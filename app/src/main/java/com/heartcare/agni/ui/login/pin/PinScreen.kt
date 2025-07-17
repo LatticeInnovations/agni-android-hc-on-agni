@@ -27,6 +27,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.focusRequester
@@ -40,11 +41,14 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextGeometricTransform
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.heartcare.agni.R
+import com.heartcare.agni.navigation.Screen
 import com.heartcare.agni.ui.common.ButtonLoader
+import com.heartcare.agni.utils.constants.NavControllerConstants.LOGGED_IN
 import com.heartcare.agni.utils.constants.NavControllerConstants.PIN_SCREEN
+import kotlinx.coroutines.launch
 
 /***
  * 0 - Login with m-pin
@@ -54,8 +58,9 @@ import com.heartcare.agni.utils.constants.NavControllerConstants.PIN_SCREEN
 @Composable
 fun PinScreen(
     navController: NavController,
-    viewModel: PinViewModel = viewModel()
+    viewModel: PinViewModel = hiltViewModel()
 ) {
+    val coroutineScope = rememberCoroutineScope()
     LaunchedEffect(viewModel.isLaunched) {
         if (!viewModel.isLaunched) {
             viewModel.screenFlag =
@@ -103,6 +108,20 @@ fun PinScreen(
                     onClick = {
                         // save pin
                         viewModel.isLoading = true
+                        viewModel.savePin(
+                            pin = viewModel.pinValues.joinToString("") { it.value },
+                            navigate = {
+                                viewModel.isLoading = false
+                                // navigate to Landing screen
+                                coroutineScope.launch {
+                                    navController.currentBackStackEntry?.savedStateHandle?.set(
+                                        LOGGED_IN,
+                                        true
+                                    )
+                                    navController.navigate(Screen.LandingScreen.route)
+                                }
+                            }
+                        )
                     },
                     enabled = viewModel.pinValues.joinToString("") { it.value }.length == viewModel.pinLength,
                     modifier = Modifier
@@ -249,8 +268,10 @@ private fun MPinTextField(
 private fun setKeyEvent(keyEvent: KeyEvent, viewModel: PinViewModel, index: Int): Boolean {
     return if (keyEvent.key == Key.Backspace) {
         if (index > 0) {
-            viewModel.pinValues[index].value = ""
-            viewModel.focusRequesters[index - 1].requestFocus()
+            if (viewModel.pinValues[index].value.isBlank()) {
+                viewModel.focusRequesters[index - 1].requestFocus()
+                viewModel.pinValues[index - 1].value = ""
+            } else viewModel.pinValues[index].value = ""
         } else {
             viewModel.pinValues[index].value = ""
         }

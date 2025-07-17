@@ -10,6 +10,7 @@ class PreferenceStorageImpl(private val sharedPreferences: SharedPreferences) : 
     override var userDetails by StringPreference(sharedPreferences, PREF_USER_DETAILS, "")
     override var accessToken by StringPreference(sharedPreferences, PREF_ACCESS_TOKEN, "")
     override var refreshToken by StringPreference(sharedPreferences, PREF_REFRESH_TOKEN, "")
+    override var pin by StringPreference(sharedPreferences, PREF_PIN, "")
     override var token by StringPreference(sharedPreferences, PREF_TOKEN, "")
     override var userFhirId by StringPreference(sharedPreferences, PREF_USER_FHIR_ID, "")
     override var userName by StringPreference(sharedPreferences, PREF_USER_NAME, "")
@@ -123,6 +124,7 @@ class PreferenceStorageImpl(private val sharedPreferences: SharedPreferences) : 
         const val PREF_USER_DETAILS = "pref_user_details"
         const val PREF_ACCESS_TOKEN = "pref_access_token"
         const val PREF_REFRESH_TOKEN = "pref_refresh_token"
+        const val PREF_PIN = "pref_pin"
         const val PREF_TOKEN = "pref_token"
 
         const val PREF_USER_FHIR_ID = "pref_user_fhir_id"

@@ -11,6 +11,9 @@ interface PreferenceStorage {
     /** Refresh Token */
     var refreshToken: String
 
+    /** M-Pin */
+    var pin: String
+
     /** Auth Token */
     var token: String
 

@@ -16,6 +16,10 @@ interface PreferenceRepository {
     fun setRefreshToken(token: String)
     fun getRefreshToken(): String
 
+    /** M-Pin */
+    fun setPin(pin: String)
+    fun getPin(): String
+
     /** Last Sync Status */
     fun setSyncStatus(status: String)
     fun getSyncStatus(): String

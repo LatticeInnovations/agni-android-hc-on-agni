@@ -6,8 +6,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.focus.FocusRequester
 import com.heartcare.agni.base.viewmodel.BaseViewModel
+import com.heartcare.agni.data.local.repository.preference.PreferenceRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 
-class PinViewModel : BaseViewModel() {
+@HiltViewModel
+class PinViewModel @Inject constructor(
+    private val preferenceRepository: PreferenceRepository
+) : BaseViewModel() {
     val pinLength = 4
 
     var isLaunched by mutableStateOf(false)
@@ -18,4 +24,12 @@ class PinViewModel : BaseViewModel() {
     val focusRequesters = List(4) { FocusRequester() }
     val pinValues = List(4) { mutableStateOf("") }
     var pinError by mutableStateOf(false)
+
+    fun savePin(
+        pin: String,
+        navigate: () -> Unit
+    ) {
+        preferenceRepository.setPin(pin)
+        navigate()
+    }
 }

@@ -33,6 +33,14 @@ class PreferenceRepositoryImpl @Inject constructor(private val preferenceStorage
         return preferenceStorage.refreshToken
     }
 
+    override fun setPin(pin: String) {
+        preferenceStorage.pin = pin
+    }
+
+    override fun getPin(): String {
+        return preferenceStorage.pin
+    }
+
     override fun setSyncStatus(status: String) {
         preferenceStorage.syncStatus = status
     }

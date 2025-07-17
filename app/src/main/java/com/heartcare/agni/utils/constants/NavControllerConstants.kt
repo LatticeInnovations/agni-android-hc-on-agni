@@ -17,4 +17,5 @@ object NavControllerConstants {
     const val PIN_SCREEN = "pin_screen_flag"
     const val PASSWORD_SCREEN = "password_screen_flag"
     const val PRIOR_DX_SAVED = "prior_dx_saved"
+    const val LOGGED_IN = "loggedIn"
 }
