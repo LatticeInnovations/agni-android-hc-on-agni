@@ -2,6 +2,15 @@ package com.heartcare.agni.data.local.sharedpreferences
 
 interface PreferenceStorage {
 
+    /** User Details */
+    var userDetails: String
+
+    /** Access Token */
+    var accessToken: String
+
+    /** Refresh Token */
+    var refreshToken: String
+
     /** Auth Token */
     var token: String
 

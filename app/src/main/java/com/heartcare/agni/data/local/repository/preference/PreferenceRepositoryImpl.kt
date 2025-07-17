@@ -1,10 +1,38 @@
 package com.heartcare.agni.data.local.repository.preference
 
+import com.google.gson.Gson
 import com.heartcare.agni.data.local.sharedpreferences.PreferenceStorage
+import com.heartcare.agni.data.server.model.authentication.LoginResponse
 import javax.inject.Inject
 
 class PreferenceRepositoryImpl @Inject constructor(private val preferenceStorage: PreferenceStorage) :
     PreferenceRepository {
+    override fun setUserDetails(loginResponse: LoginResponse) {
+        val gson = Gson()
+        preferenceStorage.userDetails = gson.toJson(loginResponse)
+    }
+
+    override fun getUserDetails(): LoginResponse? {
+        val gson = Gson()
+        return gson.fromJson(preferenceStorage.userDetails, LoginResponse::class.java)
+    }
+
+    override fun setAccessToken(token: String) {
+        preferenceStorage.accessToken = token
+    }
+
+    override fun getAccessToken(): String {
+        return preferenceStorage.accessToken
+    }
+
+    override fun setRefreshToken(token: String) {
+        preferenceStorage.refreshToken = token
+    }
+
+    override fun getRefreshToken(): String {
+        return preferenceStorage.refreshToken
+    }
+
     override fun setSyncStatus(status: String) {
         preferenceStorage.syncStatus = status
     }

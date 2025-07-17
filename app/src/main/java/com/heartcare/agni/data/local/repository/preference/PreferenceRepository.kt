@@ -1,6 +1,20 @@
 package com.heartcare.agni.data.local.repository.preference
 
+import com.heartcare.agni.data.server.model.authentication.LoginResponse
+
 interface PreferenceRepository {
+
+    /** User Details */
+    fun setUserDetails(loginResponse: LoginResponse)
+    fun getUserDetails(): LoginResponse?
+
+    /** Access Token */
+    fun setAccessToken(token: String)
+    fun getAccessToken(): String
+
+    /** Refresh Token */
+    fun setRefreshToken(token: String)
+    fun getRefreshToken(): String
 
     /** Last Sync Status */
     fun setSyncStatus(status: String)

@@ -3,6 +3,8 @@ package com.heartcare.agni.data.server.repository.authentication
 import com.heartcare.agni.data.local.repository.preference.PreferenceRepository
 import com.heartcare.agni.data.server.api.AuthenticationApiService
 import com.heartcare.agni.data.server.model.authentication.Login
+import com.heartcare.agni.data.server.model.authentication.LoginResponse
+import com.heartcare.agni.data.server.model.authentication.LoginRequest
 import com.heartcare.agni.data.server.model.authentication.Otp
 import com.heartcare.agni.data.server.model.authentication.TokenResponse
 import com.heartcare.agni.data.server.model.user.UserResponse
@@ -22,6 +24,17 @@ class AuthenticationRepositoryImpl @Inject constructor(
             authenticationApiService.login(
                 Login(
                     userContact = userContact
+                )
+            )
+        )
+    }
+
+    override suspend fun login(userId: String, password: String): ResponseMapper<LoginResponse> {
+        return ApiResponseConverter.convert(
+            authenticationApiService.login(
+                LoginRequest(
+                    userId = userId,
+                    password = password
                 )
             )
         )

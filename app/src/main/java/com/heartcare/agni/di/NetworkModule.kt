@@ -34,6 +34,7 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.net.SocketTimeoutException
 import java.util.concurrent.TimeUnit
+import javax.inject.Named
 import javax.inject.Singleton
 
 @Module
@@ -86,6 +87,7 @@ object NetworkModule {
     }
 
     @Provides
+    @Named("agni")
     @Singleton
     fun provideRetrofit(okHttpClient: OkHttpClient): Retrofit {
         return Retrofit.Builder()
@@ -96,79 +98,90 @@ object NetworkModule {
     }
 
     @Provides
+    @Named("heart_care")
     @Singleton
-    fun providePatientApiService(retrofit: Retrofit): PatientApiService {
+    fun provideHeartCareRetrofit(okHttpClient: OkHttpClient): Retrofit {
+        return Retrofit.Builder()
+            .baseUrl(BuildConfig.HEARTCARE_BASE_URL)
+            .client(okHttpClient)
+            .addConverterFactory(GsonConverterFactory.create(gson))
+            .build()
+    }
+
+    @Provides
+    @Singleton
+    fun providePatientApiService(@Named("agni") retrofit: Retrofit): PatientApiService {
         return retrofit.create(PatientApiService::class.java)
     }
 
     @Provides
     @Singleton
-    fun provideAuthenticationApiService(retrofit: Retrofit): AuthenticationApiService {
+    fun provideAuthenticationApiService(@Named("heart_care") retrofit: Retrofit): AuthenticationApiService {
         return retrofit.create(AuthenticationApiService::class.java)
     }
 
     @Provides
     @Singleton
-    fun providePrescriptionApiService(retrofit: Retrofit): PrescriptionApiService {
+    fun providePrescriptionApiService(@Named("agni") retrofit: Retrofit): PrescriptionApiService {
         return retrofit.create(PrescriptionApiService::class.java)
     }
 
     @Provides
     @Singleton
-    fun provideScheduleApiService(retrofit: Retrofit): ScheduleAndAppointmentApiService {
+    fun provideScheduleApiService(@Named("agni") retrofit: Retrofit): ScheduleAndAppointmentApiService {
         return retrofit.create(ScheduleAndAppointmentApiService::class.java)
     }
 
     @Provides
     @Singleton
-    internal fun provideFileUploadApiService(retrofit: Retrofit): FileUploadApiService {
+    internal fun provideFileUploadApiService(@Named("agni") retrofit: Retrofit): FileUploadApiService {
         return retrofit.create(FileUploadApiService::class.java)
     }
 
     @Provides
     @Singleton
-    internal fun provideSignUpApiService(retrofit: Retrofit): SignUpApiService {
+    internal fun provideSignUpApiService(@Named("heart_care") retrofit: Retrofit): SignUpApiService {
         return retrofit.create(SignUpApiService::class.java)
     }
 
     @Provides
     @Singleton
-    internal fun provideCVDApiService(retrofit: Retrofit): CVDApiService {
+    internal fun provideCVDApiService(@Named("agni") retrofit: Retrofit): CVDApiService {
         return retrofit.create(CVDApiService::class.java)
     }
 
     @Provides
     @Singleton
-    internal fun provideVitalAPiService(retrofit: Retrofit): VitalApiService {
+    internal fun provideVitalAPiService(@Named("agni") retrofit: Retrofit): VitalApiService {
         return retrofit.create(VitalApiService::class.java)
     }
     @Provides
     @Singleton
-    internal fun provideSymptomsAndDiagnosisAPiService(retrofit: Retrofit): SymptomsAndDiagnosisService {
+    internal fun provideSymptomsAndDiagnosisAPiService(@Named("agni") retrofit: Retrofit): SymptomsAndDiagnosisService {
         return retrofit.create(SymptomsAndDiagnosisService::class.java)
     }
 
     @Provides
     @Singleton
-    internal fun provideLabAndMedAPiService(retrofit: Retrofit): LabTestAndMedRecordService {
+    internal fun provideLabAndMedAPiService(@Named("agni") retrofit: Retrofit): LabTestAndMedRecordService {
         return retrofit.create(LabTestAndMedRecordService::class.java)
     }
 
     @Provides
     @Singleton
-    internal fun provideDispenseApiService(retrofit: Retrofit): DispenseApiService {
+    internal fun provideDispenseApiService(@Named("agni") retrofit: Retrofit): DispenseApiService {
         return retrofit.create(DispenseApiService::class.java)
     }
 
     @Provides
     @Singleton
-    internal fun provideVaccinationApiService(retrofit: Retrofit): VaccinationApiService {
+    internal fun provideVaccinationApiService(@Named("agni") retrofit: Retrofit): VaccinationApiService {
         return retrofit.create(VaccinationApiService::class.java)
     }
 
     @Provides
     @Singleton
-    internal fun provideLevelsApiService(retrofit: Retrofit): LevelsApiService {
+    internal fun provideLevelsApiService(@Named("agni") retrofit: Retrofit): LevelsApiService {
         return retrofit.create(LevelsApiService::class.java)
     }
 }

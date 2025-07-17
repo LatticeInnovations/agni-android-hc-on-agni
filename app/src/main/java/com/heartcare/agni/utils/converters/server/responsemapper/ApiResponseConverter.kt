@@ -11,4 +11,10 @@ object ApiResponseConverter {
     ): ResponseMapper<T> {
         return ResponseMapper.create(response, paginated)
     }
+
+    fun <T> convert(
+        response: Response<T>
+    ): ResponseMapper<T> {
+        return ResponseMapper.create(response)
+    }
 }

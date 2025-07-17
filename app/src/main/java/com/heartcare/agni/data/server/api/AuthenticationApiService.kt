@@ -2,6 +2,8 @@ package com.heartcare.agni.data.server.api
 
 import com.heartcare.agni.base.server.BaseResponse
 import com.heartcare.agni.data.server.model.authentication.Login
+import com.heartcare.agni.data.server.model.authentication.LoginResponse
+import com.heartcare.agni.data.server.model.authentication.LoginRequest
 import com.heartcare.agni.data.server.model.authentication.Otp
 import com.heartcare.agni.data.server.model.authentication.TokenResponse
 import com.heartcare.agni.data.server.model.user.UserResponse
@@ -17,6 +19,9 @@ interface AuthenticationApiService {
 
     @POST("auth/login")
     suspend fun login(@Body login: Login): Response<BaseResponse<String?>>
+
+    @POST("login")
+    suspend fun login(@Body login: LoginRequest): Response<LoginResponse>
 
     @POST("auth/otp")
     suspend fun validateOtp(@Body otp: Otp): Response<BaseResponse<TokenResponse>>

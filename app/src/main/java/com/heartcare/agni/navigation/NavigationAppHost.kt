@@ -52,7 +52,7 @@ import com.heartcare.agni.ui.vaccination.view.ViewVaccinationScreen
 @Composable
 fun NavigationAppHost(navController: NavController, startDest: String) {
     NavHost(navController = navController as NavHostController, startDestination = startDest) {
-        composable(Screen.UserIdPasswordScreen.route) { UserPasswordScreen() }
+        composable(Screen.UserIdPasswordScreen.route) { UserPasswordScreen(navController) }
         composable(Screen.CreatePasswordScreen.route) { CreatePasswordScreen(navController) }
         composable(Screen.PinScreen.route) { PinScreen(navController) }
         composable(Screen.ForgotPasswordScreen.route) { ForgotPasswordScreen() }

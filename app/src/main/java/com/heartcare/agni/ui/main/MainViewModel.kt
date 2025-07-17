@@ -15,7 +15,7 @@ class MainViewModel @Inject constructor(
 ) : BaseViewModel() {
 
     var isUserLoggedIn by mutableStateOf(false)
-    var startDestination by mutableStateOf(Screen.PhoneEmailScreen.route)
+    var startDestination by mutableStateOf(Screen.UserIdPasswordScreen.route)
 
     init {
         isUserLoggedIn = preferenceRepository.getAuthenticationToken().isNotEmpty()
