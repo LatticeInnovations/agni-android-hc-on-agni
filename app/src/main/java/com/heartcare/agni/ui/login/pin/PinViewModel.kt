@@ -20,10 +20,14 @@ class PinViewModel @Inject constructor(
     var screenFlag by mutableIntStateOf(0)
 
     var isLoading by mutableStateOf(false)
+    var isPinInvalid by mutableStateOf(false)
 
     val focusRequesters = List(4) { FocusRequester() }
     val pinValues = List(4) { mutableStateOf("") }
-    var pinError by mutableStateOf(false)
+
+    fun getPin(): String {
+        return preferenceRepository.getPin()
+    }
 
     fun savePin(
         pin: String,
