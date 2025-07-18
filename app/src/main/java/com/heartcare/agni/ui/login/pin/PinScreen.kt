@@ -1,6 +1,8 @@
 package com.heartcare.agni.ui.login.pin
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -89,73 +91,14 @@ fun PinScreen(
                 PinFields(viewModel)
 
                 if (viewModel.screenFlag == 0) {
-                    AnimatedVisibility (viewModel.isPinInvalid) {
-                        Text(
-                            text = stringResource(R.string.invalid_pin),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.error,
-                            modifier = Modifier.fillMaxWidth()
-                                .padding(top = 10.dp),
-                            textAlign = TextAlign.Center
-                        )
-                    }
+                    InvalidPinText(viewModel)
                     Spacer(modifier = Modifier.height(30.dp))
-                    Box(
-                        modifier = Modifier.fillMaxWidth(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        TextButton(
-                            onClick = {
-                                // forgot m-pin
-                            }
-                        ) {
-                            Text(stringResource(R.string.forgot_pin))
-                        }
-                    }
+                    ForgotPinButton(navController)
                 }
 
                 Spacer(modifier = Modifier.height(30.dp))
 
-                Button(
-                    onClick = {
-                        // save pin
-                        viewModel.isLoading = true
-                        val pin = viewModel.pinValues.joinToString("") { it.value }
-                        when(viewModel.screenFlag) {
-                            0 -> {
-                                if (pin == viewModel.getPin()) {
-                                    viewModel.isLoading = false
-                                    navController.popBackStack(Screen.PinScreen.route, inclusive = true)
-                                    navigate(navController, coroutineScope)
-                                } else {
-                                    viewModel.isLoading = false
-                                    viewModel.isPinInvalid = true
-                                }
-                            }
-                            1, 2 -> {
-                                viewModel.savePin(
-                                    pin = pin,
-                                    navigate = {
-                                        viewModel.isLoading = false
-                                        navController.popBackStack(Screen.UserIdPasswordScreen.route, inclusive = true)
-                                        navigate(navController, coroutineScope)
-                                    }
-                                )
-                            }
-                        }
-                    },
-                    enabled = viewModel.pinValues.joinToString("") { it.value }.length == viewModel.pinLength,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                ) {
-                    if (viewModel.isLoading) ButtonLoader()
-                    else Text(
-                        when (viewModel.screenFlag) {
-                            1, 2 -> stringResource(R.string.save_pin)
-                            else -> stringResource(R.string.login)
-                        }
-                    )
-                }
+                SubmitPinButton(viewModel, navController, coroutineScope)
             }
         }
     )
@@ -300,6 +243,93 @@ private fun setKeyEvent(keyEvent: KeyEvent, viewModel: PinViewModel, index: Int)
     } else {
         false
     }
+}
+
+@Composable
+private fun InvalidPinText(viewModel: PinViewModel) {
+    AnimatedVisibility(
+        visible = viewModel.isPinInvalid,
+        enter = expandVertically(),
+        exit = shrinkVertically()
+    ) {
+        Text(
+            text = stringResource(R.string.invalid_pin),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.error,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 10.dp),
+            textAlign = TextAlign.Center
+        )
+    }
+}
+
+@Composable
+private fun ForgotPinButton(navController: NavController) {
+    Box(
+        modifier = Modifier.fillMaxWidth(),
+        contentAlignment = Alignment.Center
+    ) {
+        TextButton(
+            onClick = {
+                navController.currentBackStackEntry?.savedStateHandle?.set(PIN_SCREEN, 2)
+                navController.navigate(Screen.UserIdPasswordScreen.route)
+            }
+        ) {
+            Text(stringResource(R.string.forgot_pin))
+        }
+    }
+}
+
+@Composable
+private fun SubmitPinButton(
+    viewModel: PinViewModel,
+    navController: NavController,
+    coroutineScope: CoroutineScope
+) {
+    val pin = viewModel.pinValues.joinToString("") { it.value }
+    val isPinComplete = pin.length == viewModel.pinLength
+
+    Button(
+        onClick = {
+            viewModel.isLoading = true
+            handlePinSubmission(pin, viewModel, navController, coroutineScope)
+        },
+        enabled = isPinComplete,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        if (viewModel.isLoading) ButtonLoader()
+        else {
+            val textRes = when (viewModel.screenFlag) {
+                1, 2 -> R.string.save_pin
+                else -> R.string.login
+            }
+            Text(stringResource(textRes))
+        }
+    }
+}
+
+private fun handlePinSubmission(
+    pin: String,
+    viewModel: PinViewModel,
+    navController: NavController,
+    coroutineScope: CoroutineScope
+) {
+    when (viewModel.screenFlag) {
+        0 -> {
+            if (pin == viewModel.getPin()) {
+                viewModel.isPinInvalid = false
+                navigate(navController, coroutineScope)
+            } else {
+                viewModel.isPinInvalid = true
+            }
+        }
+        1, 2 -> {
+            viewModel.savePin(pin)
+            navigate(navController, coroutineScope)
+        }
+    }
+    viewModel.isLoading = false
 }
 
 private fun navigate(

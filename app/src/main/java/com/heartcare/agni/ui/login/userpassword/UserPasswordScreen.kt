@@ -207,7 +207,14 @@ private fun loginAndNavigate(
     viewModel.login {
         if (viewModel.isPasswordCreated) {
             coroutineScope.launch {
-                navController.currentBackStackEntry?.savedStateHandle?.set(PIN_SCREEN, 1)
+                val pinScreen =
+                    navController.previousBackStackEntry?.savedStateHandle?.get<Int>(
+                        PIN_SCREEN
+                    ) ?: 1
+                navController.currentBackStackEntry?.savedStateHandle?.set(
+                    PIN_SCREEN,
+                    pinScreen
+                )
                 navController.navigate(Screen.PinScreen.route)
             }
         } else {

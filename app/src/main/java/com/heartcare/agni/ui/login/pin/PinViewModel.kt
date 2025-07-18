@@ -29,11 +29,7 @@ class PinViewModel @Inject constructor(
         return preferenceRepository.getPin()
     }
 
-    fun savePin(
-        pin: String,
-        navigate: () -> Unit
-    ) {
+    fun savePin(pin: String) {
         preferenceRepository.setPin(pin)
-        navigate()
     }
 }
