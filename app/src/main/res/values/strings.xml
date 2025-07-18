@@ -567,7 +567,7 @@ include them in the household</string>
     <string name="invalid_pin">Invalid M-pin</string>
     <string name="password_updated_successfully">Password updated successfully</string>
     <string name="enter_authentication_code">Enter the authorization code sent to %s</string>
-    <string name="authentication_code_sent">Authorization code sent to email</string>
+    <string name="authentication_code_sent">Authorization Code is sent to your registered Email</string>
     <string name="request_new_code_info">Request new authorization code in</string>
     <string name="resend_code">Resend code</string>
     <string name="authentication_code">Authentication code</string>

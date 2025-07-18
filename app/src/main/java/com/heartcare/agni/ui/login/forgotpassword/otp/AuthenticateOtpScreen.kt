@@ -23,32 +23,44 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.heartcare.agni.R
+import com.heartcare.agni.navigation.Screen
 import com.heartcare.agni.utils.constants.NavControllerConstants.EMAIL
+import com.heartcare.agni.utils.constants.NavControllerConstants.PASSWORD_SCREEN
+import com.heartcare.agni.utils.network.CheckNetwork.isInternetAvailable
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.util.Locale
 
 @Composable
 fun AuthenticateOtpScreen(
     navController: NavController,
-    viewModel: AuthenticateOtpViewModel = viewModel()
+    viewModel: AuthenticateOtpViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
     val snackBarHostState = remember { SnackbarHostState() }
     LaunchedEffect(viewModel.isLaunched) {
         if (!viewModel.isLaunched) {
             viewModel.email =
                 navController.previousBackStackEntry?.savedStateHandle?.get<String>(EMAIL).orEmpty()
-            snackBarHostState.showSnackbar(
-                context.getString(R.string.authentication_code_sent)
-            )
+            viewModel.snackBarMsg = context.getString(R.string.authentication_code_sent)
             viewModel.isLaunched = true
+        }
+    }
+
+    LaunchedEffect(viewModel.snackBarMsg) {
+        if (viewModel.snackBarMsg.isNotBlank()) {
+            snackBarHostState.showSnackbar(viewModel.snackBarMsg)
+            viewModel.snackBarMsg = ""
         }
     }
 
@@ -80,9 +92,9 @@ fun AuthenticateOtpScreen(
                 Spacer(Modifier.height(60.dp))
                 CodeField(viewModel, context)
                 Spacer(Modifier.height(20.dp))
-                ContinueButton(viewModel)
+                SubmitButton(viewModel, navController, context, coroutineScope)
                 Spacer(modifier = Modifier.height(16.dp))
-                TwoMinuteTimer(viewModel)
+                TwoMinuteTimer(viewModel, context)
             }
         }
     )
@@ -109,7 +121,7 @@ private fun CodeField(
         supportingText = {
             Text(text = if (viewModel.isError) viewModel.errorMsg else "")
         },
-        isError = viewModel.isBtnEnabled(),
+        isError = viewModel.isError,
         singleLine = true,
         placeholder = {
             Text(stringResource(R.string.authentication_code))
@@ -118,15 +130,32 @@ private fun CodeField(
 }
 
 @Composable
-private fun ContinueButton(
-    viewModel: AuthenticateOtpViewModel
+private fun SubmitButton(
+    viewModel: AuthenticateOtpViewModel,
+    navController: NavController,
+    context: Context,
+    coroutineScope: CoroutineScope
 ) {
     Button(
         onClick = {
-            // Continue
+            // Submit
+            when (isInternetAvailable(context)) {
+                true -> {
+                    viewModel.validateOtp {
+                        coroutineScope.launch {
+                            navController.currentBackStackEntry?.savedStateHandle?.set(PASSWORD_SCREEN, 1)
+                            navController.navigate(Screen.CreatePasswordScreen.route)
+                        }
+                    }
+                }
+
+                false -> {
+                    viewModel.snackBarMsg = context.getString(R.string.no_internet_error_msg)
+                }
+            }
         },
         modifier = Modifier.fillMaxWidth(),
-        enabled = !viewModel.isError
+        enabled = viewModel.isBtnEnabled()
     ) {
         Text(stringResource(R.string.submit))
     }
@@ -134,7 +163,8 @@ private fun ContinueButton(
 
 @Composable
 private fun TwoMinuteTimer(
-    viewModel: AuthenticateOtpViewModel
+    viewModel: AuthenticateOtpViewModel,
+    context: Context
 ) {
     val timer = "${
         String.format(
@@ -168,13 +198,35 @@ private fun TwoMinuteTimer(
             )
         }
     } else {
-        FilledTonalButton(
-            onClick = {
-                // resend code
-            },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text(stringResource(R.string.resend_code))
-        }
+        ResendCodeButton(viewModel, context)
+    }
+}
+
+@Composable
+private fun ResendCodeButton(
+    viewModel: AuthenticateOtpViewModel,
+    context: Context
+) {
+    FilledTonalButton(
+        onClick = {
+            // resend code
+            when (isInternetAvailable(context)) {
+                true -> {
+                    viewModel.requestOtp {
+                        viewModel.snackBarMsg = context.getString(R.string.authentication_code_sent)
+                        viewModel.twoMinuteTimer = 120
+                        viewModel.otp = ""
+                        viewModel.isError = false
+                    }
+                }
+
+                false -> {
+                    viewModel.snackBarMsg = context.getString(R.string.no_internet_error_msg)
+                }
+            }
+        },
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Text(stringResource(R.string.resend_code))
     }
 }

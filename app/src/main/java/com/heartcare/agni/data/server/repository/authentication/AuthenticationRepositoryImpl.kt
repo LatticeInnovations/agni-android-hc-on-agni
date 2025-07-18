@@ -64,6 +64,17 @@ class AuthenticationRepositoryImpl @Inject constructor(
         )
     }
 
+    override suspend fun validateCode(
+        email: String,
+        otp: Int
+    ): ResponseMapper<Unit> {
+        return ApiResponseConverter.convert(
+            authenticationApiService.validateCode(
+                ForgotPasswordRequest(context = email, oneTimePassword = otp)
+            )
+        )
+    }
+
     override suspend fun validateOtp(userContact: String, otp: Int): ResponseMapper<TokenResponse> {
         return ApiResponseConverter.convert(
             authenticationApiService.validateOtp(
