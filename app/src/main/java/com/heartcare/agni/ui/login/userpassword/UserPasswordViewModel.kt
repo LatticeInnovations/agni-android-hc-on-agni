@@ -1,6 +1,7 @@
 package com.heartcare.agni.ui.login.userpassword
 
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewModelScope
@@ -8,13 +9,16 @@ import com.heartcare.agni.base.viewmodel.BaseViewModel
 import com.heartcare.agni.data.local.repository.preference.PreferenceRepository
 import com.heartcare.agni.data.local.roomdb.FhirAppDatabase
 import com.heartcare.agni.data.server.repository.authentication.AuthenticationRepository
+import com.heartcare.agni.di.dispatcher.IoDispatcher
+import com.heartcare.agni.utils.constants.AuthenticationConstants.AUTHORIZATION
+import com.heartcare.agni.utils.constants.AuthenticationConstants.REFRESH_TOKEN
 import com.heartcare.agni.utils.constants.ErrorConstants.ERROR_FETCHING_USER_DETAILS
 import com.heartcare.agni.utils.constants.ErrorConstants.SOMETHING_WENT_WRONG
 import com.heartcare.agni.utils.converters.server.responsemapper.ApiEmptyResponse
 import com.heartcare.agni.utils.converters.server.responsemapper.ApiEndResponse
 import com.heartcare.agni.utils.converters.server.responsemapper.ApiErrorResponse
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
@@ -23,11 +27,14 @@ import javax.inject.Inject
 class UserPasswordViewModel @Inject constructor(
     private val authenticationRepository: AuthenticationRepository,
     private val preferenceRepository: PreferenceRepository,
-    private val fhirAppDatabase: FhirAppDatabase
+    private val fhirAppDatabase: FhirAppDatabase,
+    @IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) : BaseViewModel() {
     val maxUserIdLength = 10
     val minUserIdLength = 3
     val maxPasswordLength = 15
+
+    var pinScreen by mutableIntStateOf(0)
 
     var userId by mutableStateOf("")
     var isUserIdError by mutableStateOf(false)
@@ -47,7 +54,7 @@ class UserPasswordViewModel @Inject constructor(
     }
 
     fun login(navigate: () -> Unit) {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(ioDispatcher) {
             authenticationRepository.login(userId, password).apply {
                 when(this) {
                     is ApiEndResponse -> {
@@ -55,8 +62,8 @@ class UserPasswordViewModel @Inject constructor(
                         isPasswordCreated = body.systemPasswordChanged
                         preferenceRepository.setUserDetails(body)
                         try {
-                            preferenceRepository.setAccessToken(headers!!["authorization"]!!)
-                            preferenceRepository.setRefreshToken(headers["refreshtoken"]!!)
+                            preferenceRepository.setAccessToken(headers!![AUTHORIZATION]!!)
+                            preferenceRepository.setRefreshToken(headers[REFRESH_TOKEN]!!)
                             navigate()
                         } catch (e: Exception) {
                             Timber.e(e)
@@ -88,7 +95,7 @@ class UserPasswordViewModel @Inject constructor(
     }
 
     fun clearAllAppData() {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(ioDispatcher) {
             fhirAppDatabase.clearAllTables()
             preferenceRepository.clearPreferences()
         }

@@ -55,7 +55,8 @@ fun UserPasswordScreen(
     val snackBarHostState = remember { SnackbarHostState() }
 
     BackHandler {
-        activity?.finish()
+        if (viewModel.pinScreen == 2) navController.popBackStack()
+        else activity?.finish()
     }
 
     LaunchedEffect(viewModel.snackBarError) {
@@ -65,6 +66,10 @@ fun UserPasswordScreen(
         }
     }
     LaunchedEffect(Unit) {
+        viewModel.pinScreen =
+            navController.previousBackStackEntry?.savedStateHandle?.get<Int>(
+                PIN_SCREEN
+            ) ?: 1
         val isPasswordSaved =
             navController.currentBackStackEntry?.savedStateHandle?.get<Boolean>(PASSWORD_SAVED)
                 ?: false
@@ -228,13 +233,9 @@ private fun loginAndNavigate(
     viewModel.login {
         if (viewModel.isPasswordCreated) {
             coroutineScope.launch {
-                val pinScreen =
-                    navController.previousBackStackEntry?.savedStateHandle?.get<Int>(
-                        PIN_SCREEN
-                    ) ?: 1
                 navController.currentBackStackEntry?.savedStateHandle?.set(
                     PIN_SCREEN,
-                    pinScreen
+                    viewModel.pinScreen
                 )
                 navController.navigate(Screen.PinScreen.route)
             }

@@ -6,4 +6,5 @@ object AuthenticationConstants {
     const val BEARER_TOKEN_BUILDER = "Bearer %s"
     const val TEMP_TOKEN = "temptoken"
     const val AUTHORIZATION = "authorization"
+    const val REFRESH_TOKEN = "refreshtoken"
 }
