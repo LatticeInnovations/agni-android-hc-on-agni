@@ -18,4 +18,6 @@ object NavControllerConstants {
     const val PASSWORD_SCREEN = "password_screen_flag"
     const val PRIOR_DX_SAVED = "prior_dx_saved"
     const val LOGGED_IN = "loggedIn"
+    const val PASSWORD = "password"
+    const val PASSWORD_SAVED = "password_saved"
 }

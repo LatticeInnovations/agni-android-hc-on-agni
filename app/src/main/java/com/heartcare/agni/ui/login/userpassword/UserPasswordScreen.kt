@@ -33,6 +33,8 @@ import com.heartcare.agni.R
 import com.heartcare.agni.navigation.Screen
 import com.heartcare.agni.ui.common.CustomDialog
 import com.heartcare.agni.ui.common.CustomTextField
+import com.heartcare.agni.utils.constants.NavControllerConstants.PASSWORD
+import com.heartcare.agni.utils.constants.NavControllerConstants.PASSWORD_SAVED
 import com.heartcare.agni.utils.constants.NavControllerConstants.PIN_SCREEN
 import com.heartcare.agni.utils.network.CheckNetwork.isInternetAvailable
 import com.heartcare.agni.utils.regex.RegexPatterns.atLeastOneAlphaAndNumber
@@ -53,6 +55,17 @@ fun UserPasswordScreen(
         if (viewModel.snackBarError.isNotBlank()) {
             snackBarHostState.showSnackbar(viewModel.snackBarError)
             viewModel.snackBarError = ""
+        }
+    }
+    LaunchedEffect(Unit) {
+        val isPasswordSaved =
+            navController.currentBackStackEntry?.savedStateHandle?.get<Boolean>(PASSWORD_SAVED)
+                ?: false
+        if (isPasswordSaved) {
+            viewModel.userId = ""
+            viewModel.password = ""
+            viewModel.snackBarError = context.getString(R.string.password_updated_successfully)
+            navController.currentBackStackEntry?.savedStateHandle?.remove<Boolean>(PASSWORD_SAVED)
         }
     }
     Scaffold(
@@ -219,6 +232,10 @@ private fun loginAndNavigate(
             }
         } else {
             coroutineScope.launch {
+                navController.currentBackStackEntry?.savedStateHandle?.set(
+                    PASSWORD,
+                    viewModel.password
+                )
                 navController.navigate(Screen.CreatePasswordScreen.route)
             }
         }

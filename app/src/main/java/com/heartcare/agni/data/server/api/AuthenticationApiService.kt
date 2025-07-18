@@ -1,6 +1,7 @@
 package com.heartcare.agni.data.server.api
 
 import com.heartcare.agni.base.server.BaseResponse
+import com.heartcare.agni.data.server.model.authentication.ChangePassword
 import com.heartcare.agni.data.server.model.authentication.Login
 import com.heartcare.agni.data.server.model.authentication.LoginResponse
 import com.heartcare.agni.data.server.model.authentication.LoginRequest
@@ -14,6 +15,7 @@ import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.POST
+import retrofit2.http.PUT
 
 interface AuthenticationApiService {
 
@@ -22,6 +24,9 @@ interface AuthenticationApiService {
 
     @POST("login")
     suspend fun login(@Body login: LoginRequest): Response<LoginResponse>
+
+    @PUT("user/change-password")
+    suspend fun changePassword(@Body changePassword: ChangePassword): Response<Unit>
 
     @POST("auth/otp")
     suspend fun validateOtp(@Body otp: Otp): Response<BaseResponse<TokenResponse>>

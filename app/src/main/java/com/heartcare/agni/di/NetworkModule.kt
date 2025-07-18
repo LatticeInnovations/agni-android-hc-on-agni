@@ -16,6 +16,7 @@ import com.heartcare.agni.data.server.api.SignUpApiService
 import com.heartcare.agni.data.server.api.VitalApiService
 import com.heartcare.agni.data.server.api.SymptomsAndDiagnosisService
 import com.heartcare.agni.data.server.api.VaccinationApiService
+import com.heartcare.agni.utils.constants.AuthenticationConstants.AUTHORIZATION
 import com.heartcare.agni.utils.constants.AuthenticationConstants.X_ACCESS_TOKEN
 import com.heartcare.agni.utils.constants.ErrorConstants
 import dagger.Module
@@ -49,39 +50,53 @@ object NetworkModule {
             .readTimeout(30, TimeUnit.SECONDS)
             .writeTimeout(30, TimeUnit.SECONDS)
             .addInterceptor { chain ->
+                val originalRequest = chain.request()
+                val requestBuilder = originalRequest.newBuilder()
+                    .addHeader("Content-Type", "application/json")
+
+                val url = originalRequest.url.toString()
+
+                when {
+                    url.startsWith(BuildConfig.HEARTCARE_BASE_URL) -> {
+                        // Heartcare backend
+                        if (preferenceStorage.accessToken.isNotBlank()) {
+                            requestBuilder.addHeader(AUTHORIZATION, preferenceStorage.accessToken)
+                        }
+                    }
+                    else -> {
+                        // Facade backend
+                        if (preferenceStorage.accessToken.isNotBlank()) {
+                            requestBuilder.addHeader(X_ACCESS_TOKEN, preferenceStorage.accessToken)
+                        }
+                    }
+                }
+
                 try {
-                    chain.proceed(chain.request().newBuilder().also { requestBuilder ->
-                        requestBuilder.addHeader("Content-Type", "application/json")
-                        if (preferenceStorage.token.isNotBlank()) requestBuilder.addHeader(
-                            X_ACCESS_TOKEN,
-                            preferenceStorage.token
-                        )
-                    }.build())
+                    chain.proceed(requestBuilder.build())
                 } catch (e: IOException) {
                     val errorMsg: String = when (e) {
                         is SocketTimeoutException -> ErrorConstants.SOCKET_TIMEOUT_EXCEPTION
                         else -> ErrorConstants.IO_EXCEPTION
                     }
+
                     Response.Builder()
-                        .request(chain.request())
+                        .request(originalRequest)
                         .protocol(Protocol.HTTP_1_1)
                         .code(200)
                         .message("OK")
                         .body(
-                            "${
-                                JSONObject().run {
-                                    put("status", 0)
-                                    put("message", errorMsg)
-                                }
-                            }".toByteArray().toResponseBody("application/json".toMediaType())
+                            JSONObject().apply {
+                                put("status", 0)
+                                put("message", errorMsg)
+                            }.toString().toByteArray().toResponseBody("application/json".toMediaType())
                         )
                         .build()
                 }
-            }.also { client ->
+            }.apply {
                 if (BuildConfig.DEBUG) {
                     val interceptor = HttpLoggingInterceptor()
                     interceptor.level = HttpLoggingInterceptor.Level.BODY
-                    client.addInterceptor(interceptor)
+                    addInterceptor(interceptor)
                 }
             }.build()
     }

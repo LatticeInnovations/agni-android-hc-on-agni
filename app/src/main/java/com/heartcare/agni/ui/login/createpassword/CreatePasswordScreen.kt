@@ -18,6 +18,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -27,12 +28,16 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.heartcare.agni.R
 import com.heartcare.agni.ui.common.CustomTextField
+import com.heartcare.agni.utils.constants.NavControllerConstants.PASSWORD
+import com.heartcare.agni.utils.constants.NavControllerConstants.PASSWORD_SAVED
 import com.heartcare.agni.utils.constants.NavControllerConstants.PASSWORD_SCREEN
+import com.heartcare.agni.utils.network.CheckNetwork.isInternetAvailable
 import com.heartcare.agni.utils.regex.RegexPatterns.passwordRegex
+import kotlinx.coroutines.launch
 
 /***
  * 0 - Create new password
@@ -41,15 +46,25 @@ import com.heartcare.agni.utils.regex.RegexPatterns.passwordRegex
 @Composable
 fun CreatePasswordScreen(
     navController: NavController,
-    viewModel: CreatePasswordViewModel = viewModel()
+    viewModel: CreatePasswordViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
-    val snackbarHostState = remember { SnackbarHostState() }
+    val coroutineScope = rememberCoroutineScope()
+    val snackBarHostState = remember { SnackbarHostState() }
     LaunchedEffect(viewModel.isLaunched) {
         if (!viewModel.isLaunched) {
             viewModel.screenFlag =
                 navController.previousBackStackEntry?.savedStateHandle?.get<Int>(PASSWORD_SCREEN) ?: 0
+            if (viewModel.screenFlag == 0) {
+                viewModel.oldPassword = navController.previousBackStackEntry?.savedStateHandle?.get<String>(PASSWORD)!!
+            }
             viewModel.isLaunched = true
+        }
+    }
+    LaunchedEffect(viewModel.snackBarError) {
+        if (viewModel.snackBarError.isNotBlank()) {
+            snackBarHostState.showSnackbar(viewModel.snackBarError)
+            viewModel.snackBarError = ""
         }
     }
     Scaffold(
@@ -57,7 +72,7 @@ fun CreatePasswordScreen(
             .fillMaxSize()
             .imePadding()
             .navigationBarsPadding(),
-        snackbarHost = { SnackbarHost(snackbarHostState) },
+        snackbarHost = { SnackbarHost(snackBarHostState) },
         content = { paddingValues ->
             Column(
                 modifier = Modifier
@@ -81,7 +96,22 @@ fun CreatePasswordScreen(
                 Spacer(Modifier.height(20.dp))
                 Button(
                     onClick = {
-                        // save password
+                        when (isInternetAvailable(context)) {
+                            true -> {
+                                // save password
+                                viewModel.savePassword {
+                                    coroutineScope.launch {
+                                        navController.previousBackStackEntry?.savedStateHandle?.set(PASSWORD_SAVED, true)
+                                        navController.navigateUp()
+                                    }
+                                }
+                            }
+
+                            false -> {
+                                viewModel.snackBarError =
+                                    context.getString(R.string.no_internet_error_msg)
+                            }
+                        }
                     },
                     modifier = Modifier.fillMaxWidth(),
                     enabled = viewModel.validation()

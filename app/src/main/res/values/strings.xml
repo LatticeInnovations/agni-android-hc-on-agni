@@ -562,4 +562,5 @@ include them in the household</string>
     <string name="please_specify_mandatory">Please specify*</string>
     <string name="prior_dx_saved">Prior Dx saved</string>
     <string name="invalid_pin">Invalid M-pin</string>
+    <string name="password_updated_successfully">Password updated successfully</string>
 </resources>
