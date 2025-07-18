@@ -25,6 +25,7 @@ import com.heartcare.agni.ui.login.PhoneEmailScreen
 import com.heartcare.agni.ui.login.pin.PinScreen
 import com.heartcare.agni.ui.login.forgotpassword.ForgotPasswordScreen
 import com.heartcare.agni.ui.login.createpassword.CreatePasswordScreen
+import com.heartcare.agni.ui.login.forgotpassword.otp.AuthenticateOtpScreen
 import com.heartcare.agni.ui.login.userpassword.UserPasswordScreen
 import com.heartcare.agni.ui.patienteditscreen.address.EditPatientAddress
 import com.heartcare.agni.ui.patienteditscreen.basicinfo.EditBasicInformation
@@ -56,6 +57,7 @@ fun NavigationAppHost(navController: NavController, startDest: String) {
         composable(Screen.CreatePasswordScreen.route) { CreatePasswordScreen(navController) }
         composable(Screen.PinScreen.route) { PinScreen(navController) }
         composable(Screen.ForgotPasswordScreen.route) { ForgotPasswordScreen() }
+        composable(Screen.AuthenticateOtpScreen.route) { AuthenticateOtpScreen(navController) }
         composable(Screen.PhoneEmailScreen.route) { PhoneEmailScreen(navController) }
         composable(Screen.SignUpPhoneEmailScreen.route) { SignUpPhoneEmailScreen(navController) }
         composable(Screen.SignUpScreen.route) { SignUpScreen(navController = navController) }

@@ -20,4 +20,5 @@ object NavControllerConstants {
     const val LOGGED_IN = "loggedIn"
     const val PASSWORD = "password"
     const val PASSWORD_SAVED = "password_saved"
+    const val EMAIL = "email"
 }
