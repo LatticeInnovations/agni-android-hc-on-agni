@@ -3,6 +3,7 @@ package com.heartcare.agni.data.server.repository.authentication
 import com.heartcare.agni.data.local.repository.preference.PreferenceRepository
 import com.heartcare.agni.data.server.api.AuthenticationApiService
 import com.heartcare.agni.data.server.model.authentication.ChangePassword
+import com.heartcare.agni.data.server.model.authentication.ForgotPasswordRequest
 import com.heartcare.agni.data.server.model.authentication.Login
 import com.heartcare.agni.data.server.model.authentication.LoginResponse
 import com.heartcare.agni.data.server.model.authentication.LoginRequest
@@ -51,6 +52,14 @@ class AuthenticationRepositoryImpl @Inject constructor(
                     oldPassword = oldPassword,
                     newPassword = newPassword
                 )
+            )
+        )
+    }
+
+    override suspend fun requestOtp(email: String): ResponseMapper<Unit> {
+        return ApiResponseConverter.convert(
+            authenticationApiService.requestOtp(
+                ForgotPasswordRequest(context = email)
             )
         )
     }

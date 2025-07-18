@@ -95,6 +95,7 @@ fun UserPasswordScreen(
                 TextButton(
                     onClick = {
                         // forgot password
+                        navController.navigate(Screen.ForgotPasswordScreen.route)
                     }
                 ) {
                     Text(stringResource(R.string.forgot_password))

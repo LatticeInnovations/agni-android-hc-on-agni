@@ -2,6 +2,7 @@ package com.heartcare.agni.data.server.api
 
 import com.heartcare.agni.base.server.BaseResponse
 import com.heartcare.agni.data.server.model.authentication.ChangePassword
+import com.heartcare.agni.data.server.model.authentication.ForgotPasswordRequest
 import com.heartcare.agni.data.server.model.authentication.Login
 import com.heartcare.agni.data.server.model.authentication.LoginResponse
 import com.heartcare.agni.data.server.model.authentication.LoginRequest
@@ -27,6 +28,9 @@ interface AuthenticationApiService {
 
     @PUT("user/change-password")
     suspend fun changePassword(@Body changePassword: ChangePassword): Response<Unit>
+
+    @POST("send-otp")
+    suspend fun requestOtp(@Body forgotPasswordRequest: ForgotPasswordRequest): Response<Unit>
 
     @POST("auth/otp")
     suspend fun validateOtp(@Body otp: Otp): Response<BaseResponse<TokenResponse>>

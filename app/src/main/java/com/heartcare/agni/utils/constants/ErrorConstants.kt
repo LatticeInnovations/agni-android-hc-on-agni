@@ -11,4 +11,7 @@ object ErrorConstants {
     const val USER_DOES_NOT_EXIST = "User does not exist"
     const val SOMETHING_WENT_WRONG = "Something went wrong"
     const val ERROR_FETCHING_USER_DETAILS = "Error fetching user details"
+    const val FAILED_TO_SEND_EMAIL = "Failed to send Email"
+    const val EMAIL_NOT_REGISTERED_BACKEND = "No user with provided email-id exists in the system"
+    const val EMAIL_NOT_REGISTERED_ERROR_UI = "Email entered is not registered"
 }

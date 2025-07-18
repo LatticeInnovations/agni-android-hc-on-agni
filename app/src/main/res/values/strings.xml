@@ -535,7 +535,7 @@ include them in the household</string>
     <string name="pin_info">This pin will be required for login</string>
     <string name="save_pin">Save m-pin</string>
     <string name="enter_email_number">Enter the registered email or mobile number</string>
-    <string name="enter_registered_email">Enter the registered email</string>
+    <string name="enter_registered_email">Enter the registered email address</string>
     <string name="enter_valid_phone_number_or_email">Enter valid phone number or email address</string>
     <string name="enter_valid_email">Please enter a valid email address</string>
     <string name="email_is_required">Email address is required</string>

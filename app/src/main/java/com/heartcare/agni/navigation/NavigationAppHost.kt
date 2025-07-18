@@ -56,7 +56,7 @@ fun NavigationAppHost(navController: NavController, startDest: String) {
         composable(Screen.UserIdPasswordScreen.route) { UserPasswordScreen(navController) }
         composable(Screen.CreatePasswordScreen.route) { CreatePasswordScreen(navController) }
         composable(Screen.PinScreen.route) { PinScreen(navController) }
-        composable(Screen.ForgotPasswordScreen.route) { ForgotPasswordScreen() }
+        composable(Screen.ForgotPasswordScreen.route) { ForgotPasswordScreen(navController) }
         composable(Screen.AuthenticateOtpScreen.route) { AuthenticateOtpScreen(navController) }
         composable(Screen.PhoneEmailScreen.route) { PhoneEmailScreen(navController) }
         composable(Screen.SignUpPhoneEmailScreen.route) { SignUpPhoneEmailScreen(navController) }
