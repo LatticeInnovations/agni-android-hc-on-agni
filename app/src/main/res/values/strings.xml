@@ -572,4 +572,5 @@ include them in the household</string>
     <string name="resend_code">Resend code</string>
     <string name="authentication_code">Authentication code</string>
     <string name="login_successful">Login successful!</string>
+    <string name="authorization_code_verified">Authorization code verified</string>
 </resources>

@@ -70,6 +70,14 @@ fun UserPasswordScreen(
             navController.previousBackStackEntry?.savedStateHandle?.get<Int>(
                 PIN_SCREEN
             ) ?: 1
+        if (navController.previousBackStackEntry?.savedStateHandle?.contains(
+                PIN_SCREEN
+            ) == true
+        ) {
+            navController.previousBackStackEntry?.savedStateHandle?.remove<Int>(
+                PIN_SCREEN
+            )
+        }
         val isPasswordSaved =
             navController.currentBackStackEntry?.savedStateHandle?.get<Boolean>(PASSWORD_SAVED)
                 ?: false

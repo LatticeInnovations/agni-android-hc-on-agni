@@ -38,7 +38,7 @@ class CreatePasswordViewModel @Inject constructor(
     var isConfirmPasswordVisible by mutableStateOf(false)
     var hasInteractedWithConfirmPassword by mutableStateOf(false)
 
-    var snackBarError by mutableStateOf("")
+    var snackBarMsg by mutableStateOf("")
 
     fun validation(): Boolean {
         return newPassword.isNotBlank() && confirmPassword.isNotBlank() && !isNewPasswordError && !isConfirmPasswordError
@@ -55,11 +55,11 @@ class CreatePasswordViewModel @Inject constructor(
                     }
 
                     is ApiErrorResponse -> {
-                        snackBarError = errorMessage
+                        snackBarMsg = errorMessage
                     }
 
                     else -> {
-                        snackBarError = SOMETHING_WENT_WRONG
+                        snackBarMsg = SOMETHING_WENT_WRONG
                     }
                 }
             }
@@ -77,11 +77,11 @@ class CreatePasswordViewModel @Inject constructor(
                     }
 
                     is ApiErrorResponse -> {
-                        snackBarError = errorMessage
+                        snackBarMsg = errorMessage
                     }
 
                     else -> {
-                        snackBarError = SOMETHING_WENT_WRONG
+                        snackBarMsg = SOMETHING_WENT_WRONG
                     }
                 }
             }

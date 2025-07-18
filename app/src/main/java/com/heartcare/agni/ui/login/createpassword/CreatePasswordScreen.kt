@@ -62,14 +62,15 @@ fun CreatePasswordScreen(
                 viewModel.oldPassword = navController.previousBackStackEntry?.savedStateHandle?.get<String>(PASSWORD)!!
             } else {
                 viewModel.email = navController.previousBackStackEntry?.savedStateHandle?.get<String>(EMAIL)!!
+                viewModel.snackBarMsg = context.getString(R.string.authorization_code_verified)
             }
             viewModel.isLaunched = true
         }
     }
-    LaunchedEffect(viewModel.snackBarError) {
-        if (viewModel.snackBarError.isNotBlank()) {
-            snackBarHostState.showSnackbar(viewModel.snackBarError)
-            viewModel.snackBarError = ""
+    LaunchedEffect(viewModel.snackBarMsg) {
+        if (viewModel.snackBarMsg.isNotBlank()) {
+            snackBarHostState.showSnackbar(viewModel.snackBarMsg)
+            viewModel.snackBarMsg = ""
         }
     }
     Scaffold(
@@ -221,7 +222,7 @@ private fun SaveButton(
                 }
 
                 false -> {
-                    viewModel.snackBarError =
+                    viewModel.snackBarMsg =
                         context.getString(R.string.no_internet_error_msg)
                 }
             }
