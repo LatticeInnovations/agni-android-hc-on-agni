@@ -78,6 +78,7 @@ import com.heartcare.agni.data.local.model.search.SearchParameters
 import com.heartcare.agni.navigation.Screen
 import com.heartcare.agni.ui.common.BottomNavBar
 import com.heartcare.agni.utils.constants.NavControllerConstants.ADD_TO_QUEUE
+import com.heartcare.agni.utils.constants.NavControllerConstants.LOGGED_IN
 import com.heartcare.agni.utils.constants.NavControllerConstants.PATIENT_ARRIVED
 import com.heartcare.agni.utils.constants.NavControllerConstants.SELECTED_INDEX
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.to14DaysWeek
@@ -140,12 +141,12 @@ fun LandingScreen(
                     )
             } else if (
                 navController.previousBackStackEntry?.savedStateHandle?.get<Boolean>(
-                    "loggedIn"
+                    LOGGED_IN
                 ) == true
             ) {
                 coroutineScope.launch {
                     snackbarHostState.showSnackbar(
-                        message = "Logged in successfully"
+                        activity.getString(R.string.login_successful)
                     )
                 }
             } else {
@@ -401,7 +402,7 @@ fun LandingScreen(
                                 onClick = {
                                     viewModel.isLoggingOut = false
                                     viewModel.logout()
-                                    navController.navigate(Screen.PhoneEmailScreen.route) {
+                                    navController.navigate(Screen.UserIdPasswordScreen.route) {
                                         popUpTo(Screen.LandingScreen.route) {
                                             inclusive = true
                                         }

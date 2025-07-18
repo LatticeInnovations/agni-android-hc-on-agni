@@ -1,6 +1,8 @@
 package com.heartcare.agni.ui.login.userpassword
 
 import android.content.Context
+import androidx.activity.compose.BackHandler
+import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -48,8 +50,13 @@ fun UserPasswordScreen(
     viewModel: UserPasswordViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
+    val activity = LocalActivity.current
     val coroutineScope = rememberCoroutineScope()
     val snackBarHostState = remember { SnackbarHostState() }
+
+    BackHandler {
+        activity?.finish()
+    }
 
     LaunchedEffect(viewModel.snackBarError) {
         if (viewModel.snackBarError.isNotBlank()) {

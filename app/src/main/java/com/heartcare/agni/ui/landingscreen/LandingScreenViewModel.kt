@@ -42,6 +42,7 @@ import com.heartcare.agni.service.workmanager.utils.Sync
 import com.heartcare.agni.service.workmanager.workers.trigger.TriggerWorkerPeriodicImpl
 import com.heartcare.agni.utils.common.Queries.getSearchListWithLastVisited
 import com.heartcare.agni.utils.constants.ErrorConstants.TOO_MANY_ATTEMPTS_ERROR
+import com.heartcare.agni.utils.converters.responseconverter.NameConverter.getFullName
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.calculateMinutesToOneThirty
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toLastSyncTime
 import com.heartcare.agni.utils.converters.server.responsemapper.ApiEmptyResponse
@@ -254,10 +255,12 @@ class LandingScreenViewModel @Inject constructor(
             )
         }
 
-        userName = preferenceRepository.getUserName()
-        userRole = preferenceRepository.getUserRole()
-        userPhoneNo = preferenceRepository.getUserMobile().toString()
-        userEmail = preferenceRepository.getUserEmail()
+        preferenceRepository.getUserDetails()?.let { user ->
+            userName = getFullName(user.firstName, user.lastName)
+            userRole = ""
+            userPhoneNo = user.contactNumber.orEmpty()
+            userEmail = user.email.orEmpty()
+        }
 
         setSyncDisplayData()
     }
@@ -376,7 +379,7 @@ class LandingScreenViewModel @Inject constructor(
             WorkManager.getInstance(getApplication<Application>().applicationContext)
                 .cancelAllWork().await().also {
                     (getApplication<FhirApp>().applicationContext.getSystemService(Context.JOB_SCHEDULER_SERVICE) as JobScheduler).cancelAll()
-                    preferenceRepository.resetAuthenticationToken()
+                    preferenceRepository.setPin("")
                 }
         }
     }
