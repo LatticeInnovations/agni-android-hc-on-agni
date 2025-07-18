@@ -35,6 +35,9 @@ interface AuthenticationApiService {
     @POST("validate-otp")
     suspend fun validateCode(@Body forgotPasswordRequest: ForgotPasswordRequest): Response<Unit>
 
+    @POST("forgot-password")
+    suspend fun forgotPassword(@Body forgotPasswordRequest: ForgotPasswordRequest): Response<Unit>
+
     @POST("auth/otp")
     suspend fun validateOtp(@Body otp: Otp): Response<BaseResponse<TokenResponse>>
 

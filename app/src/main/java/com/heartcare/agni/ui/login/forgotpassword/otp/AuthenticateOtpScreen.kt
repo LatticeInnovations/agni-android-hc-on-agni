@@ -144,6 +144,7 @@ private fun SubmitButton(
                     viewModel.validateOtp {
                         coroutineScope.launch {
                             navController.currentBackStackEntry?.savedStateHandle?.set(PASSWORD_SCREEN, 1)
+                            navController.currentBackStackEntry?.savedStateHandle?.set(EMAIL, viewModel.email)
                             navController.navigate(Screen.CreatePasswordScreen.route)
                         }
                     }

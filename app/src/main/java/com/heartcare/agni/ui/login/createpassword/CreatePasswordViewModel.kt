@@ -26,6 +26,7 @@ class CreatePasswordViewModel @Inject constructor(
     var isLaunched by mutableStateOf(false)
     var screenFlag by mutableIntStateOf(0)
 
+    var email by mutableStateOf("")
     var oldPassword by mutableStateOf("")
     var newPassword by mutableStateOf("")
     var isNewPasswordError by mutableStateOf(false)
@@ -48,6 +49,28 @@ class CreatePasswordViewModel @Inject constructor(
     ) {
         viewModelScope.launch(ioDispatcher) {
             authenticationRepository.changePassword(oldPassword, newPassword).apply {
+                when (this) {
+                    is ApiEndResponse -> {
+                        navigate()
+                    }
+
+                    is ApiErrorResponse -> {
+                        snackBarError = errorMessage
+                    }
+
+                    else -> {
+                        snackBarError = SOMETHING_WENT_WRONG
+                    }
+                }
+            }
+        }
+    }
+
+    fun resetPassword(
+        navigate: () -> Unit
+    ) {
+        viewModelScope.launch(ioDispatcher) {
+            authenticationRepository.forgotPassword(email, newPassword).apply {
                 when (this) {
                     is ApiEndResponse -> {
                         navigate()
