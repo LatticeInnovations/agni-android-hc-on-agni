@@ -25,6 +25,8 @@ class PinViewModel @Inject constructor(
     val focusRequesters = List(4) { FocusRequester() }
     val pinValues = List(4) { mutableStateOf("") }
 
+    var wrongPinCount by mutableIntStateOf(0)
+
     fun getPin(): String {
         return preferenceRepository.getPin()
     }

@@ -321,7 +321,11 @@ private fun handlePinSubmission(
                 viewModel.isPinInvalid = false
                 navigate(navController, coroutineScope)
             } else {
-                viewModel.isPinInvalid = true
+                viewModel.wrongPinCount += 1
+                if (viewModel.wrongPinCount == 5) {
+                    viewModel.savePin("")
+                    navController.navigate(Screen.UserIdPasswordScreen.route)
+                } else viewModel.isPinInvalid = true
             }
         }
         1, 2 -> {
