@@ -24,6 +24,9 @@ class AuthenticateOtpViewModel@Inject constructor(
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ): BaseViewModel() {
     var isLaunched by mutableStateOf(false)
+
+    var isLoading by mutableStateOf(false)
+    var isResendLoading by mutableStateOf(false)
     var email by mutableStateOf("")
     var otp by mutableStateOf("")
     var isError by mutableStateOf(false)
@@ -40,6 +43,7 @@ class AuthenticateOtpViewModel@Inject constructor(
     ) {
         viewModelScope.launch(ioDispatcher) {
             authenticationRepository.validateCode(email, otp.toInt()).apply {
+                isLoading = false
                 when(this){
                     is ApiEndResponse -> {
                         navigate()
@@ -59,6 +63,7 @@ class AuthenticateOtpViewModel@Inject constructor(
     fun requestOtp(requested: () -> Unit) {
         viewModelScope.launch(ioDispatcher) {
             authenticationRepository.requestOtp(email = email).apply {
+                isResendLoading = false
                 when(this){
                     is ApiEndResponse -> {
                         requested()

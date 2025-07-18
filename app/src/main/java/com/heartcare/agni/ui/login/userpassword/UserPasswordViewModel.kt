@@ -34,6 +34,8 @@ class UserPasswordViewModel @Inject constructor(
     val minUserIdLength = 3
     val maxPasswordLength = 15
 
+    var isLoading by mutableStateOf(false)
+
     var pinScreen by mutableIntStateOf(0)
 
     var userId by mutableStateOf("")
@@ -56,6 +58,7 @@ class UserPasswordViewModel @Inject constructor(
     fun login(navigate: () -> Unit) {
         viewModelScope.launch(ioDispatcher) {
             authenticationRepository.login(userId, password).apply {
+                isLoading = false
                 when(this) {
                     is ApiEndResponse -> {
                         // save user details and navigate

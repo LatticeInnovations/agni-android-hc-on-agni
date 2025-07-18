@@ -27,6 +27,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.heartcare.agni.R
 import com.heartcare.agni.navigation.Screen
+import com.heartcare.agni.ui.common.ButtonLoader
 import com.heartcare.agni.utils.constants.NavControllerConstants.EMAIL
 import com.heartcare.agni.utils.network.CheckNetwork.isInternetAvailable
 import com.heartcare.agni.utils.regex.EmailRegex.emailPattern
@@ -68,15 +69,16 @@ fun ForgotPasswordScreen(
                             viewModel.inputValue = it.trim()
                         }
                         viewModel.isError = viewModel.inputValue.isBlank() || !viewModel.inputValue.matches(emailPattern)
+                        viewModel.isServerError = false
                         viewModel.errorMsg = if (viewModel.inputValue.isBlank()) context.getString(R.string.email_is_required)
                         else context.getString(R.string.enter_valid_email)
                     },
                     modifier = Modifier
                         .fillMaxWidth(),
                     supportingText = {
-                        Text(text = if (viewModel.isError) viewModel.errorMsg else "")
+                        Text(text = if (viewModel.isError || viewModel.isServerError) viewModel.errorMsg else "")
                     },
-                    isError = viewModel.isError,
+                    isError = viewModel.isError || viewModel.isServerError,
                     singleLine = true
                 )
                 Spacer(Modifier.height(20.dp))
@@ -96,22 +98,28 @@ private fun ContinueButton(
 ) {
     Button(
         onClick = {
-            // Continue
-            when (isInternetAvailable(context)) {
-                true -> {
-                    viewModel.requestOtp {
-                        coroutineScope.launch {
-                            navController.currentBackStackEntry?.savedStateHandle?.set(EMAIL, viewModel.inputValue)
-                            navController.navigate(Screen.AuthenticateOtpScreen.route)
+            if (!viewModel.isLoading) {
+                // Continue
+                when (isInternetAvailable(context)) {
+                    true -> {
+                        viewModel.isLoading = true
+                        viewModel.requestOtp {
+                            coroutineScope.launch {
+                                navController.currentBackStackEntry?.savedStateHandle?.set(
+                                    EMAIL,
+                                    viewModel.inputValue
+                                )
+                                navController.navigate(Screen.AuthenticateOtpScreen.route)
+                            }
                         }
                     }
-                }
 
-                false -> {
-                    coroutineScope.launch {
-                        snackBarHostState.showSnackbar(
-                            context.getString(R.string.no_internet_error_msg)
-                        )
+                    false -> {
+                        coroutineScope.launch {
+                            snackBarHostState.showSnackbar(
+                                context.getString(R.string.no_internet_error_msg)
+                            )
+                        }
                     }
                 }
             }
@@ -119,6 +127,7 @@ private fun ContinueButton(
         modifier = Modifier.fillMaxWidth(),
         enabled = viewModel.isBtnEnabled()
     ) {
-        Text(stringResource(R.string.continue_text))
+        if (viewModel.isLoading) ButtonLoader()
+        else Text(stringResource(R.string.continue_text))
     }
 }

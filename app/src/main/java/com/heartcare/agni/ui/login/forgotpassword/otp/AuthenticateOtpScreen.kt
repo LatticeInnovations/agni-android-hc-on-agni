@@ -32,6 +32,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.heartcare.agni.R
 import com.heartcare.agni.navigation.Screen
+import com.heartcare.agni.ui.common.ButtonLoader
 import com.heartcare.agni.utils.constants.NavControllerConstants.EMAIL
 import com.heartcare.agni.utils.constants.NavControllerConstants.PASSWORD_SCREEN
 import com.heartcare.agni.utils.network.CheckNetwork.isInternetAvailable
@@ -138,27 +139,37 @@ private fun SubmitButton(
 ) {
     Button(
         onClick = {
-            // Submit
-            when (isInternetAvailable(context)) {
-                true -> {
-                    viewModel.validateOtp {
-                        coroutineScope.launch {
-                            navController.currentBackStackEntry?.savedStateHandle?.set(PASSWORD_SCREEN, 1)
-                            navController.currentBackStackEntry?.savedStateHandle?.set(EMAIL, viewModel.email)
-                            navController.navigate(Screen.CreatePasswordScreen.route)
+            if (!viewModel.isLoading) {
+                // Submit
+                when (isInternetAvailable(context)) {
+                    true -> {
+                        viewModel.isLoading = true
+                        viewModel.validateOtp {
+                            coroutineScope.launch {
+                                navController.currentBackStackEntry?.savedStateHandle?.set(
+                                    PASSWORD_SCREEN,
+                                    1
+                                )
+                                navController.currentBackStackEntry?.savedStateHandle?.set(
+                                    EMAIL,
+                                    viewModel.email
+                                )
+                                navController.navigate(Screen.CreatePasswordScreen.route)
+                            }
                         }
                     }
-                }
 
-                false -> {
-                    viewModel.snackBarMsg = context.getString(R.string.no_internet_error_msg)
+                    false -> {
+                        viewModel.snackBarMsg = context.getString(R.string.no_internet_error_msg)
+                    }
                 }
             }
         },
         modifier = Modifier.fillMaxWidth(),
         enabled = viewModel.isBtnEnabled()
     ) {
-        Text(stringResource(R.string.submit))
+        if (viewModel.isLoading) ButtonLoader()
+        else Text(stringResource(R.string.submit))
     }
 }
 
@@ -210,24 +221,29 @@ private fun ResendCodeButton(
 ) {
     FilledTonalButton(
         onClick = {
-            // resend code
-            when (isInternetAvailable(context)) {
-                true -> {
-                    viewModel.requestOtp {
-                        viewModel.snackBarMsg = context.getString(R.string.authentication_code_sent)
-                        viewModel.twoMinuteTimer = 120
-                        viewModel.otp = ""
-                        viewModel.isError = false
+            if (!viewModel.isResendLoading) {
+                // resend code
+                when (isInternetAvailable(context)) {
+                    true -> {
+                        viewModel.isResendLoading = true
+                        viewModel.requestOtp {
+                            viewModel.snackBarMsg =
+                                context.getString(R.string.authentication_code_sent)
+                            viewModel.twoMinuteTimer = 120
+                            viewModel.otp = ""
+                            viewModel.isError = false
+                        }
                     }
-                }
 
-                false -> {
-                    viewModel.snackBarMsg = context.getString(R.string.no_internet_error_msg)
+                    false -> {
+                        viewModel.snackBarMsg = context.getString(R.string.no_internet_error_msg)
+                    }
                 }
             }
         },
         modifier = Modifier.fillMaxWidth()
     ) {
-        Text(stringResource(R.string.resend_code))
+        if (viewModel.isResendLoading) ButtonLoader(color = MaterialTheme.colorScheme.primary)
+        else Text(stringResource(R.string.resend_code))
     }
 }

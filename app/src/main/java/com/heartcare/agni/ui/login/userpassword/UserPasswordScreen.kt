@@ -33,6 +33,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.heartcare.agni.R
 import com.heartcare.agni.navigation.Screen
+import com.heartcare.agni.ui.common.ButtonLoader
 import com.heartcare.agni.ui.common.CustomDialog
 import com.heartcare.agni.ui.common.CustomTextField
 import com.heartcare.agni.utils.constants.NavControllerConstants.PASSWORD
@@ -137,6 +138,7 @@ fun UserPasswordScreen(
                 viewModel.showDifferentUserLoginDialog = false
                 when (isInternetAvailable(context)) {
                     true -> {
+                        viewModel.isLoading = true
                         viewModel.clearAllAppData()
                         loginAndNavigate(viewModel, navController, coroutineScope)
                     }
@@ -211,25 +213,29 @@ private fun ContinueButton(
     Button(
         onClick = {
             // continue button handle
-            when (isInternetAvailable(context)) {
-                true -> {
-                    if (viewModel.isDifferentUserLogin()) {
-                        viewModel.showDifferentUserLoginDialog = true
-                    } else {
-                        loginAndNavigate(viewModel, navController, coroutineScope)
+            if (!viewModel.isLoading) {
+                when (isInternetAvailable(context)) {
+                    true -> {
+                        if (viewModel.isDifferentUserLogin()) {
+                            viewModel.showDifferentUserLoginDialog = true
+                        } else {
+                            viewModel.isLoading = true
+                            loginAndNavigate(viewModel, navController, coroutineScope)
+                        }
                     }
-                }
 
-                false -> {
-                    viewModel.snackBarError =
-                        context.getString(R.string.no_internet_error_msg)
+                    false -> {
+                        viewModel.snackBarError =
+                            context.getString(R.string.no_internet_error_msg)
+                    }
                 }
             }
         },
         modifier = Modifier.fillMaxWidth(),
         enabled = viewModel.isValid()
     ) {
-        Text(stringResource(R.string.continue_text))
+        if (viewModel.isLoading) ButtonLoader()
+        else Text(stringResource(R.string.continue_text))
     }
 }
 

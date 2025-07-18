@@ -22,8 +22,11 @@ class ForgotPasswordViewModel@Inject constructor(
     private val authenticationRepository: AuthenticationRepository,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ): BaseViewModel() {
+    var isLoading by mutableStateOf(false)
+
     var inputValue by mutableStateOf("")
     var isError by mutableStateOf(false)
+    var isServerError by mutableStateOf(false)
     var errorMsg by mutableStateOf("")
 
     fun isBtnEnabled(): Boolean {
@@ -35,18 +38,19 @@ class ForgotPasswordViewModel@Inject constructor(
     ) {
         viewModelScope.launch(ioDispatcher) {
             authenticationRepository.requestOtp(email = inputValue).apply {
+                isLoading = false
                 when(this){
                     is ApiEndResponse -> {
                         navigate()
                     }
                     is ApiErrorResponse -> {
-                        isError = true
+                        isServerError = true
                         errorMsg =
                             if (errorMessage == EMAIL_NOT_REGISTERED_BACKEND) EMAIL_NOT_REGISTERED_ERROR_UI
                             else errorMessage
                     }
                     else -> {
-                        isError = true
+                        isServerError = true
                         errorMsg = FAILED_TO_SEND_EMAIL
                     }
                 }

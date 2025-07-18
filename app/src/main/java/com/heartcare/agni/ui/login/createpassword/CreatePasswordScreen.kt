@@ -32,6 +32,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.heartcare.agni.R
 import com.heartcare.agni.navigation.Screen
+import com.heartcare.agni.ui.common.ButtonLoader
 import com.heartcare.agni.ui.common.CustomTextField
 import com.heartcare.agni.utils.constants.NavControllerConstants.EMAIL
 import com.heartcare.agni.utils.constants.NavControllerConstants.PASSWORD
@@ -193,43 +194,50 @@ private fun SaveButton(
 ) {
     Button(
         onClick = {
-            when (isInternetAvailable(context)) {
-                true -> {
-                    if (viewModel.screenFlag == 0) {
-                        // save password
-                        viewModel.savePassword {
-                            coroutineScope.launch {
-                                navController.previousBackStackEntry?.savedStateHandle?.set(
-                                    PASSWORD_SAVED,
-                                    true
-                                )
-                                navController.navigateUp()
+            if (!viewModel.isLoading) {
+                when (isInternetAvailable(context)) {
+                    true -> {
+                        viewModel.isLoading = true
+                        if (viewModel.screenFlag == 0) {
+                            // save password
+                            viewModel.savePassword {
+                                coroutineScope.launch {
+                                    navController.previousBackStackEntry?.savedStateHandle?.set(
+                                        PASSWORD_SAVED,
+                                        true
+                                    )
+                                    navController.navigateUp()
+                                }
                             }
-                        }
-                    } else {
-                        // reset password
-                        viewModel.resetPassword {
-                            coroutineScope.launch {
-                                navController.popBackStack(Screen.ForgotPasswordScreen.route, false)
-                                navController.previousBackStackEntry?.savedStateHandle?.set(
-                                    PASSWORD_SAVED,
-                                    true
-                                )
-                                navController.navigateUp()
+                        } else {
+                            // reset password
+                            viewModel.resetPassword {
+                                coroutineScope.launch {
+                                    navController.popBackStack(
+                                        Screen.ForgotPasswordScreen.route,
+                                        false
+                                    )
+                                    navController.previousBackStackEntry?.savedStateHandle?.set(
+                                        PASSWORD_SAVED,
+                                        true
+                                    )
+                                    navController.navigateUp()
+                                }
                             }
                         }
                     }
-                }
 
-                false -> {
-                    viewModel.snackBarMsg =
-                        context.getString(R.string.no_internet_error_msg)
+                    false -> {
+                        viewModel.snackBarMsg =
+                            context.getString(R.string.no_internet_error_msg)
+                    }
                 }
             }
         },
         modifier = Modifier.fillMaxWidth(),
         enabled = viewModel.validation()
     ) {
-        Text(stringResource(R.string.save))
+        if (viewModel.isLoading) ButtonLoader()
+        else Text(stringResource(R.string.save))
     }
 }

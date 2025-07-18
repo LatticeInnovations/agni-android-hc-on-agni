@@ -24,6 +24,8 @@ class CreatePasswordViewModel @Inject constructor(
     val maxPasswordLength = 15
 
     var isLaunched by mutableStateOf(false)
+
+    var isLoading by mutableStateOf(false)
     var screenFlag by mutableIntStateOf(0)
 
     var email by mutableStateOf("")
@@ -49,6 +51,7 @@ class CreatePasswordViewModel @Inject constructor(
     ) {
         viewModelScope.launch(ioDispatcher) {
             authenticationRepository.changePassword(oldPassword, newPassword).apply {
+                isLoading = false
                 when (this) {
                     is ApiEndResponse -> {
                         navigate()
@@ -71,6 +74,7 @@ class CreatePasswordViewModel @Inject constructor(
     ) {
         viewModelScope.launch(ioDispatcher) {
             authenticationRepository.forgotPassword(email, newPassword).apply {
+                isLoading = false
                 when (this) {
                     is ApiEndResponse -> {
                         navigate()
