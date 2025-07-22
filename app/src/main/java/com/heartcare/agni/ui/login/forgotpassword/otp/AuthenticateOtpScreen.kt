@@ -91,7 +91,7 @@ fun AuthenticateOtpScreen(
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 Spacer(Modifier.height(60.dp))
-                CodeField(viewModel, context)
+                CodeField(viewModel)
                 Spacer(Modifier.height(20.dp))
                 SubmitButton(viewModel, navController, context, coroutineScope)
                 Spacer(modifier = Modifier.height(16.dp))
@@ -103,8 +103,7 @@ fun AuthenticateOtpScreen(
 
 @Composable
 private fun CodeField(
-    viewModel: AuthenticateOtpViewModel,
-    context: Context
+    viewModel: AuthenticateOtpViewModel
 ) {
     OutlinedTextField(
         value = viewModel.otp,
@@ -113,9 +112,7 @@ private fun CodeField(
                 viewModel.otp = value.trim().filter { it.isDigit() }
             }
             viewModel.isError = viewModel.otp.isBlank()
-            viewModel.errorMsg =
-                if (viewModel.otp.isBlank()) context.getString(R.string.email_is_required)
-                else context.getString(R.string.enter_valid_email)
+            viewModel.errorMsg = ""
         },
         modifier = Modifier
             .fillMaxWidth(),
