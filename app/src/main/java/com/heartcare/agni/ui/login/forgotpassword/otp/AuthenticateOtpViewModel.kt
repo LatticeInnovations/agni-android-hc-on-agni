@@ -1,4 +1,4 @@
-package com.heartcare.agni.ui.login.createpassword
+package com.heartcare.agni.ui.login.forgotpassword.otp
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -8,7 +8,9 @@ import androidx.lifecycle.viewModelScope
 import com.heartcare.agni.base.viewmodel.BaseViewModel
 import com.heartcare.agni.data.server.repository.authentication.AuthenticationRepository
 import com.heartcare.agni.di.dispatcher.IoDispatcher
-import com.heartcare.agni.utils.constants.ErrorConstants.SOMETHING_WENT_WRONG
+import com.heartcare.agni.utils.constants.ErrorConstants.EMAIL_NOT_REGISTERED_BACKEND
+import com.heartcare.agni.utils.constants.ErrorConstants.EMAIL_NOT_REGISTERED_ERROR_UI
+import com.heartcare.agni.utils.constants.ErrorConstants.FAILED_TO_SEND_EMAIL
 import com.heartcare.agni.utils.converters.server.responsemapper.ApiEndResponse
 import com.heartcare.agni.utils.converters.server.responsemapper.ApiErrorResponse
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -17,75 +19,62 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class CreatePasswordViewModel @Inject constructor(
+class AuthenticateOtpViewModel@Inject constructor(
     private val authenticationRepository: AuthenticationRepository,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher
-) : BaseViewModel() {
-    val maxPasswordLength = 15
-
+): BaseViewModel() {
     var isLaunched by mutableStateOf(false)
 
     var isLoading by mutableStateOf(false)
-    var screenFlag by mutableIntStateOf(0)
-
+    var isResendLoading by mutableStateOf(false)
     var email by mutableStateOf("")
-    var oldPassword by mutableStateOf("")
-    var newPassword by mutableStateOf("")
-    var isNewPasswordError by mutableStateOf(false)
-    var isNewPasswordVisible by mutableStateOf(false)
-
-    var confirmPassword by mutableStateOf("")
-    var isConfirmPasswordError by mutableStateOf(false)
-    var confirmPasswordError by mutableStateOf("")
-    var isConfirmPasswordVisible by mutableStateOf(false)
-    var hasInteractedWithConfirmPassword by mutableStateOf(false)
-
+    var otp by mutableStateOf("")
+    var isError by mutableStateOf(false)
+    var errorMsg by mutableStateOf("")
+    var twoMinuteTimer by mutableIntStateOf(120)
     var snackBarMsg by mutableStateOf("")
 
-    fun validation(): Boolean {
-        return newPassword.isNotBlank() && confirmPassword.isNotBlank() && !isNewPasswordError && !isConfirmPasswordError
+    fun isBtnEnabled() : Boolean {
+        return otp.length == 6
     }
 
-    fun savePassword(
+    fun validateOtp(
         navigate: () -> Unit
     ) {
         viewModelScope.launch(ioDispatcher) {
-            authenticationRepository.changePassword(oldPassword, newPassword).apply {
+            authenticationRepository.validateCode(email, otp.toInt()).apply {
                 isLoading = false
-                when (this) {
+                when(this){
                     is ApiEndResponse -> {
                         navigate()
                     }
-
                     is ApiErrorResponse -> {
-                        snackBarMsg = errorMessage
+                        isError = true
+                        errorMsg = errorMessage
                     }
-
                     else -> {
-                        snackBarMsg = SOMETHING_WENT_WRONG
+                        isError = true
                     }
                 }
             }
         }
     }
 
-    fun resetPassword(
-        navigate: () -> Unit
-    ) {
+    fun requestOtp(requested: () -> Unit) {
         viewModelScope.launch(ioDispatcher) {
-            authenticationRepository.forgotPassword(email, newPassword).apply {
-                isLoading = false
-                when (this) {
+            authenticationRepository.requestOtp(email = email).apply {
+                isResendLoading = false
+                when(this){
                     is ApiEndResponse -> {
-                        navigate()
+                        requested()
                     }
-
                     is ApiErrorResponse -> {
-                        snackBarMsg = errorMessage
+                        snackBarMsg =
+                            if (errorMessage == EMAIL_NOT_REGISTERED_BACKEND) EMAIL_NOT_REGISTERED_ERROR_UI
+                            else errorMessage
                     }
-
                     else -> {
-                        snackBarMsg = SOMETHING_WENT_WRONG
+                        snackBarMsg = FAILED_TO_SEND_EMAIL
                     }
                 }
             }

@@ -23,6 +23,7 @@ import com.google.android.gms.common.api.CommonStatusCodes
 import com.google.android.gms.common.api.Status
 import com.heartcare.agni.base.activity.BaseActivity
 import com.heartcare.agni.navigation.NavigationAppHost
+import com.heartcare.agni.navigation.Screen
 import com.heartcare.agni.ui.theme.FHIRAndroidTheme
 import com.heartcare.agni.utils.network.ConnectivityObserver
 import com.heartcare.agni.utils.network.NetworkConnectivityObserver
@@ -52,7 +53,14 @@ class MainActivity : BaseActivity() {
                 val navController = rememberNavController()
                 NavigationAppHost(
                     navController = navController,
-                    startDest = viewModel.startDestination
+                    startDest = when {
+                        viewModel.mPinExists -> {
+                            Screen.PinScreen.route
+                        }
+                        else -> {
+                            Screen.UserIdPasswordScreen.route
+                        }
+                    }
                 )
             }
         }

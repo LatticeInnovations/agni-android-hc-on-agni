@@ -4,6 +4,7 @@ import com.google.gson.GsonBuilder
 import com.google.gson.JsonSyntaxException
 import com.google.gson.reflect.TypeToken
 import com.heartcare.agni.base.server.BaseResponse
+import com.heartcare.agni.data.server.model.authentication.ErrorResponse
 import com.heartcare.agni.utils.constants.ErrorConstants.SERVER_ERROR
 import retrofit2.Response
 import timber.log.Timber
@@ -59,6 +60,30 @@ sealed class ResponseMapper<out T> {
                     response.body()?.status ?: 0,
                     response.body()?.message ?: SERVER_ERROR
                 )
+            }
+        }
+
+        fun <T> create(
+            response: Response<T>
+        ): ResponseMapper<T> {
+            return if (response.isSuccessful) {
+                val body = response.body()
+                if (body != null) {
+                    ApiEndResponse(body = body, headers = response.headers())
+                } else {
+                    ApiEmptyResponse()
+                }
+            } else {
+                val gson = GsonBuilder().setPrettyPrinting().create()
+                try {
+                    val error = response.errorBody()?.charStream()?.let {
+                        gson.fromJson(it, ErrorResponse::class.java)
+                    }
+                    ApiErrorResponse(response.code(), error?.message ?: "Unknown error")
+                } catch (e: JsonSyntaxException) {
+                    Timber.e(e)
+                    ApiErrorResponse(0, SERVER_ERROR)
+                }
             }
         }
     }
