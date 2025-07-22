@@ -11,6 +11,8 @@ import com.heartcare.agni.di.dispatcher.IoDispatcher
 import com.heartcare.agni.utils.constants.ErrorConstants.EMAIL_NOT_REGISTERED_BACKEND
 import com.heartcare.agni.utils.constants.ErrorConstants.EMAIL_NOT_REGISTERED_ERROR_UI
 import com.heartcare.agni.utils.constants.ErrorConstants.FAILED_TO_SEND_EMAIL
+import com.heartcare.agni.utils.constants.ErrorConstants.INCORRECT_CODE
+import com.heartcare.agni.utils.constants.ErrorConstants.INVALID_OTP
 import com.heartcare.agni.utils.converters.server.responsemapper.ApiEndResponse
 import com.heartcare.agni.utils.converters.server.responsemapper.ApiErrorResponse
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -50,7 +52,8 @@ class AuthenticateOtpViewModel@Inject constructor(
                     }
                     is ApiErrorResponse -> {
                         isError = true
-                        errorMsg = errorMessage
+                        errorMsg = if (errorMessage == INVALID_OTP) INCORRECT_CODE
+                            else errorMessage
                     }
                     else -> {
                         isError = true

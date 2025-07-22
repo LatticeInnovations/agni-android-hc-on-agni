@@ -5,6 +5,7 @@ import com.heartcare.agni.BuildConfig
 import com.heartcare.agni.FhirApp.Companion.gson
 import com.heartcare.agni.data.local.sharedpreferences.PreferenceStorage
 import com.heartcare.agni.data.server.api.AuthenticationApiService
+import com.heartcare.agni.data.server.api.AuthenticationApiServiceWithToken
 import com.heartcare.agni.data.server.api.CVDApiService
 import com.heartcare.agni.data.server.api.DispenseApiService
 import com.heartcare.agni.data.server.api.FileUploadApiService
@@ -47,8 +48,8 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    @Named("auth_okhttp")
-    fun provideAuthOkHttpClient(): OkHttpClient {
+    @Named("auth_okhttp_no_token")
+    fun provideAuthOkHttpClientNoToken(): OkHttpClient {
         return OkHttpClient.Builder()
             .connectTimeout(30, TimeUnit.SECONDS)
             .readTimeout(30, TimeUnit.SECONDS)
@@ -64,10 +65,34 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    @Named("auth_retrofit")
-    fun provideAuthRetrofit(@Named("auth_okhttp") okHttpClient: OkHttpClient): Retrofit {
+    @Named("auth_okhttp_with_token")
+    fun provideAuthOkHttpClientWithToken(preferenceStorage: PreferenceStorage): OkHttpClient {
+        return OkHttpClient.Builder()
+            .addInterceptor { chain ->
+                val requestBuilder = chain.request().newBuilder()
+                    .addHeader("Content-Type", "application/json")
+
+                if (preferenceStorage.accessToken.isNotBlank()) {
+                    requestBuilder.addHeader(AUTHORIZATION, preferenceStorage.accessToken)
+                }
+
+                chain.proceed(requestBuilder.build())
+            }
+            .apply {
+                if (BuildConfig.DEBUG) {
+                    val interceptor = HttpLoggingInterceptor()
+                    interceptor.level = HttpLoggingInterceptor.Level.BODY
+                    addInterceptor(interceptor)
+                }
+            }.build()
+    }
+
+    @Provides
+    @Singleton
+    @Named("auth_retrofit_no_token")
+    fun provideAuthRetrofitNoToken(@Named("auth_okhttp_no_token") okHttpClient: OkHttpClient): Retrofit {
         return Retrofit.Builder()
-            .baseUrl(BuildConfig.HEARTCARE_BASE_URL) // or a dedicated auth URL
+            .baseUrl(BuildConfig.HEARTCARE_BASE_URL)
             .client(okHttpClient)
             .addConverterFactory(GsonConverterFactory.create(gson))
             .build()
@@ -75,8 +100,25 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideAuthenticationApiService(@Named("auth_retrofit") retrofit: Retrofit): AuthenticationApiService {
+    @Named("auth_retrofit_with_token")
+    fun provideAuthRetrofitWithToken(@Named("auth_okhttp_with_token") okHttpClient: OkHttpClient): Retrofit {
+        return Retrofit.Builder()
+            .baseUrl(BuildConfig.HEARTCARE_BASE_URL)
+            .client(okHttpClient)
+            .addConverterFactory(GsonConverterFactory.create(gson))
+            .build()
+    }
+
+    @Provides
+    @Singleton
+    fun provideAuthenticationApiService(@Named("auth_retrofit_no_token") retrofit: Retrofit): AuthenticationApiService {
         return retrofit.create(AuthenticationApiService::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideAuthenticationApiServiceWithToken(@Named("auth_retrofit_with_token") retrofit: Retrofit): AuthenticationApiServiceWithToken {
+        return retrofit.create(AuthenticationApiServiceWithToken::class.java)
     }
 
     @Provides

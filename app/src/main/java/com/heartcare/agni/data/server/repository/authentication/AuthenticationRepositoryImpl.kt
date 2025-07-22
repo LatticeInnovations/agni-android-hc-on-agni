@@ -2,6 +2,7 @@ package com.heartcare.agni.data.server.repository.authentication
 
 import com.heartcare.agni.data.local.repository.preference.PreferenceRepository
 import com.heartcare.agni.data.server.api.AuthenticationApiService
+import com.heartcare.agni.data.server.api.AuthenticationApiServiceWithToken
 import com.heartcare.agni.data.server.model.authentication.ChangePassword
 import com.heartcare.agni.data.server.model.authentication.ForgotPasswordRequest
 import com.heartcare.agni.data.server.model.authentication.Login
@@ -18,6 +19,7 @@ import javax.inject.Inject
 
 class AuthenticationRepositoryImpl @Inject constructor(
     private val authenticationApiService: AuthenticationApiService,
+    private val authenticationApiServiceWithToken: AuthenticationApiServiceWithToken,
     private val preferenceRepository: PreferenceRepository
 ) : AuthenticationRepository {
 
@@ -47,7 +49,7 @@ class AuthenticationRepositoryImpl @Inject constructor(
         newPassword: String
     ): ResponseMapper<Unit> {
         return ApiResponseConverter.convert(
-            authenticationApiService.changePassword(
+            authenticationApiServiceWithToken.changePassword(
                 ChangePassword(
                     oldPassword = oldPassword,
                     newPassword = newPassword

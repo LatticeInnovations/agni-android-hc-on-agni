@@ -14,4 +14,6 @@ object ErrorConstants {
     const val FAILED_TO_SEND_EMAIL = "Failed to send Email"
     const val EMAIL_NOT_REGISTERED_BACKEND = "No user with provided email-id exists in the system"
     const val EMAIL_NOT_REGISTERED_ERROR_UI = "Email entered is not registered"
+    const val INVALID_OTP = "Entered OTP is invalid"
+    const val INCORRECT_CODE = "Incorrect authorization code"
 }
