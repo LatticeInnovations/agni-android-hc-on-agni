@@ -34,6 +34,7 @@ class UserPasswordViewModel @Inject constructor(
     val minUserIdLength = 3
     val maxPasswordLength = 15
 
+    var isLaunched by mutableStateOf(false)
     var isLoading by mutableStateOf(false)
 
     var pinScreen by mutableIntStateOf(0)

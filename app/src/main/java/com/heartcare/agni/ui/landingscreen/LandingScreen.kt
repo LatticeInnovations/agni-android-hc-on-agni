@@ -199,7 +199,7 @@ fun LandingScreen(
                 "logoutReason",
                 viewModel.logoutReason
             )
-            navController.navigate(Screen.PhoneEmailScreen.route)
+            navController.navigate(Screen.UserIdPasswordScreen.route)
             viewModel.logoutUser = false
         }
     }

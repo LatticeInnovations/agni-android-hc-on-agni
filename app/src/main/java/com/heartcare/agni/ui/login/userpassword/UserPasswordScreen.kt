@@ -59,36 +59,7 @@ fun UserPasswordScreen(
         if (viewModel.pinScreen == 2) navController.popBackStack()
         else activity?.finish()
     }
-
-    LaunchedEffect(viewModel.snackBarError) {
-        if (viewModel.snackBarError.isNotBlank()) {
-            snackBarHostState.showSnackbar(viewModel.snackBarError)
-            viewModel.snackBarError = ""
-        }
-    }
-    LaunchedEffect(Unit) {
-        viewModel.pinScreen =
-            navController.previousBackStackEntry?.savedStateHandle?.get<Int>(
-                PIN_SCREEN
-            ) ?: 1
-        if (navController.previousBackStackEntry?.savedStateHandle?.contains(
-                PIN_SCREEN
-            ) == true
-        ) {
-            navController.previousBackStackEntry?.savedStateHandle?.remove<Int>(
-                PIN_SCREEN
-            )
-        }
-        val isPasswordSaved =
-            navController.currentBackStackEntry?.savedStateHandle?.get<Boolean>(PASSWORD_SAVED)
-                ?: false
-        if (isPasswordSaved) {
-            viewModel.userId = ""
-            viewModel.password = ""
-            viewModel.snackBarError = context.getString(R.string.password_updated_successfully)
-            navController.currentBackStackEntry?.savedStateHandle?.remove<Boolean>(PASSWORD_SAVED)
-        }
-    }
+    HandleLaunchedEffects(viewModel, navController, snackBarHostState, context)
     Scaffold(
         modifier = Modifier
             .fillMaxSize()
@@ -261,6 +232,56 @@ private fun loginAndNavigate(
                 )
                 navController.navigate(Screen.CreatePasswordScreen.route)
             }
+        }
+    }
+}
+
+@Composable
+private fun HandleLaunchedEffects(
+    viewModel: UserPasswordViewModel,
+    navController: NavController,
+    snackBarHostState: SnackbarHostState,
+    context: Context
+) {
+    LaunchedEffect(viewModel.snackBarError) {
+        if (viewModel.snackBarError.isNotBlank()) {
+            snackBarHostState.showSnackbar(viewModel.snackBarError)
+            viewModel.snackBarError = ""
+        }
+    }
+    LaunchedEffect(Unit) {
+        viewModel.pinScreen =
+            navController.previousBackStackEntry?.savedStateHandle?.get<Int>(
+                PIN_SCREEN
+            ) ?: 1
+        if (navController.previousBackStackEntry?.savedStateHandle?.contains(
+                PIN_SCREEN
+            ) == true
+        ) {
+            navController.previousBackStackEntry?.savedStateHandle?.remove<Int>(
+                PIN_SCREEN
+            )
+        }
+        val isPasswordSaved =
+            navController.currentBackStackEntry?.savedStateHandle?.get<Boolean>(PASSWORD_SAVED)
+                ?: false
+        if (isPasswordSaved) {
+            viewModel.userId = ""
+            viewModel.password = ""
+            viewModel.snackBarError = context.getString(R.string.password_updated_successfully)
+            navController.currentBackStackEntry?.savedStateHandle?.remove<Boolean>(PASSWORD_SAVED)
+        }
+    }
+
+    LaunchedEffect(viewModel.isLaunched) {
+        if (!viewModel.isLaunched) {
+            if (navController.previousBackStackEntry?.savedStateHandle?.get<Boolean>("logoutUser") == true) {
+                viewModel.snackBarError = navController.previousBackStackEntry?.savedStateHandle?.get<String>(
+                    "logoutReason"
+                )!!
+                navController.previousBackStackEntry?.savedStateHandle?.remove<Boolean>("logoutUser")
+            }
+            viewModel.isLaunched = true
         }
     }
 }
