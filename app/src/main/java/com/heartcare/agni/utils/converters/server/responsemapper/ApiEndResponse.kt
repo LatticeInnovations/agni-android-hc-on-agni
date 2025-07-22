@@ -1,3 +1,8 @@
 package com.heartcare.agni.utils.converters.server.responsemapper
 
-data class ApiEndResponse<T>(val body: T) : ResponseMapper<T>()
+import okhttp3.Headers
+
+data class ApiEndResponse<T>(
+    val body: T,
+    val headers: Headers? = null
+) : ResponseMapper<T>()

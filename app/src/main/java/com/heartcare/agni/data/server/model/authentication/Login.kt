@@ -8,3 +8,9 @@ data class Login(
     val userContact: String,
     val type: RegisterTypeEnum? = null
 )
+
+@Keep
+data class LoginRequest(
+    val userId: String,
+    val password: String
+)

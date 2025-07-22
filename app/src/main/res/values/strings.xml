@@ -535,7 +535,10 @@ include them in the household</string>
     <string name="pin_info">This pin will be required for login</string>
     <string name="save_pin">Save m-pin</string>
     <string name="enter_email_number">Enter the registered email or mobile number</string>
+    <string name="enter_registered_email">Enter the registered email address</string>
     <string name="enter_valid_phone_number_or_email">Enter valid phone number or email address</string>
+    <string name="enter_valid_email">Please enter a valid email address</string>
+    <string name="email_is_required">Email address is required</string>
     <string name="enter_pin">Enter your m-pin to login</string>
     <string name="reset_pin">Reset your m-pin</string>
     <string name="forgot_pin">Forgot m-pin</string>
@@ -561,4 +564,13 @@ include them in the household</string>
     <string name="prior_dx_header_text">Have you ever been diagnosed with any of the following conditions:</string>
     <string name="please_specify_mandatory">Please specify*</string>
     <string name="prior_dx_saved">Prior Dx saved</string>
+    <string name="invalid_pin">Invalid M-pin</string>
+    <string name="password_updated_successfully">Password updated successfully</string>
+    <string name="enter_authentication_code">Enter the authorization code sent to %s</string>
+    <string name="authentication_code_sent">Authorization Code is sent to your registered Email</string>
+    <string name="request_new_code_info">Request new authorization code in</string>
+    <string name="resend_code">Resend code</string>
+    <string name="authentication_code">Authentication code</string>
+    <string name="login_successful">Login successful!</string>
+    <string name="authorization_code_verified">Authorization code verified</string>
 </resources>

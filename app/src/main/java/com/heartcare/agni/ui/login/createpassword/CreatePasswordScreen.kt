@@ -18,6 +18,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -27,12 +28,20 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.heartcare.agni.R
+import com.heartcare.agni.navigation.Screen
+import com.heartcare.agni.ui.common.ButtonLoader
 import com.heartcare.agni.ui.common.CustomTextField
+import com.heartcare.agni.utils.constants.NavControllerConstants.EMAIL
+import com.heartcare.agni.utils.constants.NavControllerConstants.PASSWORD
+import com.heartcare.agni.utils.constants.NavControllerConstants.PASSWORD_SAVED
 import com.heartcare.agni.utils.constants.NavControllerConstants.PASSWORD_SCREEN
+import com.heartcare.agni.utils.network.CheckNetwork.isInternetAvailable
 import com.heartcare.agni.utils.regex.RegexPatterns.passwordRegex
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 
 /***
  * 0 - Create new password
@@ -41,15 +50,28 @@ import com.heartcare.agni.utils.regex.RegexPatterns.passwordRegex
 @Composable
 fun CreatePasswordScreen(
     navController: NavController,
-    viewModel: CreatePasswordViewModel = viewModel()
+    viewModel: CreatePasswordViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
-    val snackbarHostState = remember { SnackbarHostState() }
+    val coroutineScope = rememberCoroutineScope()
+    val snackBarHostState = remember { SnackbarHostState() }
     LaunchedEffect(viewModel.isLaunched) {
         if (!viewModel.isLaunched) {
             viewModel.screenFlag =
                 navController.previousBackStackEntry?.savedStateHandle?.get<Int>(PASSWORD_SCREEN) ?: 0
+            if (viewModel.screenFlag == 0) {
+                viewModel.oldPassword = navController.previousBackStackEntry?.savedStateHandle?.get<String>(PASSWORD)!!
+            } else {
+                viewModel.email = navController.previousBackStackEntry?.savedStateHandle?.get<String>(EMAIL)!!
+                viewModel.snackBarMsg = context.getString(R.string.authorization_code_verified)
+            }
             viewModel.isLaunched = true
+        }
+    }
+    LaunchedEffect(viewModel.snackBarMsg) {
+        if (viewModel.snackBarMsg.isNotBlank()) {
+            snackBarHostState.showSnackbar(viewModel.snackBarMsg)
+            viewModel.snackBarMsg = ""
         }
     }
     Scaffold(
@@ -57,7 +79,7 @@ fun CreatePasswordScreen(
             .fillMaxSize()
             .imePadding()
             .navigationBarsPadding(),
-        snackbarHost = { SnackbarHost(snackbarHostState) },
+        snackbarHost = { SnackbarHost(snackBarHostState) },
         content = { paddingValues ->
             Column(
                 modifier = Modifier
@@ -79,15 +101,7 @@ fun CreatePasswordScreen(
                 Spacer(Modifier.height(16.dp))
                 ConfirmPasswordField(viewModel, context)
                 Spacer(Modifier.height(20.dp))
-                Button(
-                    onClick = {
-                        // save password
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    enabled = viewModel.validation()
-                ) {
-                    Text(stringResource(R.string.save))
-                }
+                SaveButton(viewModel, context, coroutineScope, navController)
             }
         }
     )
@@ -169,4 +183,61 @@ fun updateConfirmPasswordError(
             context.getString(R.string.password_validation_error_msg)
         else ""
     viewModel.isConfirmPasswordError = viewModel.confirmPasswordError.isNotBlank()
+}
+
+@Composable
+private fun SaveButton(
+    viewModel: CreatePasswordViewModel,
+    context: Context,
+    coroutineScope: CoroutineScope,
+    navController: NavController
+) {
+    Button(
+        onClick = {
+            if (!viewModel.isLoading) {
+                when (isInternetAvailable(context)) {
+                    true -> {
+                        viewModel.isLoading = true
+                        if (viewModel.screenFlag == 0) {
+                            // save password
+                            viewModel.savePassword {
+                                coroutineScope.launch {
+                                    navController.previousBackStackEntry?.savedStateHandle?.set(
+                                        PASSWORD_SAVED,
+                                        true
+                                    )
+                                    navController.navigateUp()
+                                }
+                            }
+                        } else {
+                            // reset password
+                            viewModel.resetPassword {
+                                coroutineScope.launch {
+                                    navController.popBackStack(
+                                        Screen.ForgotPasswordScreen.route,
+                                        false
+                                    )
+                                    navController.previousBackStackEntry?.savedStateHandle?.set(
+                                        PASSWORD_SAVED,
+                                        true
+                                    )
+                                    navController.navigateUp()
+                                }
+                            }
+                        }
+                    }
+
+                    false -> {
+                        viewModel.snackBarMsg =
+                            context.getString(R.string.no_internet_error_msg)
+                    }
+                }
+            }
+        },
+        modifier = Modifier.fillMaxWidth(),
+        enabled = viewModel.validation()
+    ) {
+        if (viewModel.isLoading) ButtonLoader()
+        else Text(stringResource(R.string.save))
+    }
 }
