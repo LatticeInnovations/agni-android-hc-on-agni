@@ -79,8 +79,6 @@ class SyncService(
                     }, async {
                         patchSymDiag(logout)
                     }, async {
-                        downloadVaccineManufacturer(logout)
-                    }, async {
                         downloadLevelsRecord(logout)
                     }
                 )
