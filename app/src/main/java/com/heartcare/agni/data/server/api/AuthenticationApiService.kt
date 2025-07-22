@@ -27,9 +27,6 @@ interface AuthenticationApiService {
     @POST("login")
     suspend fun login(@Body login: LoginRequest): Response<LoginResponse>
 
-    @PUT("user/change-password")
-    suspend fun changePassword(@Body changePassword: ChangePassword): Response<Unit>
-
     @POST("send-otp")
     suspend fun requestOtp(@Body forgotPasswordRequest: ForgotPasswordRequest): Response<Unit>
 
@@ -50,4 +47,10 @@ interface AuthenticationApiService {
 
     @DELETE("user")
     suspend fun deleteUserDetails(@Header(TEMP_TOKEN) tempToken: String): Response<BaseResponse<String?>>
+}
+
+interface AuthenticationApiServiceWithToken {
+
+    @PUT("user/change-password")
+    suspend fun changePassword(@Body changePassword: ChangePassword): Response<Unit>
 }
