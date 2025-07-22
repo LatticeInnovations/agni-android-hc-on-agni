@@ -18,5 +18,7 @@ data class LoginResponse(
     val levelThreeName: String,
     val systemPasswordChanged: Boolean,
     val userId: String,
-    val userTypeId: Int
+    val userTypeId: Int,
+    val hospitalCode: String,
+    val fhirId: String
 )
