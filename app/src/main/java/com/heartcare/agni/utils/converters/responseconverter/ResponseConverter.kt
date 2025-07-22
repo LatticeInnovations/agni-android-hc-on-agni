@@ -395,7 +395,13 @@ internal fun ScheduleResponse.toScheduleEntity(): ScheduleEntity {
         startTime = planningHorizon.start,
         endTime = planningHorizon.end,
         bookedSlots = bookedSlots!!,
-        orgId = orgId
+        roleId = roleId!!,
+        active = active!!,
+        practitionerId = practitionerId!!,
+        hospitalId = hospitalId,
+        hospitalFhirId = hospitalFhirId,
+        hospitalName = hospitalName!!,
+        hospitalCode = hospitalCode!!,
     )
 }
 
@@ -404,11 +410,17 @@ internal fun ScheduleEntity.toScheduleResponse(): ScheduleResponse {
         uuid = id,
         scheduleId = scheduleFhirId,
         bookedSlots = bookedSlots,
-        orgId = orgId,
         planningHorizon = Slot(
             start = startTime,
             end = endTime
-        )
+        ),
+        roleId = roleId,
+        active = active,
+        practitionerId = practitionerId,
+        hospitalId = hospitalId,
+        hospitalFhirId = hospitalFhirId,
+        hospitalName = hospitalName,
+        hospitalCode = hospitalCode
     )
 }
 

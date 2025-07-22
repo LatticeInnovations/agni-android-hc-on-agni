@@ -20,6 +20,7 @@ import com.heartcare.agni.data.server.model.patient.PatientResponse
 import com.heartcare.agni.data.server.model.scheduleandappointment.Slot
 import com.heartcare.agni.data.server.model.scheduleandappointment.appointment.AppointmentResponse
 import com.heartcare.agni.data.server.model.scheduleandappointment.schedule.ScheduleResponse
+import com.heartcare.agni.di.dispatcher.IoDispatcher
 import com.heartcare.agni.utils.builders.UUIDBuilder
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.to30MinutesAfter
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.to5MinutesAfter
@@ -29,7 +30,7 @@ import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toTod
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toWeekList
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.tomorrow
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.launch
 import java.util.Date
 import javax.inject.Inject
@@ -40,7 +41,8 @@ class ScheduleAppointmentViewModel @Inject constructor(
     private val appointmentRepository: AppointmentRepository,
     private val preferenceRepository: PreferenceRepository,
     private val genericRepository: GenericRepository,
-    private val patientLastUpdatedRepository: PatientLastUpdatedRepository
+    private val patientLastUpdatedRepository: PatientLastUpdatedRepository,
+    @IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) : BaseViewModel() {
     var isLaunched by mutableStateOf(false)
     var showDatePicker by mutableStateOf(false)
@@ -54,7 +56,7 @@ class ScheduleAppointmentViewModel @Inject constructor(
     val maxNumberOfSlots = 6
 
     internal fun getBookedSlotsCount(time: Long, slotsCount: (Int) -> Unit) {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(ioDispatcher) {
             slotsCount(
                 scheduleRepository.getBookedSlotsCount(time)
             )
@@ -62,7 +64,7 @@ class ScheduleAppointmentViewModel @Inject constructor(
     }
 
     internal fun insertScheduleAndAppointment(appointmentCreated: (Any) -> Unit) {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(ioDispatcher) {
             // check if appointment already exists for that date
             // if exists, reschedule that appointment
             // else create new appointment
@@ -154,7 +156,7 @@ class ScheduleAppointmentViewModel @Inject constructor(
     }
 
     internal fun ifAnotherAppointmentExists(appointmentExists: (Boolean) -> Unit) {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(ioDispatcher) {
             appointmentRepository.getAppointmentsOfPatientByDate(
                 patient!!.id,
                 selectedDate.toTodayStartDate(),
@@ -171,7 +173,7 @@ class ScheduleAppointmentViewModel @Inject constructor(
     }
 
     internal fun rescheduleAppointment(rescheduled: (Int) -> Unit) {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(ioDispatcher) {
             // free the slot of previous schedule
             scheduleRepository.getScheduleByStartTime(appointment!!.scheduleId.time)
                 .let { scheduleResponse ->
@@ -307,45 +309,45 @@ class ScheduleAppointmentViewModel @Inject constructor(
     }
 
     private suspend fun createNewSchedule(id: String) {
-        scheduleRepository.insertSchedule(
-            ScheduleResponse(
-                uuid = id,
-                scheduleId = null,
-                bookedSlots = 1,
-                orgId = preferenceRepository.getOrganizationFhirId(),
-                planningHorizon = Slot(
-                    start = Date(
-                        selectedSlot.toCurrentTimeInMillis(
-                            selectedDate
-                        )
-                    ),
-                    end = Date(
-                        selectedSlot.to30MinutesAfter(
-                            selectedDate
-                        )
+        val user = preferenceRepository.getUserDetails()!!
+        val schedule = ScheduleResponse(
+            uuid = id,
+            scheduleId = null,
+            planningHorizon = Slot(
+                start = Date(
+                    selectedSlot.toCurrentTimeInMillis(
+                        selectedDate
+                    )
+                ),
+                end = Date(
+                    selectedSlot.to30MinutesAfter(
+                        selectedDate
                     )
                 )
+            ),
+            bookedSlots = null,
+            roleId = null,
+            active = null,
+            practitionerId = null,
+            hospitalId = null,
+            hospitalFhirId = null,
+            hospitalName = null,
+            hospitalCode = null
+        )
+        scheduleRepository.insertSchedule(
+            schedule.copy(
+                bookedSlots = 1,
+                roleId = user.accountGroupId.toString(),
+                active = true,
+                practitionerId = user.fhirId,
+                hospitalId = user.hospitalId.toString(),
+                hospitalFhirId = null,
+                hospitalName = user.hospitalName,
+                hospitalCode = user.hospitalCode
             )
         )
         genericRepository.insertSchedule(
-            ScheduleResponse(
-                uuid = id,
-                scheduleId = null,
-                bookedSlots = null,
-                orgId = preferenceRepository.getOrganizationFhirId(),
-                planningHorizon = Slot(
-                    start = Date(
-                        selectedSlot.toCurrentTimeInMillis(
-                            selectedDate
-                        )
-                    ),
-                    end = Date(
-                        selectedSlot.to30MinutesAfter(
-                            selectedDate
-                        )
-                    )
-                )
-            )
+            schedule
         )
     }
 }

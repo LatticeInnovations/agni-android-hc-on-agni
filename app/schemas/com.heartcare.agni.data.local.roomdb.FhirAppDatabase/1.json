@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "e7230278f5891c159574b4d58aa31e55",
+    "identityHash": "b7e8e2c68403bae170aa30528961ab88",
     "entities": [
       {
         "tableName": "PatientEntity",
@@ -668,7 +668,7 @@
       },
       {
         "tableName": "ScheduleEntity",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `scheduleFhirId` TEXT, `startTime` INTEGER NOT NULL, `endTime` INTEGER NOT NULL, `orgId` TEXT NOT NULL, `bookedSlots` INTEGER NOT NULL, PRIMARY KEY(`startTime`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `scheduleFhirId` TEXT, `startTime` INTEGER NOT NULL, `endTime` INTEGER NOT NULL, `bookedSlots` INTEGER NOT NULL, `roleId` TEXT NOT NULL, `active` INTEGER NOT NULL, `practitionerId` TEXT NOT NULL, `hospitalId` TEXT, `hospitalFhirId` TEXT, `hospitalName` TEXT NOT NULL, `hospitalCode` TEXT NOT NULL, PRIMARY KEY(`startTime`))",
         "fields": [
           {
             "fieldPath": "id",
@@ -694,15 +694,49 @@
             "notNull": true
           },
           {
-            "fieldPath": "orgId",
-            "columnName": "orgId",
+            "fieldPath": "bookedSlots",
+            "columnName": "bookedSlots",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "roleId",
+            "columnName": "roleId",
             "affinity": "TEXT",
             "notNull": true
           },
           {
-            "fieldPath": "bookedSlots",
-            "columnName": "bookedSlots",
+            "fieldPath": "active",
+            "columnName": "active",
             "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "practitionerId",
+            "columnName": "practitionerId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "hospitalId",
+            "columnName": "hospitalId",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "hospitalFhirId",
+            "columnName": "hospitalFhirId",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "hospitalName",
+            "columnName": "hospitalName",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "hospitalCode",
+            "columnName": "hospitalCode",
+            "affinity": "TEXT",
             "notNull": true
           }
         ],
@@ -2578,7 +2612,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'e7230278f5891c159574b4d58aa31e55')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'b7e8e2c68403bae170aa30528961ab88')"
     ]
   }
 }

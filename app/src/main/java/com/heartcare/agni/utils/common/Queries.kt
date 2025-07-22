@@ -64,45 +64,46 @@ object Queries {
                 )
             } else {
                 val uuid = UUIDBuilder.generateUUID()
-                scheduleRepository.insertSchedule(
-                    ScheduleResponse(
-                        uuid = uuid,
-                        scheduleId = null,
-                        bookedSlots = 1,
-                        orgId = preferenceRepository.getOrganizationFhirId(),
-                        planningHorizon = Slot(
-                            start = Date(
-                                selectedSlot.toCurrentTimeInMillis(
-                                    Date()
-                                )
-                            ),
-                            end = Date(
-                                selectedSlot.to30MinutesAfter(
-                                    Date()
-                                )
+
+                val user = preferenceRepository.getUserDetails()!!
+                val schedule = ScheduleResponse(
+                    uuid = uuid,
+                    scheduleId = null,
+                    planningHorizon = Slot(
+                        start = Date(
+                            selectedSlot.toCurrentTimeInMillis(
+                                Date()
+                            )
+                        ),
+                        end = Date(
+                            selectedSlot.to30MinutesAfter(
+                                Date()
                             )
                         )
+                    ),
+                    bookedSlots = null,
+                    roleId = null,
+                    active = null,
+                    practitionerId = null,
+                    hospitalId = null,
+                    hospitalFhirId = null,
+                    hospitalName = null,
+                    hospitalCode = null
+                )
+                scheduleRepository.insertSchedule(
+                    schedule.copy(
+                        bookedSlots = 1,
+                        roleId = user.accountGroupId.toString(),
+                        active = true,
+                        practitionerId = user.fhirId,
+                        hospitalId = user.hospitalId.toString(),
+                        hospitalFhirId = null,
+                        hospitalName = user.hospitalName,
+                        hospitalCode = user.hospitalCode
                     )
                 )
                 genericRepository.insertSchedule(
-                    ScheduleResponse(
-                        uuid = uuid,
-                        scheduleId = null,
-                        bookedSlots = null,
-                        orgId = preferenceRepository.getOrganizationFhirId(),
-                        planningHorizon = Slot(
-                            start = Date(
-                                selectedSlot.toCurrentTimeInMillis(
-                                    Date()
-                                )
-                            ),
-                            end = Date(
-                                selectedSlot.to30MinutesAfter(
-                                    Date()
-                                )
-                            )
-                        )
-                    )
+                    schedule
                 )
             }
         }.also {
