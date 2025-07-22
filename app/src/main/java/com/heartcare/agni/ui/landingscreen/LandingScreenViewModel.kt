@@ -48,7 +48,6 @@ import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toLas
 import com.heartcare.agni.utils.converters.server.responsemapper.ApiEmptyResponse
 import com.heartcare.agni.utils.converters.server.responsemapper.ApiEndResponse
 import com.heartcare.agni.utils.converters.server.responsemapper.ApiErrorResponse
-import com.heartcare.agni.utils.network.CheckNetwork.isInternetAvailable
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
@@ -212,18 +211,6 @@ class LandingScreenViewModel @Inject constructor(
                     logoutUser = true
                     logoutReason = sessionExpireMap["errorMsg"]?.toString() ?: "SERVER ERROR"
                     getApplication<FhirApp>().sessionExpireFlow.postValue(emptyMap())
-                }
-            }
-        }
-
-        //Medication Sync
-        if (isInternetAvailable(getApplication<Application>().applicationContext)) {
-            viewModelScope.launch(ioDispatcher) {
-                syncService.downloadMedication { isErrorReceived, errorMsg ->
-                    if (isErrorReceived) {
-                        logoutUser = true
-                        logoutReason = errorMsg
-                    }
                 }
             }
         }

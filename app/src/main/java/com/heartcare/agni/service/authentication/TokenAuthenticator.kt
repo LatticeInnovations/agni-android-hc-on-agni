@@ -6,6 +6,7 @@ import com.heartcare.agni.data.local.sharedpreferences.PreferenceStorage
 import com.heartcare.agni.data.server.api.AuthenticationApiService
 import com.heartcare.agni.data.server.model.authentication.RefreshTokenRequest
 import com.heartcare.agni.utils.constants.AuthenticationConstants.AUTHORIZATION
+import com.heartcare.agni.utils.constants.AuthenticationConstants.X_ACCESS_TOKEN
 import com.heartcare.agni.utils.constants.ErrorConstants.SESSION_EXPIRED
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -29,9 +30,9 @@ class TokenAuthenticator @Inject constructor(
 
         synchronized(this) {
             val currentToken = preferenceStorage.accessToken
-            if (currentToken != response.request.header(AUTHORIZATION)) {
+            if (currentToken != response.request.header(X_ACCESS_TOKEN)) {
                 return response.request.newBuilder()
-                    .header(AUTHORIZATION, currentToken)
+                    .header(X_ACCESS_TOKEN, currentToken)
                     .build()
             }
 
@@ -48,7 +49,7 @@ class TokenAuthenticator @Inject constructor(
                     preferenceStorage.accessToken = newAccessToken
 
                     response.request.newBuilder()
-                        .header(AUTHORIZATION, newAccessToken)
+                        .header(X_ACCESS_TOKEN, newAccessToken)
                         .build()
                 } else {
                     CoroutineScope(Dispatchers.Main).launch {

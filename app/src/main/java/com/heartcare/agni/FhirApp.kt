@@ -37,9 +37,7 @@ import com.heartcare.agni.utils.file.DeleteFileManager
 import com.heartcare.agni.utils.network.CheckNetwork
 import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 import timber.log.Timber.Forest.plant
@@ -194,14 +192,6 @@ class FhirApp : Application() {
                         // list of errors is maintained.
                         // if the list is empty, then all the api calls were successful.
                         listOfErrors.add(errorMessage)
-                        CoroutineScope(Dispatchers.Main).launch {
-                            (applicationContext as FhirApp).sessionExpireFlow.postValue(
-                                mapOf(
-                                    Pair("errorReceived", errorReceived),
-                                    Pair("errorMsg", errorMessage)
-                                )
-                            )
-                        }
                     }.also {
                         checkPhotoWorkerStatus(listOfErrors)
                     }
