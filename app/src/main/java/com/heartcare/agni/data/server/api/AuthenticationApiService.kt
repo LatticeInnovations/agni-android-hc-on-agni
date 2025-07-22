@@ -7,6 +7,7 @@ import com.heartcare.agni.data.server.model.authentication.Login
 import com.heartcare.agni.data.server.model.authentication.LoginResponse
 import com.heartcare.agni.data.server.model.authentication.LoginRequest
 import com.heartcare.agni.data.server.model.authentication.Otp
+import com.heartcare.agni.data.server.model.authentication.RefreshTokenRequest
 import com.heartcare.agni.data.server.model.authentication.TokenResponse
 import com.heartcare.agni.data.server.model.user.UserResponse
 import com.heartcare.agni.utils.constants.AuthenticationConstants.TEMP_TOKEN
@@ -37,6 +38,9 @@ interface AuthenticationApiService {
 
     @POST("forgot-password")
     suspend fun forgotPassword(@Body forgotPasswordRequest: ForgotPasswordRequest): Response<Unit>
+
+    @PUT("refresh-token")
+    suspend fun refreshToken(@Body refreshTokenRequest: RefreshTokenRequest): Response<Unit>
 
     @POST("auth/otp")
     suspend fun validateOtp(@Body otp: Otp): Response<BaseResponse<TokenResponse>>
