@@ -265,6 +265,7 @@ class GenericRepositoryImpl @Inject constructor(
 
     override suspend fun insertOrUpdateAppointmentPatch(
         appointmentFhirId: String,
+        patientFhirId: String,
         map: Map<String, Any>,
         uuid: String
     ): Long {
@@ -276,6 +277,7 @@ class GenericRepositoryImpl @Inject constructor(
             insertOrUpdateAppointmentGenericEntityPatch(
                 appointmentGenericEntity,
                 map,
+                patientFhirId,
                 appointmentFhirId,
                 uuid
             )

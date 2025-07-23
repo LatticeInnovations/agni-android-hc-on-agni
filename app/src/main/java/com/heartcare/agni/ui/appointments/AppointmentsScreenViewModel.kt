@@ -117,6 +117,7 @@ class AppointmentsScreenViewModel @Inject constructor(
                         // insert patch request
                         genericRepository.insertOrUpdateAppointmentPatch(
                             appointmentFhirId = selectedAppointment?.appointmentId!!,
+                            patientFhirId = patient?.fhirId!!,
                             map = mapOf(
                                 Pair(
                                     "status",

@@ -5,4 +5,6 @@ object Id {
     const val ID = "id"
     const val FHIR_ID = "fhirId"
     const val APPOINTMENT_ID = "appointmentId"
+    const val PATIENT_ID = "patientId"
+    const val APP_UPDATED_DATE = "appUpdatedDate"
 }

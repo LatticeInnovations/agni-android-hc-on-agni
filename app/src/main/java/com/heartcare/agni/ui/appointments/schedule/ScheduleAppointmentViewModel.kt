@@ -282,6 +282,7 @@ class ScheduleAppointmentViewModel @Inject constructor(
                             //  if fhir id is not null send patch request in generic
                             genericRepository.insertOrUpdateAppointmentPatch(
                                 appointmentFhirId = appointment?.appointmentId!!,
+                                patientFhirId = patient?.fhirId!!,
                                 map = mapOf(
                                     Pair(
                                         "status",

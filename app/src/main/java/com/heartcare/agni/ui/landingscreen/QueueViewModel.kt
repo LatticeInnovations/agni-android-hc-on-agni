@@ -161,6 +161,7 @@ class QueueViewModel @Inject constructor(
                     } else {
                         genericRepository.insertOrUpdateAppointmentPatch(
                             appointmentFhirId = appointmentSelected?.appointmentId!!,
+                            patientFhirId = patientRepository.getPatientById(appointmentSelected!!.patientId)[0].fhirId!!,
                             map = mapOf(
                                 Pair(
                                     "status",
@@ -217,6 +218,7 @@ class QueueViewModel @Inject constructor(
                         genericRepository.insertOrUpdateAppointmentPatch(
                             appointmentFhirId = appointmentSelected!!.appointmentId
                                 ?: appointmentSelected!!.uuid,
+                            patientFhirId = patientRepository.getPatientById(appointmentSelected!!.patientId)[0].fhirId!!,
                             map = mapOf(
                                 Pair(
                                     "status",

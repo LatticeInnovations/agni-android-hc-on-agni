@@ -212,6 +212,7 @@ object Queries {
                 } else {
                     genericRepository.insertOrUpdateAppointmentPatch(
                         appointmentFhirId = appointment.appointmentId,
+                        patientFhirId = patient.fhirId!!,
                         map = mapOf(
                             Pair(
                                 "status",
@@ -319,6 +320,7 @@ object Queries {
             } else {
                 genericRepository.insertOrUpdateAppointmentPatch(
                     appointmentFhirId = appointmentResponseLocal.appointmentId,
+                    patientFhirId = patient.fhirId!!,
                     map = mapOf(
                         Pair(
                             "generatedOn",

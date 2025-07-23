@@ -94,6 +94,7 @@ interface GenericRepository {
 
     suspend fun insertOrUpdateAppointmentPatch(
         appointmentFhirId: String,
+        patientFhirId: String,
         map: Map<String, Any>,
         uuid: String = UUIDBuilder.generateUUID()
     ): Long
