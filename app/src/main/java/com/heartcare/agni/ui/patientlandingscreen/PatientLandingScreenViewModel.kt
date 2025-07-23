@@ -16,14 +16,13 @@ import com.heartcare.agni.data.local.repository.patient.PatientRepository
 import com.heartcare.agni.data.local.repository.prescription.PrescriptionRepository
 import com.heartcare.agni.data.local.repository.vaccination.ImmunizationRecommendationRepository
 import com.heartcare.agni.data.server.model.patient.PatientResponse
+import com.heartcare.agni.di.dispatcher.IoDispatcher
 import com.heartcare.agni.service.workmanager.utils.Sync
 import com.heartcare.agni.service.workmanager.workers.trigger.TriggerWorkerPeriodicImpl
-import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toEndOfDay
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toTodayStartDate
 import com.heartcare.agni.utils.network.CheckNetwork
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import okhttp3.internal.filterList
@@ -37,7 +36,8 @@ class PatientLandingScreenViewModel @Inject constructor(
     private val appointmentRepository: AppointmentRepository,
     private val prescriptionRepository: PrescriptionRepository,
     private val cvdAssessmentRepository: CVDAssessmentRepository,
-    private val immunizationRecommendationRepository: ImmunizationRecommendationRepository
+    private val immunizationRecommendationRepository: ImmunizationRecommendationRepository,
+    @IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) : BaseAndroidViewModel(application) {
     var isLaunched by mutableStateOf(false)
     var patient by mutableStateOf<PatientResponse?>(null)
@@ -47,7 +47,6 @@ class PatientLandingScreenViewModel @Inject constructor(
 
     var appointmentsCount by mutableIntStateOf(0)
     var uploadsCount by mutableIntStateOf(0)
-    var pastAppointmentsCount by mutableIntStateOf(0)
     var isFabSelected by mutableStateOf(false)
     var showAllSlotsBookedDialog by mutableStateOf(false)
 
@@ -75,7 +74,7 @@ class PatientLandingScreenViewModel @Inject constructor(
 
     internal fun downloadPrescriptions(patientFhirId: String) {
         if (CheckNetwork.isInternetAvailable(getApplication<FhirApp>().applicationContext)) {
-            viewModelScope.launch(Dispatchers.IO) {
+            viewModelScope.launch(ioDispatcher) {
                 syncService.patchPrescription { isErrorReceived, errorMsg ->
                     if (isErrorReceived) {
                         logoutUser = true
@@ -106,35 +105,30 @@ class PatientLandingScreenViewModel @Inject constructor(
     }
 
     internal fun getScheduledAppointmentsCount(patientId: String) {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(ioDispatcher) {
             appointmentsCount = appointmentRepository.getAppointmentsOfPatientByStatus(
                 patientId,
                 AppointmentStatusEnum.SCHEDULED.value
             ).filter { appointmentResponseLocal ->
                 appointmentResponseLocal.slot.start.time > Date().toTodayStartDate()
             }.size
-            pastAppointmentsCount = appointmentRepository.getAppointmentsOfPatient(patientId)
-                .filter { appointmentResponseLocal ->
-                    appointmentResponseLocal.slot.start.time < Date().toEndOfDay() && appointmentResponseLocal.status != AppointmentStatusEnum.SCHEDULED.value
-                }.size
         }
     }
 
     internal fun getUploadsCount(patientId: String) {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(ioDispatcher) {
             uploadsCount = prescriptionRepository.getLastPhotoPrescription(patientId).size
         }
     }
 
     internal fun getLastCVDRisk(patientId: String) {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(ioDispatcher) {
             cvdRisk = (cvdAssessmentRepository.getCVDRecord(patientId).firstOrNull()?.risk ?: "").toString()
         }
     }
 
     internal fun getImmunizationRecommendationList(
-        patientId: String,
-        ioDispatcher: CoroutineDispatcher = Dispatchers.IO
+        patientId: String
     ) {
         viewModelScope.launch(ioDispatcher) {
             val immunizationRecommendationList = immunizationRecommendationRepository.getImmunizationRecommendation(patientId)

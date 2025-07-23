@@ -202,6 +202,7 @@ private fun CardComposableList(
                 rememberScrollState()
             )
     ) {
+        /**
         CardComposable(
             viewModel = viewModel,
             label = stringResource(id = R.string.history_taking_and_tests),
@@ -215,14 +216,14 @@ private fun CardComposableList(
                 navController.navigate(Screen.HistoryTakingAndTestsScreen.route)
             }
         )
+        **/
         CardComposable(
             viewModel,
             stringResource(id = R.string.appointments),
             R.drawable.event_note_icon,
             stringResource(
                 id = R.string.appointments_scheduled,
-                viewModel.appointmentsCount,
-                viewModel.pastAppointmentsCount
+                viewModel.appointmentsCount
             ),
             onClick = {
                 navController.currentBackStackEntry?.savedStateHandle?.set(
@@ -232,6 +233,7 @@ private fun CardComposableList(
                 navController.navigate(Screen.Appointments.route)
             }
         )
+        /**
         CardComposable(
             viewModel,
             stringResource(id = R.string.cvd_risk_assessment),
@@ -367,6 +369,7 @@ private fun CardComposableList(
                 navController.navigate(Screen.VaccinationScreen.route)
             }
         )
+        **/
         Spacer(
             modifier = Modifier.height(76.dp)
         )
