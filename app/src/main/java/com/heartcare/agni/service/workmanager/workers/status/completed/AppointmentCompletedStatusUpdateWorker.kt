@@ -13,6 +13,7 @@ import com.heartcare.agni.data.local.roomdb.entities.generic.GenericEntity
 import com.heartcare.agni.service.workmanager.workers.base.SyncWorker
 import com.heartcare.agni.utils.builders.UUIDBuilder
 import com.heartcare.agni.utils.constants.Id
+import com.heartcare.agni.utils.constants.Id.APP_UPDATED_DATE
 import com.heartcare.agni.utils.converters.responseconverter.GsonConverters.fromJson
 import com.heartcare.agni.utils.converters.responseconverter.GsonConverters.toJson
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toEndOfDay
@@ -51,6 +52,7 @@ abstract class AppointmentCompletedStatusUpdateWorker(
     private suspend fun insertInGenericEntity(appointmentEntity: AppointmentEntity): Long {
         val genericDao = (applicationContext as FhirApp).fhirAppDatabase.getGenericDao()
         val scheduleDao = (applicationContext as FhirApp).fhirAppDatabase.getScheduleDao()
+        val patientDao = (applicationContext as FhirApp).fhirAppDatabase.getPatientDao()
         return genericDao.getGenericEntityById(
             patientId = appointmentEntity.id,
             genericTypeEnum = GenericTypeEnum.APPOINTMENT,
@@ -83,6 +85,7 @@ abstract class AppointmentCompletedStatusUpdateWorker(
                         map.entries.forEach { mapEntry ->
                             existingMap[mapEntry.key] = mapEntry.value
                         }
+                        existingMap[APP_UPDATED_DATE] = Date()
                         genericDao.insertGenericEntity(
                             GenericEntity(
                                 id = appointmentGenericPatchEntity.id,
@@ -101,6 +104,8 @@ abstract class AppointmentCompletedStatusUpdateWorker(
                                 payload = map.toMutableMap().let { mutableMap ->
                                     mutableMap[Id.APPOINTMENT_ID] =
                                         appointmentEntity.appointmentFhirId
+                                    mutableMap[Id.PATIENT_ID] = patientDao.getPatientDataById(appointmentEntity.patientId)[0].patientEntity.fhirId!!
+                                    mutableMap[APP_UPDATED_DATE] = Date()
                                     mutableMap
                                 }.toJson(),
                                 type = GenericTypeEnum.APPOINTMENT,
