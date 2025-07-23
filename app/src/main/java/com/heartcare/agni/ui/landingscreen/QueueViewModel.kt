@@ -22,6 +22,7 @@ import com.heartcare.agni.data.local.repository.schedule.ScheduleRepository
 import com.heartcare.agni.data.server.model.patient.PatientLastUpdatedResponse
 import com.heartcare.agni.data.server.model.patient.PatientResponse
 import com.heartcare.agni.data.server.model.scheduleandappointment.appointment.AppointmentResponse
+import com.heartcare.agni.di.dispatcher.IoDispatcher
 import com.heartcare.agni.service.workmanager.utils.Sync.getWorkerInfo
 import com.heartcare.agni.service.workmanager.workers.trigger.TriggerWorkerPeriodicImpl
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.to14DaysWeek
@@ -29,7 +30,6 @@ import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toEnd
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toTodayStartDate
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -43,7 +43,8 @@ class QueueViewModel @Inject constructor(
     private val appointmentRepository: AppointmentRepository,
     private val scheduleRepository: ScheduleRepository,
     private val genericRepository: GenericRepository,
-    private val patientLastUpdatedRepository: PatientLastUpdatedRepository
+    private val patientLastUpdatedRepository: PatientLastUpdatedRepository,
+    @IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) : BaseAndroidViewModel(application) {
 
     // queue screen
@@ -67,18 +68,18 @@ class QueueViewModel @Inject constructor(
     var selectedChip by mutableIntStateOf(R.string.total_appointment)
     var rescheduled by mutableStateOf(false)
 
-    internal suspend fun syncData(ioDispatcher: CoroutineDispatcher = Dispatchers.IO) {
+    internal suspend fun syncData() {
         getWorkerInfo<TriggerWorkerPeriodicImpl>(getApplication<FhirApp>().applicationContext).collectLatest { workInfo ->
             if (workInfo != null && workInfo.state == WorkInfo.State.ENQUEUED) {
                 withContext(ioDispatcher) {
                     getApplication<FhirApp>().launchSyncing()
-                    getAppointmentListByDate(ioDispatcher)
+                    getAppointmentListByDate()
                 }
             }
         }
     }
 
-    internal fun getAppointmentListByDate(ioDispatcher: CoroutineDispatcher = Dispatchers.IO) {
+    internal fun getAppointmentListByDate() {
         viewModelScope.launch(ioDispatcher) {
             appointmentsList = appointmentRepository.getAppointmentListByDate(
                 selectedDate.toTodayStartDate(),
@@ -113,7 +114,7 @@ class QueueViewModel @Inject constructor(
     }
 
     internal fun cancelAppointment(cancelled: (Int) -> Unit) {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(ioDispatcher) {
             cancelled(
                 appointmentRepository.updateAppointment(
                     appointmentSelected!!.copy(
@@ -143,11 +144,18 @@ class QueueViewModel @Inject constructor(
                                 patientFhirId = patientRepository.getPatientById(appointmentSelected!!.patientId)[0].fhirId
                                     ?: appointmentSelected!!.patientId,
                                 appointmentId = null,
-                                orgId = appointmentSelected!!.orgId,
                                 status = AppointmentStatusEnum.CANCELLED.value,
                                 uuid = appointmentSelected!!.uuid,
                                 appointmentType = appointmentSelected!!.appointmentType,
-                                inProgressTime = appointmentSelected!!.inProgressTime
+                                inProgressTime = appointmentSelected!!.inProgressTime,
+                                roleId = null,
+                                slotId = null,
+                                practitionerId = null,
+                                hospitalFhirId = null,
+                                hospitalId = null,
+                                hospitalName = null,
+                                hospitalCode = null,
+                                appUpdatedDate = Date()
                             )
                         )
                     } else {
@@ -171,7 +179,7 @@ class QueueViewModel @Inject constructor(
     }
 
     internal fun updateAppointmentStatus(status: String, updated: (Int) -> Unit) {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(ioDispatcher) {
             updated(
                 appointmentRepository.updateAppointment(
                     appointmentSelected!!.copy(
@@ -191,11 +199,18 @@ class QueueViewModel @Inject constructor(
                                 patientFhirId = patientRepository.getPatientById(appointmentSelected!!.patientId)[0].fhirId
                                     ?: appointmentSelected!!.patientId,
                                 appointmentId = null,
-                                orgId = appointmentSelected!!.orgId,
                                 status = status,
                                 uuid = appointmentSelected!!.uuid,
                                 appointmentType = appointmentSelected!!.appointmentType,
-                                inProgressTime = appointmentSelected!!.inProgressTime
+                                inProgressTime = appointmentSelected!!.inProgressTime,
+                                roleId = null,
+                                slotId = null,
+                                practitionerId = null,
+                                hospitalFhirId = null,
+                                hospitalId = null,
+                                hospitalName = null,
+                                hospitalCode = null,
+                                appUpdatedDate = Date()
                             )
                         )
                     } else {

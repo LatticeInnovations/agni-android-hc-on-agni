@@ -87,7 +87,6 @@ class AppointmentsFabViewModel @Inject constructor(
                 appointment,
                 appointmentRepository,
                 genericRepository,
-                preferenceRepository,
                 scheduleRepository,
                 patientLastUpdatedRepository,
                 updated

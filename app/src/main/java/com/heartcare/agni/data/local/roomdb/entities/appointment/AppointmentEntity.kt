@@ -1,7 +1,6 @@
 package com.heartcare.agni.data.local.roomdb.entities.appointment
 
 import androidx.annotation.Keep
-import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
@@ -35,10 +34,15 @@ data class AppointmentEntity(
     val scheduleId: Date,
     val startTime: Date,
     val endTime: Date,
-    val orgId: String,
     val createdOn: Date,
     val status: String,
-    @ColumnInfo(defaultValue = "DEFAULT_APPOINTMENT_TYPE")
     val appointmentType: String,
-    val inProgressTime: Date?
+    val inProgressTime: Date?,
+    val roleId: String?,
+    val slotId: String?,
+    val practitionerId: String?,
+    val hospitalFhirId: String?,
+    val hospitalId: String?,
+    val hospitalName: String?,
+    val hospitalCode: String?
 )

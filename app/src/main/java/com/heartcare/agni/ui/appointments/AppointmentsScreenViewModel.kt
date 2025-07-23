@@ -16,10 +16,11 @@ import com.heartcare.agni.data.local.repository.schedule.ScheduleRepository
 import com.heartcare.agni.data.server.model.patient.PatientLastUpdatedResponse
 import com.heartcare.agni.data.server.model.patient.PatientResponse
 import com.heartcare.agni.data.server.model.scheduleandappointment.appointment.AppointmentResponse
+import com.heartcare.agni.di.dispatcher.IoDispatcher
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toEndOfDay
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toTodayStartDate
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.launch
 import java.util.Date
 import javax.inject.Inject
@@ -29,7 +30,8 @@ class AppointmentsScreenViewModel @Inject constructor(
     private val appointmentRepository: AppointmentRepository,
     private val genericRepository: GenericRepository,
     private val scheduleRepository: ScheduleRepository,
-    private val patientLastUpdatedRepository: PatientLastUpdatedRepository
+    private val patientLastUpdatedRepository: PatientLastUpdatedRepository,
+    @IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) : BaseViewModel() {
     var isLaunched by mutableStateOf(false)
 
@@ -51,7 +53,7 @@ class AppointmentsScreenViewModel @Inject constructor(
     var pastAppointmentsList by mutableStateOf(listOf<AppointmentResponseLocal>())
 
     internal fun getAppointmentsList(patientId: String) {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(ioDispatcher) {
             upcomingAppointmentsList = appointmentRepository.getAppointmentsOfPatientByStatus(
                 patientId,
                 AppointmentStatusEnum.SCHEDULED.value
@@ -66,7 +68,7 @@ class AppointmentsScreenViewModel @Inject constructor(
     }
 
     internal fun cancelAppointment(cancelled: (Int) -> Unit) {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(ioDispatcher) {
             cancelled(
                 appointmentRepository.updateAppointment(
                     selectedAppointment!!.copy(
@@ -97,11 +99,18 @@ class AppointmentsScreenViewModel @Inject constructor(
                                     selectedAppointment!!.scheduleId.time
                                 )?.uuid)!!,
                                 slot = selectedAppointment!!.slot,
-                                orgId = selectedAppointment!!.orgId,
                                 createdOn = selectedAppointment!!.createdOn,
                                 status = AppointmentStatusEnum.CANCELLED.value,
                                 appointmentType = selectedAppointment!!.appointmentType,
-                                inProgressTime = selectedAppointment!!.inProgressTime
+                                inProgressTime = selectedAppointment!!.inProgressTime,
+                                roleId = null,
+                                slotId = null,
+                                practitionerId = null,
+                                hospitalFhirId = null,
+                                hospitalId = null,
+                                hospitalName = null,
+                                hospitalCode = null,
+                                appUpdatedDate = Date()
                             )
                         )
                     } else {

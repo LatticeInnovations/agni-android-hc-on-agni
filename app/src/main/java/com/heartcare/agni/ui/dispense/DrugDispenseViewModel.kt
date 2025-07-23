@@ -136,7 +136,6 @@ class DrugDispenseViewModel @Inject constructor(
                 appointment,
                 appointmentRepository,
                 genericRepository,
-                preferenceRepository,
                 scheduleRepository,
                 patientLastUpdatedRepository,
                 updated

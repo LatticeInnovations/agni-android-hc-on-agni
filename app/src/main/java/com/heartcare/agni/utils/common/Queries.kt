@@ -117,6 +117,7 @@ object Queries {
                     )
                 )
             )
+            val user = preferenceRepository.getUserDetails()!!
             addedToQueue(
                 appointmentRepository.addAppointment(
                     AppointmentResponseLocal(
@@ -125,11 +126,17 @@ object Queries {
                         patientId = patient.id,
                         scheduleId = scheduleId,
                         createdOn = createdOn,
-                        orgId = preferenceRepository.getOrganizationFhirId(),
                         slot = slot,
                         status = AppointmentStatusEnum.WALK_IN.value,
                         appointmentType = AppointmentTypeEnum.WALK_IN.code,
-                        inProgressTime = null
+                        inProgressTime = null,
+                        roleId = user.accountGroupId.toString(),
+                        slotId = null,
+                        practitionerId = user.fhirId,
+                        hospitalFhirId = null,
+                        hospitalId = user.hospitalId.toString(),
+                        hospitalName = user.hospitalName,
+                        hospitalCode = user.hospitalCode
                     )
                 ).also {
                     genericRepository.insertAppointment(
@@ -140,11 +147,18 @@ object Queries {
                             scheduleId = scheduleFhirId
                                 ?: scheduleRepository.getScheduleByStartTime(scheduleId.time)?.uuid!!,
                             createdOn = createdOn,
-                            orgId = preferenceRepository.getOrganizationFhirId(),
                             slot = slot,
                             status = AppointmentStatusEnum.WALK_IN.value,
                             appointmentType = AppointmentTypeEnum.WALK_IN.code,
-                            inProgressTime = null
+                            inProgressTime = null,
+                            roleId = null,
+                            slotId = null,
+                            practitionerId = null,
+                            hospitalFhirId = null,
+                            hospitalId = null,
+                            hospitalName = null,
+                            hospitalCode = null,
+                            appUpdatedDate = Date()
                         )
                     )
                     updatePatientLastUpdated(
@@ -162,7 +176,6 @@ object Queries {
         appointment: AppointmentResponseLocal,
         appointmentRepository: AppointmentRepository,
         genericRepository: GenericRepository,
-        preferenceRepository: PreferenceRepository,
         scheduleRepository: ScheduleRepository,
         patientLastUpdatedRepository: PatientLastUpdatedRepository,
         updated: (Int) -> Unit
@@ -180,13 +193,20 @@ object Queries {
                             createdOn = appointment.createdOn,
                             uuid = appointment.uuid,
                             patientFhirId = patient.fhirId ?: patient.id,
-                            orgId = preferenceRepository.getOrganizationFhirId(),
                             scheduleId = scheduleRepository.getScheduleByStartTime(appointment.scheduleId.time)?.scheduleId
                                 ?: scheduleRepository.getScheduleByStartTime(appointment.scheduleId.time)?.uuid!!,
                             slot = appointment.slot,
                             status = AppointmentStatusEnum.ARRIVED.value,
                             appointmentType = appointment.appointmentType,
-                            inProgressTime = appointment.inProgressTime
+                            inProgressTime = appointment.inProgressTime,
+                            roleId = null,
+                            slotId = null,
+                            practitionerId = null,
+                            hospitalFhirId = null,
+                            hospitalId = null,
+                            hospitalName = null,
+                            hospitalCode = null,
+                            appUpdatedDate = Date()
                         )
                     )
                 } else {
@@ -280,13 +300,20 @@ object Queries {
                         createdOn = appointmentResponseLocal.createdOn,
                         uuid = appointmentResponseLocal.uuid,
                         patientFhirId = patient.fhirId ?: patient.id,
-                        orgId = appointmentResponseLocal.orgId,
                         scheduleId = scheduleRepository.getScheduleByStartTime(appointmentResponseLocal.scheduleId.time)?.scheduleId
                             ?: scheduleRepository.getScheduleByStartTime(appointmentResponseLocal.scheduleId.time)?.uuid!!,
                         slot = appointmentResponseLocal.slot,
                         status = AppointmentStatusEnum.IN_PROGRESS.value,
                         appointmentType = appointmentResponseLocal.appointmentType,
-                        inProgressTime = inProgressTime
+                        inProgressTime = inProgressTime,
+                        roleId = null,
+                        slotId = null,
+                        practitionerId = null,
+                        hospitalFhirId = null,
+                        hospitalId = null,
+                        hospitalName = null,
+                        hospitalCode = null,
+                        appUpdatedDate = Date()
                     )
                 )
             } else {

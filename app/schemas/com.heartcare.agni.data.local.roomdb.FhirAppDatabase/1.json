@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "b7e8e2c68403bae170aa30528961ab88",
+    "identityHash": "1858f7ad0a98b82b934be8e5eda6ed56",
     "entities": [
       {
         "tableName": "PatientEntity",
@@ -749,7 +749,7 @@
       },
       {
         "tableName": "AppointmentEntity",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `appointmentFhirId` TEXT, `patientId` TEXT NOT NULL, `scheduleId` INTEGER NOT NULL, `startTime` INTEGER NOT NULL, `endTime` INTEGER NOT NULL, `orgId` TEXT NOT NULL, `createdOn` INTEGER NOT NULL, `status` TEXT NOT NULL, `appointmentType` TEXT NOT NULL DEFAULT 'DEFAULT_APPOINTMENT_TYPE', `inProgressTime` INTEGER, PRIMARY KEY(`id`), FOREIGN KEY(`patientId`) REFERENCES `PatientEntity`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION , FOREIGN KEY(`scheduleId`) REFERENCES `ScheduleEntity`(`startTime`) ON UPDATE NO ACTION ON DELETE NO ACTION )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `appointmentFhirId` TEXT, `patientId` TEXT NOT NULL, `scheduleId` INTEGER NOT NULL, `startTime` INTEGER NOT NULL, `endTime` INTEGER NOT NULL, `createdOn` INTEGER NOT NULL, `status` TEXT NOT NULL, `appointmentType` TEXT NOT NULL, `inProgressTime` INTEGER, `roleId` TEXT, `slotId` TEXT, `practitionerId` TEXT, `hospitalFhirId` TEXT, `hospitalId` TEXT, `hospitalName` TEXT, `hospitalCode` TEXT, PRIMARY KEY(`id`), FOREIGN KEY(`patientId`) REFERENCES `PatientEntity`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION , FOREIGN KEY(`scheduleId`) REFERENCES `ScheduleEntity`(`startTime`) ON UPDATE NO ACTION ON DELETE NO ACTION )",
         "fields": [
           {
             "fieldPath": "id",
@@ -787,12 +787,6 @@
             "notNull": true
           },
           {
-            "fieldPath": "orgId",
-            "columnName": "orgId",
-            "affinity": "TEXT",
-            "notNull": true
-          },
-          {
             "fieldPath": "createdOn",
             "columnName": "createdOn",
             "affinity": "INTEGER",
@@ -808,13 +802,47 @@
             "fieldPath": "appointmentType",
             "columnName": "appointmentType",
             "affinity": "TEXT",
-            "notNull": true,
-            "defaultValue": "'DEFAULT_APPOINTMENT_TYPE'"
+            "notNull": true
           },
           {
             "fieldPath": "inProgressTime",
             "columnName": "inProgressTime",
             "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "roleId",
+            "columnName": "roleId",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "slotId",
+            "columnName": "slotId",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "practitionerId",
+            "columnName": "practitionerId",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "hospitalFhirId",
+            "columnName": "hospitalFhirId",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "hospitalId",
+            "columnName": "hospitalId",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "hospitalName",
+            "columnName": "hospitalName",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "hospitalCode",
+            "columnName": "hospitalCode",
+            "affinity": "TEXT"
           }
         ],
         "primaryKey": {
@@ -2612,7 +2640,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'b7e8e2c68403bae170aa30528961ab88')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '1858f7ad0a98b82b934be8e5eda6ed56')"
     ]
   }
 }

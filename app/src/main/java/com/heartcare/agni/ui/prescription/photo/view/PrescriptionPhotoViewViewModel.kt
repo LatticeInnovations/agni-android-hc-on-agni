@@ -314,7 +314,6 @@ class PrescriptionPhotoViewViewModel @Inject constructor(
                 appointment,
                 appointmentRepository,
                 genericRepository,
-                preferenceRepository,
                 scheduleRepository,
                 patientLastUpdatedRepository,
                 updated

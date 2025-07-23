@@ -435,12 +435,18 @@ internal suspend fun AppointmentResponse.toAppointmentEntity(
         createdOn = createdOn,
         patientId = patientDao.getPatientIdByFhirId(patientFhirId)!!,
         scheduleId = scheduleDao.getScheduleStartTimeByFhirId(scheduleId)!!,
-        orgId = orgId,
         status = status,
         startTime = slot.start,
         endTime = slot.end,
         appointmentType = appointmentType,
-        inProgressTime = inProgressTime
+        inProgressTime = inProgressTime,
+        roleId = roleId,
+        slotId = slotId,
+        practitionerId = practitionerId,
+        hospitalFhirId = hospitalFhirId,
+        hospitalId = hospitalId,
+        hospitalName = hospitalName,
+        hospitalCode = hospitalCode
     )
 }
 
@@ -451,7 +457,6 @@ internal suspend fun AppointmentEntity.toAppointmentResponse(
         uuid = id,
         createdOn = createdOn,
         appointmentId = appointmentFhirId,
-        orgId = orgId,
         patientFhirId = patientId,
         scheduleId = scheduleDao.getFhirIdByStartTime(scheduleId)
             ?: scheduleDao.getScheduleByStartTime(scheduleId.time)!!.id,
@@ -461,7 +466,15 @@ internal suspend fun AppointmentEntity.toAppointmentResponse(
         ),
         status = status,
         appointmentType = appointmentType,
-        inProgressTime = inProgressTime
+        inProgressTime = inProgressTime,
+        roleId = null,
+        slotId = null,
+        practitionerId = null,
+        hospitalFhirId = null,
+        hospitalId = null,
+        hospitalName = null,
+        hospitalCode = null,
+        appUpdatedDate = Date()
     )
 }
 
@@ -470,7 +483,6 @@ internal fun AppointmentEntity.toAppointmentResponseLocal(): AppointmentResponse
         uuid = id,
         createdOn = createdOn,
         appointmentId = appointmentFhirId,
-        orgId = orgId,
         patientId = patientId,
         scheduleId = scheduleId,
         slot = Slot(
@@ -479,7 +491,14 @@ internal fun AppointmentEntity.toAppointmentResponseLocal(): AppointmentResponse
         ),
         status = status,
         appointmentType = appointmentType,
-        inProgressTime = inProgressTime
+        inProgressTime = inProgressTime,
+        roleId = roleId,
+        slotId = slotId,
+        practitionerId = practitionerId,
+        hospitalFhirId = hospitalFhirId,
+        hospitalId = hospitalId,
+        hospitalName = hospitalName,
+        hospitalCode = hospitalCode
     )
 }
 
@@ -491,12 +510,18 @@ internal fun AppointmentResponseLocal.toAppointmentEntity(): AppointmentEntity {
         createdOn = createdOn,
         patientId = patientId,
         scheduleId = scheduleId,
-        orgId = orgId,
         status = status,
         startTime = slot.start,
         endTime = slot.end,
         appointmentType = appointmentType,
-        inProgressTime = inProgressTime
+        inProgressTime = inProgressTime,
+        roleId = roleId,
+        slotId = slotId,
+        practitionerId = practitionerId,
+        hospitalFhirId = hospitalFhirId,
+        hospitalId = hospitalId,
+        hospitalName = hospitalName,
+        hospitalCode = hospitalCode,
     )
 }
 

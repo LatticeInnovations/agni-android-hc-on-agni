@@ -108,6 +108,7 @@ class ScheduleAppointmentViewModel @Inject constructor(
                                 )
                             )
                         )
+                        val user = preferenceRepository.getUserDetails()!!
                         appointmentCreated(
                             appointmentRepository.addAppointment(
                                 AppointmentResponseLocal(
@@ -116,11 +117,17 @@ class ScheduleAppointmentViewModel @Inject constructor(
                                     patientId = patient?.id!!,
                                     scheduleId = Date(scheduleId),
                                     createdOn = createdOn,
-                                    orgId = preferenceRepository.getOrganizationFhirId(),
                                     slot = slot,
                                     status = AppointmentStatusEnum.SCHEDULED.value,
                                     appointmentType = AppointmentTypeEnum.ROUTINE.code,
-                                    inProgressTime = null
+                                    inProgressTime = null,
+                                    roleId = user.accountGroupId.toString(),
+                                    slotId = null,
+                                    practitionerId = user.fhirId,
+                                    hospitalFhirId = null,
+                                    hospitalId = user.hospitalId.toString(),
+                                    hospitalName = user.hospitalName,
+                                    hospitalCode = user.hospitalCode
                                 )
                             ).also {
                                 genericRepository.insertAppointment(
@@ -130,11 +137,18 @@ class ScheduleAppointmentViewModel @Inject constructor(
                                         patientFhirId = patient!!.fhirId ?: patient!!.id,
                                         scheduleId = scheduleFhirId ?: id,
                                         createdOn = createdOn,
-                                        orgId = preferenceRepository.getOrganizationFhirId(),
                                         slot = slot,
                                         status = AppointmentStatusEnum.SCHEDULED.value,
                                         appointmentType = AppointmentTypeEnum.ROUTINE.code,
-                                        inProgressTime = null
+                                        inProgressTime = null,
+                                        roleId = null,
+                                        slotId = null,
+                                        practitionerId = null,
+                                        hospitalFhirId = null,
+                                        hospitalId = null,
+                                        hospitalName = null,
+                                        hospitalCode = null,
+                                        appUpdatedDate = Date()
                                     )
                                 )
                                 val patientLastUpdatedResponse = PatientLastUpdatedResponse(
@@ -219,6 +233,7 @@ class ScheduleAppointmentViewModel @Inject constructor(
                         )
                     )
                 )
+                val user = preferenceRepository.getUserDetails()!!
                 rescheduled(
                     appointmentRepository.updateAppointment(
                         AppointmentResponseLocal(
@@ -227,11 +242,17 @@ class ScheduleAppointmentViewModel @Inject constructor(
                             scheduleId = Date(scheduleId),
                             createdOn = createdOn,
                             slot = slot,
-                            orgId = appointment!!.orgId,
                             patientId = patient?.id!!,
                             status = appointment!!.status,
                             appointmentType = appointment!!.appointmentType,
-                            inProgressTime = appointment!!.inProgressTime
+                            inProgressTime = appointment!!.inProgressTime,
+                            roleId = user.accountGroupId.toString(),
+                            slotId = null,
+                            practitionerId = user.fhirId,
+                            hospitalFhirId = null,
+                            hospitalId = user.hospitalId.toString(),
+                            hospitalName = user.hospitalName,
+                            hospitalCode = user.hospitalCode
                         )
                     ).also {
                         if (appointment?.appointmentId.isNullOrBlank()) {
@@ -243,11 +264,18 @@ class ScheduleAppointmentViewModel @Inject constructor(
                                     slot = slot,
                                     patientFhirId = patient!!.fhirId ?: patient!!.id,
                                     appointmentId = null,
-                                    orgId = appointment!!.orgId,
                                     status = appointment!!.status,
                                     uuid = appointment!!.uuid,
                                     appointmentType = appointment!!.appointmentType,
-                                    inProgressTime = appointment!!.inProgressTime
+                                    inProgressTime = appointment!!.inProgressTime,
+                                    roleId = null,
+                                    slotId = null,
+                                    practitionerId = null,
+                                    hospitalFhirId = null,
+                                    hospitalId = null,
+                                    hospitalName = null,
+                                    hospitalCode = null,
+                                    appUpdatedDate = Date()
                                 )
                             )
                         } else {
