@@ -573,4 +573,8 @@ include them in the household</string>
     <string name="authentication_code">Authentication code</string>
     <string name="login_successful">Login successful!</string>
     <string name="authorization_code_verified">Authorization code verified</string>
+
+    <string name="scheduled_count">Scheduled (%d)</string>
+    <string name="assessed_count">Assessed (%d)</string>
+    <string name="prescribed_count">Prescribed (%d)</string>
 </resources>

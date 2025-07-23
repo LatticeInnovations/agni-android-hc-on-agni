@@ -18,6 +18,7 @@ import com.heartcare.agni.data.local.repository.appointment.AppointmentRepositor
 import com.heartcare.agni.data.local.repository.generic.GenericRepository
 import com.heartcare.agni.data.local.repository.patient.PatientRepository
 import com.heartcare.agni.data.local.repository.patient.lastupdated.PatientLastUpdatedRepository
+import com.heartcare.agni.data.local.repository.prescription.PrescriptionRepository
 import com.heartcare.agni.data.local.repository.schedule.ScheduleRepository
 import com.heartcare.agni.data.server.model.patient.PatientLastUpdatedResponse
 import com.heartcare.agni.data.server.model.patient.PatientResponse
@@ -44,6 +45,7 @@ class QueueViewModel @Inject constructor(
     private val scheduleRepository: ScheduleRepository,
     private val genericRepository: GenericRepository,
     private val patientLastUpdatedRepository: PatientLastUpdatedRepository,
+    private val prescriptionRepository: PrescriptionRepository,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) : BaseAndroidViewModel(application) {
 
@@ -57,16 +59,14 @@ class QueueViewModel @Inject constructor(
     var statusList by mutableStateOf(listOf<String>())
     var isSearchingInQueue by mutableStateOf(false)
     var searchQueueQuery by mutableStateOf("")
-    var waitingQueueList by mutableStateOf(listOf<AppointmentResponseLocal>())
-    var inProgressQueueList by mutableStateOf(listOf<AppointmentResponseLocal>())
-    var scheduledQueueList by mutableStateOf(listOf<AppointmentResponseLocal>())
-    var completedQueueList by mutableStateOf(listOf<AppointmentResponseLocal>())
-    var cancelledQueueList by mutableStateOf(listOf<AppointmentResponseLocal>())
-    var noShowQueueList by mutableStateOf(listOf<AppointmentResponseLocal>())
     var patientSelected by mutableStateOf<PatientResponse?>(null)
     var appointmentSelected by mutableStateOf<AppointmentResponseLocal?>(null)
     var selectedChip by mutableIntStateOf(R.string.total_appointment)
     var rescheduled by mutableStateOf(false)
+
+    var scheduledQueueList by mutableStateOf(listOf<AppointmentResponseLocal>())
+    var assessedQueueList by mutableStateOf(listOf<AppointmentResponseLocal>())
+    var prescribedQueueList by mutableStateOf(listOf<AppointmentResponseLocal>())
 
     internal suspend fun syncData() {
         getWorkerInfo<TriggerWorkerPeriodicImpl>(getApplication<FhirApp>().applicationContext).collectLatest { workInfo ->
@@ -88,29 +88,31 @@ class QueueViewModel @Inject constructor(
                 val patient = getPatientById(appointmentResponseLocal.patientId)
                 patient.firstName.contains(searchQueueQuery, true) || patient.lastName.contains(searchQueueQuery, true) || patient.fhirId?.contains(searchQueueQuery, true) == true
             }
-            waitingQueueList = appointmentsList.filter { appointmentResponseLocal ->
-                (appointmentResponseLocal.status == AppointmentStatusEnum.WALK_IN.value || appointmentResponseLocal.status == AppointmentStatusEnum.ARRIVED.value)
-            }
-            inProgressQueueList = appointmentsList.filter { appointmentResponseLocal ->
-                appointmentResponseLocal.status == AppointmentStatusEnum.IN_PROGRESS.value
-            }
             scheduledQueueList = appointmentsList.filter { appointmentResponseLocal ->
-                appointmentResponseLocal.status == AppointmentStatusEnum.SCHEDULED.value
+                appointmentResponseLocal.status == AppointmentStatusEnum.WALK_IN.value
+                        || appointmentResponseLocal.status == AppointmentStatusEnum.ARRIVED.value
+                        || appointmentResponseLocal.status == AppointmentStatusEnum.SCHEDULED.value
+                        || appointmentResponseLocal.status == AppointmentStatusEnum.NO_SHOW.value
             }
-            completedQueueList = appointmentsList.filter { appointmentResponseLocal ->
-                appointmentResponseLocal.status == AppointmentStatusEnum.COMPLETED.value
+            assessedQueueList = appointmentsList.filter { appointmentResponseLocal ->
+                (appointmentResponseLocal.status == AppointmentStatusEnum.IN_PROGRESS.value
+                        || appointmentResponseLocal.status == AppointmentStatusEnum.COMPLETED.value)
+                        && !isPrescriptionExists(appointmentResponseLocal.uuid)
             }
-            cancelledQueueList = appointmentsList.filter { appointmentResponseLocal ->
-                appointmentResponseLocal.status == AppointmentStatusEnum.CANCELLED.value
-            }
-            noShowQueueList = appointmentsList.filter { appointmentResponseLocal ->
-                appointmentResponseLocal.status == AppointmentStatusEnum.NO_SHOW.value
+            prescribedQueueList = appointmentsList.filter { appointmentResponseLocal ->
+                (appointmentResponseLocal.status == AppointmentStatusEnum.IN_PROGRESS.value
+                        || appointmentResponseLocal.status == AppointmentStatusEnum.COMPLETED.value)
+                        && isPrescriptionExists(appointmentResponseLocal.uuid)
             }
         }
     }
 
     internal suspend fun getPatientById(patientId: String): PatientResponse {
         return patientRepository.getPatientById(patientId)[0]
+    }
+
+    suspend fun isPrescriptionExists(appointmentId: String): Boolean {
+        return prescriptionRepository.getPrescriptionByAppointmentId(appointmentId).isNotEmpty()
     }
 
     internal fun cancelAppointment(cancelled: (Int) -> Unit) {
