@@ -1502,7 +1502,7 @@ class SyncRepositoryImpl @Inject constructor(
     override suspend fun getAndInsertLevelsData(): ResponseMapper<List<LevelResponse>> {
         val map = mutableMapOf<String, String>()
         map[TYPE] = "village,province,area-council,health-facility,island"
-        map[SORT] = "-$ID"
+        map[COUNT] = "$COUNT_VALUE"
         if (preferenceRepository.getLastSyncLevelRecord() != 0L) map[LAST_UPDATED] =
             String.format(
                 GREATER_THAN_BUILDER,
