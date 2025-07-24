@@ -9,8 +9,8 @@ import javax.inject.Inject
 class ScheduleRepositoryImpl @Inject constructor(private val scheduleDao: ScheduleDao) :
     ScheduleRepository {
 
-    override suspend fun getBookedSlotsCount(startTime: Long): Int {
-        return scheduleDao.getBookedSlotsCountByStartTime(startTime)
+    override suspend fun getBookedSlotsCount(startTime: Long, hospitalCode: String): Int {
+        return scheduleDao.getBookedSlotsCountByStartTime(startTime, hospitalCode)
     }
 
     override suspend fun insertSchedule(scheduleResponse: ScheduleResponse): List<Long> {
@@ -25,7 +25,7 @@ class ScheduleRepositoryImpl @Inject constructor(private val scheduleDao: Schedu
         return scheduleDao.updateScheduleEntity(scheduleResponse.toScheduleEntity())
     }
 
-    override suspend fun getScheduleByStartTime(startTime: Long): ScheduleResponse? {
-        return scheduleDao.getScheduleByStartTime(startTime)?.toScheduleResponse()
+    override suspend fun getScheduleByStartTime(startTime: Long, hospitalCode: String): ScheduleResponse? {
+        return scheduleDao.getScheduleByStartTime(startTime, hospitalCode)?.toScheduleResponse()
     }
 }

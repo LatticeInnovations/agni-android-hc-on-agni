@@ -165,12 +165,19 @@ fun PatientLandingScreen(
                 modifier = Modifier.padding(bottom = 80.dp, end = 16.dp),
                 navController,
                 patient,
-                viewModel.isFabSelected
-            ) { showDialog ->
-                if (showDialog) {
-                    viewModel.showAllSlotsBookedDialog = true
-                } else viewModel.isFabSelected = !viewModel.isFabSelected
-            }
+                viewModel.isFabSelected,
+                showDialog = { showDialog ->
+                    if (showDialog) {
+                        viewModel.showAllSlotsBookedDialog = true
+                    } else viewModel.isFabSelected = !viewModel.isFabSelected
+                },
+                showSnackBar = { snackBarMsg ->
+                    viewModel.isFabSelected = false
+                    scope.launch {
+                        snackbarHostState.showSnackbar(snackBarMsg)
+                    }
+                }
+            )
         }
     }
     if (viewModel.showIdStatusDialog) {
@@ -228,7 +235,8 @@ private fun CardComposableList(
             R.drawable.event_note_icon,
             stringResource(
                 id = R.string.appointments_scheduled,
-                viewModel.appointmentsCount
+                viewModel.appointmentsCount,
+                viewModel.pastAppointmentsCount
             ),
             onClick = {
                 navController.currentBackStackEntry?.savedStateHandle?.set(

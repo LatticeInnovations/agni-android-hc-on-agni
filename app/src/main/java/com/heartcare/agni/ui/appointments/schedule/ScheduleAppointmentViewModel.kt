@@ -39,11 +39,12 @@ import javax.inject.Inject
 class ScheduleAppointmentViewModel @Inject constructor(
     private val scheduleRepository: ScheduleRepository,
     private val appointmentRepository: AppointmentRepository,
-    private val preferenceRepository: PreferenceRepository,
     private val genericRepository: GenericRepository,
     private val patientLastUpdatedRepository: PatientLastUpdatedRepository,
+    preferenceRepository: PreferenceRepository,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) : BaseViewModel() {
+    val user = preferenceRepository.getUserDetails()!!
     var isLaunched by mutableStateOf(false)
     var showDatePicker by mutableStateOf(false)
     var selectedDate by mutableStateOf(Date().tomorrow())
@@ -55,10 +56,12 @@ class ScheduleAppointmentViewModel @Inject constructor(
 
     val maxNumberOfSlots = 6
 
+    var existsInOtherHospital by mutableStateOf(false)
+
     internal fun getBookedSlotsCount(time: Long, slotsCount: (Int) -> Unit) {
         viewModelScope.launch(ioDispatcher) {
             slotsCount(
-                scheduleRepository.getBookedSlotsCount(time)
+                scheduleRepository.getBookedSlotsCount(time, user.hospitalCode)
             )
         }
     }
@@ -75,6 +78,7 @@ class ScheduleAppointmentViewModel @Inject constructor(
             ).let { existingAppointment ->
                 if (existingAppointment != null) {
                     // appointment already exists for that day
+                    existsInOtherHospital = existingAppointment.hospitalCode != user.hospitalCode
                     appointmentCreated(false)
                 } else {
                     var id = UUIDBuilder.generateUUID()
@@ -83,7 +87,8 @@ class ScheduleAppointmentViewModel @Inject constructor(
                         selectedDate
                     )
                     scheduleRepository.getScheduleByStartTime(
-                        scheduleId
+                        scheduleId,
+                        user.hospitalCode
                     ).let { scheduleResponse ->
                         if (scheduleResponse != null) {
                             id = scheduleResponse.uuid
@@ -108,7 +113,6 @@ class ScheduleAppointmentViewModel @Inject constructor(
                                 )
                             )
                         )
-                        val user = preferenceRepository.getUserDetails()!!
                         appointmentCreated(
                             appointmentRepository.addAppointment(
                                 AppointmentResponseLocal(
@@ -180,6 +184,7 @@ class ScheduleAppointmentViewModel @Inject constructor(
                     false
                 )
                 else {
+                    existsInOtherHospital = todaysAppointment.hospitalCode != user.hospitalCode
                     appointmentExists(true)
                 }
             }
@@ -189,7 +194,7 @@ class ScheduleAppointmentViewModel @Inject constructor(
     internal fun rescheduleAppointment(rescheduled: (Int) -> Unit) {
         viewModelScope.launch(ioDispatcher) {
             // free the slot of previous schedule
-            scheduleRepository.getScheduleByStartTime(appointment!!.scheduleId.time)
+            scheduleRepository.getScheduleByStartTime(appointment!!.scheduleId.time, user.hospitalCode)
                 .let { scheduleResponse ->
                     scheduleResponse?.let { previousScheduleResponse ->
                         scheduleRepository.updateSchedule(
@@ -206,12 +211,13 @@ class ScheduleAppointmentViewModel @Inject constructor(
             var scheduleFhirId: String? = null
             var id = UUIDBuilder.generateUUID()
             scheduleRepository.getScheduleByStartTime(
-                scheduleId
+                scheduleId,
+                user.hospitalCode
             ).let { scheduleResponse ->
                 // if already exists, increase booked slots count
                 if (scheduleResponse != null) {
                     scheduleId = scheduleResponse.planningHorizon.start.time
-                    id = scheduleRepository.getScheduleByStartTime(scheduleId)?.uuid!!
+                    id = scheduleRepository.getScheduleByStartTime(scheduleId, user.hospitalCode)?.uuid!!
                     scheduleFhirId = scheduleResponse.scheduleId
                     updateSchedule(scheduleResponse)
                 } else {
@@ -233,7 +239,6 @@ class ScheduleAppointmentViewModel @Inject constructor(
                         )
                     )
                 )
-                val user = preferenceRepository.getUserDetails()!!
                 rescheduled(
                     appointmentRepository.updateAppointment(
                         AppointmentResponseLocal(
@@ -338,7 +343,6 @@ class ScheduleAppointmentViewModel @Inject constructor(
     }
 
     private suspend fun createNewSchedule(id: String) {
-        val user = preferenceRepository.getUserDetails()!!
         val schedule = ScheduleResponse(
             uuid = id,
             scheduleId = null,

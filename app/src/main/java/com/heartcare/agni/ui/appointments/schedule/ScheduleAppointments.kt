@@ -362,7 +362,8 @@ fun ScheduleAppointments(
                                 if (alreadyExists) {
                                     composableScope.launch {
                                         snackbarHostState.showSnackbar(
-                                            message = context.getString(
+                                            message = if (viewModel.existsInOtherHospital) context.getString(R.string.appointment_exists_in_other_hospital)
+                                                else context.getString(
                                                 R.string.appointment_exists
                                             )
                                         )
@@ -384,7 +385,8 @@ fun ScheduleAppointments(
                                 if (appointmentCreated == false) {
                                     composableScope.launch {
                                         snackbarHostState.showSnackbar(
-                                            message = context.getString(R.string.appointment_exists)
+                                            message = if (viewModel.existsInOtherHospital) context.getString(R.string.appointment_exists_in_other_hospital)
+                                            else context.getString(R.string.appointment_exists)
                                         )
                                     }
                                 } else {

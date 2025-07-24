@@ -446,20 +446,21 @@ internal suspend fun AppointmentResponse.toAppointmentEntity(
         hospitalFhirId = hospitalFhirId,
         hospitalId = hospitalId,
         hospitalName = hospitalName,
-        hospitalCode = hospitalCode
+        hospitalCode = hospitalCode!!
     )
 }
 
 internal suspend fun AppointmentEntity.toAppointmentResponse(
-    scheduleDao: ScheduleDao
+    scheduleDao: ScheduleDao,
+    hospitalCode: String
 ): AppointmentResponse {
     return AppointmentResponse(
         uuid = id,
         createdOn = createdOn,
         appointmentId = appointmentFhirId,
         patientFhirId = patientId,
-        scheduleId = scheduleDao.getFhirIdByStartTime(scheduleId)
-            ?: scheduleDao.getScheduleByStartTime(scheduleId.time)!!.id,
+        scheduleId = scheduleDao.getFhirIdByStartTime(scheduleId, hospitalCode)
+            ?: scheduleDao.getScheduleByStartTime(scheduleId.time, hospitalCode)!!.id,
         slot = Slot(
             start = startTime,
             end = endTime
@@ -521,7 +522,7 @@ internal fun AppointmentResponseLocal.toAppointmentEntity(): AppointmentEntity {
         hospitalFhirId = hospitalFhirId,
         hospitalId = hospitalId,
         hospitalName = hospitalName,
-        hospitalCode = hospitalCode,
+        hospitalCode = hospitalCode!!
     )
 }
 

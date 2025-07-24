@@ -18,17 +18,15 @@ import java.util.Date
             parentColumns = arrayOf("id"),
             childColumns = arrayOf("patientId")
         ),
-        // To-be tested
         ForeignKey(
             entity = ScheduleEntity::class,
-            parentColumns = arrayOf("startTime"),
-            childColumns = arrayOf("scheduleId")
+            parentColumns = arrayOf("startTime", "hospitalCode"),
+            childColumns = arrayOf("scheduleId", "hospitalCode")
         )
     ]
 )
 data class AppointmentEntity(
-    @PrimaryKey
-    val id: String,
+    @PrimaryKey val id: String,
     val appointmentFhirId: String?,
     val patientId: String,
     val scheduleId: Date,
@@ -44,5 +42,5 @@ data class AppointmentEntity(
     val hospitalFhirId: String?,
     val hospitalId: String?,
     val hospitalName: String?,
-    val hospitalCode: String?
+    val hospitalCode: String
 )

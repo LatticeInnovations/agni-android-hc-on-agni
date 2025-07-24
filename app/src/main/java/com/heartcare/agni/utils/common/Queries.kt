@@ -41,6 +41,7 @@ object Queries {
         patientLastUpdatedRepository: PatientLastUpdatedRepository,
         addedToQueue: (List<Long>) -> Unit
     ) {
+        val user = preferenceRepository.getUserDetails()!!
         val selectedSlot = Date().toSlotStartTime()
         var scheduleId = Date(
             selectedSlot.toCurrentTimeInMillis(
@@ -51,7 +52,7 @@ object Queries {
         scheduleRepository.getScheduleByStartTime(
             selectedSlot.toCurrentTimeInMillis(
                 Date()
-            )
+            ), user.hospitalCode
         ).let { scheduleResponse ->
             if (scheduleResponse != null) {
                 Timber.d("manseeyy already scheduled")
@@ -145,7 +146,7 @@ object Queries {
                             uuid = appointmentId,
                             patientFhirId = patient.fhirId ?: patient.id,
                             scheduleId = scheduleFhirId
-                                ?: scheduleRepository.getScheduleByStartTime(scheduleId.time)?.uuid!!,
+                                ?: scheduleRepository.getScheduleByStartTime(scheduleId.time, user.hospitalCode)?.uuid!!,
                             createdOn = createdOn,
                             slot = slot,
                             status = AppointmentStatusEnum.WALK_IN.value,
@@ -177,9 +178,11 @@ object Queries {
         appointmentRepository: AppointmentRepository,
         genericRepository: GenericRepository,
         scheduleRepository: ScheduleRepository,
+        preferenceRepository: PreferenceRepository,
         patientLastUpdatedRepository: PatientLastUpdatedRepository,
         updated: (Int) -> Unit
     ) {
+        val user = preferenceRepository.getUserDetails()!!
         updated(
             appointmentRepository.updateAppointment(
                 appointment.copy(
@@ -193,8 +196,8 @@ object Queries {
                             createdOn = appointment.createdOn,
                             uuid = appointment.uuid,
                             patientFhirId = patient.fhirId ?: patient.id,
-                            scheduleId = scheduleRepository.getScheduleByStartTime(appointment.scheduleId.time)?.scheduleId
-                                ?: scheduleRepository.getScheduleByStartTime(appointment.scheduleId.time)?.uuid!!,
+                            scheduleId = scheduleRepository.getScheduleByStartTime(appointment.scheduleId.time, user.hospitalCode)?.scheduleId
+                                ?: scheduleRepository.getScheduleByStartTime(appointment.scheduleId.time, user.hospitalCode)?.uuid!!,
                             slot = appointment.slot,
                             status = AppointmentStatusEnum.ARRIVED.value,
                             appointmentType = appointment.appointmentType,
@@ -284,7 +287,8 @@ object Queries {
         appointmentResponseLocal: AppointmentResponseLocal,
         appointmentRepository: AppointmentRepository,
         genericRepository: GenericRepository,
-        scheduleRepository: ScheduleRepository
+        scheduleRepository: ScheduleRepository,
+        preferenceRepository: PreferenceRepository
     ) {
         if (appointmentResponseLocal.status == AppointmentStatusEnum.WALK_IN.value
             || appointmentResponseLocal.status == AppointmentStatusEnum.ARRIVED.value) {
@@ -295,14 +299,15 @@ object Queries {
                 )
             )
             if (appointmentResponseLocal.appointmentId.isNullOrBlank()) {
+                val user = preferenceRepository.getUserDetails()!!
                 genericRepository.insertAppointment(
                     AppointmentResponse(
                         appointmentId = null,
                         createdOn = appointmentResponseLocal.createdOn,
                         uuid = appointmentResponseLocal.uuid,
                         patientFhirId = patient.fhirId ?: patient.id,
-                        scheduleId = scheduleRepository.getScheduleByStartTime(appointmentResponseLocal.scheduleId.time)?.scheduleId
-                            ?: scheduleRepository.getScheduleByStartTime(appointmentResponseLocal.scheduleId.time)?.uuid!!,
+                        scheduleId = scheduleRepository.getScheduleByStartTime(appointmentResponseLocal.scheduleId.time, user.hospitalCode)?.scheduleId
+                            ?: scheduleRepository.getScheduleByStartTime(appointmentResponseLocal.scheduleId.time, user.hospitalCode)?.uuid!!,
                         slot = appointmentResponseLocal.slot,
                         status = AppointmentStatusEnum.IN_PROGRESS.value,
                         appointmentType = appointmentResponseLocal.appointmentType,

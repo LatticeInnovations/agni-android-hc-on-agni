@@ -12,6 +12,7 @@ import com.heartcare.agni.data.local.model.patch.ChangeRequest
 import com.heartcare.agni.data.local.repository.appointment.AppointmentRepository
 import com.heartcare.agni.data.local.repository.generic.GenericRepository
 import com.heartcare.agni.data.local.repository.patient.lastupdated.PatientLastUpdatedRepository
+import com.heartcare.agni.data.local.repository.preference.PreferenceRepository
 import com.heartcare.agni.data.local.repository.schedule.ScheduleRepository
 import com.heartcare.agni.data.server.model.patient.PatientLastUpdatedResponse
 import com.heartcare.agni.data.server.model.patient.PatientResponse
@@ -31,9 +32,11 @@ class AppointmentsScreenViewModel @Inject constructor(
     private val genericRepository: GenericRepository,
     private val scheduleRepository: ScheduleRepository,
     private val patientLastUpdatedRepository: PatientLastUpdatedRepository,
+    preferenceRepository: PreferenceRepository,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) : BaseViewModel() {
     var isLaunched by mutableStateOf(false)
+    val user = preferenceRepository.getUserDetails()!!
 
     var patient by mutableStateOf<PatientResponse?>(null)
 
@@ -58,10 +61,12 @@ class AppointmentsScreenViewModel @Inject constructor(
                 patientId,
                 AppointmentStatusEnum.SCHEDULED.value
             ).filter { appointmentResponseLocal ->
+                appointmentResponseLocal.hospitalCode == user.hospitalCode &&
                 appointmentResponseLocal.slot.start.time > Date().toTodayStartDate()
             }
             pastAppointmentsList = appointmentRepository.getAppointmentsOfPatient(patientId)
                 .filter { appointmentResponseLocal ->
+                    appointmentResponseLocal.hospitalCode == user.hospitalCode &&
                     appointmentResponseLocal.slot.start.time < Date().toEndOfDay() && appointmentResponseLocal.status != AppointmentStatusEnum.SCHEDULED.value
                 }
         }
@@ -76,7 +81,7 @@ class AppointmentsScreenViewModel @Inject constructor(
                     )
                 ).also {
                     // update previous schedule
-                    scheduleRepository.getScheduleByStartTime(selectedAppointment?.scheduleId?.time!!)
+                    scheduleRepository.getScheduleByStartTime(selectedAppointment?.scheduleId?.time!!, user.hospitalCode)
                         .let { scheduleResponse ->
                             scheduleResponse?.let { previousScheduleResponse ->
                                 scheduleRepository.updateSchedule(
@@ -94,9 +99,9 @@ class AppointmentsScreenViewModel @Inject constructor(
                                 uuid = selectedAppointment!!.uuid,
                                 patientFhirId = patient!!.fhirId ?: patient!!.id,
                                 scheduleId = (scheduleRepository.getScheduleByStartTime(
-                                    selectedAppointment!!.scheduleId.time
+                                    selectedAppointment!!.scheduleId.time, user.hospitalCode
                                 )?.scheduleId ?: scheduleRepository.getScheduleByStartTime(
-                                    selectedAppointment!!.scheduleId.time
+                                    selectedAppointment!!.scheduleId.time, user.hospitalCode
                                 )?.uuid)!!,
                                 slot = selectedAppointment!!.slot,
                                 createdOn = selectedAppointment!!.createdOn,

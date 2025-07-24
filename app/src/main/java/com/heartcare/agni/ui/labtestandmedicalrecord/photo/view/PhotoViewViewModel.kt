@@ -356,6 +356,7 @@ class PhotoViewViewModel @Inject constructor(
                 appointmentRepository,
                 genericRepository,
                 scheduleRepository,
+                preferenceRepository,
                 patientLastUpdatedRepository,
                 updated
             )

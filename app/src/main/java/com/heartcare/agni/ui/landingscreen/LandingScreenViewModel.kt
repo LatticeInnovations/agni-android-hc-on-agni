@@ -244,7 +244,7 @@ class LandingScreenViewModel @Inject constructor(
 
         preferenceRepository.getUserDetails()?.let { user ->
             userName = getFullName(user.firstName, user.lastName)
-            userRole = ""
+            userRole = user.userId
             userPhoneNo = user.contactNumber.orEmpty()
             userEmail = user.email.orEmpty()
         }

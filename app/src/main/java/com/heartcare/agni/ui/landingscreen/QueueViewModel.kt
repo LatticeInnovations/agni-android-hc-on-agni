@@ -18,6 +18,7 @@ import com.heartcare.agni.data.local.repository.appointment.AppointmentRepositor
 import com.heartcare.agni.data.local.repository.generic.GenericRepository
 import com.heartcare.agni.data.local.repository.patient.PatientRepository
 import com.heartcare.agni.data.local.repository.patient.lastupdated.PatientLastUpdatedRepository
+import com.heartcare.agni.data.local.repository.preference.PreferenceRepository
 import com.heartcare.agni.data.local.repository.prescription.PrescriptionRepository
 import com.heartcare.agni.data.local.repository.schedule.ScheduleRepository
 import com.heartcare.agni.data.server.model.patient.PatientLastUpdatedResponse
@@ -46,8 +47,11 @@ class QueueViewModel @Inject constructor(
     private val genericRepository: GenericRepository,
     private val patientLastUpdatedRepository: PatientLastUpdatedRepository,
     private val prescriptionRepository: PrescriptionRepository,
+    preferenceRepository: PreferenceRepository,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) : BaseAndroidViewModel(application) {
+
+    val user = preferenceRepository.getUserDetails()!!
 
     // queue screen
     var isLaunched by mutableStateOf(false)
@@ -86,7 +90,8 @@ class QueueViewModel @Inject constructor(
                 selectedDate.toEndOfDay()
             ).filter { appointmentResponseLocal ->
                 val patient = getPatientById(appointmentResponseLocal.patientId)
-                patient.firstName.contains(searchQueueQuery, true) || patient.lastName.contains(searchQueueQuery, true) || patient.fhirId?.contains(searchQueueQuery, true) == true
+                appointmentResponseLocal.hospitalCode == user.hospitalCode &&
+                        (patient.firstName.contains(searchQueueQuery, true) || patient.lastName.contains(searchQueueQuery, true) || patient.fhirId?.contains(searchQueueQuery, true) == true)
             }
             scheduledQueueList = appointmentsList.filter { appointmentResponseLocal ->
                 appointmentResponseLocal.status == AppointmentStatusEnum.WALK_IN.value
@@ -123,7 +128,7 @@ class QueueViewModel @Inject constructor(
                         status = AppointmentStatusEnum.CANCELLED.value
                     )
                 ).also {
-                    scheduleRepository.getScheduleByStartTime(appointmentSelected?.scheduleId?.time!!)
+                    scheduleRepository.getScheduleByStartTime(appointmentSelected?.scheduleId?.time!!, user.hospitalCode)
                         .let { scheduleResponse ->
                             scheduleResponse?.let { previousScheduleResponse ->
                                 scheduleRepository.updateSchedule(
@@ -137,9 +142,9 @@ class QueueViewModel @Inject constructor(
                         genericRepository.insertAppointment(
                             AppointmentResponse(
                                 scheduleId = scheduleRepository.getScheduleByStartTime(
-                                    appointmentSelected!!.scheduleId.time
+                                    appointmentSelected!!.scheduleId.time, user.hospitalCode
                                 )?.scheduleId ?: scheduleRepository.getScheduleByStartTime(
-                                    appointmentSelected!!.scheduleId.time
+                                    appointmentSelected!!.scheduleId.time, user.hospitalCode
                                 )?.uuid!!,
                                 createdOn = appointmentSelected!!.createdOn,
                                 slot = appointmentSelected!!.slot,
@@ -193,9 +198,9 @@ class QueueViewModel @Inject constructor(
                         genericRepository.insertAppointment(
                             AppointmentResponse(
                                 scheduleId = scheduleRepository.getScheduleByStartTime(
-                                    appointmentSelected!!.scheduleId.time
+                                    appointmentSelected!!.scheduleId.time, user.hospitalCode
                                 )?.scheduleId ?: scheduleRepository.getScheduleByStartTime(
-                                    appointmentSelected!!.scheduleId.time
+                                    appointmentSelected!!.scheduleId.time, user.hospitalCode
                                 )?.uuid!!,
                                 createdOn = appointmentSelected!!.createdOn,
                                 slot = appointmentSelected!!.slot,

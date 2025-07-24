@@ -210,12 +210,20 @@ fun AppointmentsScreen(
                     Modifier.padding(16.dp),
                     navController,
                     patient,
-                    viewModel.isFabSelected
-                ) { showDialog ->
-                    if (showDialog) {
-                        viewModel.showAllSlotsBookedDialog = true
-                    } else viewModel.isFabSelected = !viewModel.isFabSelected
-                }
+                    viewModel.isFabSelected,
+                    showDialog = { showDialog ->
+                        if (showDialog) {
+                            viewModel.showAllSlotsBookedDialog = true
+                        } else viewModel.isFabSelected = !viewModel.isFabSelected
+
+                    },
+                    showSnackBar = { snackBarMsg ->
+                        viewModel.isFabSelected = false
+                        coroutineScope.launch {
+                            snackbarHostState.showSnackbar(snackBarMsg)
+                        }
+                    }
+                )
             }
         }
     }

@@ -2,6 +2,7 @@ package com.heartcare.agni.service.workmanager.workers.status.completed
 
 import android.content.Context
 import androidx.work.WorkerParameters
+import com.google.gson.Gson
 import com.heartcare.agni.FhirApp
 import com.heartcare.agni.data.local.enums.AppointmentStatusEnum
 import com.heartcare.agni.data.local.enums.ChangeTypeEnum
@@ -10,6 +11,7 @@ import com.heartcare.agni.data.local.enums.SyncType
 import com.heartcare.agni.data.local.model.patch.ChangeRequest
 import com.heartcare.agni.data.local.roomdb.entities.appointment.AppointmentEntity
 import com.heartcare.agni.data.local.roomdb.entities.generic.GenericEntity
+import com.heartcare.agni.data.server.model.authentication.LoginResponse
 import com.heartcare.agni.service.workmanager.workers.base.SyncWorker
 import com.heartcare.agni.utils.builders.UUIDBuilder
 import com.heartcare.agni.utils.constants.Id
@@ -53,6 +55,7 @@ abstract class AppointmentCompletedStatusUpdateWorker(
         val genericDao = (applicationContext as FhirApp).fhirAppDatabase.getGenericDao()
         val scheduleDao = (applicationContext as FhirApp).fhirAppDatabase.getScheduleDao()
         val patientDao = (applicationContext as FhirApp).fhirAppDatabase.getPatientDao()
+        val user = Gson().fromJson((applicationContext as FhirApp).preferenceStorage.userDetails, LoginResponse::class.java)!!
         return genericDao.getGenericEntityById(
             patientId = appointmentEntity.id,
             genericTypeEnum = GenericTypeEnum.APPOINTMENT,
@@ -64,7 +67,7 @@ abstract class AppointmentCompletedStatusUpdateWorker(
                     appointmentGenericEntity.copy(
                         payload = appointmentEntity.copy(
                             status = AppointmentStatusEnum.COMPLETED.value
-                        ).toAppointmentResponse(scheduleDao).toJson()
+                        ).toAppointmentResponse(scheduleDao, user.hospitalCode).toJson()
                     )
                 )[0]
             } else {

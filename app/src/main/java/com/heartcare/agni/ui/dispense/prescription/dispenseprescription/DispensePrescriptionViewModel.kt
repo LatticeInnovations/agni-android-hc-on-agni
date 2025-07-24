@@ -16,6 +16,7 @@ import com.heartcare.agni.data.local.repository.generic.GenericRepository
 import com.heartcare.agni.data.local.repository.medication.MedicationRepository
 import com.heartcare.agni.data.local.repository.patient.PatientRepository
 import com.heartcare.agni.data.local.repository.patient.lastupdated.PatientLastUpdatedRepository
+import com.heartcare.agni.data.local.repository.preference.PreferenceRepository
 import com.heartcare.agni.data.local.repository.schedule.ScheduleRepository
 import com.heartcare.agni.data.local.roomdb.entities.dispense.DispenseAndPrescriptionRelation
 import com.heartcare.agni.data.local.roomdb.entities.dispense.DispenseDataEntity
@@ -46,7 +47,8 @@ class DispensePrescriptionViewModel @Inject constructor(
     private val genericRepository: GenericRepository,
     private val patientLastUpdatedRepository: PatientLastUpdatedRepository,
     private val appointmentRepository: AppointmentRepository,
-    private val scheduleRepository: ScheduleRepository
+    private val scheduleRepository: ScheduleRepository,
+    private val preferenceRepository: PreferenceRepository
 ) : ViewModel() {
     var recompose by mutableStateOf(false)
     var isLaunched by mutableStateOf(false)
@@ -202,7 +204,8 @@ class DispensePrescriptionViewModel @Inject constructor(
             appointmentResponseLocal = appointmentResponseLocal,
             appointmentRepository = appointmentRepository,
             scheduleRepository = scheduleRepository,
-            genericRepository = genericRepository
+            genericRepository = genericRepository,
+            preferenceRepository = preferenceRepository
         )
         updatePatientLastUpdated(
             patient.id,

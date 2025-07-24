@@ -2,15 +2,15 @@ package com.heartcare.agni.data.local.roomdb.entities.schedule
 
 import androidx.annotation.Keep
 import androidx.room.Entity
-import androidx.room.PrimaryKey
 import java.util.Date
 
 @Keep
-@Entity
+@Entity(
+    primaryKeys = ["startTime", "hospitalCode"]
+)
 data class ScheduleEntity(
     val id: String,
     val scheduleFhirId: String?,
-    @PrimaryKey
     val startTime: Date,
     val endTime: Date,
     val bookedSlots: Int,

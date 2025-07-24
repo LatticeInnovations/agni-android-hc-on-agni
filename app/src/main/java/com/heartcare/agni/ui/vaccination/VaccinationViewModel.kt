@@ -121,6 +121,7 @@ class VaccinationViewModel @Inject constructor(
                 appointmentRepository,
                 genericRepository,
                 scheduleRepository,
+                preferenceRepository,
                 patientLastUpdatedRepository,
                 updated
             )
