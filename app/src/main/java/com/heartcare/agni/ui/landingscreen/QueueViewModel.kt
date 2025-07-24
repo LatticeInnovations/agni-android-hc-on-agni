@@ -85,7 +85,6 @@ class QueueViewModel @Inject constructor(
     }
 
     internal fun getAppointmentListByDate() {
-        isLoading = true
         viewModelScope.launch(ioDispatcher) {
             appointmentsList = appointmentRepository.getAppointmentListByDate(
                 selectedDate.toTodayStartDate(),
