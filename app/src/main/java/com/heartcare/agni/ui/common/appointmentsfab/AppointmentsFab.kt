@@ -30,6 +30,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
@@ -55,7 +56,8 @@ fun AppointmentsFab(
     patient: PatientResponse,
     isFabSelected: Boolean,
     appointmentsFabViewModel: AppointmentsFabViewModel = hiltViewModel(),
-    showDialog: (Boolean) -> Unit
+    showDialog: (Boolean) -> Unit,
+    showSnackBar: (String) -> Unit
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     LaunchedEffect(true) {
@@ -112,12 +114,13 @@ fun AppointmentsFab(
                     Column {
                         ScheduleAppointmentFAB(navController, patient, showDialog)
                         Spacer(modifier = Modifier.height(20.dp))
-                        if (!appointmentsFabViewModel.ifAlreadyWaiting) {
+                        if (!appointmentsFabViewModel.ifAlreadyWaiting || appointmentsFabViewModel.existsInOtherHospital) {
                             AddToQueueFAB(
                                 navController,
                                 patient,
                                 appointmentsFabViewModel,
-                                showDialog
+                                showDialog,
+                                showSnackBar
                             )
                             Spacer(modifier = Modifier.height(20.dp))
                         }
@@ -133,8 +136,10 @@ private fun AddToQueueFAB(
     navController: NavController,
     patient: PatientResponse,
     appointmentsFabViewModel: AppointmentsFabViewModel = hiltViewModel(),
-    showDialog: (Boolean) -> Unit
+    showDialog: (Boolean) -> Unit,
+    showSnackBar: (String) -> Unit
 ) {
+    val context = LocalContext.current
     FloatingActionButton(
         onClick = {
             //showDialog(true)
@@ -157,13 +162,17 @@ private fun AddToQueueFAB(
                 if (appointmentsFabViewModel.ifAllSlotsBooked) {
                     showDialog(true)
                 } else {
-                    appointmentsFabViewModel.addPatientToQueue(patient) {
-                        CoroutineScope(Dispatchers.Main).launch {
-                            navController.currentBackStackEntry?.savedStateHandle?.set(
-                                ADD_TO_QUEUE,
-                                true
-                            )
-                            navController.navigate(Screen.LandingScreen.route)
+                    if (appointmentsFabViewModel.existsInOtherHospital){
+                        showSnackBar(context.getString(R.string.appointment_exists_in_other_hospital))
+                    } else {
+                        appointmentsFabViewModel.addPatientToQueue(patient) {
+                            CoroutineScope(Dispatchers.Main).launch {
+                                navController.currentBackStackEntry?.savedStateHandle?.set(
+                                    ADD_TO_QUEUE,
+                                    true
+                                )
+                                navController.navigate(Screen.LandingScreen.route)
+                            }
                         }
                     }
                 }

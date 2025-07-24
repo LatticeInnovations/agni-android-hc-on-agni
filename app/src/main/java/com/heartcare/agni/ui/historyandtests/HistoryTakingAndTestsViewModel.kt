@@ -115,8 +115,8 @@ class HistoryTakingAndTestsViewModel@Inject constructor(
                 appointment,
                 appointmentRepository,
                 genericRepository,
-                preferenceRepository,
                 scheduleRepository,
+                preferenceRepository,
                 patientLastUpdatedRepository,
                 updated
             )

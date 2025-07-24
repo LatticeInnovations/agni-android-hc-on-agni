@@ -225,7 +225,8 @@ class AddVitalsViewModel @Inject constructor(
                     appointmentResponseLocal = appointmentResponseLocal!!,
                     appointmentRepository = appointmentRepository,
                     scheduleRepository = scheduleRepository,
-                    genericRepository = genericRepository
+                    genericRepository = genericRepository,
+                    preferenceRepository = preferenceRepository
                 )
                 updatePatientLastUpdated(
                     patient!!.id,

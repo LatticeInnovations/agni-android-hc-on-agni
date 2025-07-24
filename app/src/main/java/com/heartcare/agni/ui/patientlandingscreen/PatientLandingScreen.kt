@@ -67,6 +67,7 @@ import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toAge
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toTimeInMilli
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import timber.log.Timber
 
 @Composable
 fun PatientLandingScreen(
@@ -93,8 +94,10 @@ fun PatientLandingScreen(
                     patientFhirId
                 )
             }
-            if (navController.previousBackStackEntry?.savedStateHandle?.get<Boolean>(PATIENT_SAVED) == true){
-                navController.previousBackStackEntry?.savedStateHandle?.remove<Boolean>(PATIENT_SAVED)
+            if (navController.previousBackStackEntry?.savedStateHandle?.get<Boolean>(PATIENT_SAVED) == true) {
+                navController.previousBackStackEntry?.savedStateHandle?.remove<Boolean>(
+                    PATIENT_SAVED
+                )
                 snackbarHostState.showSnackbar(
                     message = context.getString(R.string.patient_registered_successfully)
                 )
@@ -157,15 +160,24 @@ fun PatientLandingScreen(
         )
     }
     viewModel.patient?.let { patient ->
-        AppointmentsFab(
-            modifier = Modifier.padding(bottom = 80.dp, end = 16.dp),
-            navController,
-            patient,
-            viewModel.isFabSelected
-        ) { showDialog ->
-            if (showDialog) {
-                viewModel.showAllSlotsBookedDialog = true
-            } else viewModel.isFabSelected = !viewModel.isFabSelected
+        if (patient.patientDeceasedReason.isNullOrBlank()) {
+            AppointmentsFab(
+                modifier = Modifier.padding(bottom = 80.dp, end = 16.dp),
+                navController,
+                patient,
+                viewModel.isFabSelected,
+                showDialog = { showDialog ->
+                    if (showDialog) {
+                        viewModel.showAllSlotsBookedDialog = true
+                    } else viewModel.isFabSelected = !viewModel.isFabSelected
+                },
+                showSnackBar = { snackBarMsg ->
+                    viewModel.isFabSelected = false
+                    scope.launch {
+                        snackbarHostState.showSnackbar(snackBarMsg)
+                    }
+                }
+            )
         }
     }
     if (viewModel.showIdStatusDialog) {
@@ -202,19 +214,21 @@ private fun CardComposableList(
                 rememberScrollState()
             )
     ) {
+        /**
         CardComposable(
-            viewModel = viewModel,
-            label = stringResource(id = R.string.history_taking_and_tests),
-            icon = R.drawable.overview,
-            subText = null,
-            onClick = {
-                navController.currentBackStackEntry?.savedStateHandle?.set(
-                    PATIENT,
-                    viewModel.patient
-                )
-                navController.navigate(Screen.HistoryTakingAndTestsScreen.route)
-            }
+        viewModel = viewModel,
+        label = stringResource(id = R.string.history_taking_and_tests),
+        icon = R.drawable.overview,
+        subText = null,
+        onClick = {
+        navController.currentBackStackEntry?.savedStateHandle?.set(
+        PATIENT,
+        viewModel.patient
         )
+        navController.navigate(Screen.HistoryTakingAndTestsScreen.route)
+        }
+        )
+         **/
         CardComposable(
             viewModel,
             stringResource(id = R.string.appointments),
@@ -232,141 +246,143 @@ private fun CardComposableList(
                 navController.navigate(Screen.Appointments.route)
             }
         )
+        /**
         CardComposable(
-            viewModel,
-            stringResource(id = R.string.cvd_risk_assessment),
-            R.drawable.cardiology,
-            if (viewModel.cvdRisk.isBlank()) null
-            else stringResource(R.string.percentage, viewModel.cvdRisk),
-            isCardDisabled = viewModel.patient!!.gender == "other" ||
-                    viewModel.patient!!.birthDate.toTimeInMilli()
-                        .toAge() !in 40..74,
-            onClick = {
-                if (viewModel.patient!!.gender == "other" ||
-                    viewModel.patient!!.birthDate.toTimeInMilli().toAge() !in 40..74
-                ) {
-                    scope.launch {
-                        snackbarHostState.showSnackbar(
-                            message = context.getString(R.string.cvd_error_message)
-                        )
-                    }
-                } else {
-                    scope.launch {
-                        navController.currentBackStackEntry?.savedStateHandle?.set(
-                            "patient",
-                            viewModel.patient
-                        )
-                        navController.navigate(Screen.CVDRiskAssessmentScreen.route)
-                    }
-                }
+        viewModel,
+        stringResource(id = R.string.cvd_risk_assessment),
+        R.drawable.cardiology,
+        if (viewModel.cvdRisk.isBlank()) null
+        else stringResource(R.string.percentage, viewModel.cvdRisk),
+        isCardDisabled = viewModel.patient!!.gender == "other" ||
+        viewModel.patient!!.birthDate.toTimeInMilli()
+        .toAge() !in 40..74,
+        onClick = {
+        if (viewModel.patient!!.gender == "other" ||
+        viewModel.patient!!.birthDate.toTimeInMilli().toAge() !in 40..74
+        ) {
+        scope.launch {
+        snackbarHostState.showSnackbar(
+        message = context.getString(R.string.cvd_error_message)
+        )
+        }
+        } else {
+        scope.launch {
+        navController.currentBackStackEntry?.savedStateHandle?.set(
+        "patient",
+        viewModel.patient
+        )
+        navController.navigate(Screen.CVDRiskAssessmentScreen.route)
+        }
+        }
 
-            }
+        }
         )
         CardComposable(
-            viewModel,
-            stringResource(id = R.string.vital),
-            R.drawable.vital_signs,
-            null,
-            onClick = {
-                navController.currentBackStackEntry?.savedStateHandle?.set(
-                    PATIENT,
-                    viewModel.patient
-                )
-                navController.navigate(Screen.VitalsScreen.route)
-            }
+        viewModel,
+        stringResource(id = R.string.vital),
+        R.drawable.vital_signs,
+        null,
+        onClick = {
+        navController.currentBackStackEntry?.savedStateHandle?.set(
+        PATIENT,
+        viewModel.patient
+        )
+        navController.navigate(Screen.VitalsScreen.route)
+        }
         )
 
         CardComposable(
-            viewModel,
-            stringResource(id = R.string.symptoms_and_diagnosis),
-            R.drawable.diagnosis,
-            null,
-            onClick = {
-                navController.currentBackStackEntry?.savedStateHandle?.set(
-                    PATIENT,
-                    viewModel.patient
-                )
-                navController.navigate(Screen.SymptomsAndDiagnosisScreen.route)
-            }
+        viewModel,
+        stringResource(id = R.string.symptoms_and_diagnosis),
+        R.drawable.diagnosis,
+        null,
+        onClick = {
+        navController.currentBackStackEntry?.savedStateHandle?.set(
+        PATIENT,
+        viewModel.patient
+        )
+        navController.navigate(Screen.SymptomsAndDiagnosisScreen.route)
+        }
         )
         CardComposable(
-            viewModel,
-            stringResource(id = R.string.prescription),
-            R.drawable.prescriptions_icon,
-            null,
-            onClick = {
-                navController.currentBackStackEntry?.savedStateHandle?.set(
-                    "patient",
-                    viewModel.patient
-                )
-                navController.navigate(Screen.PrescriptionPhotoViewScreen.route)
-            }
+        viewModel,
+        stringResource(id = R.string.prescription),
+        R.drawable.prescriptions_icon,
+        null,
+        onClick = {
+        navController.currentBackStackEntry?.savedStateHandle?.set(
+        "patient",
+        viewModel.patient
+        )
+        navController.navigate(Screen.PrescriptionPhotoViewScreen.route)
+        }
         )
         CardComposable(
-            viewModel,
-            stringResource(id = R.string.drugs_dispense),
-            R.drawable.pill,
-            null,
-            onClick = {
-                navController.currentBackStackEntry?.savedStateHandle?.set(
-                    PATIENT,
-                    viewModel.patient
-                )
-                navController.navigate(Screen.DrugDispenseScreen.route)
-            }
+        viewModel,
+        stringResource(id = R.string.drugs_dispense),
+        R.drawable.pill,
+        null,
+        onClick = {
+        navController.currentBackStackEntry?.savedStateHandle?.set(
+        PATIENT,
+        viewModel.patient
+        )
+        navController.navigate(Screen.DrugDispenseScreen.route)
+        }
         )
         CardComposable(
-            viewModel,
-            stringResource(id = R.string.lab_test),
-            R.drawable.lab_research,
-            null,
-            onClick = {
-                navController.currentBackStackEntry?.savedStateHandle?.set(
-                    PHOTO_VIEW_TYPE,
-                    PhotoUploadTypeEnum.LAB_TEST.value
-                )
-                navController.currentBackStackEntry?.savedStateHandle?.set(
-                    PATIENT,
-                    viewModel.patient
-                )
-                navController.navigate(Screen.LabAndMedRecordPhotoViewScreen.route)
-            }
+        viewModel,
+        stringResource(id = R.string.lab_test),
+        R.drawable.lab_research,
+        null,
+        onClick = {
+        navController.currentBackStackEntry?.savedStateHandle?.set(
+        PHOTO_VIEW_TYPE,
+        PhotoUploadTypeEnum.LAB_TEST.value
+        )
+        navController.currentBackStackEntry?.savedStateHandle?.set(
+        PATIENT,
+        viewModel.patient
+        )
+        navController.navigate(Screen.LabAndMedRecordPhotoViewScreen.route)
+        }
         )
         CardComposable(
-            viewModel,
-            stringResource(id = R.string.medical_record),
-            R.drawable.contract,
-            null,
-            onClick = {
-                navController.currentBackStackEntry?.savedStateHandle?.set(
-                    PHOTO_VIEW_TYPE,
-                    PhotoUploadTypeEnum.MEDICAL_RECORD.value
-                )
-                navController.currentBackStackEntry?.savedStateHandle?.set(
-                    PATIENT,
-                    viewModel.patient
-                )
-                navController.navigate(Screen.LabAndMedRecordPhotoViewScreen.route)
-            }
+        viewModel,
+        stringResource(id = R.string.medical_record),
+        R.drawable.contract,
+        null,
+        onClick = {
+        navController.currentBackStackEntry?.savedStateHandle?.set(
+        PHOTO_VIEW_TYPE,
+        PhotoUploadTypeEnum.MEDICAL_RECORD.value
+        )
+        navController.currentBackStackEntry?.savedStateHandle?.set(
+        PATIENT,
+        viewModel.patient
+        )
+        navController.navigate(Screen.LabAndMedRecordPhotoViewScreen.route)
+        }
         )
         CardComposable(
-            viewModel,
-            stringResource(id = R.string.vaccination),
-            R.drawable.syringe,
-            stringResource(
-                id = R.string.vaccination_info,
-                viewModel.upcomingVaccine,
-                viewModel.missedVaccine,
-                viewModel.takenVaccine
-            ),
-            onClick = {
-                navController.currentBackStackEntry?.savedStateHandle?.set(
-                    PATIENT,
-                    viewModel.patient
-                )
-                navController.navigate(Screen.VaccinationScreen.route)
-            }
+        viewModel,
+        stringResource(id = R.string.vaccination),
+        R.drawable.syringe,
+        stringResource(
+        id = R.string.vaccination_info,
+        viewModel.upcomingVaccine,
+        viewModel.missedVaccine,
+        viewModel.takenVaccine
+        ),
+        onClick = {
+        navController.currentBackStackEntry?.savedStateHandle?.set(
+        PATIENT,
+        viewModel.patient
         )
+        navController.navigate(Screen.VaccinationScreen.route)
+        }
+        )
+         **/
         Spacer(
             modifier = Modifier.height(76.dp)
         )

@@ -14,9 +14,15 @@ data class AppointmentResponseLocal(
     val patientId: String,
     val scheduleId: Date,
     val slot: Slot,
-    val orgId: String,
     val createdOn: Date,
     val status: String,
     val appointmentType: String,
-    val inProgressTime: Date?
+    val inProgressTime: Date?,
+    val roleId: String?,
+    val slotId: String?,
+    val practitionerId: String?,
+    val hospitalFhirId: String?,
+    val hospitalId: String?,
+    val hospitalName: String?,
+    val hospitalCode: String?
 ) : Parcelable

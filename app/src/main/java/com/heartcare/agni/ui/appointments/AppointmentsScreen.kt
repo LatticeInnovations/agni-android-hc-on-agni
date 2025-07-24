@@ -205,15 +205,25 @@ fun AppointmentsScreen(
     }
     if (pagerState.currentPage == 0) {
         viewModel.patient?.let { patient ->
-            AppointmentsFab(
-                Modifier.padding(16.dp),
-                navController,
-                patient,
-                viewModel.isFabSelected
-            ) { showDialog ->
-                if (showDialog) {
-                    viewModel.showAllSlotsBookedDialog = true
-                } else viewModel.isFabSelected = !viewModel.isFabSelected
+            if (patient.patientDeceasedReason.isNullOrBlank()) {
+                AppointmentsFab(
+                    Modifier.padding(16.dp),
+                    navController,
+                    patient,
+                    viewModel.isFabSelected,
+                    showDialog = { showDialog ->
+                        if (showDialog) {
+                            viewModel.showAllSlotsBookedDialog = true
+                        } else viewModel.isFabSelected = !viewModel.isFabSelected
+
+                    },
+                    showSnackBar = { snackBarMsg ->
+                        viewModel.isFabSelected = false
+                        coroutineScope.launch {
+                            snackbarHostState.showSnackbar(snackBarMsg)
+                        }
+                    }
+                )
             }
         }
     }

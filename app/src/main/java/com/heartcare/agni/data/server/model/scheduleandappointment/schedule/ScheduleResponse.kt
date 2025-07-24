@@ -11,6 +11,12 @@ data class ScheduleResponse(
     val uuid: String,
     val scheduleId: String?,
     val planningHorizon: Slot,
-    val orgId: String,
-    val bookedSlots: Int?
+    val bookedSlots: Int?,
+    val roleId: String?,
+    val active: Boolean?,
+    val practitionerId: String?,
+    val hospitalId: String?,
+    val hospitalFhirId: String?,
+    val hospitalName: String?,
+    val hospitalCode: String?
 ) : Parcelable

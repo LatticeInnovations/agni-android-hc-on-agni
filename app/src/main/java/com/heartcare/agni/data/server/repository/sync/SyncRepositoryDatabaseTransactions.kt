@@ -2,7 +2,7 @@ package com.heartcare.agni.data.server.repository.sync
 
 import com.heartcare.agni.data.local.enums.DispenseStatusEnum
 import com.heartcare.agni.data.local.enums.GenericTypeEnum
-import com.heartcare.agni.data.local.enums.IdentifierCodeEnum
+import com.heartcare.agni.data.local.enums.IdentifierIgnoreEnum
 import com.heartcare.agni.data.local.enums.PhotoDeleteEnum
 import com.heartcare.agni.data.local.enums.PhotoUploadTypeEnum
 import com.heartcare.agni.data.local.enums.SyncType
@@ -161,13 +161,6 @@ open class SyncRepositoryDatabaseTransactions(
                         payload = patientResponse.fhirId,
                         type = GenericTypeEnum.FHIR_IDS_OTC,
                         syncType = SyncType.POST
-                    ),
-                    GenericEntity(
-                        id = UUID.randomUUID().toString(),
-                        patientId = patientResponse.id,
-                        payload = patientResponse.fhirId,
-                        type = GenericTypeEnum.FHIR_IDS_IMMUNIZATION,
-                        syncType = SyncType.POST
                     )
                 )
             )
@@ -180,9 +173,8 @@ open class SyncRepositoryDatabaseTransactions(
             *listOfGenericEntity.toTypedArray()
         )
 
-        //Insert Identifer Data
-        patientDao.insertIdentifiers(*identifierList.filter { it.identifierCode != IdentifierCodeEnum.MEDICAL_RECORD.value }
-            .toTypedArray())
+        //Insert Identifier Data
+        patientDao.insertIdentifiers(*identifierList.toTypedArray())
     }
 
     protected suspend fun insertRelations(body: List<RelatedPersonResponse>) {

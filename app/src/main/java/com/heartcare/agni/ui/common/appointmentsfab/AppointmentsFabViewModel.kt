@@ -13,11 +13,12 @@ import com.heartcare.agni.data.local.repository.patient.lastupdated.PatientLastU
 import com.heartcare.agni.data.local.repository.preference.PreferenceRepository
 import com.heartcare.agni.data.local.repository.schedule.ScheduleRepository
 import com.heartcare.agni.data.server.model.patient.PatientResponse
+import com.heartcare.agni.di.dispatcher.IoDispatcher
 import com.heartcare.agni.utils.common.Queries
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toEndOfDay
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toTodayStartDate
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.launch
 import java.util.Date
 import javax.inject.Inject
@@ -28,23 +29,26 @@ class AppointmentsFabViewModel @Inject constructor(
     private val scheduleRepository: ScheduleRepository,
     private val genericRepository: GenericRepository,
     private val preferenceRepository: PreferenceRepository,
-    private val patientLastUpdatedRepository: PatientLastUpdatedRepository
+    private val patientLastUpdatedRepository: PatientLastUpdatedRepository,
+    @IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) : BaseViewModel() {
-
+    val user = preferenceRepository.getUserDetails()!!
     var appointment by mutableStateOf<AppointmentResponseLocal?>(null)
     var ifAlreadyWaiting by mutableStateOf(false)
     var ifAllSlotsBooked by mutableStateOf(false)
+    var existsInOtherHospital by mutableStateOf(false)
     private val maxNumberOfAppointmentsInADay = 250
 
     internal fun initialize(patientId: String) {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(ioDispatcher) {
             appointmentRepository.getAppointmentsOfPatientByDate(
                 patientId,
                 Date().toTodayStartDate(),
                 Date().toEndOfDay()
             ).let { appointmentResponse ->
                 ifAlreadyWaiting = appointmentResponse?.status?.let {
-                    it != AppointmentStatusEnum.SCHEDULED.value
+                    existsInOtherHospital = appointmentResponse.hospitalCode != user.hospitalCode
+                    it != AppointmentStatusEnum.SCHEDULED.value && appointmentResponse.hospitalCode == user.hospitalCode
                 } ?: false
             }
             ifAllSlotsBooked = appointmentRepository.getAppointmentListByDate(
@@ -57,13 +61,14 @@ class AppointmentsFabViewModel @Inject constructor(
                 patientId,
                 AppointmentStatusEnum.SCHEDULED.value
             ).firstOrNull { appointmentResponse ->
+                appointmentResponse.hospitalCode == user.hospitalCode &&
                 appointmentResponse.slot.start.time < Date().toEndOfDay() && appointmentResponse.slot.start.time > Date().toTodayStartDate()
             }
         }
     }
 
     internal fun addPatientToQueue(patient: PatientResponse, addedToQueue: (List<Long>) -> Unit) {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(ioDispatcher) {
             Queries.addPatientToQueue(
                 patient,
                 scheduleRepository,
@@ -81,14 +86,14 @@ class AppointmentsFabViewModel @Inject constructor(
         appointment: AppointmentResponseLocal,
         updated: (Int) -> Unit
     ) {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(ioDispatcher) {
             Queries.updateStatusToArrived(
                 patient,
                 appointment,
                 appointmentRepository,
                 genericRepository,
-                preferenceRepository,
                 scheduleRepository,
+                preferenceRepository,
                 patientLastUpdatedRepository,
                 updated
             )

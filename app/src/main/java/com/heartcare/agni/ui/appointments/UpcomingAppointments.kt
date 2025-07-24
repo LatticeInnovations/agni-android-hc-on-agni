@@ -13,7 +13,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -32,6 +32,8 @@ import com.heartcare.agni.utils.constants.NavControllerConstants.APPOINTMENT_SEL
 import com.heartcare.agni.utils.constants.NavControllerConstants.IF_RESCHEDULING
 import com.heartcare.agni.utils.constants.NavControllerConstants.PATIENT
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toAppointmentDate
+import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toEndOfDay
+import java.util.Date
 
 @Composable
 fun UpcomingAppointments(navController: NavController, viewModel: AppointmentsScreenViewModel) {
@@ -73,7 +75,7 @@ fun UpcomingAppointmentCard(
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
         ),
-        modifier = Modifier.testTag("UPCOMING_APPOINTMENT_CARD")
+        modifier = Modifier.fillMaxWidth()
     ) {
         Text(
             text = appointmentResponseLocal.slot.start.toAppointmentDate(),
@@ -84,49 +86,51 @@ fun UpcomingAppointmentCard(
                 )
                 .testTag("APPOINTMENT_DATE_AND_TIME")
         )
-        Divider(
-            thickness = 1.dp,
-            color = MaterialTheme.colorScheme.outlineVariant
-        )
-        Row(
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Surface(
-                modifier = Modifier.weight(1f),
-                color = MaterialTheme.colorScheme.surface
+        if (appointmentResponseLocal.slot.start.time >= Date().toEndOfDay()) {
+            HorizontalDivider(
+                thickness = 1.dp,
+                color = MaterialTheme.colorScheme.outlineVariant
+            )
+            Row(
+                modifier = Modifier.fillMaxWidth()
             ) {
-                TextButton(
-                    modifier = Modifier.testTag("APPOINTMENT_CANCEL_BTN"),
-                    onClick = {
-                        viewModel.selectedAppointment = appointmentResponseLocal
-                        viewModel.showCancelAppointmentDialog = true
-                    }) {
-                    Text(text = stringResource(id = R.string.cancel))
+                Surface(
+                    modifier = Modifier.weight(1f),
+                    color = MaterialTheme.colorScheme.surface
+                ) {
+                    TextButton(
+                        modifier = Modifier.testTag("APPOINTMENT_CANCEL_BTN"),
+                        onClick = {
+                            viewModel.selectedAppointment = appointmentResponseLocal
+                            viewModel.showCancelAppointmentDialog = true
+                        }) {
+                        Text(text = stringResource(id = R.string.cancel))
+                    }
                 }
-            }
-            Surface(
-                modifier = Modifier.weight(1f),
-                color = MaterialTheme.colorScheme.secondaryContainer
-            ) {
-                TextButton(
-                    modifier = Modifier.testTag("APPOINTMENT_RESCHEDULE_BTN"),
-                    onClick = {
-                        viewModel.selectedAppointment = appointmentResponseLocal
-                        navController.currentBackStackEntry?.savedStateHandle?.set(
-                            PATIENT,
-                            viewModel.patient
-                        )
-                        navController.currentBackStackEntry?.savedStateHandle?.set(
-                            APPOINTMENT_SELECTED,
-                            viewModel.selectedAppointment
-                        )
-                        navController.currentBackStackEntry?.savedStateHandle?.set(
-                            IF_RESCHEDULING,
-                            true
-                        )
-                        navController.navigate(Screen.ScheduleAppointments.route)
-                    }) {
-                    Text(text = stringResource(id = R.string.reschedule))
+                Surface(
+                    modifier = Modifier.weight(1f),
+                    color = MaterialTheme.colorScheme.secondaryContainer
+                ) {
+                    TextButton(
+                        modifier = Modifier.testTag("APPOINTMENT_RESCHEDULE_BTN"),
+                        onClick = {
+                            viewModel.selectedAppointment = appointmentResponseLocal
+                            navController.currentBackStackEntry?.savedStateHandle?.set(
+                                PATIENT,
+                                viewModel.patient
+                            )
+                            navController.currentBackStackEntry?.savedStateHandle?.set(
+                                APPOINTMENT_SELECTED,
+                                viewModel.selectedAppointment
+                            )
+                            navController.currentBackStackEntry?.savedStateHandle?.set(
+                                IF_RESCHEDULING,
+                                true
+                            )
+                            navController.navigate(Screen.ScheduleAppointments.route)
+                        }) {
+                        Text(text = stringResource(id = R.string.reschedule))
+                    }
                 }
             }
         }

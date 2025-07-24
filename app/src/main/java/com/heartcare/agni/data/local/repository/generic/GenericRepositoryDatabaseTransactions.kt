@@ -27,6 +27,9 @@ import com.heartcare.agni.data.server.model.scheduleandappointment.schedule.Sche
 import com.heartcare.agni.data.server.model.vaccination.ImmunizationResponse
 import com.heartcare.agni.utils.builders.GenericEntityPatchBuilder.processPatch
 import com.heartcare.agni.utils.constants.Id
+import com.heartcare.agni.utils.constants.Id.APPOINTMENT_ID
+import com.heartcare.agni.utils.constants.Id.APP_UPDATED_DATE
+import com.heartcare.agni.utils.constants.Id.PATIENT_ID
 import com.heartcare.agni.utils.converters.responseconverter.FHIR.isFhirId
 import com.heartcare.agni.utils.converters.responseconverter.GsonConverters.fromJson
 import com.heartcare.agni.utils.converters.responseconverter.GsonConverters.mapToObject
@@ -478,6 +481,7 @@ open class GenericRepositoryDatabaseTransactions(
     protected suspend fun insertOrUpdateAppointmentGenericEntityPatch(
         appointmentGenericEntity: GenericEntity?,
         map: Map<String, Any>,
+        patientFhirId: String,
         appointmentFhirId: String,
         uuid: String
     ): Long {
@@ -486,6 +490,7 @@ open class GenericRepositoryDatabaseTransactions(
             map.entries.forEach { mapEntry ->
                 existingMap[mapEntry.key] = mapEntry.value
             }
+            existingMap[APP_UPDATED_DATE] = Date()
             genericDao.insertGenericEntity(
                 GenericEntity(
                     id = appointmentGenericEntity.id,
@@ -501,7 +506,9 @@ open class GenericRepositoryDatabaseTransactions(
                     id = uuid,
                     patientId = appointmentFhirId,
                     payload = map.toMutableMap().let { mutableMap ->
-                        mutableMap[Id.APPOINTMENT_ID] = appointmentFhirId
+                        mutableMap[APPOINTMENT_ID] = appointmentFhirId
+                        mutableMap[PATIENT_ID] = patientFhirId
+                        mutableMap[APP_UPDATED_DATE] = Date()
                         mutableMap
                     }.toJson(),
                     type = GenericTypeEnum.APPOINTMENT,

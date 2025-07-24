@@ -16,6 +16,7 @@ import com.heartcare.agni.data.local.repository.dispense.DispenseRepository
 import com.heartcare.agni.data.local.repository.generic.GenericRepository
 import com.heartcare.agni.data.local.repository.medication.MedicationRepository
 import com.heartcare.agni.data.local.repository.patient.lastupdated.PatientLastUpdatedRepository
+import com.heartcare.agni.data.local.repository.preference.PreferenceRepository
 import com.heartcare.agni.data.local.repository.prescription.PrescriptionRepository
 import com.heartcare.agni.data.local.repository.schedule.ScheduleRepository
 import com.heartcare.agni.data.local.repository.search.SearchRepository
@@ -47,7 +48,8 @@ class PrescriptionViewModel @Inject constructor(
     private val appointmentRepository: AppointmentRepository,
     private val dispenseRepository: DispenseRepository,
     private val scheduleRepository: ScheduleRepository,
-    private val patientLastUpdatedRepository: PatientLastUpdatedRepository
+    private val patientLastUpdatedRepository: PatientLastUpdatedRepository,
+    private val preferenceRepository: PreferenceRepository
 ) : BaseViewModel() {
     var isLaunched by mutableStateOf(false)
 
@@ -135,7 +137,8 @@ class PrescriptionViewModel @Inject constructor(
                         appointmentResponseLocal = appointmentResponseLocal!!,
                         appointmentRepository = appointmentRepository,
                         scheduleRepository = scheduleRepository,
-                        genericRepository = genericRepository
+                        genericRepository = genericRepository,
+                        preferenceRepository = preferenceRepository
                     )
                     updatePatientLastUpdated(
                         patient!!.id,

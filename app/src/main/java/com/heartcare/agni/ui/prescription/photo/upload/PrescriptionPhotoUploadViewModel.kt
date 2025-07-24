@@ -16,6 +16,7 @@ import com.heartcare.agni.data.local.repository.appointment.AppointmentRepositor
 import com.heartcare.agni.data.local.repository.file.DownloadedFileRepository
 import com.heartcare.agni.data.local.repository.generic.GenericRepository
 import com.heartcare.agni.data.local.repository.patient.lastupdated.PatientLastUpdatedRepository
+import com.heartcare.agni.data.local.repository.preference.PreferenceRepository
 import com.heartcare.agni.data.local.repository.prescription.PrescriptionRepository
 import com.heartcare.agni.data.local.repository.schedule.ScheduleRepository
 import com.heartcare.agni.data.local.roomdb.entities.file.DownloadedFileEntity
@@ -44,7 +45,8 @@ class PrescriptionPhotoUploadViewModel @Inject constructor(
     private val fileSyncRepository: FileSyncRepository,
     private val downloadedFileRepository: DownloadedFileRepository,
     private val scheduleRepository: ScheduleRepository,
-    private val patientLastUpdatedRepository: PatientLastUpdatedRepository
+    private val patientLastUpdatedRepository: PatientLastUpdatedRepository,
+    private val preferenceRepository: PreferenceRepository
 ) : BaseAndroidViewModel(application) {
 
     var patient: PatientResponse? by mutableStateOf(null)
@@ -129,7 +131,8 @@ class PrescriptionPhotoUploadViewModel @Inject constructor(
                 appointmentResponseLocal = appointmentResponseLocal!!,
                 appointmentRepository = appointmentRepository,
                 scheduleRepository = scheduleRepository,
-                genericRepository = genericRepository
+                genericRepository = genericRepository,
+                preferenceRepository = preferenceRepository
             )
             updatePatientLastUpdated(
                 patient!!.id,

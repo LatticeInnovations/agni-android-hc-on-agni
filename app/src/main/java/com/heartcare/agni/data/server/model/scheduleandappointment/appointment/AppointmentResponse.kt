@@ -16,10 +16,17 @@ data class AppointmentResponse(
     val patientFhirId: String,
     val scheduleId: String,
     val slot: Slot,
-    val orgId: String,
     val createdOn: Date,
     val status: String,
     val appointmentType: String,
     @SerializedName("generatedOn")
-    val inProgressTime: Date?
+    val inProgressTime: Date?,
+    val roleId: String?,
+    val slotId: String?,
+    val practitionerId: String?,
+    val hospitalFhirId: String?,
+    val hospitalId: String?,
+    val hospitalName: String?,
+    val hospitalCode: String?,
+    val appUpdatedDate: Date?
 ) : Parcelable

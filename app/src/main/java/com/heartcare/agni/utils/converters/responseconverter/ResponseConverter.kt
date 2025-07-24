@@ -1,5 +1,6 @@
 package com.heartcare.agni.utils.converters.responseconverter
 
+import com.heartcare.agni.data.local.enums.IdentifierIgnoreEnum
 import com.heartcare.agni.data.local.enums.PhotoDeleteEnum
 import com.heartcare.agni.data.local.enums.PrescriptionType
 import com.heartcare.agni.data.local.enums.RelationEnum
@@ -136,7 +137,7 @@ fun PatientIdentifier.toIdentifierEntity(patientId: String): IdentifierEntity {
 }
 
 fun PatientResponse.toListOfIdentifierEntity(): List<IdentifierEntity> {
-    return this.identifier.map {
+    return this.identifier.filter { it.code != IdentifierIgnoreEnum.MEDICAL_RECORD.value || it.identifierType != IdentifierIgnoreEnum.HEARTCARE_TYPE.value }.map {
         it.toIdentifierEntity(this.id)
     }
 }
@@ -395,7 +396,13 @@ internal fun ScheduleResponse.toScheduleEntity(): ScheduleEntity {
         startTime = planningHorizon.start,
         endTime = planningHorizon.end,
         bookedSlots = bookedSlots!!,
-        orgId = orgId
+        roleId = roleId!!,
+        active = active!!,
+        practitionerId = practitionerId!!,
+        hospitalId = hospitalId,
+        hospitalFhirId = hospitalFhirId,
+        hospitalName = hospitalName!!,
+        hospitalCode = hospitalCode!!,
     )
 }
 
@@ -404,11 +411,17 @@ internal fun ScheduleEntity.toScheduleResponse(): ScheduleResponse {
         uuid = id,
         scheduleId = scheduleFhirId,
         bookedSlots = bookedSlots,
-        orgId = orgId,
         planningHorizon = Slot(
             start = startTime,
             end = endTime
-        )
+        ),
+        roleId = roleId,
+        active = active,
+        practitionerId = practitionerId,
+        hospitalId = hospitalId,
+        hospitalFhirId = hospitalFhirId,
+        hospitalName = hospitalName,
+        hospitalCode = hospitalCode
     )
 }
 
@@ -423,33 +436,47 @@ internal suspend fun AppointmentResponse.toAppointmentEntity(
         createdOn = createdOn,
         patientId = patientDao.getPatientIdByFhirId(patientFhirId)!!,
         scheduleId = scheduleDao.getScheduleStartTimeByFhirId(scheduleId)!!,
-        orgId = orgId,
         status = status,
         startTime = slot.start,
         endTime = slot.end,
         appointmentType = appointmentType,
-        inProgressTime = inProgressTime
+        inProgressTime = inProgressTime,
+        roleId = roleId,
+        slotId = slotId,
+        practitionerId = practitionerId,
+        hospitalFhirId = hospitalFhirId,
+        hospitalId = hospitalId,
+        hospitalName = hospitalName,
+        hospitalCode = hospitalCode!!
     )
 }
 
 internal suspend fun AppointmentEntity.toAppointmentResponse(
-    scheduleDao: ScheduleDao
+    scheduleDao: ScheduleDao,
+    hospitalCode: String
 ): AppointmentResponse {
     return AppointmentResponse(
         uuid = id,
         createdOn = createdOn,
         appointmentId = appointmentFhirId,
-        orgId = orgId,
         patientFhirId = patientId,
-        scheduleId = scheduleDao.getFhirIdByStartTime(scheduleId)
-            ?: scheduleDao.getScheduleByStartTime(scheduleId.time)!!.id,
+        scheduleId = scheduleDao.getFhirIdByStartTime(scheduleId, hospitalCode)
+            ?: scheduleDao.getScheduleByStartTime(scheduleId.time, hospitalCode)!!.id,
         slot = Slot(
             start = startTime,
             end = endTime
         ),
         status = status,
         appointmentType = appointmentType,
-        inProgressTime = inProgressTime
+        inProgressTime = inProgressTime,
+        roleId = null,
+        slotId = null,
+        practitionerId = null,
+        hospitalFhirId = null,
+        hospitalId = null,
+        hospitalName = null,
+        hospitalCode = null,
+        appUpdatedDate = Date()
     )
 }
 
@@ -458,7 +485,6 @@ internal fun AppointmentEntity.toAppointmentResponseLocal(): AppointmentResponse
         uuid = id,
         createdOn = createdOn,
         appointmentId = appointmentFhirId,
-        orgId = orgId,
         patientId = patientId,
         scheduleId = scheduleId,
         slot = Slot(
@@ -467,7 +493,14 @@ internal fun AppointmentEntity.toAppointmentResponseLocal(): AppointmentResponse
         ),
         status = status,
         appointmentType = appointmentType,
-        inProgressTime = inProgressTime
+        inProgressTime = inProgressTime,
+        roleId = roleId,
+        slotId = slotId,
+        practitionerId = practitionerId,
+        hospitalFhirId = hospitalFhirId,
+        hospitalId = hospitalId,
+        hospitalName = hospitalName,
+        hospitalCode = hospitalCode
     )
 }
 
@@ -479,12 +512,18 @@ internal fun AppointmentResponseLocal.toAppointmentEntity(): AppointmentEntity {
         createdOn = createdOn,
         patientId = patientId,
         scheduleId = scheduleId,
-        orgId = orgId,
         status = status,
         startTime = slot.start,
         endTime = slot.end,
         appointmentType = appointmentType,
-        inProgressTime = inProgressTime
+        inProgressTime = inProgressTime,
+        roleId = roleId,
+        slotId = slotId,
+        practitionerId = practitionerId,
+        hospitalFhirId = hospitalFhirId,
+        hospitalId = hospitalId,
+        hospitalName = hospitalName,
+        hospitalCode = hospitalCode!!
     )
 }
 

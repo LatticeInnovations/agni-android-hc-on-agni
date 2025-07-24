@@ -22,7 +22,7 @@ interface SearchDao {
 
     @Transaction
     @RewriteQueriesToDropUnusedColumns
-    @Query("SELECT * FROM PatientEntity INNER JOIN PatientLastUpdatedEntity ON PatientEntity.id = PatientLastUpdatedEntity.patientId ORDER BY PatientLastUpdatedEntity.lastUpdated DESC")
+    @Query("SELECT * FROM PatientEntity INNER JOIN PatientLastUpdatedEntity ON PatientEntity.id = PatientLastUpdatedEntity.patientId WHERE PatientEntity.isDeleted = 0 ORDER BY PatientLastUpdatedEntity.lastUpdated DESC")
     suspend fun getPatientList(): List<PatientAndIdentifierEntity>
 
     @Transaction

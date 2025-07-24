@@ -2,6 +2,7 @@ package com.heartcare.agni.service.workmanager.workers.status.noshow
 
 import android.content.Context
 import androidx.work.WorkerParameters
+import com.google.gson.Gson
 import com.heartcare.agni.FhirApp
 import com.heartcare.agni.data.local.enums.AppointmentStatusEnum
 import com.heartcare.agni.data.local.enums.ChangeTypeEnum
@@ -10,9 +11,11 @@ import com.heartcare.agni.data.local.enums.SyncType
 import com.heartcare.agni.data.local.model.patch.ChangeRequest
 import com.heartcare.agni.data.local.roomdb.entities.appointment.AppointmentEntity
 import com.heartcare.agni.data.local.roomdb.entities.generic.GenericEntity
+import com.heartcare.agni.data.server.model.authentication.LoginResponse
 import com.heartcare.agni.service.workmanager.workers.base.SyncWorker
 import com.heartcare.agni.utils.builders.UUIDBuilder
 import com.heartcare.agni.utils.constants.Id
+import com.heartcare.agni.utils.constants.Id.APP_UPDATED_DATE
 import com.heartcare.agni.utils.converters.responseconverter.GsonConverters.fromJson
 import com.heartcare.agni.utils.converters.responseconverter.GsonConverters.toJson
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toEndOfDay
@@ -51,6 +54,8 @@ abstract class AppointmentNoShowStatusUpdateWorker(
     private suspend fun insertInGenericEntity(appointmentEntity: AppointmentEntity): Long {
         val genericDao = (applicationContext as FhirApp).fhirAppDatabase.getGenericDao()
         val scheduleDao = (applicationContext as FhirApp).fhirAppDatabase.getScheduleDao()
+        val patientDao = (applicationContext as FhirApp).fhirAppDatabase.getPatientDao()
+        val user = Gson().fromJson((applicationContext as FhirApp).preferenceStorage.userDetails, LoginResponse::class.java)!!
         return genericDao.getGenericEntityById(
             patientId = appointmentEntity.id,
             genericTypeEnum = GenericTypeEnum.APPOINTMENT,
@@ -62,7 +67,7 @@ abstract class AppointmentNoShowStatusUpdateWorker(
                     appointmentGenericEntity.copy(
                         payload = appointmentEntity.copy(
                             status = AppointmentStatusEnum.NO_SHOW.value
-                        ).toAppointmentResponse(scheduleDao).toJson()
+                        ).toAppointmentResponse(scheduleDao, user.hospitalCode).toJson()
                     )
                 )[0]
             } else {
@@ -83,6 +88,7 @@ abstract class AppointmentNoShowStatusUpdateWorker(
                         map.entries.forEach { mapEntry ->
                             existingMap[mapEntry.key] = mapEntry.value
                         }
+                        existingMap[APP_UPDATED_DATE] = Date()
                         genericDao.insertGenericEntity(
                             GenericEntity(
                                 id = appointmentGenericPatchEntity.id,
@@ -99,8 +105,9 @@ abstract class AppointmentNoShowStatusUpdateWorker(
                                 id = UUIDBuilder.generateUUID(),
                                 patientId = appointmentEntity.appointmentFhirId,
                                 payload = map.toMutableMap().let { mutableMap ->
-                                    mutableMap[Id.APPOINTMENT_ID] =
-                                        appointmentEntity.appointmentFhirId
+                                    mutableMap[Id.APPOINTMENT_ID] = appointmentEntity.appointmentFhirId
+                                    mutableMap[Id.PATIENT_ID] = patientDao.getPatientDataById(appointmentEntity.patientId)[0].patientEntity.fhirId!!
+                                    mutableMap[APP_UPDATED_DATE] = Date()
                                     mutableMap
                                 }.toJson(),
                                 type = GenericTypeEnum.APPOINTMENT,

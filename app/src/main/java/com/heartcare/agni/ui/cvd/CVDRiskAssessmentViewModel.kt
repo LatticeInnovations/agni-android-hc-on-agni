@@ -234,7 +234,8 @@ class CVDRiskAssessmentViewModel @Inject constructor(
                 appointmentResponseLocal = appointmentResponseLocal!!,
                 appointmentRepository = appointmentRepository,
                 scheduleRepository = scheduleRepository,
-                genericRepository = genericRepository
+                genericRepository = genericRepository,
+                preferenceRepository = preferenceRepository
             )
             getAppointment()
             updatePatientLastUpdated(
@@ -305,8 +306,8 @@ class CVDRiskAssessmentViewModel @Inject constructor(
                 appointment,
                 appointmentRepository,
                 genericRepository,
-                preferenceRepository,
                 scheduleRepository,
+                preferenceRepository,
                 patientLastUpdatedRepository,
                 updated
             )
