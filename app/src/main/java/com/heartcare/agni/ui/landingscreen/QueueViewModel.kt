@@ -55,6 +55,7 @@ class QueueViewModel @Inject constructor(
 
     // queue screen
     var isLaunched by mutableStateOf(false)
+    var isLoading by mutableStateOf(true)
     var selectedDate by mutableStateOf(Date())
     var weekList by mutableStateOf(selectedDate.to14DaysWeek())
     var showDatePicker by mutableStateOf(false)
@@ -84,6 +85,7 @@ class QueueViewModel @Inject constructor(
     }
 
     internal fun getAppointmentListByDate() {
+        isLoading = true
         viewModelScope.launch(ioDispatcher) {
             appointmentsList = appointmentRepository.getAppointmentListByDate(
                 selectedDate.toTodayStartDate(),
@@ -109,6 +111,7 @@ class QueueViewModel @Inject constructor(
                         || appointmentResponseLocal.status == AppointmentStatusEnum.COMPLETED.value)
                         && isPrescriptionExists(appointmentResponseLocal.uuid)
             }
+            isLoading = false
         }
     }
 

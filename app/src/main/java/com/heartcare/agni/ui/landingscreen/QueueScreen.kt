@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -50,6 +51,7 @@ import com.heartcare.agni.data.local.model.appointment.AppointmentResponseLocal
 import com.heartcare.agni.data.server.model.patient.PatientResponse
 import com.heartcare.agni.navigation.Screen
 import com.heartcare.agni.ui.appointments.CancelAppointmentDialog
+import com.heartcare.agni.ui.common.Loader
 import com.heartcare.agni.ui.common.WeekDaysComposable
 import com.heartcare.agni.utils.constants.NavControllerConstants
 import com.heartcare.agni.utils.constants.NavControllerConstants.PATIENT
@@ -123,7 +125,14 @@ fun QueueScreen(
                 }
             }
         }
-        QueueList(queueListState, viewModel, landingViewModel, navController)
+        if (viewModel.isLoading) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Loader()
+            }
+        } else QueueList(queueListState, viewModel, landingViewModel, navController)
     }
     if (viewModel.showCancelAppointmentDialog) {
         CancelAppointmentDialog(
@@ -164,8 +173,10 @@ private fun QueueList(
             // scheduled
             item {
                 ListWithLabel(
-                    surfaceColor = if (viewModel.scheduledQueueList.isEmpty()) MaterialTheme.colorScheme.surface
-                        else MaterialTheme.colorScheme.secondaryContainer,
+                    surfaceColor = if (viewModel.scheduledQueueList.isEmpty()
+                        || viewModel.selectedDate.toTodayStartDate() != Date().toTodayStartDate()
+                    ) MaterialTheme.colorScheme.surface
+                    else MaterialTheme.colorScheme.secondaryContainer,
                     label = stringResource(
                         id = R.string.scheduled_count,
                         viewModel.scheduledQueueList.size
