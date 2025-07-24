@@ -9,6 +9,7 @@ import com.heartcare.agni.base.viewmodel.BaseViewModel
 import com.heartcare.agni.data.local.enums.LevelsEnum
 import com.heartcare.agni.data.local.repository.levels.LevelRepository
 import com.heartcare.agni.data.server.model.levels.LevelResponse
+import com.heartcare.agni.di.dispatcher.IoDispatcher
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
@@ -17,19 +18,11 @@ import javax.inject.Inject
 
 @HiltViewModel
 class PatientRegistrationStepThreeViewModel @Inject constructor(
-    private val levelRepository: LevelRepository
+    private val levelRepository: LevelRepository,
+    @IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) : BaseViewModel(), DefaultLifecycleObserver {
     var isLaunched by mutableStateOf(false)
-    val other = LevelResponse(
-        fhirId = "others",
-        code = "0",
-        levelType = "others",
-        name = "Others",
-        population = null,
-        precedingLevelId = null,
-        secondaryName = null,
-        status = "active"
-    )
+    val otherName = "Others"
     val maxLength = 50
     val postalCodeLength = 10
 
@@ -51,7 +44,7 @@ class PatientRegistrationStepThreeViewModel @Inject constructor(
     var postalCode by mutableStateOf("")
 
     init {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(ioDispatcher) {
             provinceList =
                 levelRepository.getLevels(levelType = LevelsEnum.PROVINCE.levelType)
         }
@@ -84,16 +77,15 @@ class PatientRegistrationStepThreeViewModel @Inject constructor(
     ) {
         viewModelScope.launch(ioDispatcher) {
             villageList = levelRepository.getLevels(
-                levelType = LevelsEnum.VILLAGE.levelType,
-                precedingId = island!!.fhirId
-            ) + listOf(other)
+                levelType = LevelsEnum.VILLAGE.levelType
+            ).filter { it.precedingLevelId == island?.fhirId || it.precedingLevelId == null }
         }
     }
 
     fun addressInfoValidation(): Boolean {
         if (province == null || areaCouncil == null || island == null) return false
 
-        if (village == other) {
+        if (village?.name == otherName) {
             return otherVillage.isNotBlank()
         }
 

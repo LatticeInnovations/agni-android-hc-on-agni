@@ -77,8 +77,7 @@ fun EditPatientAddress(
                 viewModel.island = viewModel.getLevelByFhirId(permanentAddress.island)
                 viewModel.village = if (permanentAddress.village == null) null
                     else {
-                        if (permanentAddress.village == viewModel.other.fhirId) viewModel.other
-                    else viewModel.getLevelByFhirId(permanentAddress.village)
+                        viewModel.getLevelByFhirId(permanentAddress.village)
                 }
                 viewModel.otherVillage = permanentAddress.addressLine2 ?: ""
                 viewModel.isVillageOtherSelected = viewModel.otherVillage.isNotBlank()
@@ -270,7 +269,7 @@ private fun AddressHierarchy(viewModel: EditPatientAddressViewModel) {
         value = viewModel.village?.name ?: "",
         updateValue = {
             viewModel.village = it
-            viewModel.isVillageOtherSelected = it == viewModel.other
+            viewModel.isVillageOtherSelected = it.name == viewModel.otherName
             if (!viewModel.isVillageOtherSelected) {
                 viewModel.otherVillage = ""
             }

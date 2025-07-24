@@ -12,9 +12,9 @@ import com.heartcare.agni.data.local.repository.levels.LevelRepository
 import com.heartcare.agni.data.local.repository.patient.PatientRepository
 import com.heartcare.agni.data.server.model.levels.LevelResponse
 import com.heartcare.agni.data.server.model.patient.PatientResponse
+import com.heartcare.agni.di.dispatcher.IoDispatcher
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -22,20 +22,12 @@ import javax.inject.Inject
 class EditPatientAddressViewModel @Inject constructor(
     val patientRepository: PatientRepository,
     val genericRepository: GenericRepository,
-    private val levelRepository: LevelRepository
+    private val levelRepository: LevelRepository,
+    @IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) : BaseViewModel(), DefaultLifecycleObserver {
     var isLaunched by mutableStateOf(false)
 
-    val other = LevelResponse(
-        fhirId = "others",
-        code = "0",
-        levelType = "others",
-        name = "Others",
-        population = null,
-        precedingLevelId = null,
-        secondaryName = null,
-        status = "active"
-    )
+    val otherName = "Others"
     val maxLength = 50
     val postalCodeLength = 10
 
@@ -64,7 +56,7 @@ class EditPatientAddressViewModel @Inject constructor(
     var postalCodeTemp by mutableStateOf("")
 
     fun getLists() {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(ioDispatcher) {
             provinceList =
                 levelRepository.getLevels(levelType = LevelsEnum.PROVINCE.levelType)
             getAreaCouncilList()
@@ -73,9 +65,7 @@ class EditPatientAddressViewModel @Inject constructor(
         }
     }
 
-    fun getAreaCouncilList(
-        ioDispatcher: CoroutineDispatcher = Dispatchers.IO
-    ) {
+    fun getAreaCouncilList() {
         viewModelScope.launch(ioDispatcher) {
             areaCouncilList = levelRepository.getLevels(
                 levelType = LevelsEnum.AREA_COUNCIL.levelType,
@@ -84,9 +74,7 @@ class EditPatientAddressViewModel @Inject constructor(
         }
     }
 
-    fun getIslandList(
-        ioDispatcher: CoroutineDispatcher = Dispatchers.IO
-    ) {
+    fun getIslandList() {
         viewModelScope.launch(ioDispatcher) {
             islandList = levelRepository.getLevels(
                 levelType = LevelsEnum.ISLAND.levelType,
@@ -95,14 +83,11 @@ class EditPatientAddressViewModel @Inject constructor(
         }
     }
 
-    fun getVillageList(
-        ioDispatcher: CoroutineDispatcher = Dispatchers.IO
-    ) {
+    fun getVillageList() {
         viewModelScope.launch(ioDispatcher) {
             villageList = levelRepository.getLevels(
-                levelType = LevelsEnum.VILLAGE.levelType,
-                precedingId = island!!.fhirId
-            ) + listOf(other)
+                levelType = LevelsEnum.VILLAGE.levelType
+            ).filter { it.precedingLevelId == island?.fhirId || it.precedingLevelId == null }
         }
     }
 
@@ -113,7 +98,7 @@ class EditPatientAddressViewModel @Inject constructor(
     fun addressInfoValidation(): Boolean {
         if (province == null || areaCouncil == null || island == null) return false
 
-        if (village == other) {
+        if (village?.name == otherName) {
             return otherVillage.isNotBlank()
         }
 
@@ -143,7 +128,7 @@ class EditPatientAddressViewModel @Inject constructor(
     }
 
     fun updateAddressInfo(patientResponse: PatientResponse) {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(ioDispatcher) {
             val response = patientRepository.updatePatientData(patientResponse = patientResponse)
             if (checkIsEdit() && response > 0) {
                 if (patientResponse.fhirId != null) {
