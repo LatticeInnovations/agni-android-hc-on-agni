@@ -137,9 +137,11 @@ fun PatientIdentifier.toIdentifierEntity(patientId: String): IdentifierEntity {
 }
 
 fun PatientResponse.toListOfIdentifierEntity(): List<IdentifierEntity> {
-    return this.identifier.filter { it.code != IdentifierIgnoreEnum.MEDICAL_RECORD.value || it.identifierType != IdentifierIgnoreEnum.HEARTCARE_TYPE.value }.map {
-        it.toIdentifierEntity(this.id)
-    }
+    return this.identifier
+        .filter { it.code != IdentifierIgnoreEnum.MEDICAL_RECORD.value && it.identifierType != IdentifierIgnoreEnum.HEARTCARE_TYPE.value }
+        .map {
+            it.toIdentifierEntity(this.id)
+        }
 }
 
 fun PatientAndIdentifierEntity.toPatientResponse(): PatientResponse {
@@ -157,8 +159,18 @@ fun PatientAndIdentifierEntity.toPatientResponse(): PatientResponse {
         fathersName = patientEntity.fathersName,
         spouseName = patientEntity.spouseName,
         isDeleted = patientEntity.isDeleted,
-        managingOrganization = patientEntity.managingOrganization?.let { ManagingOrganization(reference = it) },
-        generalPractitioner = patientEntity.generalPractitioner?.let { listOf(GeneralPractitioner(reference = it))},
+        managingOrganization = patientEntity.managingOrganization?.let {
+            ManagingOrganization(
+                reference = it
+            )
+        },
+        generalPractitioner = patientEntity.generalPractitioner?.let {
+            listOf(
+                GeneralPractitioner(
+                    reference = it
+                )
+            )
+        },
         patientDeceasedReason = patientEntity.patientDeceasedReason,
         patientDeceasedReasonId = patientEntity.patientDeceasedReasonId,
         appUpdatedDate = null,
