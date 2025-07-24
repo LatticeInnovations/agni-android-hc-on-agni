@@ -189,7 +189,7 @@ private fun AddressHierarchy(viewModel: PatientRegistrationStepThreeViewModel) {
         value = viewModel.village?.name ?: "",
         updateValue = {
             viewModel.village = it
-            viewModel.isVillageOtherSelected = it == viewModel.other
+            viewModel.isVillageOtherSelected = it.name == viewModel.otherName
             if (!viewModel.isVillageOtherSelected) {
                 viewModel.otherVillage = ""
             }
