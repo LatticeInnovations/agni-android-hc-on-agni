@@ -45,10 +45,10 @@ android {
 
     signingConfigs {
         release {
-            storeFile file('../agni.jks')
-            storePassword 'latticeagni'
+            storeFile file('../heartcare_agni.jks')
+            storePassword 'heartcareonagni'
             keyAlias 'key0'
-            keyPassword 'latticeagni'
+            keyPassword 'heartcareonagni'
         }
     }
 

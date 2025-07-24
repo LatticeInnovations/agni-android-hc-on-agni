@@ -91,4 +91,4 @@ app/google-services.json
 app/google-services.json.gpg
 
 # Signing key
-agni.jks
+/heartcare_agni.jks
