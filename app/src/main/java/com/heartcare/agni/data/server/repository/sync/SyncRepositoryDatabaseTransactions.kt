@@ -174,8 +174,7 @@ open class SyncRepositoryDatabaseTransactions(
         )
 
         //Insert Identifier Data
-        patientDao.insertIdentifiers(*identifierList.filter { it.identifierCode != IdentifierIgnoreEnum.MEDICAL_RECORD.value || it.identifierType != IdentifierIgnoreEnum.HEARTCARE_TYPE.value }
-            .toTypedArray())
+        patientDao.insertIdentifiers(*identifierList.toTypedArray())
     }
 
     protected suspend fun insertRelations(body: List<RelatedPersonResponse>) {
