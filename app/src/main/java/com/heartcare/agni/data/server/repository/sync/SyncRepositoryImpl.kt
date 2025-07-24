@@ -50,7 +50,6 @@ import com.heartcare.agni.data.server.constants.QueryParameters.GREATER_THAN_BUI
 import com.heartcare.agni.data.server.constants.QueryParameters.ID
 import com.heartcare.agni.data.server.constants.QueryParameters.LAST_UPDATED
 import com.heartcare.agni.data.server.constants.QueryParameters.OFFSET
-import com.heartcare.agni.data.server.constants.QueryParameters.ORG_ID
 import com.heartcare.agni.data.server.constants.QueryParameters.PATIENT_ID
 import com.heartcare.agni.data.server.constants.QueryParameters.SORT
 import com.heartcare.agni.data.server.constants.QueryParameters.TYPE
@@ -385,7 +384,6 @@ class SyncRepositoryImpl @Inject constructor(
         map[COUNT] = COUNT_VALUE.toString()
         map[OFFSET] = offset.toString()
         map[SORT] = "-$ID"
-        map[ORG_ID] = preferenceRepository.getOrganizationFhirId()
         if (preferenceRepository.getLastSyncSchedule() != 0L) map[LAST_UPDATED] = String.format(
             GREATER_THAN_BUILDER, preferenceRepository.getLastSyncSchedule().toTimeStampDate()
         )
@@ -419,7 +417,6 @@ class SyncRepositoryImpl @Inject constructor(
         map[COUNT] = COUNT_VALUE.toString()
         map[OFFSET] = offset.toString()
         map[SORT] = "-$ID"
-        map[ORG_ID] = preferenceRepository.getOrganizationFhirId()
         if (preferenceRepository.getLastSyncAppointment() != 0L) map[LAST_UPDATED] = String.format(
             GREATER_THAN_BUILDER, preferenceRepository.getLastSyncAppointment().toTimeStampDate()
         )
