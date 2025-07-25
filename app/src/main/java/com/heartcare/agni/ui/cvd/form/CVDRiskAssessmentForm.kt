@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
@@ -17,10 +18,12 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -34,12 +37,17 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.heartcare.agni.R
 import com.heartcare.agni.data.local.enums.YesNoEnum
+import com.heartcare.agni.ui.common.DatePickerDialog
 import com.heartcare.agni.ui.cvd.CVDRiskAssessmentViewModel
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toAge
+import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toEndOfDay
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toTimeInMilli
+import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toddMMYYYYString
 import com.heartcare.agni.utils.regex.OnlyNumberRegex.onlyNumbers
 import com.heartcare.agni.utils.regex.OnlyNumberRegex.onlyNumbersWithDecimal
+import java.util.Date
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CVDRiskAssessmentForm(
     viewModel: CVDRiskAssessmentViewModel
@@ -58,6 +66,8 @@ fun CVDRiskAssessmentForm(
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+            ScreeningDateComposable(viewModel)
+            ChiefComplaintComposable(viewModel)
             DisplayField(
                 stringResource(R.string.age),
                 viewModel.patient?.birthDate?.toTimeInMilli()?.toAge().toString()
@@ -81,6 +91,14 @@ fun CVDRiskAssessmentForm(
                     viewModel.riskPercentage = ""
                 }
             )
+            SegmentedButtonField(
+                heading = stringResource(R.string.previous_heart_attack_or_stroke),
+                selectedValue = viewModel.previousHeartAttack,
+                updateValue = { value ->
+                    viewModel.previousHeartAttack = value
+                    viewModel.riskPercentage = ""
+                }
+            )
             BloodPressureTextField(viewModel)
             CholesterolTextField(viewModel)
             HeightTextField(viewModel)
@@ -88,6 +106,63 @@ fun CVDRiskAssessmentForm(
             BMIChip(viewModel)
         }
     }
+    if (viewModel.showDatePicker) {
+        DatePickerDialog(
+            selectableDates = object : SelectableDates {
+                override fun isSelectableDate(utcTimeMillis: Long): Boolean {
+                    return utcTimeMillis <= Date().toEndOfDay()
+                }
+            },
+            initialSelectedDate = viewModel.screeningDate,
+            dismissBtnText = stringResource(R.string.cancel),
+            confirmBtnText = stringResource(R.string.ok),
+            dismiss = { viewModel.showDatePicker = false },
+            confirm = {
+                viewModel.screeningDate = it
+                viewModel.showDatePicker = false
+            }
+        )
+    }
+}
+
+@Composable
+private fun ScreeningDateComposable(
+    viewModel: CVDRiskAssessmentViewModel
+) {
+    OutlinedTextField(
+        value = viewModel.screeningDate.toddMMYYYYString(),
+        onValueChange = { },
+        modifier = Modifier.fillMaxWidth(),
+        label = {
+            Text(stringResource(R.string.screening_date))
+        },
+        trailingIcon = {
+            IconButton(
+                onClick = { viewModel.showDatePicker = true }
+            ) {
+                Icon(painterResource(R.drawable.today_calendar), null)
+            }
+        },
+        readOnly = true
+    )
+}
+
+@Composable
+private fun ChiefComplaintComposable(
+    viewModel: CVDRiskAssessmentViewModel
+) {
+    OutlinedTextField(
+        value = viewModel.chiefComplaint,
+        onValueChange = { value ->
+            if (value.length <= viewModel.maxChiefComplaintLength) viewModel.chiefComplaint = value
+        },
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(100.dp),
+        label = {
+            Text(stringResource(R.string.chief_complaint))
+        }
+    )
 }
 
 @Composable
@@ -146,7 +221,9 @@ private fun SegmentedButtonField(
 
 @Composable
 private fun BloodPressureTextField(viewModel: CVDRiskAssessmentViewModel) {
-    Column {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(6.dp)
+    ) {
         Text(
             text = stringResource(R.string.blood_pressure_colon),
             style = MaterialTheme.typography.titleSmall,
@@ -163,18 +240,7 @@ private fun BloodPressureTextField(viewModel: CVDRiskAssessmentViewModel) {
                 OutlinedTextField(
                     value = viewModel.systolic,
                     onValueChange = { value ->
-                        if (value.isBlank() || (value.matches(onlyNumbers) && value.length < 4)) {
-                            viewModel.systolic = value
-                            viewModel.systolicError =
-                                viewModel.systolic.isBlank() || viewModel.systolic.toInt() !in 30..300
-                            if (!viewModel.systolicError) {
-                                viewModel.diastolicError =
-                                    viewModel.diastolic.isBlank() || viewModel.diastolic.toInt() !in 20..200
-                            }
-                            viewModel.bpError =
-                                viewModel.systolic.isBlank() || viewModel.diastolic.isBlank() || viewModel.systolicError || viewModel.diastolicError
-                            viewModel.riskPercentage = ""
-                        }
+                        updateSystolic(value, viewModel)
                     },
                     label = {
                         Text(stringResource(R.string.systolic))
@@ -189,18 +255,7 @@ private fun BloodPressureTextField(viewModel: CVDRiskAssessmentViewModel) {
                 OutlinedTextField(
                     value = viewModel.diastolic,
                     onValueChange = { value ->
-                        if (value.isBlank() || (value.matches(onlyNumbers) && value.length < 4)) {
-                            viewModel.diastolic = value
-                            viewModel.diastolicError =
-                                viewModel.diastolic.isBlank() || viewModel.diastolic.toInt() !in 20..200
-                            if (!viewModel.diastolicError) {
-                                viewModel.systolicError =
-                                    viewModel.systolic.isBlank() || viewModel.systolic.toInt() !in 30..300
-                            }
-                            viewModel.bpError =
-                                viewModel.systolic.isBlank() || viewModel.diastolic.isBlank() || viewModel.systolicError || viewModel.diastolicError
-                            viewModel.riskPercentage = ""
-                        }
+                        updateDiastolic(value, viewModel)
                     },
                     label = {
                         Text(stringResource(R.string.diastolic))
@@ -225,30 +280,70 @@ private fun BloodPressureTextField(viewModel: CVDRiskAssessmentViewModel) {
             }
         }
         AnimatedVisibility(viewModel.bpError) {
-            Text(
-                if (viewModel.systolic.isBlank() && viewModel.diastolic.isBlank())
-                    stringResource(R.string.blood_pressure_required)
-                else if (viewModel.systolicError)
-                    stringResource(
-                        R.string.value_cannot_exceed,
-                        "30",
-                        "300",
-                        "mmHg"
-                    )
-                else if (viewModel.diastolicError)
-                    stringResource(
-                        R.string.value_cannot_exceed,
-                        "20",
-                        "200",
-                        "mmHg"
-                    )
-                else "",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.error,
-                modifier = Modifier.padding(8.dp)
-            )
+            BloodPressureError(viewModel)
         }
     }
+}
+
+private fun updateSystolic(
+    value: String,
+    viewModel: CVDRiskAssessmentViewModel
+) {
+    if (value.isBlank() || (value.matches(onlyNumbers) && value.length < 4)) {
+        viewModel.systolic = value
+        viewModel.systolicError =
+            viewModel.systolic.isBlank() || viewModel.systolic.toInt() !in 30..300
+        if (!viewModel.systolicError) {
+            viewModel.diastolicError =
+                viewModel.diastolic.isBlank() || viewModel.diastolic.toInt() !in 20..200
+        }
+        viewModel.bpError =
+            viewModel.systolic.isBlank() || viewModel.diastolic.isBlank() || viewModel.systolicError || viewModel.diastolicError
+        viewModel.riskPercentage = ""
+    }
+}
+
+private fun updateDiastolic(
+    value: String,
+    viewModel: CVDRiskAssessmentViewModel
+) {
+    if (value.isBlank() || (value.matches(onlyNumbers) && value.length < 4)) {
+        viewModel.diastolic = value
+        viewModel.diastolicError =
+            viewModel.diastolic.isBlank() || viewModel.diastolic.toInt() !in 20..200
+        if (!viewModel.diastolicError) {
+            viewModel.systolicError =
+                viewModel.systolic.isBlank() || viewModel.systolic.toInt() !in 30..300
+        }
+        viewModel.bpError =
+            viewModel.systolic.isBlank() || viewModel.diastolic.isBlank() || viewModel.systolicError || viewModel.diastolicError
+        viewModel.riskPercentage = ""
+    }
+}
+
+@Composable
+private fun BloodPressureError(viewModel: CVDRiskAssessmentViewModel) {
+    Text(
+        when{
+            viewModel.systolic.isBlank() && viewModel.diastolic.isBlank() -> stringResource(R.string.blood_pressure_required)
+            viewModel.systolicError -> stringResource(
+                R.string.value_cannot_exceed,
+                "30",
+                "300",
+                "mmHg"
+            )
+            viewModel.diastolicError -> stringResource(
+                R.string.value_cannot_exceed,
+                "20",
+                "200",
+                "mmHg"
+            )
+            else -> ""
+        },
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.error,
+        modifier = Modifier.padding(start = 12.dp)
+    )
 }
 
 @Composable
@@ -264,21 +359,7 @@ private fun CholesterolTextField(viewModel: CVDRiskAssessmentViewModel) {
             OutlinedTextField(
                 value = viewModel.cholesterol,
                 onValueChange = { value ->
-                    if (viewModel.selectedCholesterolIndex == 0) {
-                        if (value.isBlank() || (value.matches(onlyNumbersWithDecimal) && value.length < 5)) {
-                            viewModel.cholesterol = value
-                            viewModel.cholesterolError = viewModel.cholesterol.isNotBlank() &&
-                                    viewModel.cholesterol.toDouble() !in 1.0..13.0
-                            viewModel.riskPercentage = ""
-                        }
-                    } else {
-                        if (value.isBlank() || (value.matches(onlyNumbers) && value.length < 4)) {
-                            viewModel.cholesterol = value
-                            viewModel.cholesterolError = viewModel.cholesterol.isNotBlank() &&
-                                    viewModel.cholesterol.toInt() !in 1..500
-                            viewModel.riskPercentage = ""
-                        }
-                    }
+                    updateCholesterolValue(value, viewModel)
                 },
                 label = {
                     Text(stringResource(R.string.total_cholestrol))
@@ -290,17 +371,7 @@ private fun CholesterolTextField(viewModel: CVDRiskAssessmentViewModel) {
                 isError = viewModel.cholesterolError,
                 supportingText = if (viewModel.cholesterolError) {
                     {
-                        Text(
-                            if (viewModel.selectedCholesterolIndex == 0)
-                                stringResource(
-                                    R.string.value_cannot_exceed,
-                                    "1.0",
-                                    "13.0",
-                                    "mmol/L"
-                                )
-                            else
-                                stringResource(R.string.value_cannot_exceed, "1", "500", "mg/dL")
-                        )
+                        CholesterolError(viewModel)
                     }
                 } else null,
                 singleLine = true
@@ -339,6 +410,42 @@ private fun CholesterolTextField(viewModel: CVDRiskAssessmentViewModel) {
     }
 }
 
+private fun updateCholesterolValue(
+    value: String,
+    viewModel: CVDRiskAssessmentViewModel
+) {
+    if (viewModel.selectedCholesterolIndex == 0) {
+        if (value.isBlank() || (value.matches(onlyNumbersWithDecimal) && value.length < 5)) {
+            viewModel.cholesterol = value
+            viewModel.cholesterolError = viewModel.cholesterol.isNotBlank() &&
+                    viewModel.cholesterol.toDouble() !in 1.0..13.0
+            viewModel.riskPercentage = ""
+        }
+    } else {
+        if (value.isBlank() || (value.matches(onlyNumbers) && value.length < 4)) {
+            viewModel.cholesterol = value
+            viewModel.cholesterolError = viewModel.cholesterol.isNotBlank() &&
+                    viewModel.cholesterol.toInt() !in 1..500
+            viewModel.riskPercentage = ""
+        }
+    }
+}
+
+@Composable
+private fun CholesterolError(viewModel: CVDRiskAssessmentViewModel) {
+    Text(
+        if (viewModel.selectedCholesterolIndex == 0)
+            stringResource(
+                R.string.value_cannot_exceed,
+                "1.0",
+                "13.0",
+                "mmol/L"
+            )
+        else
+            stringResource(R.string.value_cannot_exceed, "1", "500", "mg/dL")
+    )
+}
+
 @Composable
 private fun HeightTextField(viewModel: CVDRiskAssessmentViewModel) {
     Column {
@@ -354,13 +461,7 @@ private fun HeightTextField(viewModel: CVDRiskAssessmentViewModel) {
                     OutlinedTextField(
                         value = viewModel.heightInCM,
                         onValueChange = { value ->
-                            if (value.isBlank() || (value.matches(onlyNumbersWithDecimal) && value.length < 6)) {
-                                viewModel.heightInCM = value
-                                viewModel.heightInCMError =
-                                    viewModel.heightInCM.isNotBlank() && viewModel.heightInCM.toDouble() !in 30.0..250.0
-                                viewModel.getBmi()
-                                viewModel.riskPercentage = ""
-                            }
+                            updateHeightInCM(value, viewModel)
                         },
                         label = {
                             Text(stringResource(R.string.height))
@@ -376,13 +477,7 @@ private fun HeightTextField(viewModel: CVDRiskAssessmentViewModel) {
                     OutlinedTextField(
                         value = viewModel.heightInFeet,
                         onValueChange = { value ->
-                            if (value.isBlank() || (value.matches(onlyNumbers) && value.length < 2)) {
-                                viewModel.heightInFeet = value
-                                viewModel.heightInFeetError = viewModel.heightInFeet.isNotBlank() &&
-                                        viewModel.heightInFeet.toInt() !in 1..8
-                                viewModel.getBmi()
-                                viewModel.riskPercentage = ""
-                            }
+                            updateHeightInFeet(value, viewModel)
                         },
                         label = {
                             Text(stringResource(R.string.ft))
@@ -397,18 +492,7 @@ private fun HeightTextField(viewModel: CVDRiskAssessmentViewModel) {
                     OutlinedTextField(
                         value = viewModel.heightInInch,
                         onValueChange = { value ->
-                            if (value.isBlank() || (value.matches(onlyNumbersWithDecimal) && value.length < 5)) {
-                                viewModel.heightInInch = value
-                                viewModel.heightInInchError = viewModel.heightInInch.isNotBlank() &&
-                                        viewModel.heightInInch.toDouble() !in 0.0..11.9
-                                if (!viewModel.heightInInchError) {
-                                    viewModel.heightInFeetError =
-                                        viewModel.heightInInch.isNotBlank() && (viewModel.heightInFeet.isBlank() ||
-                                                viewModel.heightInFeet.toInt() !in 1..8)
-                                }
-                                viewModel.getBmi()
-                                viewModel.riskPercentage = ""
-                            }
+                            updateHeightInInch(value, viewModel)
                         },
                         label = {
                             Text(stringResource(R.string.inch))
@@ -459,37 +543,89 @@ private fun HeightTextField(viewModel: CVDRiskAssessmentViewModel) {
             }
         }
         AnimatedVisibility(viewModel.heightInCMError || viewModel.heightInFeetError || viewModel.heightInInchError) {
-            Text(
-                if (viewModel.selectedHeightUnitIndex == 0)
-                    stringResource(
-                        R.string.value_cannot_exceed,
-                        "30.0",
-                        "250.0",
-                        "cm"
-                    )
-                else {
-                    if (viewModel.heightInFeetError) {
-                        stringResource(
-                            R.string.value_cannot_exceed,
-                            "1",
-                            "8",
-                            "ft"
-                        )
-                    } else if (viewModel.heightInInchError) {
-                        stringResource(
-                            R.string.value_cannot_exceed,
-                            "0.0",
-                            "11.9",
-                            "in"
-                        )
-                    } else ""
-                },
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.error,
-                modifier = Modifier.padding(8.dp)
-            )
+            HeightError(viewModel)
         }
     }
+}
+
+private fun updateHeightInCM(
+    value: String,
+    viewModel: CVDRiskAssessmentViewModel
+) {
+    if (value.isBlank() || (value.matches(onlyNumbersWithDecimal) && value.length < 6)) {
+        viewModel.heightInCM = value
+        viewModel.heightInCMError =
+            viewModel.heightInCM.isBlank() || viewModel.heightInCM.toDouble() !in 30.0..250.0
+        viewModel.getBmi()
+        viewModel.riskPercentage = ""
+    }
+}
+
+private fun updateHeightInFeet(
+    value: String,
+    viewModel: CVDRiskAssessmentViewModel
+) {
+    if (value.isBlank() || (value.matches(onlyNumbers) && value.length < 2)) {
+        viewModel.heightInFeet = value
+        viewModel.heightInFeetError = viewModel.heightInFeet.isBlank() ||
+                viewModel.heightInFeet.toInt() !in 1..8
+        viewModel.getBmi()
+        viewModel.riskPercentage = ""
+    }
+}
+
+private fun updateHeightInInch(
+    value: String,
+    viewModel: CVDRiskAssessmentViewModel
+) {
+    if (value.isBlank() || (value.matches(onlyNumbersWithDecimal) && value.length < 5)) {
+        viewModel.heightInInch = value
+        viewModel.heightInInchError = viewModel.heightInInch.isNotBlank() &&
+                viewModel.heightInInch.toDouble() !in 0.0..11.9
+        if (!viewModel.heightInInchError) {
+            viewModel.heightInFeetError =
+                viewModel.heightInFeet.isBlank() ||
+                        viewModel.heightInFeet.toInt() !in 1..8
+        }
+        viewModel.getBmi()
+        viewModel.riskPercentage = ""
+    }
+}
+
+@Composable
+private fun HeightError(viewModel: CVDRiskAssessmentViewModel) {
+    Text(
+        if (viewModel.heightInCM.isBlank() && viewModel.heightInFeet.isBlank() && viewModel.heightInInch.isBlank()) stringResource(
+            R.string.height_required
+        )
+        else if (viewModel.selectedHeightUnitIndex == 0)
+            stringResource(
+                R.string.value_cannot_exceed,
+                "30.0",
+                "250.0",
+                "cm"
+            )
+        else {
+            if (viewModel.heightInFeetError) {
+                stringResource(
+                    R.string.value_cannot_exceed,
+                    "1",
+                    "8",
+                    "ft"
+                )
+            } else if (viewModel.heightInInchError) {
+                stringResource(
+                    R.string.value_cannot_exceed,
+                    "0.0",
+                    "11.9",
+                    "in"
+                )
+            } else ""
+        },
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.error,
+        modifier = Modifier.padding(start = 12.dp, top = 6.dp)
+    )
 }
 
 @Composable
@@ -505,13 +641,7 @@ private fun WeightTextField(viewModel: CVDRiskAssessmentViewModel) {
             OutlinedTextField(
                 value = viewModel.weight,
                 onValueChange = { value ->
-                    if (value.isBlank() || (value.matches(onlyNumbersWithDecimal) && value.length < 6)) {
-                        viewModel.weight = value
-                        viewModel.weightError = viewModel.weight.isNotBlank() &&
-                                viewModel.weight.toDouble() !in 1.0..200.0
-                        viewModel.getBmi()
-                        viewModel.riskPercentage = ""
-                    }
+                    updateWeight(value, viewModel)
                 },
                 label = {
                     Text(stringResource(R.string.weight))
@@ -523,22 +653,65 @@ private fun WeightTextField(viewModel: CVDRiskAssessmentViewModel) {
                 isError = viewModel.weightError,
                 supportingText = if (viewModel.weightError) {
                     {
-                        Text(stringResource(R.string.value_cannot_exceed, "1.0", "200.0", "kg"))
+                        Text(
+                            if (viewModel.weight.isBlank()) stringResource(R.string.weight_required)
+                            else if (viewModel.selectedWeightUnitIndex == 0) stringResource(
+                                R.string.value_cannot_exceed,
+                                "1.0",
+                                "300.0",
+                                "kg"
+                            )
+                            else stringResource(R.string.value_cannot_exceed, "0.1", "661.0", "lbs")
+                        )
                     }
                 } else null,
                 singleLine = true
             )
         }
         Row(
-            modifier = Modifier.weight(3f),
-            horizontalArrangement = Arrangement.SpaceAround
+            modifier = Modifier
+                .weight(3f)
+                .padding(start = 12.dp),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = viewModel.weightUnit,
+                text = viewModel.weightUnits[viewModel.selectedWeightUnitIndex],
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+            Spacer(Modifier.width(8.dp))
+            Icon(
+                painter = painterResource(R.drawable.swap),
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null
+                ) {
+                    if (viewModel.selectedWeightUnitIndex == 0) viewModel.selectedWeightUnitIndex =
+                        1
+                    else viewModel.selectedWeightUnitIndex = 0
+                    viewModel.weight = ""
+                    viewModel.weightError = false
+                    viewModel.getBmi()
+                    viewModel.riskPercentage = ""
+                }
+            )
         }
+    }
+}
+
+private fun updateWeight(
+    value: String,
+    viewModel: CVDRiskAssessmentViewModel
+) {
+    if (value.isBlank() || (value.matches(onlyNumbersWithDecimal) && value.length < 6)) {
+        viewModel.weight = value
+        viewModel.weightError = viewModel.weight.isBlank() ||
+                viewModel.weight.toDouble() !in if (viewModel.selectedWeightUnitIndex == 0) 1.0..300.0 else 0.1..661.0
+        viewModel.getBmi()
+        viewModel.riskPercentage = ""
     }
 }
 

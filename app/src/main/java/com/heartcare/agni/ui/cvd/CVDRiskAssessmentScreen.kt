@@ -50,7 +50,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -90,7 +89,6 @@ fun CVDRiskAssessmentScreen(
     navController: NavController,
     viewModel: CVDRiskAssessmentViewModel = hiltViewModel()
 ) {
-
     LaunchedEffect(viewModel.isLaunched) {
         if (!viewModel.isLaunched) {
             viewModel.patient =
@@ -104,14 +102,13 @@ fun CVDRiskAssessmentScreen(
     }
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    val snackbarHostState = remember { SnackbarHostState() }
+    val snackBarHostState = remember { SnackbarHostState() }
     val pagerState = rememberPagerState(
         initialPage = 0,
         initialPageOffsetFraction = 0f
     ) {
         viewModel.tabs.size
     }
-    val focusManager = LocalFocusManager.current
 
     BackHandler {
         if (viewModel.selectedRecord != null) viewModel.selectedRecord = null
@@ -141,14 +138,14 @@ fun CVDRiskAssessmentScreen(
                 },
                 title = {
                     Text(
-                        text = stringResource(id = R.string.cvd_risk_assessment),
+                        text = stringResource(id = R.string.risk_predictor),
                         style = MaterialTheme.typography.titleLarge,
                         modifier = Modifier.testTag("TITLE")
                     )
                 }
             )
         },
-        snackbarHost = { SnackbarHost(snackbarHostState) },
+        snackbarHost = { SnackbarHost(snackBarHostState) },
         content = {
             Box(modifier = Modifier.padding(it)) {
                 Column(modifier = Modifier.fillMaxWidth()) {
@@ -156,34 +153,22 @@ fun CVDRiskAssessmentScreen(
                         viewModel.tabs,
                         pagerState
                     ) { index ->
-                        if (index == 1) {
-                            viewModel.getAppointmentInfo(
-                                callback = {
-                                    if (viewModel.canAddAssessment) {
-                                        scope.launch { pagerState.animateScrollToPage(index) }
-                                    } else if (viewModel.isAppointmentCompleted) {
-                                        viewModel.showAppointmentCompletedDialog = true
-                                    } else {
-                                        viewModel.showAddToQueueDialog = true
-                                    }
-                                }
-                            )
-                        } else scope.launch { pagerState.animateScrollToPage(index) }
+                        scope.launch { pagerState.animateScrollToPage(index) }
                     }
                     HorizontalPager(
                         state = pagerState,
                         userScrollEnabled = viewModel.canAddAssessment
                     ) { index ->
                         when (index) {
-                            0 -> CVDRiskAssessmentRecords(viewModel)
-                            1 -> CVDRiskAssessmentForm(viewModel)
+                            0 -> CVDRiskAssessmentForm(viewModel)
+                            1 -> CVDRiskAssessmentRecords(viewModel)
                         }
                     }
                 }
             }
         },
         bottomBar = {
-            if (pagerState.currentPage == 1) {
+            if (pagerState.currentPage == 0) {
                 Column {
                     AnimatedVisibility(
                         viewModel.riskPercentage.isNotBlank(),
@@ -253,14 +238,23 @@ fun CVDRiskAssessmentScreen(
                         if (viewModel.riskPercentage.isNotBlank()) {
                             Button(
                                 onClick = {
-                                    viewModel.saveCVDRecord(
-                                        saved = {
-                                            focusManager.clearFocus()
-                                            scope.launch {
-                                                pagerState.animateScrollToPage(0)
-                                                snackbarHostState.showSnackbar(
-                                                    message = context.getString(R.string.assessment_record_saved)
+                                    viewModel.getAppointmentInfo(
+                                        callback = {
+                                            if (viewModel.canAddAssessment) {
+                                                viewModel.saveCVDRecord(
+                                                    saved = {
+                                                        scope.launch {
+                                                            pagerState.animateScrollToPage(1)
+                                                            snackBarHostState.showSnackbar(
+                                                                message = context.getString(R.string.assessment_record_saved)
+                                                            )
+                                                        }
+                                                    }
                                                 )
+                                            } else if (viewModel.isAppointmentCompleted) {
+                                                viewModel.showAppointmentCompletedDialog = true
+                                            } else {
+                                                viewModel.showAddToQueueDialog = true
                                             }
                                         }
                                     )
@@ -303,7 +297,16 @@ fun CVDRiskAssessmentScreen(
                         viewModel.appointment!!,
                         updated = {
                             viewModel.showAddToQueueDialog = false
-                            scope.launch { pagerState.animateScrollToPage(1) }
+                            viewModel.saveCVDRecord(
+                                saved = {
+                                    scope.launch {
+                                        pagerState.animateScrollToPage(1)
+                                        snackBarHostState.showSnackbar(
+                                            message = context.getString(R.string.assessment_record_saved)
+                                        )
+                                    }
+                                }
+                            )
                         }
                     )
                 } else {
@@ -314,7 +317,16 @@ fun CVDRiskAssessmentScreen(
                             viewModel.patient!!,
                             addedToQueue = {
                                 viewModel.showAddToQueueDialog = false
-                                scope.launch { pagerState.animateScrollToPage(1) }
+                                viewModel.saveCVDRecord(
+                                    saved = {
+                                        scope.launch {
+                                            pagerState.animateScrollToPage(1)
+                                            snackBarHostState.showSnackbar(
+                                                message = context.getString(R.string.assessment_record_saved)
+                                            )
+                                        }
+                                    }
+                                )
                             }
                         )
                     }
