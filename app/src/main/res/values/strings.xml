@@ -578,4 +578,11 @@ include them in the household</string>
     <string name="assessed_count">Assessed (%d)</string>
     <string name="prescribed_count">Prescribed (%d)</string>
     <string name="appointment_exists_in_other_hospital">Appointment for patient already exists in another health facility</string>
+    <string name="risk_predictor">Risk predictor</string>
+    <string name="screening_date">Screening date</string>
+    <string name="ok">Ok</string>
+    <string name="chief_complaint">Chief complaint</string>
+    <string name="previous_heart_attack_or_stroke">Previous heart attack or stroke</string>
+    <string name="weight_required">Weight is required</string>
+    <string name="height_required">Height is required</string>
 </resources>
