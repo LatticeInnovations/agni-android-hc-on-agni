@@ -270,7 +270,7 @@ include them in the household</string>
     <string name="gender_colon">Gender:</string>
     <string name="diabetic_colon">Diabetic:</string>
     <string name="current_smoker">Current smoker:</string>
-    <string name="blood_pressure_colon">Blood pressure:</string>
+    <string name="blood_pressure_colon">Blood pressure</string>
     <string name="systolic">Systolic</string>
     <string name="diastolic">Diastolic</string>
     <string name="total_cholestrol">Total cholesterol</string>
@@ -580,7 +580,7 @@ include them in the household</string>
     <string name="appointment_exists_in_other_hospital">Appointment for patient already exists in another health facility</string>
     <string name="risk_predictor">Risk predictor</string>
     <string name="screening_date">Screening date</string>
-    <string name="ok">Ok</string>
+    <string name="ok">OK</string>
     <string name="chief_complaint">Chief complaint</string>
     <string name="previous_heart_attack_or_stroke">Previous heart attack or stroke</string>
     <string name="weight_required">Weight is required</string>

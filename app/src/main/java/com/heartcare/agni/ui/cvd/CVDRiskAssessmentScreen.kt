@@ -417,6 +417,10 @@ private fun RecordsFullDetailsComposable(
                     YesNoEnum.displayFromCode(record.smoker)
                 )
                 DisplayField(
+                    stringResource(R.string.previous_heart_attack_or_stroke),
+                    YesNoEnum.displayFromCode(record.heartAttackHistory)
+                )
+                DisplayField(
                     stringResource(R.string.blood_pressure_colon),
                     "${record.bpSystolic}/${record.bpDiastolic} mmhg"
                 )
@@ -427,8 +431,7 @@ private fun RecordsFullDetailsComposable(
                 )
                 DisplayField(
                     stringResource(R.string.weight),
-                    if (record.weight == null) stringResource(R.string.dash)
-                    else "${record.weight} kg"
+                    "${record.weight} ${record.weightUnit}"
                 )
                 DisplayField(
                     stringResource(R.string.height),
@@ -436,6 +439,29 @@ private fun RecordsFullDetailsComposable(
                     else if (record.heightFt != null || record.heightInch != null) "${record.heightFt} ft ${record.heightInch ?: 0} in"
                     else stringResource(R.string.dash)
                 )
+                if (!record.chiefComplaint.isNullOrBlank()) {
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(8.dp),
+                        color = MaterialTheme.colorScheme.primaryContainer
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(12.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Text(
+                                text = stringResource(R.string.chief_complaint),
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Text(
+                                text = record.chiefComplaint,
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
             }
         }
     }
@@ -463,18 +489,15 @@ private fun CVDRiskRow(record: CVDResponse, onClick: () -> Unit) {
         Spacer(modifier = Modifier.weight(1f))
         Surface(
             shape = RoundedCornerShape(40.dp),
-            color = if (record.bmi == null) MaterialTheme.colorScheme.surfaceVariant
-            else MaterialTheme.colorScheme.primaryContainer
+            color = MaterialTheme.colorScheme.primaryContainer
         ) {
             Text(
                 text = stringResource(
                     R.string.bmi,
-                    record.bmi?.toInt()?.toString() ?: stringResource(R.string.dash)
+                    record.bmi.toString()
                 ),
-                style = if (record.bmi == null) MaterialTheme.typography.bodyMedium
-                else MaterialTheme.typography.labelLarge,
-                color = if (record.bmi == null) MaterialTheme.colorScheme.onSurfaceVariant
-                else MaterialTheme.colorScheme.onSecondaryContainer,
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onSecondaryContainer,
                 modifier = Modifier.padding(vertical = 8.dp, horizontal = 12.dp)
             )
         }

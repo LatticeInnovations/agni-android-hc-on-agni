@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "e0fe126c3c531ba8da53c764fb3357d5",
+    "identityHash": "d80b7a11f5e631e6fea326397ca6c9b5",
     "entities": [
       {
         "tableName": "PatientEntity",
@@ -1163,7 +1163,7 @@
       },
       {
         "tableName": "CVDEntity",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`cvdFhirId` TEXT, `cvdUuid` TEXT NOT NULL, `appointmentId` TEXT NOT NULL, `patientId` TEXT NOT NULL, `bmi` REAL, `bpDiastolic` INTEGER NOT NULL, `bpSystolic` INTEGER NOT NULL, `cholesterol` REAL, `cholesterolUnit` TEXT, `diabetic` INTEGER NOT NULL, `heightCm` REAL, `heightFt` INTEGER, `heightInch` REAL, `practitionerName` TEXT, `risk` INTEGER NOT NULL, `smoker` INTEGER NOT NULL, `weight` REAL, `createdOn` INTEGER NOT NULL, PRIMARY KEY(`cvdUuid`), FOREIGN KEY(`patientId`) REFERENCES `PatientEntity`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION , FOREIGN KEY(`appointmentId`) REFERENCES `AppointmentEntity`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`cvdFhirId` TEXT, `cvdUuid` TEXT NOT NULL, `appointmentId` TEXT NOT NULL, `patientId` TEXT NOT NULL, `bmi` REAL NOT NULL, `bpDiastolic` INTEGER NOT NULL, `bpSystolic` INTEGER NOT NULL, `cholesterol` REAL, `cholesterolUnit` TEXT, `diabetic` INTEGER NOT NULL, `heightCm` REAL, `heightFt` INTEGER, `heightInch` REAL, `practitionerName` TEXT, `risk` INTEGER NOT NULL, `smoker` INTEGER NOT NULL, `weight` REAL NOT NULL, `createdOn` INTEGER NOT NULL, `weightUnit` TEXT NOT NULL, `chiefComplaint` TEXT, `screeningDate` INTEGER NOT NULL, `heartAttackHistory` INTEGER NOT NULL, PRIMARY KEY(`cvdUuid`), FOREIGN KEY(`patientId`) REFERENCES `PatientEntity`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION , FOREIGN KEY(`appointmentId`) REFERENCES `AppointmentEntity`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION )",
         "fields": [
           {
             "fieldPath": "cvdFhirId",
@@ -1191,7 +1191,8 @@
           {
             "fieldPath": "bmi",
             "columnName": "bmi",
-            "affinity": "REAL"
+            "affinity": "REAL",
+            "notNull": true
           },
           {
             "fieldPath": "bpDiastolic",
@@ -1256,11 +1257,35 @@
           {
             "fieldPath": "weight",
             "columnName": "weight",
-            "affinity": "REAL"
+            "affinity": "REAL",
+            "notNull": true
           },
           {
             "fieldPath": "createdOn",
             "columnName": "createdOn",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "weightUnit",
+            "columnName": "weightUnit",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "chiefComplaint",
+            "columnName": "chiefComplaint",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "screeningDate",
+            "columnName": "screeningDate",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "heartAttackHistory",
+            "columnName": "heartAttackHistory",
             "affinity": "INTEGER",
             "notNull": true
           }
@@ -2644,7 +2669,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'e0fe126c3c531ba8da53c764fb3357d5')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'd80b7a11f5e631e6fea326397ca6c9b5')"
     ]
   }
 }

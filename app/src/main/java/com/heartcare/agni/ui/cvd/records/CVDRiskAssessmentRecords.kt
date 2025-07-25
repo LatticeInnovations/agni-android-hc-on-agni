@@ -145,7 +145,6 @@ private fun RecordDetailsComposable(
     }
 }
 
-
 @Composable
 fun LineChartView(
     modifier: Modifier = Modifier,

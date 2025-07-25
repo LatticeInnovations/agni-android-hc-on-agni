@@ -203,11 +203,9 @@ class CVDRiskAssessmentViewModel @Inject constructor(
         }
     }
 
-
     private fun getCVDRecord(
         cvdUUid: String = UUIDBuilder.generateUUID(),
         cvdFhirId: String? = null,
-        practitionerName: String,
         createdOn: Date = Date()
     ): CVDResponse {
         return CVDResponse(
@@ -226,10 +224,15 @@ class CVDRiskAssessmentViewModel @Inject constructor(
             heightCm = if (selectedHeightUnitIndex == 0 && heightInCM.isNotBlank()) heightInCM.toDouble() else null,
             heightInch = if (selectedHeightUnitIndex == 1 && heightInInch.isNotBlank()) heightInInch.toDouble() else null,
             heightFt = if (selectedHeightUnitIndex == 1 && heightInFeet.isNotBlank()) heightInFeet.toInt() else null,
-            weight = if (weight.isNotBlank()) weight.toDouble() else null,
+            weight = weight.toDouble(),
             risk = riskPercentage.toInt(),
-            practitionerName = practitionerName,
-            bmi = if (bmi.isNotBlank()) bmi.toDouble() else null
+            bmi = bmi.toDouble(),
+            appUpdatedDate = Date(),
+            weightUnit = weightUnits[selectedWeightUnitIndex],
+            chiefComplaint = chiefComplaint.trim(),
+            screeningDate = screeningDate,
+            heartAttackHistory = YesNoEnum.codeFromDisplay(previousHeartAttack),
+            practitionerName = null
         )
     }
 
@@ -239,7 +242,7 @@ class CVDRiskAssessmentViewModel @Inject constructor(
     ) {
         viewModelScope.launch(ioDispatcher) {
             getAppointment()
-            val cvdResponse = getCVDRecord(practitionerName = preferenceRepository.getUserName())
+            val cvdResponse = getCVDRecord()
             cvdAssessmentRepository.insertCVDRecord(
                 cvdResponse.copy(
                     appointmentId = appointmentResponseLocal!!.uuid,
@@ -279,8 +282,11 @@ class CVDRiskAssessmentViewModel @Inject constructor(
     }
 
     private fun clearForm() {
+        screeningDate = Date()
+        chiefComplaint = ""
         isDiabetic = ""
         isSmoker = ""
+        previousHeartAttack = ""
         systolic = ""
         diastolic = ""
         cholesterol = ""
@@ -290,6 +296,7 @@ class CVDRiskAssessmentViewModel @Inject constructor(
         heightInInch = ""
         selectedHeightUnitIndex = 0
         weight = ""
+        selectedWeightUnitIndex = 0
         riskPercentage = ""
         bmi = ""
     }
