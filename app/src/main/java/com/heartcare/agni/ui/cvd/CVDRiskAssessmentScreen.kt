@@ -238,35 +238,47 @@ fun CVDRiskAssessmentScreen(
                         if (viewModel.riskPercentage.isNotBlank()) {
                             Button(
                                 onClick = {
-                                    viewModel.getAppointmentInfo(
-                                        callback = {
-                                            if (viewModel.existsInOtherHospital) {
+                                    viewModel.checkIfCVDExistsForScreenDate(
+                                        exists = {
+                                            if (it) {
                                                 scope.launch {
                                                     snackBarHostState.showSnackbar(
-                                                        context.getString(
-                                                            R.string.appointment_exists_in_other_hospital
-                                                        )
+                                                        context.getString(R.string.appointment_exists_on_screening_date)
                                                     )
                                                 }
-                                            } else if (viewModel.ifAllSlotsBooked) {
-                                                viewModel.showAllSlotsBookedDialog = true
                                             } else {
-                                                if (viewModel.canAddAssessment) {
-                                                    viewModel.saveCVDRecord(
-                                                        saved = {
+                                                viewModel.getAppointmentInfo(
+                                                    callback = {
+                                                        if (viewModel.existsInOtherHospital) {
                                                             scope.launch {
-                                                                pagerState.animateScrollToPage(1)
                                                                 snackBarHostState.showSnackbar(
-                                                                    message = context.getString(R.string.assessment_record_saved)
+                                                                    context.getString(
+                                                                        R.string.appointment_exists_in_other_hospital
+                                                                    )
                                                                 )
                                                             }
+                                                        } else if (viewModel.ifAllSlotsBooked) {
+                                                            viewModel.showAllSlotsBookedDialog = true
+                                                        } else {
+                                                            if (viewModel.canAddAssessment) {
+                                                                viewModel.saveCVDRecord(
+                                                                    saved = {
+                                                                        scope.launch {
+                                                                            pagerState.animateScrollToPage(1)
+                                                                            snackBarHostState.showSnackbar(
+                                                                                message = context.getString(R.string.assessment_record_saved)
+                                                                            )
+                                                                        }
+                                                                    }
+                                                                )
+                                                            } else if (viewModel.isAppointmentCompleted) {
+                                                                viewModel.showAppointmentCompletedDialog = true
+                                                            } else {
+                                                                viewModel.showAddToQueueDialog = true
+                                                            }
                                                         }
-                                                    )
-                                                } else if (viewModel.isAppointmentCompleted) {
-                                                    viewModel.showAppointmentCompletedDialog = true
-                                                } else {
-                                                    viewModel.showAddToQueueDialog = true
-                                                }
+                                                    }
+                                                )
                                             }
                                         }
                                     )

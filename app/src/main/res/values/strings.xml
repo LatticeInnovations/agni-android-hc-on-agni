@@ -585,4 +585,5 @@ include them in the household</string>
     <string name="previous_heart_attack_or_stroke">Previous heart attack or stroke</string>
     <string name="weight_required">Weight is required</string>
     <string name="height_required">Height is required</string>
+    <string name="appointment_exists_on_screening_date">Another appointment exists for the same screening date</string>
 </resources>

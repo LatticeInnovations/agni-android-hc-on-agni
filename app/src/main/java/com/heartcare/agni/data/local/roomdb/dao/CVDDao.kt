@@ -19,6 +19,9 @@ interface CVDDao {
     @Query("SELECT * FROM CVDEntity WHERE patientId=:patientId AND createdOn BETWEEN :startTime AND :endTime")
     fun getTodayCVDRecords(patientId: String, startTime: Long, endTime: Long): CVDEntity?
 
+    @Query("SELECT * FROM CVDEntity WHERE patientId=:patientId AND screeningDate BETWEEN :startTime AND :endTime")
+    fun getCVDRecordByScreeningDate(patientId: String, startTime: Long, endTime: Long): CVDEntity?
+
     @Update(onConflict = OnConflictStrategy.REPLACE)
     fun updateCVDRecord(cvdEntity: CVDEntity): Int
 

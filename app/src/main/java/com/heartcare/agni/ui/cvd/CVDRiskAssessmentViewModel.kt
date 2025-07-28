@@ -18,6 +18,7 @@ import com.heartcare.agni.data.local.repository.preference.PreferenceRepository
 import com.heartcare.agni.data.local.repository.schedule.ScheduleRepository
 import com.heartcare.agni.data.server.model.cvd.CVDResponse
 import com.heartcare.agni.data.server.model.patient.PatientResponse
+import com.heartcare.agni.di.dispatcher.IoDispatcher
 import com.heartcare.agni.utils.builders.UUIDBuilder
 import com.heartcare.agni.utils.common.Queries
 import com.heartcare.agni.utils.common.Queries.checkAndUpdateAppointmentStatusToInProgress
@@ -42,7 +43,8 @@ class CVDRiskAssessmentViewModel @Inject constructor(
     private val preferenceRepository: PreferenceRepository,
     private val genericRepository: GenericRepository,
     private val scheduleRepository: ScheduleRepository,
-    private val patientLastUpdatedRepository: PatientLastUpdatedRepository
+    private val patientLastUpdatedRepository: PatientLastUpdatedRepository,
+    @IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) : ViewModel() {
     val user = preferenceRepository.getUserDetails()!!
     var isLaunched by mutableStateOf(false)
@@ -116,7 +118,9 @@ class CVDRiskAssessmentViewModel @Inject constructor(
                 Date().toTodayStartDate(),
                 Date().toEndOfDay()
             ).let { appointmentResponse ->
-                appointmentResponse?.let { existsInOtherHospital = it.hospitalCode != user.hospitalCode }
+                appointmentResponse?.let {
+                    existsInOtherHospital = it.hospitalCode != user.hospitalCode
+                }
                 canAddAssessment =
                     (appointmentResponse?.status == AppointmentStatusEnum.ARRIVED.value || appointmentResponse?.status == AppointmentStatusEnum.WALK_IN.value
                             || appointmentResponse?.status == AppointmentStatusEnum.IN_PROGRESS.value) && appointmentResponse.hospitalCode == user.hospitalCode
@@ -173,8 +177,7 @@ class CVDRiskAssessmentViewModel @Inject constructor(
         ioDispatcher: CoroutineDispatcher = Dispatchers.IO
     ) {
         viewModelScope.launch(ioDispatcher) {
-            todayCVD = cvdAssessmentRepository.getCVDRecord(patient!!.id).firstOrNull()
-            todayCVD?.let { record ->
+            cvdAssessmentRepository.getCVDRecord(patient!!.id).firstOrNull()?.let { record ->
                 isDiabetic = YesNoEnum.displayFromCode(record.diabetic)
                 isSmoker = YesNoEnum.displayFromCode(record.smoker)
                 previousHeartAttack = YesNoEnum.displayFromCode(record.heartAttackHistory)
@@ -190,12 +193,16 @@ class CVDRiskAssessmentViewModel @Inject constructor(
                 }
                 getBmi()
                 if (record.createdOn.time in Date().toTodayStartDate()..Date().toEndOfDay()) {
+                    todayCVD = record
                     screeningDate = record.screeningDate
                     chiefComplaint = record.chiefComplaint ?: ""
                     systolic = record.bpSystolic.toString()
                     diastolic = record.bpDiastolic.toString()
                     cholesterol = record.cholesterol?.toString() ?: ""
-                    selectedCholesterolIndex = cholesterolUnits.indexOf(record.cholesterolUnit)
+                    selectedCholesterolIndex =
+                        if (record.cholesterolUnit.isNullOrBlank()) 0 else cholesterolUnits.indexOf(
+                            record.cholesterolUnit
+                        )
                 }
             }
         }
@@ -370,6 +377,21 @@ class CVDRiskAssessmentViewModel @Inject constructor(
                 preferenceRepository,
                 patientLastUpdatedRepository,
                 updated
+            )
+        }
+    }
+
+    fun checkIfCVDExistsForScreenDate(
+        exists: (Boolean) -> Unit
+    ) {
+        viewModelScope.launch(ioDispatcher) {
+            exists(
+                screeningDate.toTodayStartDate() != todayCVD?.screeningDate?.toTodayStartDate() &&
+                        cvdAssessmentRepository.getCVDRecordByScreeningDate(
+                            patient!!.id,
+                            screeningDate.toTodayStartDate(),
+                            screeningDate.toEndOfDay()
+                        ) != null
             )
         }
     }
