@@ -30,7 +30,7 @@ fun DatePickerDialog(
         derivedStateOf { datePickerState.selectedDateMillis != null }
     }
     DatePickerDialog(
-        onDismissRequest = { dismiss },
+        onDismissRequest = { dismiss() },
         confirmButton = {
             TextButton(
                 onClick = {
@@ -47,7 +47,7 @@ fun DatePickerDialog(
         },
         dismissButton = {
             TextButton(
-                onClick = { dismiss }
+                onClick = { dismiss() }
             ) {
                 Text(dismissBtnText)
             }
