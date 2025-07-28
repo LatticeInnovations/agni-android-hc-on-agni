@@ -50,6 +50,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -109,6 +110,7 @@ fun CVDRiskAssessmentScreen(
     ) {
         viewModel.tabs.size
     }
+    val focusManager = LocalFocusManager.current
 
     BackHandler {
         if (viewModel.selectedRecord != null) viewModel.selectedRecord = null
@@ -264,6 +266,7 @@ fun CVDRiskAssessmentScreen(
                                                                 viewModel.saveCVDRecord(
                                                                     saved = {
                                                                         scope.launch {
+                                                                            focusManager.clearFocus()
                                                                             pagerState.animateScrollToPage(1)
                                                                             snackBarHostState.showSnackbar(
                                                                                 message = context.getString(R.string.assessment_record_saved)
@@ -409,7 +412,7 @@ private fun RecordsFullDetailsComposable(
         onDismissRequest = {
             onClick()
         },
-        sheetState = rememberModalBottomSheetState(),
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
         modifier = Modifier
             .navigationBarsPadding(),
         dragHandle = null

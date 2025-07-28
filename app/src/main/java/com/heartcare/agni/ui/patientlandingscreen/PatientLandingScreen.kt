@@ -220,15 +220,26 @@ private fun CardComposableList(
             R.drawable.cardiology,
             if (viewModel.cvdRisk.isBlank()) null
             else stringResource(R.string.percentage, viewModel.cvdRisk),
-            isCardDisabled = false,
+            isCardDisabled = viewModel.patient!!.birthDate.toTimeInMilli()
+                        .toAge() !in 40..74,
             onClick = {
-                scope.launch {
-                    navController.currentBackStackEntry?.savedStateHandle?.set(
-                        PATIENT,
-                        viewModel.patient
-                    )
-                    navController.navigate(Screen.CVDRiskAssessmentScreen.route)
+                if (viewModel.patient!!.birthDate.toTimeInMilli().toAge() !in 40..74
+                ) {
+                    scope.launch {
+                        snackbarHostState.showSnackbar(
+                            message = context.getString(R.string.cvd_error_message)
+                        )
+                    }
+                } else {
+                    scope.launch {
+                        navController.currentBackStackEntry?.savedStateHandle?.set(
+                            PATIENT,
+                            viewModel.patient
+                        )
+                        navController.navigate(Screen.CVDRiskAssessmentScreen.route)
+                    }
                 }
+
             }
         )
         /**
