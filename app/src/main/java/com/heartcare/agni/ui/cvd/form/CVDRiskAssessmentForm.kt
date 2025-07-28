@@ -559,7 +559,7 @@ private fun updateHeightInCM(
     if (value.isBlank() || (value.matches(onlyNumbersWithDecimal) && value.length < 6)) {
         viewModel.heightInCM = value
         viewModel.heightInCMError =
-            viewModel.heightInCM.isBlank() || viewModel.heightInCM.toDouble() !in 30.0..250.0
+            viewModel.heightInCM.isBlank() || viewModel.heightInCM.toDouble() !in 25.0..250.0
         viewModel.getBmi()
         viewModel.riskPercentage = ""
     }
@@ -572,7 +572,12 @@ private fun updateHeightInFeet(
     if (value.isBlank() || (value.matches(onlyNumbers) && value.length < 2)) {
         viewModel.heightInFeet = value
         viewModel.heightInFeetError = viewModel.heightInFeet.isBlank() ||
-                viewModel.heightInFeet.toInt() !in 1..8
+                viewModel.heightInFeet.toInt() !in 0..8
+        if (!viewModel.heightInFeetError) {
+            viewModel.heightInInchError =
+                viewModel.heightInInch.isBlank() ||
+                        viewModel.heightInInch.toDouble() !in 0.1..11.9
+        }
         viewModel.getBmi()
         viewModel.riskPercentage = ""
     }
@@ -584,12 +589,12 @@ private fun updateHeightInInch(
 ) {
     if (value.isBlank() || (value.matches(onlyNumbersWithDecimal) && value.length < 5)) {
         viewModel.heightInInch = value
-        viewModel.heightInInchError = viewModel.heightInInch.isNotBlank() &&
-                viewModel.heightInInch.toDouble() !in 0.0..11.9
+        viewModel.heightInInchError = viewModel.heightInInch.isBlank() ||
+                viewModel.heightInInch.toDouble() !in 0.1..11.9
         if (!viewModel.heightInInchError) {
             viewModel.heightInFeetError =
                 viewModel.heightInFeet.isBlank() ||
-                        viewModel.heightInFeet.toInt() !in 1..8
+                        viewModel.heightInFeet.toInt() !in 0..8
         }
         viewModel.getBmi()
         viewModel.riskPercentage = ""
@@ -605,7 +610,7 @@ private fun HeightError(viewModel: CVDRiskAssessmentViewModel) {
         else if (viewModel.selectedHeightUnitIndex == 0)
             stringResource(
                 R.string.value_cannot_exceed,
-                "30.0",
+                "25.0",
                 "250.0",
                 "cm"
             )
@@ -613,14 +618,14 @@ private fun HeightError(viewModel: CVDRiskAssessmentViewModel) {
             if (viewModel.heightInFeetError) {
                 stringResource(
                     R.string.value_cannot_exceed,
-                    "1",
+                    "0",
                     "8",
                     "ft"
                 )
             } else if (viewModel.heightInInchError) {
                 stringResource(
                     R.string.value_cannot_exceed,
-                    "0.0",
+                    "0.1",
                     "11.9",
                     "in"
                 )

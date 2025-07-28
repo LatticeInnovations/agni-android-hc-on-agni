@@ -138,7 +138,7 @@ class CVDRiskAssessmentViewModel @Inject constructor(
     }
 
     internal fun getBmi() {
-        if ((heightInCM.isNotBlank() || heightInFeet.isNotBlank())
+        if ((heightInCM.isNotBlank() || heightInFeet.isNotBlank() || heightInInch.isNotBlank())
             && weight.isNotBlank()
             && !heightInCMError && !heightInFeetError && !heightInInchError
             && !weightError
@@ -167,7 +167,7 @@ class CVDRiskAssessmentViewModel @Inject constructor(
                 previousHeartAttack.isNotBlank() &&
                 diastolic.isNotBlank() && !diastolicError &&
                 systolic.isNotBlank() && !systolicError &&
-                (heightInCM.isNotBlank() || heightInFeet.isNotBlank()) &&
+                (heightInCM.isNotBlank() || (heightInFeet.isNotBlank() && heightInInch.isNotBlank())) &&
                 weight.isNotBlank() &&
                 !heightInCMError && !heightInFeetError && !heightInInchError &&
                 !weightError && !cholesterolError
