@@ -169,6 +169,27 @@ class CVDRiskAssessmentViewModel @Inject constructor(
             cvdAssessmentRepository.getCVDRecord(patient!!.id).firstOrNull()?.let { record ->
                 isDiabetic = YesNoEnum.displayFromCode(record.diabetic)
                 isSmoker = YesNoEnum.displayFromCode(record.smoker)
+                previousHeartAttack = YesNoEnum.displayFromCode(record.heartAttackHistory)
+                weight = record.weight.toString()
+                selectedWeightUnitIndex = weightUnits.indexOf(record.weightUnit)
+                if (record.heightCm != null) {
+                    heightInCM = record.heightCm.toString()
+                    selectedHeightUnitIndex = 0
+                }
+                else {
+                    heightInFeet = record.heightFt?.toString() ?: ""
+                    heightInInch = record.heightInch?.toString() ?: ""
+                    selectedHeightUnitIndex = 1
+                }
+                getBmi()
+                if (record.createdOn.time in Date().toTodayStartDate()..Date().toEndOfDay()) {
+                    screeningDate = record.screeningDate
+                    chiefComplaint = record.chiefComplaint ?: ""
+                    systolic = record.bpSystolic.toString()
+                    diastolic = record.bpDiastolic.toString()
+                    cholesterol = record.cholesterol?.toString() ?: ""
+                    selectedCholesterolIndex = cholesterolUnits.indexOf(record.cholesterolUnit)
+                }
             }
         }
     }
