@@ -22,6 +22,7 @@ import com.heartcare.agni.utils.builders.UUIDBuilder
 import com.heartcare.agni.utils.common.Queries
 import com.heartcare.agni.utils.common.Queries.checkAndUpdateAppointmentStatusToInProgress
 import com.heartcare.agni.utils.common.Queries.updatePatientLastUpdated
+import com.heartcare.agni.utils.converters.responseconverter.NameConverter.getFullName
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toAge
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toEndOfDay
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toTimeInMilli
@@ -93,6 +94,8 @@ class CVDRiskAssessmentViewModel @Inject constructor(
     var showDatePicker by mutableStateOf(false)
     var chiefComplaint by mutableStateOf("")
     var previousHeartAttack by mutableStateOf("")
+
+    var todayCVD by mutableStateOf<CVDResponse?>(null)
 
     internal fun getAppointmentInfo(
         callback: () -> Unit,
@@ -166,7 +169,8 @@ class CVDRiskAssessmentViewModel @Inject constructor(
         ioDispatcher: CoroutineDispatcher = Dispatchers.IO
     ) {
         viewModelScope.launch(ioDispatcher) {
-            cvdAssessmentRepository.getCVDRecord(patient!!.id).firstOrNull()?.let { record ->
+            todayCVD = cvdAssessmentRepository.getCVDRecord(patient!!.id).firstOrNull()
+            todayCVD?.let { record ->
                 isDiabetic = YesNoEnum.displayFromCode(record.diabetic)
                 isSmoker = YesNoEnum.displayFromCode(record.smoker)
                 previousHeartAttack = YesNoEnum.displayFromCode(record.heartAttackHistory)
@@ -175,8 +179,7 @@ class CVDRiskAssessmentViewModel @Inject constructor(
                 if (record.heightCm != null) {
                     heightInCM = record.heightCm.toString()
                     selectedHeightUnitIndex = 0
-                }
-                else {
+                } else {
                     heightInFeet = record.heightFt?.toString() ?: ""
                     heightInInch = record.heightInch?.toString() ?: ""
                     selectedHeightUnitIndex = 1
@@ -250,7 +253,7 @@ class CVDRiskAssessmentViewModel @Inject constructor(
             bmi = bmi.toDouble(),
             appUpdatedDate = Date(),
             weightUnit = weightUnits[selectedWeightUnitIndex],
-            chiefComplaint = chiefComplaint.trim(),
+            chiefComplaint = chiefComplaint.trim().ifBlank { null },
             screeningDate = screeningDate,
             heartAttackHistory = YesNoEnum.codeFromDisplay(previousHeartAttack),
             practitionerName = null
@@ -263,11 +266,17 @@ class CVDRiskAssessmentViewModel @Inject constructor(
     ) {
         viewModelScope.launch(ioDispatcher) {
             getAppointment()
-            val cvdResponse = getCVDRecord()
+            val cvdResponse = getCVDRecord(
+                cvdUUid = todayCVD?.cvdUuid ?: UUIDBuilder.generateUUID()
+            )
             cvdAssessmentRepository.insertCVDRecord(
                 cvdResponse.copy(
                     appointmentId = appointmentResponseLocal!!.uuid,
-                    patientId = patient!!.id
+                    patientId = patient!!.id,
+                    practitionerName = getFullName(
+                        preferenceRepository.getUserDetails()!!.firstName,
+                        preferenceRepository.getUserDetails()!!.lastName
+                    )
                 )
             )
             genericRepository.insertCVDRecord(cvdResponse)
