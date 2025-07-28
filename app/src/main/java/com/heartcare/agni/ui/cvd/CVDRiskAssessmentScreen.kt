@@ -158,8 +158,7 @@ fun CVDRiskAssessmentScreen(
                         scope.launch { pagerState.animateScrollToPage(index) }
                     }
                     HorizontalPager(
-                        state = pagerState,
-                        userScrollEnabled = viewModel.canAddAssessment
+                        state = pagerState
                     ) { index ->
                         when (index) {
                             0 -> CVDRiskAssessmentForm(viewModel)
