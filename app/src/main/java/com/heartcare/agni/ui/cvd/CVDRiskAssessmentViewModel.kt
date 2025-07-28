@@ -44,7 +44,8 @@ class CVDRiskAssessmentViewModel @Inject constructor(
     private val patientLastUpdatedRepository: PatientLastUpdatedRepository
 ) : ViewModel() {
     var isLaunched by mutableStateOf(false)
-    val tabs = listOf("Records", "Assess risk")
+    val tabs = listOf("Assess risk", "Records")
+    val maxChiefComplaintLength = 200
     var patient by mutableStateOf<PatientResponse?>(null)
     var appointmentResponseLocal by mutableStateOf<AppointmentResponseLocal?>(null)
     var isDiabetic by mutableStateOf("")
@@ -67,9 +68,10 @@ class CVDRiskAssessmentViewModel @Inject constructor(
     var heightInFeetError by mutableStateOf(false)
     var heightInInch by mutableStateOf("")
     var heightInInchError by mutableStateOf(false)
+    var weightUnits = listOf("kg", "lb")
+    var selectedWeightUnitIndex by mutableIntStateOf(0)
     var weight by mutableStateOf("")
     var weightError by mutableStateOf(false)
-    var weightUnit = "kg"
     var bmi by mutableStateOf("")
     var riskPercentage by mutableStateOf("")
 
@@ -86,6 +88,11 @@ class CVDRiskAssessmentViewModel @Inject constructor(
     private val maxNumberOfAppointmentsInADay = 250
     var showAppointmentCompletedDialog by mutableStateOf(false)
     var isAppointmentCompleted by mutableStateOf(false)
+
+    var screeningDate by mutableStateOf(Date())
+    var showDatePicker by mutableStateOf(false)
+    var chiefComplaint by mutableStateOf("")
+    var previousHeartAttack by mutableStateOf("")
 
     internal fun getAppointmentInfo(
         callback: () -> Unit,
@@ -120,28 +127,39 @@ class CVDRiskAssessmentViewModel @Inject constructor(
     }
 
     internal fun getBmi() {
-        if ((heightInCM.isNotBlank() || (heightInFeet.isNotBlank()))
+        if ((heightInCM.isNotBlank() || heightInFeet.isNotBlank())
             && weight.isNotBlank()
             && !heightInCMError && !heightInFeetError && !heightInInchError
             && !weightError
         ) {
-            val heightInM: Double = if (selectedHeightUnitIndex == 0) heightInCM.toDouble() * 0.01
-            else {
+            val heightInM: Double = if (selectedHeightUnitIndex == 0) {
+                heightInCM.toDouble() * 0.01
+            } else {
                 ((heightInFeet.toDouble() * 12) + heightInInch.ifBlank { "0" }.toDouble()) * 0.0254
             }
-            bmi = (weight.toDouble() / (heightInM * heightInM)).toInt().toString()
-        } else bmi = ""
+
+            val weightInKg: Double = if (selectedWeightUnitIndex == 0) {
+                weight.toDouble()
+            } else {
+                weight.toDouble() * 0.453592 // 1 lb = 0.453592 kg
+            }
+
+            bmi = "%.1f".format(weightInKg / (heightInM * heightInM))
+        } else {
+            bmi = ""
+        }
     }
 
     internal fun ifFormValid(): Boolean {
-        return isDiabetic.isNotBlank() && isSmoker.isNotBlank()
-                && diastolic.isNotBlank() && !diastolicError
-                && systolic.isNotBlank() && !systolicError
-                && (cholesterol.isNotBlank()
-                || ((heightInCM.isNotBlank() || heightInFeet.isNotBlank())
-                && weight.isNotBlank()))
-                && !heightInCMError && !heightInFeetError && !heightInInchError
-                && !weightError  && !cholesterolError
+        return isDiabetic.isNotBlank() &&
+                isSmoker.isNotBlank() &&
+                previousHeartAttack.isNotBlank() &&
+                diastolic.isNotBlank() && !diastolicError &&
+                systolic.isNotBlank() && !systolicError &&
+                (heightInCM.isNotBlank() || heightInFeet.isNotBlank()) &&
+                weight.isNotBlank() &&
+                !heightInCMError && !heightInFeetError && !heightInInchError &&
+                !weightError && !cholesterolError
     }
 
     internal fun getTodayCVDAssessment(
@@ -149,11 +167,12 @@ class CVDRiskAssessmentViewModel @Inject constructor(
     ) {
         viewModelScope.launch(ioDispatcher) {
             cvdAssessmentRepository.getCVDRecord(patient!!.id).firstOrNull()?.let { record ->
-                    isDiabetic = YesNoEnum.displayFromCode(record.diabetic)
-                    isSmoker = YesNoEnum.displayFromCode(record.smoker)
-                }
+                isDiabetic = YesNoEnum.displayFromCode(record.diabetic)
+                isSmoker = YesNoEnum.displayFromCode(record.smoker)
+            }
         }
     }
+
     internal fun getRisk(
         ioDispatcher: CoroutineDispatcher = Dispatchers.IO
     ) {
@@ -184,11 +203,9 @@ class CVDRiskAssessmentViewModel @Inject constructor(
         }
     }
 
-
     private fun getCVDRecord(
         cvdUUid: String = UUIDBuilder.generateUUID(),
         cvdFhirId: String? = null,
-        practitionerName: String,
         createdOn: Date = Date()
     ): CVDResponse {
         return CVDResponse(
@@ -207,10 +224,15 @@ class CVDRiskAssessmentViewModel @Inject constructor(
             heightCm = if (selectedHeightUnitIndex == 0 && heightInCM.isNotBlank()) heightInCM.toDouble() else null,
             heightInch = if (selectedHeightUnitIndex == 1 && heightInInch.isNotBlank()) heightInInch.toDouble() else null,
             heightFt = if (selectedHeightUnitIndex == 1 && heightInFeet.isNotBlank()) heightInFeet.toInt() else null,
-            weight = if (weight.isNotBlank()) weight.toDouble() else null,
+            weight = weight.toDouble(),
             risk = riskPercentage.toInt(),
-            practitionerName = practitionerName,
-            bmi = if (bmi.isNotBlank()) bmi.toDouble() else null
+            bmi = bmi.toDouble(),
+            appUpdatedDate = Date(),
+            weightUnit = weightUnits[selectedWeightUnitIndex],
+            chiefComplaint = chiefComplaint.trim(),
+            screeningDate = screeningDate,
+            heartAttackHistory = YesNoEnum.codeFromDisplay(previousHeartAttack),
+            practitionerName = null
         )
     }
 
@@ -220,7 +242,7 @@ class CVDRiskAssessmentViewModel @Inject constructor(
     ) {
         viewModelScope.launch(ioDispatcher) {
             getAppointment()
-            val cvdResponse = getCVDRecord(practitionerName = preferenceRepository.getUserName())
+            val cvdResponse = getCVDRecord()
             cvdAssessmentRepository.insertCVDRecord(
                 cvdResponse.copy(
                     appointmentId = appointmentResponseLocal!!.uuid,
@@ -260,8 +282,11 @@ class CVDRiskAssessmentViewModel @Inject constructor(
     }
 
     private fun clearForm() {
+        screeningDate = Date()
+        chiefComplaint = ""
         isDiabetic = ""
         isSmoker = ""
+        previousHeartAttack = ""
         systolic = ""
         diastolic = ""
         cholesterol = ""
@@ -271,6 +296,7 @@ class CVDRiskAssessmentViewModel @Inject constructor(
         heightInInch = ""
         selectedHeightUnitIndex = 0
         weight = ""
+        selectedWeightUnitIndex = 0
         riskPercentage = ""
         bmi = ""
     }

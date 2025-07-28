@@ -30,7 +30,7 @@ data class CVDEntity(
     val cvdUuid: String,
     val appointmentId: String,
     val patientId: String,
-    val bmi: Double?,
+    val bmi: Double,
     val bpDiastolic: Int,
     val bpSystolic: Int,
     val cholesterol: Double?,
@@ -42,6 +42,10 @@ data class CVDEntity(
     val practitionerName: String?,
     val risk: Int,
     val smoker: Int,
-    val weight: Double?,
-    val createdOn: Date
+    val weight: Double,
+    val createdOn: Date,
+    val weightUnit: String,
+    val chiefComplaint: String?,
+    val screeningDate: Date,
+    val heartAttackHistory: Int
 )

@@ -656,7 +656,11 @@ internal fun CVDResponse.toCVDEntity(): CVDEntity {
         risk = risk,
         practitionerName = practitionerName,
         smoker = smoker,
-        weight = weight
+        weight = weight,
+        weightUnit = weightUnit,
+        chiefComplaint = chiefComplaint,
+        screeningDate = screeningDate,
+        heartAttackHistory = heartAttackHistory,
     )
 }
 
@@ -683,7 +687,11 @@ internal suspend fun CVDResponse.toCVDEntity(
         risk = risk,
         practitionerName = practitionerName,
         smoker = smoker,
-        weight = weight
+        weight = weight,
+        weightUnit = weightUnit,
+        chiefComplaint = chiefComplaint,
+        screeningDate = screeningDate,
+        heartAttackHistory = heartAttackHistory
     )
 }
 
@@ -706,7 +714,12 @@ internal fun CVDEntity.toCVDResponse(): CVDResponse {
         risk = risk,
         practitionerName = practitionerName,
         smoker = smoker,
-        weight = weight
+        weight = weight,
+        appUpdatedDate = null,
+        weightUnit = weightUnit,
+        chiefComplaint = chiefComplaint,
+        screeningDate = screeningDate,
+        heartAttackHistory = heartAttackHistory
     )
 }
 

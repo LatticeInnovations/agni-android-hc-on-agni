@@ -214,6 +214,23 @@ private fun CardComposableList(
                 rememberScrollState()
             )
     ) {
+        CardComposable(
+            viewModel,
+            stringResource(id = R.string.risk_predictor),
+            R.drawable.cardiology,
+            if (viewModel.cvdRisk.isBlank()) null
+            else stringResource(R.string.percentage, viewModel.cvdRisk),
+            isCardDisabled = false,
+            onClick = {
+                scope.launch {
+                    navController.currentBackStackEntry?.savedStateHandle?.set(
+                        PATIENT,
+                        viewModel.patient
+                    )
+                    navController.navigate(Screen.CVDRiskAssessmentScreen.route)
+                }
+            }
+        )
         /**
         CardComposable(
         viewModel = viewModel,
@@ -247,36 +264,6 @@ private fun CardComposableList(
             }
         )
         /**
-        CardComposable(
-        viewModel,
-        stringResource(id = R.string.cvd_risk_assessment),
-        R.drawable.cardiology,
-        if (viewModel.cvdRisk.isBlank()) null
-        else stringResource(R.string.percentage, viewModel.cvdRisk),
-        isCardDisabled = viewModel.patient!!.gender == "other" ||
-        viewModel.patient!!.birthDate.toTimeInMilli()
-        .toAge() !in 40..74,
-        onClick = {
-        if (viewModel.patient!!.gender == "other" ||
-        viewModel.patient!!.birthDate.toTimeInMilli().toAge() !in 40..74
-        ) {
-        scope.launch {
-        snackbarHostState.showSnackbar(
-        message = context.getString(R.string.cvd_error_message)
-        )
-        }
-        } else {
-        scope.launch {
-        navController.currentBackStackEntry?.savedStateHandle?.set(
-        "patient",
-        viewModel.patient
-        )
-        navController.navigate(Screen.CVDRiskAssessmentScreen.route)
-        }
-        }
-
-        }
-        )
         CardComposable(
         viewModel,
         stringResource(id = R.string.vital),
