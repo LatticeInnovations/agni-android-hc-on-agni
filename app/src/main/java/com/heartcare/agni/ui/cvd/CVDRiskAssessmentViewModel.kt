@@ -44,6 +44,7 @@ class CVDRiskAssessmentViewModel @Inject constructor(
     private val scheduleRepository: ScheduleRepository,
     private val patientLastUpdatedRepository: PatientLastUpdatedRepository
 ) : ViewModel() {
+    val user = preferenceRepository.getUserDetails()!!
     var isLaunched by mutableStateOf(false)
     val tabs = listOf("Assess risk", "Records")
     val maxChiefComplaintLength = 200
@@ -89,6 +90,7 @@ class CVDRiskAssessmentViewModel @Inject constructor(
     private val maxNumberOfAppointmentsInADay = 250
     var showAppointmentCompletedDialog by mutableStateOf(false)
     var isAppointmentCompleted by mutableStateOf(false)
+    var existsInOtherHospital by mutableStateOf(false)
 
     var screeningDate by mutableStateOf(Date())
     var showDatePicker by mutableStateOf(false)
@@ -107,23 +109,25 @@ class CVDRiskAssessmentViewModel @Inject constructor(
                 AppointmentStatusEnum.SCHEDULED.value
             ).firstOrNull { appointmentResponse ->
                 appointmentResponse.slot.start.time < Date().toEndOfDay() && appointmentResponse.slot.start.time > Date().toTodayStartDate()
+                        && appointmentResponse.hospitalCode == user.hospitalCode
             }
             appointmentRepository.getAppointmentsOfPatientByDate(
                 patient!!.id,
                 Date().toTodayStartDate(),
                 Date().toEndOfDay()
             ).let { appointmentResponse ->
+                appointmentResponse?.let { existsInOtherHospital = it.hospitalCode != user.hospitalCode }
                 canAddAssessment =
-                    appointmentResponse?.status == AppointmentStatusEnum.ARRIVED.value || appointmentResponse?.status == AppointmentStatusEnum.WALK_IN.value
-                            || appointmentResponse?.status == AppointmentStatusEnum.IN_PROGRESS.value
+                    (appointmentResponse?.status == AppointmentStatusEnum.ARRIVED.value || appointmentResponse?.status == AppointmentStatusEnum.WALK_IN.value
+                            || appointmentResponse?.status == AppointmentStatusEnum.IN_PROGRESS.value) && appointmentResponse.hospitalCode == user.hospitalCode
                 isAppointmentCompleted =
-                    appointmentResponse?.status == AppointmentStatusEnum.COMPLETED.value
+                    appointmentResponse?.status == AppointmentStatusEnum.COMPLETED.value && appointmentResponse.hospitalCode == user.hospitalCode
             }
             ifAllSlotsBooked = appointmentRepository.getAppointmentListByDate(
                 Date().toTodayStartDate(),
                 Date().toEndOfDay()
             ).filter { appointmentResponseLocal ->
-                appointmentResponseLocal.status != AppointmentStatusEnum.CANCELLED.value
+                appointmentResponseLocal.status != AppointmentStatusEnum.CANCELLED.value && appointmentResponseLocal.hospitalCode == user.hospitalCode
             }.size >= maxNumberOfAppointmentsInADay
             callback()
         }

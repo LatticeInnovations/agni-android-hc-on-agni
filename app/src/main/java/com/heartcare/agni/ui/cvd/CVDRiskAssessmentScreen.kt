@@ -240,21 +240,33 @@ fun CVDRiskAssessmentScreen(
                                 onClick = {
                                     viewModel.getAppointmentInfo(
                                         callback = {
-                                            if (viewModel.canAddAssessment) {
-                                                viewModel.saveCVDRecord(
-                                                    saved = {
-                                                        scope.launch {
-                                                            pagerState.animateScrollToPage(1)
-                                                            snackBarHostState.showSnackbar(
-                                                                message = context.getString(R.string.assessment_record_saved)
-                                                            )
-                                                        }
-                                                    }
-                                                )
-                                            } else if (viewModel.isAppointmentCompleted) {
-                                                viewModel.showAppointmentCompletedDialog = true
+                                            if (viewModel.existsInOtherHospital) {
+                                                scope.launch {
+                                                    snackBarHostState.showSnackbar(
+                                                        context.getString(
+                                                            R.string.appointment_exists_in_other_hospital
+                                                        )
+                                                    )
+                                                }
+                                            } else if (viewModel.ifAllSlotsBooked) {
+                                                viewModel.showAllSlotsBookedDialog = true
                                             } else {
-                                                viewModel.showAddToQueueDialog = true
+                                                if (viewModel.canAddAssessment) {
+                                                    viewModel.saveCVDRecord(
+                                                        saved = {
+                                                            scope.launch {
+                                                                pagerState.animateScrollToPage(1)
+                                                                snackBarHostState.showSnackbar(
+                                                                    message = context.getString(R.string.assessment_record_saved)
+                                                                )
+                                                            }
+                                                        }
+                                                    )
+                                                } else if (viewModel.isAppointmentCompleted) {
+                                                    viewModel.showAppointmentCompletedDialog = true
+                                                } else {
+                                                    viewModel.showAddToQueueDialog = true
+                                                }
                                             }
                                         }
                                     )
