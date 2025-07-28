@@ -21,7 +21,7 @@ class RiskPredictionChartRepositoryImpl @Inject constructor(
         diabetes: Int
     ): String {
         return riskPredictionDao.predictRisk(
-            sex, tobaccoStatus, age, sys, cholesterol, bmi, "sa", diabetes
+            sex, tobaccoStatus, age, sys, cholesterol, bmi, "oc", diabetes
         )
     }
 

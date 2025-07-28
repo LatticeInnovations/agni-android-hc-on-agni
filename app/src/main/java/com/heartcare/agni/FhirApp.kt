@@ -140,7 +140,8 @@ class FhirApp : Application() {
             fhirAppDatabase.getImmunizationRecommendationDao(),
             fhirAppDatabase.getImmunizationDao(),
             fhirAppDatabase.getManufacturerDao(),
-            fhirAppDatabase.getLevelsDao()
+            fhirAppDatabase.getLevelsDao(),
+            fhirAppDatabase.getRiskPredictionDao()
         )
 
         _fileSyncRepository = FileSyncRepositoryImpl(

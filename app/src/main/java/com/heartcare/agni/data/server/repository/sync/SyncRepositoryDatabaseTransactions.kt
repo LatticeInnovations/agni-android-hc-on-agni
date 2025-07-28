@@ -18,6 +18,7 @@ import com.heartcare.agni.data.local.roomdb.dao.PatientDao
 import com.heartcare.agni.data.local.roomdb.dao.PatientLastUpdatedDao
 import com.heartcare.agni.data.local.roomdb.dao.PrescriptionDao
 import com.heartcare.agni.data.local.roomdb.dao.RelationDao
+import com.heartcare.agni.data.local.roomdb.dao.RiskPredictionDao
 import com.heartcare.agni.data.local.roomdb.dao.ScheduleDao
 import com.heartcare.agni.data.local.roomdb.dao.SymptomsAndDiagnosisDao
 import com.heartcare.agni.data.local.roomdb.dao.VitalDao
@@ -113,7 +114,8 @@ open class SyncRepositoryDatabaseTransactions(
     private val immunizationRecommendationDao: ImmunizationRecommendationDao,
     private val immunizationDao: ImmunizationDao,
     private val manufacturerDao: ManufacturerDao,
-    private val levelsDao: LevelsDao
+    private val levelsDao: LevelsDao,
+    private val riskPredictionDao: RiskPredictionDao
 ) {
 
 
@@ -294,7 +296,7 @@ open class SyncRepositoryDatabaseTransactions(
 
     protected suspend fun insertCVD(body: List<CVDResponse>) {
         cvdDao.insertCVDRecord(*body.map { cvdResponse ->
-            cvdResponse.toCVDEntity(patientDao, appointmentDao)
+            cvdResponse.toCVDEntity(patientDao, appointmentDao, riskPredictionDao)
         }.toTypedArray())
     }
 
