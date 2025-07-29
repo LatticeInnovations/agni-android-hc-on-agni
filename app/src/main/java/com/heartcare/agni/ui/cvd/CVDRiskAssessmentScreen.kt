@@ -84,7 +84,7 @@ import com.heartcare.agni.utils.constants.NavControllerConstants.PATIENT
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toddMMMyyyy
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CVDRiskAssessmentScreen(
     navController: NavController,
@@ -447,7 +447,7 @@ private fun RecordsFullDetailsComposable(
                     YesNoEnum.displayFromCode(record.heartAttackHistory)
                 )
                 DisplayField(
-                    stringResource(R.string.blood_pressure_colon),
+                    stringResource(R.string.blood_pressure_label),
                     "${record.bpSystolic}/${record.bpDiastolic} mmhg"
                 )
                 DisplayField(
