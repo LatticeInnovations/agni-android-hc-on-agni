@@ -29,4 +29,7 @@ interface CVDDao {
     @Query("UPDATE CVDEntity SET cvdFhirId=:fhirId WHERE cvdUuid=:id")
     suspend fun updateCVDFhirId(id: String, fhirId: String): Int
 
+    @Transaction
+    @Query("DELETE FROM CVDEntity WHERE cvdUuid=:id")
+    suspend fun deleteCVD(id: String): Int
 }

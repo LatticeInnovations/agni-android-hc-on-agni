@@ -2,7 +2,6 @@ package com.heartcare.agni.data.server.repository.sync
 
 import com.heartcare.agni.data.local.enums.DispenseStatusEnum
 import com.heartcare.agni.data.local.enums.GenericTypeEnum
-import com.heartcare.agni.data.local.enums.IdentifierIgnoreEnum
 import com.heartcare.agni.data.local.enums.PhotoDeleteEnum
 import com.heartcare.agni.data.local.enums.PhotoUploadTypeEnum
 import com.heartcare.agni.data.local.enums.SyncType
@@ -59,6 +58,7 @@ import com.heartcare.agni.data.server.model.vaccination.ImmunizationResponse
 import com.heartcare.agni.data.server.model.vaccination.ManufacturerResponse
 import com.heartcare.agni.data.server.model.vitals.VitalResponse
 import com.heartcare.agni.utils.constants.ErrorConstants
+import com.heartcare.agni.utils.constants.ErrorConstants.APPOINTMENT_ERROR
 import com.heartcare.agni.utils.converters.responseconverter.GsonConverters
 import com.heartcare.agni.utils.converters.responseconverter.Vaccination.toImmunizationEntity
 import com.heartcare.agni.utils.converters.responseconverter.Vaccination.toImmunizationFileEntity
@@ -264,9 +264,14 @@ open class SyncRepositoryDatabaseTransactions(
             .map { deletedPhotoPrescription ->
                 fileUploadDao.deleteFile(deletedPhotoPrescription.prescription[0].filename)
                 deleteFileManager.removeFromInternalStorage(deletedPhotoPrescription.prescription[0].filename)
-                prescriptionDao.deletePrescriptionPhoto(deletedPhotoPrescription.toListOfPrescriptionPhotoEntity()[0]).also {
-                    prescriptionDao.deletePrescriptionEntity(deletedPhotoPrescription.toPrescriptionEntity(patientDao))
-                }
+                prescriptionDao.deletePrescriptionPhoto(deletedPhotoPrescription.toListOfPrescriptionPhotoEntity()[0])
+                    .also {
+                        prescriptionDao.deletePrescriptionEntity(
+                            deletedPhotoPrescription.toPrescriptionEntity(
+                                patientDao
+                            )
+                        )
+                    }
             }
     }
 
@@ -443,12 +448,18 @@ open class SyncRepositoryDatabaseTransactions(
         val idsToDelete = mutableSetOf<String>()
         idsToDelete.addAll(listOfGenericEntities.map { genericEntity -> genericEntity.id })
         body.forEach { createResponse ->
-            if (createResponse.error == null) {
-                cvdDao.updateCVDFhirId(
-                    createResponse.id!!, createResponse.fhirId!!
-                )
-            } else {
-                idsToDelete.remove(createResponse.id)
+            when (createResponse.error) {
+                null -> {
+                    cvdDao.updateCVDFhirId(
+                        createResponse.id!!, createResponse.fhirId!!
+                    )
+                }
+                APPOINTMENT_ERROR -> {
+                    cvdDao.deleteCVD(createResponse.id!!)
+                }
+                else -> {
+                    idsToDelete.remove(createResponse.id)
+                }
             }
         }
         return deleteGenericEntityByListOfIds(idsToDelete.toList())
@@ -743,9 +754,10 @@ open class SyncRepositoryDatabaseTransactions(
     protected suspend fun insertImmunizationRecommendation(body: List<ImmunizationRecommendationResponse>) {
         immunizationRecommendationDao.insertImmunizationRecommendation(
             *body.map { immunizationRecommendationResponse ->
-                patientDao.getPatientIdByFhirId(immunizationRecommendationResponse.patientId)!!.let {
-                    immunizationRecommendationResponse.toImmunizationRecommendationEntity(it)
-                }
+                patientDao.getPatientIdByFhirId(immunizationRecommendationResponse.patientId)!!
+                    .let {
+                        immunizationRecommendationResponse.toImmunizationRecommendationEntity(it)
+                    }
             }.toTypedArray()
         )
     }
@@ -754,7 +766,8 @@ open class SyncRepositoryDatabaseTransactions(
         immunizationDao.insertImmunization(
             *body.map { immunizationResponse ->
                 val patientId = patientDao.getPatientIdByFhirId(immunizationResponse.patientId)!!
-                val appointmentId = appointmentDao.getAppointmentIdByFhirId(immunizationResponse.appointmentId)
+                val appointmentId =
+                    appointmentDao.getAppointmentIdByFhirId(immunizationResponse.appointmentId)
                 immunizationResponse.toImmunizationEntity(patientId, appointmentId)
             }.toTypedArray()
         )
@@ -790,7 +803,10 @@ open class SyncRepositoryDatabaseTransactions(
         )
     }
 
-    protected suspend fun insertImmunizationFhirIds(body: List<CreateResponse>, listOfGenericEntities: List<GenericEntity>):Int {
+    protected suspend fun insertImmunizationFhirIds(
+        body: List<CreateResponse>,
+        listOfGenericEntities: List<GenericEntity>
+    ): Int {
         body.forEach { createResponse ->
             immunizationDao.updateFhirId(createResponse.id!!, createResponse.fhirId!!)
         }
