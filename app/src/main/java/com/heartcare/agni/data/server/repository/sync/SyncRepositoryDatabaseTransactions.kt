@@ -59,6 +59,7 @@ import com.heartcare.agni.data.server.model.vaccination.ManufacturerResponse
 import com.heartcare.agni.data.server.model.vitals.VitalResponse
 import com.heartcare.agni.utils.constants.ErrorConstants
 import com.heartcare.agni.utils.constants.ErrorConstants.APPOINTMENT_ERROR
+import com.heartcare.agni.utils.constants.ErrorConstants.DUPLICATE_RECORD
 import com.heartcare.agni.utils.converters.responseconverter.GsonConverters
 import com.heartcare.agni.utils.converters.responseconverter.Vaccination.toImmunizationEntity
 import com.heartcare.agni.utils.converters.responseconverter.Vaccination.toImmunizationFileEntity
@@ -454,7 +455,7 @@ open class SyncRepositoryDatabaseTransactions(
                         createResponse.id!!, createResponse.fhirId!!
                     )
                 }
-                APPOINTMENT_ERROR -> {
+                APPOINTMENT_ERROR, DUPLICATE_RECORD -> {
                     cvdDao.deleteCVD(createResponse.id!!)
                 }
                 else -> {
