@@ -18,10 +18,12 @@ import com.heartcare.agni.data.local.repository.preference.PreferenceRepository
 import com.heartcare.agni.data.local.repository.schedule.ScheduleRepository
 import com.heartcare.agni.data.server.model.cvd.CVDResponse
 import com.heartcare.agni.data.server.model.patient.PatientResponse
+import com.heartcare.agni.di.dispatcher.IoDispatcher
 import com.heartcare.agni.utils.builders.UUIDBuilder
 import com.heartcare.agni.utils.common.Queries
 import com.heartcare.agni.utils.common.Queries.checkAndUpdateAppointmentStatusToInProgress
 import com.heartcare.agni.utils.common.Queries.updatePatientLastUpdated
+import com.heartcare.agni.utils.converters.responseconverter.NameConverter.getFullName
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toAge
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toEndOfDay
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toTimeInMilli
@@ -41,8 +43,10 @@ class CVDRiskAssessmentViewModel @Inject constructor(
     private val preferenceRepository: PreferenceRepository,
     private val genericRepository: GenericRepository,
     private val scheduleRepository: ScheduleRepository,
-    private val patientLastUpdatedRepository: PatientLastUpdatedRepository
+    private val patientLastUpdatedRepository: PatientLastUpdatedRepository,
+    @IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) : ViewModel() {
+    val user = preferenceRepository.getUserDetails()!!
     var isLaunched by mutableStateOf(false)
     val tabs = listOf("Assess risk", "Records")
     val maxChiefComplaintLength = 200
@@ -88,11 +92,14 @@ class CVDRiskAssessmentViewModel @Inject constructor(
     private val maxNumberOfAppointmentsInADay = 250
     var showAppointmentCompletedDialog by mutableStateOf(false)
     var isAppointmentCompleted by mutableStateOf(false)
+    var existsInOtherHospital by mutableStateOf(false)
 
     var screeningDate by mutableStateOf(Date())
     var showDatePicker by mutableStateOf(false)
     var chiefComplaint by mutableStateOf("")
     var previousHeartAttack by mutableStateOf("")
+
+    var todayCVD by mutableStateOf<CVDResponse?>(null)
 
     internal fun getAppointmentInfo(
         callback: () -> Unit,
@@ -104,30 +111,34 @@ class CVDRiskAssessmentViewModel @Inject constructor(
                 AppointmentStatusEnum.SCHEDULED.value
             ).firstOrNull { appointmentResponse ->
                 appointmentResponse.slot.start.time < Date().toEndOfDay() && appointmentResponse.slot.start.time > Date().toTodayStartDate()
+                        && appointmentResponse.hospitalCode == user.hospitalCode
             }
             appointmentRepository.getAppointmentsOfPatientByDate(
                 patient!!.id,
                 Date().toTodayStartDate(),
                 Date().toEndOfDay()
             ).let { appointmentResponse ->
+                appointmentResponse?.let {
+                    existsInOtherHospital = it.hospitalCode != user.hospitalCode
+                }
                 canAddAssessment =
-                    appointmentResponse?.status == AppointmentStatusEnum.ARRIVED.value || appointmentResponse?.status == AppointmentStatusEnum.WALK_IN.value
-                            || appointmentResponse?.status == AppointmentStatusEnum.IN_PROGRESS.value
+                    (appointmentResponse?.status == AppointmentStatusEnum.ARRIVED.value || appointmentResponse?.status == AppointmentStatusEnum.WALK_IN.value
+                            || appointmentResponse?.status == AppointmentStatusEnum.IN_PROGRESS.value) && appointmentResponse.hospitalCode == user.hospitalCode
                 isAppointmentCompleted =
-                    appointmentResponse?.status == AppointmentStatusEnum.COMPLETED.value
+                    appointmentResponse?.status == AppointmentStatusEnum.COMPLETED.value && appointmentResponse.hospitalCode == user.hospitalCode
             }
             ifAllSlotsBooked = appointmentRepository.getAppointmentListByDate(
                 Date().toTodayStartDate(),
                 Date().toEndOfDay()
             ).filter { appointmentResponseLocal ->
-                appointmentResponseLocal.status != AppointmentStatusEnum.CANCELLED.value
+                appointmentResponseLocal.status != AppointmentStatusEnum.CANCELLED.value && appointmentResponseLocal.hospitalCode == user.hospitalCode
             }.size >= maxNumberOfAppointmentsInADay
             callback()
         }
     }
 
     internal fun getBmi() {
-        if ((heightInCM.isNotBlank() || heightInFeet.isNotBlank())
+        if ((heightInCM.isNotBlank() || heightInFeet.isNotBlank() || heightInInch.isNotBlank())
             && weight.isNotBlank()
             && !heightInCMError && !heightInFeetError && !heightInInchError
             && !weightError
@@ -156,7 +167,7 @@ class CVDRiskAssessmentViewModel @Inject constructor(
                 previousHeartAttack.isNotBlank() &&
                 diastolic.isNotBlank() && !diastolicError &&
                 systolic.isNotBlank() && !systolicError &&
-                (heightInCM.isNotBlank() || heightInFeet.isNotBlank()) &&
+                (heightInCM.isNotBlank() || (heightInFeet.isNotBlank() && heightInInch.isNotBlank())) &&
                 weight.isNotBlank() &&
                 !heightInCMError && !heightInFeetError && !heightInInchError &&
                 !weightError && !cholesterolError
@@ -169,6 +180,30 @@ class CVDRiskAssessmentViewModel @Inject constructor(
             cvdAssessmentRepository.getCVDRecord(patient!!.id).firstOrNull()?.let { record ->
                 isDiabetic = YesNoEnum.displayFromCode(record.diabetic)
                 isSmoker = YesNoEnum.displayFromCode(record.smoker)
+                previousHeartAttack = YesNoEnum.displayFromCode(record.heartAttackHistory)
+                weight = record.weight.toString()
+                selectedWeightUnitIndex = weightUnits.indexOf(record.weightUnit)
+                if (record.heightCm != null) {
+                    heightInCM = record.heightCm.toString()
+                    selectedHeightUnitIndex = 0
+                } else {
+                    heightInFeet = record.heightFt?.toString() ?: ""
+                    heightInInch = record.heightInch?.toString() ?: ""
+                    selectedHeightUnitIndex = 1
+                }
+                getBmi()
+                if (record.createdOn.time in Date().toTodayStartDate()..Date().toEndOfDay()) {
+                    todayCVD = record
+                    screeningDate = record.screeningDate
+                    chiefComplaint = record.chiefComplaint ?: ""
+                    systolic = record.bpSystolic.toString()
+                    diastolic = record.bpDiastolic.toString()
+                    cholesterol = record.cholesterol?.toString() ?: ""
+                    selectedCholesterolIndex =
+                        if (record.cholesterolUnit.isNullOrBlank()) 0 else cholesterolUnits.indexOf(
+                            record.cholesterolUnit
+                        )
+                }
             }
         }
     }
@@ -229,7 +264,7 @@ class CVDRiskAssessmentViewModel @Inject constructor(
             bmi = bmi.toDouble(),
             appUpdatedDate = Date(),
             weightUnit = weightUnits[selectedWeightUnitIndex],
-            chiefComplaint = chiefComplaint.trim(),
+            chiefComplaint = chiefComplaint.trim().ifBlank { null },
             screeningDate = screeningDate,
             heartAttackHistory = YesNoEnum.codeFromDisplay(previousHeartAttack),
             practitionerName = null
@@ -242,11 +277,17 @@ class CVDRiskAssessmentViewModel @Inject constructor(
     ) {
         viewModelScope.launch(ioDispatcher) {
             getAppointment()
-            val cvdResponse = getCVDRecord()
+            val cvdResponse = getCVDRecord(
+                cvdUUid = todayCVD?.cvdUuid ?: UUIDBuilder.generateUUID()
+            )
             cvdAssessmentRepository.insertCVDRecord(
                 cvdResponse.copy(
                     appointmentId = appointmentResponseLocal!!.uuid,
-                    patientId = patient!!.id
+                    patientId = patient!!.id,
+                    practitionerName = getFullName(
+                        preferenceRepository.getUserDetails()!!.firstName,
+                        preferenceRepository.getUserDetails()!!.lastName
+                    )
                 )
             )
             genericRepository.insertCVDRecord(cvdResponse)
@@ -336,6 +377,21 @@ class CVDRiskAssessmentViewModel @Inject constructor(
                 preferenceRepository,
                 patientLastUpdatedRepository,
                 updated
+            )
+        }
+    }
+
+    fun checkIfCVDExistsForScreenDate(
+        exists: (Boolean) -> Unit
+    ) {
+        viewModelScope.launch(ioDispatcher) {
+            exists(
+                screeningDate.toTodayStartDate() != todayCVD?.screeningDate?.toTodayStartDate() &&
+                        cvdAssessmentRepository.getCVDRecordByScreeningDate(
+                            patient!!.id,
+                            screeningDate.toTodayStartDate(),
+                            screeningDate.toEndOfDay()
+                        ) != null
             )
         }
     }

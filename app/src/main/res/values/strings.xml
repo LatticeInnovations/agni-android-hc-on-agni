@@ -290,7 +290,7 @@ include them in the household</string>
     <string name="assessment_record_saved">Assessment record saved</string>
     <string name="value_cannot_exceed">Value cannot exceed %s to %s %s</string>
     <string name="blood_pressure_required">Blood pressure required</string>
-    <string name="cvd_error_message">Not applicable for gender type “Other”, age below 40 or above 74</string>
+    <string name="cvd_error_message">Not applicable for age below 40 or above 74</string>
     <string name="dash">--</string>
     <string name="assessment_record_updated">Assessment record updated</string>
     <string name="add_a_new_prescription">Add a new prescription</string>
@@ -585,4 +585,5 @@ include them in the household</string>
     <string name="previous_heart_attack_or_stroke">Previous heart attack or stroke</string>
     <string name="weight_required">Weight is required</string>
     <string name="height_required">Height is required</string>
+    <string name="appointment_exists_on_screening_date">Another appointment exists for the same screening date</string>
 </resources>

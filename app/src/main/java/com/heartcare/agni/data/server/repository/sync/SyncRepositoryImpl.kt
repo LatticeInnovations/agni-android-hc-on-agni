@@ -19,6 +19,7 @@ import com.heartcare.agni.data.local.roomdb.dao.PatientDao
 import com.heartcare.agni.data.local.roomdb.dao.PatientLastUpdatedDao
 import com.heartcare.agni.data.local.roomdb.dao.PrescriptionDao
 import com.heartcare.agni.data.local.roomdb.dao.RelationDao
+import com.heartcare.agni.data.local.roomdb.dao.RiskPredictionDao
 import com.heartcare.agni.data.local.roomdb.dao.ScheduleDao
 import com.heartcare.agni.data.local.roomdb.dao.SymptomsAndDiagnosisDao
 import com.heartcare.agni.data.local.roomdb.dao.VitalDao
@@ -120,7 +121,8 @@ class SyncRepositoryImpl @Inject constructor(
     immunizationRecommendationDao: ImmunizationRecommendationDao,
     immunizationDao: ImmunizationDao,
     manufacturerDao: ManufacturerDao,
-    levelsDao: LevelsDao
+    levelsDao: LevelsDao,
+    riskPredictionDao: RiskPredictionDao
 ) : SyncRepository, SyncRepositoryDatabaseTransactions(
     patientApiService,
     patientDao,
@@ -141,7 +143,8 @@ class SyncRepositoryImpl @Inject constructor(
     immunizationRecommendationDao,
     immunizationDao,
     manufacturerDao,
-    levelsDao
+    levelsDao,
+    riskPredictionDao
 ) {
 
     override suspend fun getAndInsertListPatientData(
@@ -1011,6 +1014,9 @@ class SyncRepositoryImpl @Inject constructor(
             ).run {
                 when (this) {
                     is ApiEndResponse -> {
+                        body.filter {
+                            it.status != "0"
+                        }
                         insertCVDFhirId(listOfGenericEntity, body).let { deletedRows ->
                             if (deletedRows > 0) sendCVDPostData() else this
                         }

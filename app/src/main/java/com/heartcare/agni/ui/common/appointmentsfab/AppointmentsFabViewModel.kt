@@ -56,6 +56,7 @@ class AppointmentsFabViewModel @Inject constructor(
                 Date().toEndOfDay()
             ).filter { appointmentResponseLocal ->
                 appointmentResponseLocal.status != AppointmentStatusEnum.CANCELLED.value
+                        && appointmentResponseLocal.hospitalCode == user.hospitalCode
             }.size >= maxNumberOfAppointmentsInADay
             appointment = appointmentRepository.getAppointmentsOfPatientByStatus(
                 patientId,

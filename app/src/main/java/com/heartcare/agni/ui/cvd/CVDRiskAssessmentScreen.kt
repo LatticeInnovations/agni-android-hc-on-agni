@@ -50,6 +50,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -109,6 +110,7 @@ fun CVDRiskAssessmentScreen(
     ) {
         viewModel.tabs.size
     }
+    val focusManager = LocalFocusManager.current
 
     BackHandler {
         if (viewModel.selectedRecord != null) viewModel.selectedRecord = null
@@ -156,8 +158,7 @@ fun CVDRiskAssessmentScreen(
                         scope.launch { pagerState.animateScrollToPage(index) }
                     }
                     HorizontalPager(
-                        state = pagerState,
-                        userScrollEnabled = viewModel.canAddAssessment
+                        state = pagerState
                     ) { index ->
                         when (index) {
                             0 -> CVDRiskAssessmentForm(viewModel)
@@ -238,23 +239,48 @@ fun CVDRiskAssessmentScreen(
                         if (viewModel.riskPercentage.isNotBlank()) {
                             Button(
                                 onClick = {
-                                    viewModel.getAppointmentInfo(
-                                        callback = {
-                                            if (viewModel.canAddAssessment) {
-                                                viewModel.saveCVDRecord(
-                                                    saved = {
-                                                        scope.launch {
-                                                            pagerState.animateScrollToPage(1)
-                                                            snackBarHostState.showSnackbar(
-                                                                message = context.getString(R.string.assessment_record_saved)
-                                                            )
+                                    viewModel.checkIfCVDExistsForScreenDate(
+                                        exists = {
+                                            if (it) {
+                                                scope.launch {
+                                                    snackBarHostState.showSnackbar(
+                                                        context.getString(R.string.appointment_exists_on_screening_date)
+                                                    )
+                                                }
+                                            } else {
+                                                viewModel.getAppointmentInfo(
+                                                    callback = {
+                                                        if (viewModel.existsInOtherHospital) {
+                                                            scope.launch {
+                                                                snackBarHostState.showSnackbar(
+                                                                    context.getString(
+                                                                        R.string.appointment_exists_in_other_hospital
+                                                                    )
+                                                                )
+                                                            }
+                                                        } else if (viewModel.ifAllSlotsBooked) {
+                                                            viewModel.showAllSlotsBookedDialog = true
+                                                        } else {
+                                                            if (viewModel.canAddAssessment) {
+                                                                viewModel.saveCVDRecord(
+                                                                    saved = {
+                                                                        scope.launch {
+                                                                            focusManager.clearFocus()
+                                                                            pagerState.animateScrollToPage(1)
+                                                                            snackBarHostState.showSnackbar(
+                                                                                message = context.getString(R.string.assessment_record_saved)
+                                                                            )
+                                                                        }
+                                                                    }
+                                                                )
+                                                            } else if (viewModel.isAppointmentCompleted) {
+                                                                viewModel.showAppointmentCompletedDialog = true
+                                                            } else {
+                                                                viewModel.showAddToQueueDialog = true
+                                                            }
                                                         }
                                                     }
                                                 )
-                                            } else if (viewModel.isAppointmentCompleted) {
-                                                viewModel.showAppointmentCompletedDialog = true
-                                            } else {
-                                                viewModel.showAddToQueueDialog = true
                                             }
                                         }
                                     )
@@ -385,7 +411,7 @@ private fun RecordsFullDetailsComposable(
         onDismissRequest = {
             onClick()
         },
-        sheetState = rememberModalBottomSheetState(),
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
         modifier = Modifier
             .navigationBarsPadding(),
         dragHandle = null

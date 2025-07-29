@@ -17,6 +17,7 @@ import com.heartcare.agni.data.local.roomdb.dao.AppointmentDao
 import com.heartcare.agni.data.local.roomdb.dao.MedicationDao
 import com.heartcare.agni.data.local.roomdb.dao.PatientDao
 import com.heartcare.agni.data.local.roomdb.dao.PrescriptionDao
+import com.heartcare.agni.data.local.roomdb.dao.RiskPredictionDao
 import com.heartcare.agni.data.local.roomdb.dao.ScheduleDao
 import com.heartcare.agni.data.local.roomdb.entities.appointment.AppointmentEntity
 import com.heartcare.agni.data.local.roomdb.entities.cvd.CVDEntity
@@ -84,12 +85,14 @@ import com.heartcare.agni.data.server.model.vitals.VitalResponse
 import com.heartcare.agni.utils.builders.UUIDBuilder
 import com.heartcare.agni.utils.converters.responseconverter.RelationConverter.getInverseRelation
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.convertStringToDate
+import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toAge
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toPatientDate
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toTimeInMilli
 import com.heartcare.agni.utils.converters.server.responsemapper.ApiEndResponse
 import com.heartcare.agni.utils.converters.server.responsemapper.ApiResponseConverter
 import java.util.Date
 import java.util.UUID
+import kotlin.collections.indexOf
 
 fun PatientResponse.toPatientEntity(): PatientEntity {
     return PatientEntity(
@@ -667,8 +670,20 @@ internal fun CVDResponse.toCVDEntity(): CVDEntity {
 
 internal suspend fun CVDResponse.toCVDEntity(
     patientDao: PatientDao,
-    appointmentDao: AppointmentDao
+    appointmentDao: AppointmentDao,
+    riskPredictionDao: RiskPredictionDao
 ): CVDEntity {
+    val patient = patientDao.getPatientDataById(patientDao.getPatientIdByFhirId(patientId)!!)[0].patientEntity
+    val cholesterolUnits = listOf("mmol/L", "mg/dl")
+    var cholesterolInMMHG: Double? = null
+    if (cholesterol != null) {
+        cholesterolInMMHG =
+            if (cholesterolUnits.indexOf(cholesterolUnit) == 1) cholesterol * 0.0259
+            else cholesterol
+    }
+    val riskPercent = riskPredictionDao.predictRisk(
+        patient.gender[0].uppercaseChar().toString(), smoker, patient.birthDate.toAge(), bpSystolic, cholesterolInMMHG, bmi, "oc", diabetic
+    ).toInt()
     return CVDEntity(
         cvdFhirId = cvdFhirId,
         cvdUuid = cvdUuid,
@@ -684,7 +699,7 @@ internal suspend fun CVDResponse.toCVDEntity(
         createdOn = createdOn,
         heightInch = heightInch,
         heightFt = heightFt,
-        risk = risk,
+        risk = riskPercent,
         practitionerName = practitionerName,
         smoker = smoker,
         weight = weight,

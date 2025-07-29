@@ -16,4 +16,6 @@ object ErrorConstants {
     const val EMAIL_NOT_REGISTERED_ERROR_UI = "Email entered is not registered"
     const val INVALID_OTP = "Entered OTP is invalid"
     const val INCORRECT_CODE = "Incorrect authorization code"
+    const val APPOINTMENT_ERROR = "Another appointment exists for the same screening date"
+    const val DUPLICATE_RECORD = "Duplicate record exists."
 }

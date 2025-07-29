@@ -136,7 +136,7 @@ class LandingScreenViewModel @Inject constructor(
 
         viewModelScope.launch(ioDispatcher) {
             val data = mutableListOf<RiskPredictionCharts>()
-            val inputStream = application.assets.open("RiskPredictionChartSouthAsia.csv") // Assuming the file is in the assets folder
+            val inputStream = application.assets.open("RiskPredictionChartOceania.csv")
             val reader = BufferedReader(InputStreamReader(inputStream))
 
             reader.useLines { lines ->

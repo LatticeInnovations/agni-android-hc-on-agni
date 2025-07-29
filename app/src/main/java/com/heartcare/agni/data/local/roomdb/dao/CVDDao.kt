@@ -19,6 +19,9 @@ interface CVDDao {
     @Query("SELECT * FROM CVDEntity WHERE patientId=:patientId AND createdOn BETWEEN :startTime AND :endTime")
     fun getTodayCVDRecords(patientId: String, startTime: Long, endTime: Long): CVDEntity?
 
+    @Query("SELECT * FROM CVDEntity WHERE patientId=:patientId AND screeningDate BETWEEN :startTime AND :endTime")
+    fun getCVDRecordByScreeningDate(patientId: String, startTime: Long, endTime: Long): CVDEntity?
+
     @Update(onConflict = OnConflictStrategy.REPLACE)
     fun updateCVDRecord(cvdEntity: CVDEntity): Int
 
@@ -26,4 +29,7 @@ interface CVDDao {
     @Query("UPDATE CVDEntity SET cvdFhirId=:fhirId WHERE cvdUuid=:id")
     suspend fun updateCVDFhirId(id: String, fhirId: String): Int
 
+    @Transaction
+    @Query("DELETE FROM CVDEntity WHERE cvdUuid=:id")
+    suspend fun deleteCVD(id: String): Int
 }
