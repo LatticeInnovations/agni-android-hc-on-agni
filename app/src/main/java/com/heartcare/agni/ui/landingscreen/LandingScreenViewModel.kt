@@ -20,6 +20,7 @@ import com.heartcare.agni.R
 import com.heartcare.agni.base.viewmodel.BaseAndroidViewModel
 import com.heartcare.agni.data.local.enums.LastVisit
 import com.heartcare.agni.data.local.enums.SyncStatusMessageEnum
+import com.heartcare.agni.data.local.enums.UserRoleEnum.Companion.getRoleFromId
 import com.heartcare.agni.data.local.enums.WorkerStatus
 import com.heartcare.agni.data.local.model.search.SearchParameters
 import com.heartcare.agni.data.local.repository.appointment.AppointmentRepository
@@ -244,7 +245,7 @@ class LandingScreenViewModel @Inject constructor(
 
         preferenceRepository.getUserDetails()?.let { user ->
             userName = getFullName(user.firstName, user.lastName)
-            userRole = user.userId
+            userRole = getRoleFromId(user.accountGroupId)
             userPhoneNo = user.contactNumber.orEmpty()
             userEmail = user.email.orEmpty()
         }
