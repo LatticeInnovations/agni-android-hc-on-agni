@@ -1014,6 +1014,9 @@ class SyncRepositoryImpl @Inject constructor(
             ).run {
                 when (this) {
                     is ApiEndResponse -> {
+                        body.filter {
+                            it.status != "0"
+                        }
                         insertCVDFhirId(listOfGenericEntity, body).let { deletedRows ->
                             if (deletedRows > 0) sendCVDPostData() else this
                         }
