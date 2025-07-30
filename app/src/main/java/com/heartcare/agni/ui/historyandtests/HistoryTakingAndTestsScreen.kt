@@ -77,6 +77,7 @@ fun HistoryTakingAndTestsScreen(
             navController.previousBackStackEntry?.savedStateHandle
                 ?.get<PatientResponse>(PATIENT)?.let {
                     viewModel.patient = it
+                    viewModel.getPreviousRecords(it.id)
                 }
             viewModel.getAppointmentInfo(callback = {})
             viewModel.isLaunched = true

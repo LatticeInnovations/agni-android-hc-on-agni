@@ -26,9 +26,16 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toDayFullMonthYear
+import java.util.Date
 
 @Composable
-fun ExpandableCard() {
+fun ExpandableCard(
+    createdOn: Date,
+    practitionerName: String,
+    lisOfItems: List<String>,
+    isBulleted: Boolean
+) {
     var expanded by rememberSaveable { mutableStateOf(false) }
     Surface(
         color = MaterialTheme.colorScheme.surfaceContainerLow,
@@ -39,7 +46,7 @@ fun ExpandableCard() {
         ) {
             Row {
                 Text(
-                    text = "04 March 2024",
+                    text = createdOn.toDayFullMonthYear(),
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurface
                 )
@@ -58,7 +65,7 @@ fun ExpandableCard() {
                 )
             }
             Text(
-                text = "Dr. Anamika Sood",
+                text = practitionerName,
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -73,15 +80,17 @@ fun ExpandableCard() {
                         thickness = 1.dp,
                         color = MaterialTheme.colorScheme.outlineVariant
                     )
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        BulletCircle(color = MaterialTheme.colorScheme.onSurface)
-                        Text(
-                            text = "A0100, Typhoid fever, unspecified",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                    lisOfItems.forEach {  item ->
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            if (isBulleted) BulletCircle(color = MaterialTheme.colorScheme.onSurface)
+                            Text(
+                                text = item,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                     }
                 }
             }
