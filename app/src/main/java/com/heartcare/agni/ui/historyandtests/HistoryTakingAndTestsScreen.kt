@@ -1,6 +1,7 @@
 package com.heartcare.agni.ui.historyandtests
 
 import android.content.Context
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
@@ -19,7 +20,9 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -110,7 +113,14 @@ fun HistoryTakingAndTestsScreen(
             )
         },
         bottomBar = {
-            HistoryBottomAppBar(pagerState, coroutineScope, navController, viewModel, snackBarHostState, context)
+            HistoryBottomAppBar(
+                pagerState,
+                coroutineScope,
+                navController,
+                viewModel,
+                snackBarHostState,
+                context
+            )
         },
         content = { paddingValues ->
             Column(modifier = Modifier.padding(paddingValues)) {
@@ -157,86 +167,94 @@ private fun HistoryBottomAppBar(
     snackBarHostState: SnackbarHostState,
     context: Context
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(if (isSystemInDarkTheme()) Black else White)
-            .padding(12.dp)
-            .navigationBarsPadding(),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        // Add Button
-        Button(
-            modifier = Modifier.fillMaxWidth(),
-            onClick = {
-                viewModel.getAppointmentInfo(
-                    callback = {
-                        when {
-                            viewModel.existsInOtherHospital -> {
-                                coroutineScope.launch {
-                                    snackBarHostState.showSnackbar(message = context.getString(R.string.appointment_exists_in_other_hospital))
+    Column {
+        HorizontalDivider(
+            thickness = 1.dp,
+            color = MaterialTheme.colorScheme.outlineVariant
+        )
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(if (isSystemInDarkTheme()) Black else White)
+                .padding(12.dp)
+                .navigationBarsPadding(),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            // Add Button
+            Button(
+                modifier = Modifier.fillMaxWidth(),
+                onClick = {
+                    viewModel.getAppointmentInfo(
+                        callback = {
+                            when {
+                                viewModel.existsInOtherHospital -> {
+                                    coroutineScope.launch {
+                                        snackBarHostState.showSnackbar(message = context.getString(R.string.appointment_exists_in_other_hospital))
+                                    }
                                 }
+
+                                viewModel.canAddAssessment -> navigateToAddScreen(
+                                    viewModel.patient!!,
+                                    pagerState,
+                                    navController,
+                                    coroutineScope
+                                )
+
+                                viewModel.isAppointmentCompleted -> viewModel.showAppointmentCompletedDialog =
+                                    true
+
+                                else -> viewModel.showAddToQueueDialog = true
                             }
-
-                            viewModel.canAddAssessment -> navigateToAddScreen(
-                                viewModel.patient!!,
-                                pagerState,
-                                navController,
-                                coroutineScope
-                            )
-
-                            viewModel.isAppointmentCompleted -> viewModel.showAppointmentCompletedDialog =
-                                true
-
-                            else -> viewModel.showAddToQueueDialog = true
                         }
-                    }
-                )
-            }
-        ) {
-            Icon(
-                painter = painterResource(R.drawable.add_icon),
-                contentDescription = null,
-                modifier = Modifier.size(20.dp)
-            )
-            Spacer(Modifier.width(8.dp))
-            Text(getBtnText(pagerState.currentPage, viewModel))
-        }
-
-        // Navigation Buttons
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            OutlinedButton(
-                onClick = {
-                    coroutineScope.launch {
-                        pagerState.animateScrollToPage(pagerState.currentPage - 1)
-                    }
-                },
-                modifier = Modifier.weight(1f),
-                enabled = pagerState.canScrollBackward
+                    )
+                }
             ) {
-                Text(stringResource(R.string.back))
+                Icon(
+                    painter = painterResource(R.drawable.add_icon),
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(Modifier.width(8.dp))
+                Text(getBtnText(pagerState.currentPage, viewModel))
             }
 
-            OutlinedButton(
-                onClick = {
-                    if (pagerState.canScrollForward) {
+            // Navigation Buttons
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                OutlinedButton(
+                    onClick = {
                         coroutineScope.launch {
-                            pagerState.animateScrollToPage(pagerState.currentPage + 1)
+                            pagerState.animateScrollToPage(pagerState.currentPage - 1)
                         }
-                    } else {
-                        // Done logic
-                    }
-                },
-                modifier = Modifier.weight(1f)
-            ) {
-                Text(
-                    text = if (pagerState.canScrollForward)
-                        stringResource(R.string.next)
-                    else stringResource(R.string.done)
-                )
+                    },
+                    modifier = Modifier.weight(1f),
+                    enabled = pagerState.canScrollBackward,
+                    border = if (!pagerState.canScrollBackward) BorderStroke(width = 1.dp, color = MaterialTheme.colorScheme.outlineVariant)
+                    else ButtonDefaults.outlinedButtonBorder
+                ) {
+                    Text(stringResource(R.string.back))
+                }
+
+                OutlinedButton(
+                    onClick = {
+                        if (pagerState.canScrollForward) {
+                            coroutineScope.launch {
+                                pagerState.animateScrollToPage(pagerState.currentPage + 1)
+                            }
+                        } else {
+                            // Done logic
+                        }
+                    },
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text(
+                        text = if (pagerState.canScrollForward)
+                            stringResource(R.string.next)
+                        else stringResource(R.string.done)
+                    )
+                }
             }
         }
     }
@@ -252,6 +270,7 @@ private fun getBtnText(
             if (viewModel.todayPriorDx != null && !viewModel.existsInOtherHospital) stringResource(R.string.update_prior_diagnosis)
             else stringResource(R.string.add_prior_diagnosis)
         }
+
         1 -> stringResource(R.string.add_medication)
         2 -> stringResource(R.string.add_family_history)
         3 -> stringResource(R.string.add_allergies)
@@ -299,7 +318,12 @@ private fun AddToQueueDialog(
                     appointment = viewModel.appointment!!,
                     updated = {
                         viewModel.showAddToQueueDialog = false
-                        navigateToAddScreen(viewModel.patient!!, pagerState, navController, coroutineScope)
+                        navigateToAddScreen(
+                            viewModel.patient!!,
+                            pagerState,
+                            navController,
+                            coroutineScope
+                        )
                     }
                 )
             } else {
@@ -310,7 +334,12 @@ private fun AddToQueueDialog(
                         viewModel.patient!!,
                         addedToQueue = {
                             viewModel.showAddToQueueDialog = false
-                            navigateToAddScreen(viewModel.patient!!, pagerState, navController, coroutineScope)
+                            navigateToAddScreen(
+                                viewModel.patient!!,
+                                pagerState,
+                                navController,
+                                coroutineScope
+                            )
                         }
                     )
                 }
