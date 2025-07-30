@@ -1,5 +1,6 @@
 package com.heartcare.agni.ui.historyandtests
 
+import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
@@ -77,7 +78,6 @@ fun HistoryTakingAndTestsScreen(
             navController.previousBackStackEntry?.savedStateHandle
                 ?.get<PatientResponse>(PATIENT)?.let {
                     viewModel.patient = it
-                    viewModel.getPreviousRecords(it.id)
                 }
             viewModel.getAppointmentInfo(callback = {})
             viewModel.isLaunched = true
@@ -85,6 +85,7 @@ fun HistoryTakingAndTestsScreen(
         if (navController.currentBackStackEntry?.savedStateHandle?.remove<Boolean>(PRIOR_DX_SAVED) == true) {
             snackBarHostState.showSnackbar(message = context.getString(R.string.prior_dx_saved))
         }
+        viewModel.getPreviousRecords(viewModel.patient!!.id)
     }
 
     Scaffold(
@@ -109,7 +110,7 @@ fun HistoryTakingAndTestsScreen(
             )
         },
         bottomBar = {
-            HistoryBottomAppBar(pagerState, coroutineScope, navController, viewModel)
+            HistoryBottomAppBar(pagerState, coroutineScope, navController, viewModel, snackBarHostState, context)
         },
         content = { paddingValues ->
             Column(modifier = Modifier.padding(paddingValues)) {
@@ -152,7 +153,9 @@ private fun HistoryBottomAppBar(
     pagerState: PagerState,
     coroutineScope: CoroutineScope,
     navController: NavController,
-    viewModel: HistoryTakingAndTestsViewModel
+    viewModel: HistoryTakingAndTestsViewModel,
+    snackBarHostState: SnackbarHostState,
+    context: Context
 ) {
     Column(
         modifier = Modifier
@@ -169,7 +172,14 @@ private fun HistoryBottomAppBar(
                 viewModel.getAppointmentInfo(
                     callback = {
                         when {
+                            viewModel.existsInOtherHospital -> {
+                                coroutineScope.launch {
+                                    snackBarHostState.showSnackbar(message = context.getString(R.string.appointment_exists_in_other_hospital))
+                                }
+                            }
+
                             viewModel.canAddAssessment -> navigateToAddScreen(
+                                viewModel.patient!!,
                                 pagerState,
                                 navController,
                                 coroutineScope
@@ -246,11 +256,13 @@ private fun getBtnText(page: Int): String {
 }
 
 private fun navigateToAddScreen(
+    patient: PatientResponse,
     pagerState: PagerState,
     navController: NavController,
     coroutineScope: CoroutineScope
 ) {
     coroutineScope.launch {
+        navController.currentBackStackEntry?.savedStateHandle?.set(PATIENT, patient)
         when (pagerState.currentPage) {
             0 -> navController.navigate(Screen.AddPriorDxScreen.route)
         }
@@ -281,7 +293,7 @@ private fun AddToQueueDialog(
                     appointment = viewModel.appointment!!,
                     updated = {
                         viewModel.showAddToQueueDialog = false
-                        navigateToAddScreen(pagerState, navController, coroutineScope)
+                        navigateToAddScreen(viewModel.patient!!, pagerState, navController, coroutineScope)
                     }
                 )
             } else {
@@ -292,7 +304,7 @@ private fun AddToQueueDialog(
                         viewModel.patient!!,
                         addedToQueue = {
                             viewModel.showAddToQueueDialog = false
-                            navigateToAddScreen(pagerState, navController, coroutineScope)
+                            navigateToAddScreen(viewModel.patient!!, pagerState, navController, coroutineScope)
                         }
                     )
                 }

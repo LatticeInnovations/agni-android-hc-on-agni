@@ -600,7 +600,7 @@ class SyncService(
 
     /** Download Levels Data */
     private suspend fun downloadLevelsRecord(logout: (Boolean, String) -> Unit) {
-        checkAuthenticationStatus(syncRepository.getAndInsertLevelsData(), logout)
+        checkAuthenticationStatus(syncRepository.getAndInsertLevelsData(0), logout)
     }
 
     /**

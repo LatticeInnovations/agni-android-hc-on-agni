@@ -80,16 +80,20 @@ fun ExpandableCard(
                         thickness = 1.dp,
                         color = MaterialTheme.colorScheme.outlineVariant
                     )
-                    lisOfItems.forEach {  item ->
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            if (isBulleted) BulletCircle(color = MaterialTheme.colorScheme.onSurface)
-                            Text(
-                                text = item,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        lisOfItems.forEach { item ->
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                if (isBulleted) BulletCircle(color = MaterialTheme.colorScheme.onSurface)
+                                Text(
+                                    text = item,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
                         }
                     }
                 }

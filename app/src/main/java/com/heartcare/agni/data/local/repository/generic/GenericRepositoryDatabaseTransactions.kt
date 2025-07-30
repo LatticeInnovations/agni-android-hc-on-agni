@@ -21,6 +21,7 @@ import com.heartcare.agni.data.server.model.patient.PatientResponse
 import com.heartcare.agni.data.server.model.prescription.photo.PrescriptionPhotoPatch
 import com.heartcare.agni.data.server.model.prescription.photo.PrescriptionPhotoResponse
 import com.heartcare.agni.data.server.model.prescription.prescriptionresponse.PrescriptionResponse
+import com.heartcare.agni.data.server.model.priordx.PriorDxResponse
 import com.heartcare.agni.data.server.model.relatedperson.RelatedPersonResponse
 import com.heartcare.agni.data.server.model.scheduleandappointment.appointment.AppointmentResponse
 import com.heartcare.agni.data.server.model.scheduleandappointment.schedule.ScheduleResponse
@@ -285,6 +286,28 @@ open class GenericRepositoryDatabaseTransactions(
                     patientId = medicineDispenseRequest.dispenseId,
                     payload = medicineDispenseRequest.toJson(),
                     type = GenericTypeEnum.DISPENSE,
+                    syncType = SyncType.POST
+                )
+            )[0]
+        }
+    }
+
+    protected suspend fun insertPriorDxGenericEntity(
+        priorDxGenericEntity: GenericEntity?,
+        priorDxResponse: PriorDxResponse,
+        uuid: String
+    ): Long {
+        return if (priorDxGenericEntity != null) {
+            genericDao.insertGenericEntity(
+                priorDxGenericEntity.copy(payload = priorDxResponse.toJson())
+            )[0]
+        } else {
+            genericDao.insertGenericEntity(
+                GenericEntity(
+                    id = uuid,
+                    patientId = priorDxResponse.priorDxUuid,
+                    payload = priorDxResponse.toJson(),
+                    type = GenericTypeEnum.PRIOR_DX,
                     syncType = SyncType.POST
                 )
             )[0]

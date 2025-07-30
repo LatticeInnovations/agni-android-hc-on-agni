@@ -11,6 +11,7 @@ import com.heartcare.agni.data.server.model.patient.PatientResponse
 import com.heartcare.agni.data.server.model.prescription.photo.PrescriptionPhotoPatch
 import com.heartcare.agni.data.server.model.prescription.photo.PrescriptionPhotoResponse
 import com.heartcare.agni.data.server.model.prescription.prescriptionresponse.PrescriptionResponse
+import com.heartcare.agni.data.server.model.priordx.PriorDxResponse
 import com.heartcare.agni.data.server.model.relatedperson.RelatedPersonResponse
 import com.heartcare.agni.data.server.model.scheduleandappointment.appointment.AppointmentResponse
 import com.heartcare.agni.data.server.model.scheduleandappointment.schedule.ScheduleResponse
@@ -72,6 +73,11 @@ interface GenericRepository {
 
     suspend fun insertDispense(
         medicineDispenseRequest: MedicineDispenseRequest,
+        uuid: String = UUIDBuilder.generateUUID()
+    ): Long
+
+    suspend fun insertPriorDxRecord(
+        priorDxResponse: PriorDxResponse,
         uuid: String = UUIDBuilder.generateUUID()
     ): Long
 

@@ -27,7 +27,7 @@ import java.util.Date
 import javax.inject.Inject
 
 @HiltViewModel
-class HistoryTakingAndTestsViewModel@Inject constructor(
+class HistoryTakingAndTestsViewModel @Inject constructor(
     private val appointmentRepository: AppointmentRepository,
     private val preferenceRepository: PreferenceRepository,
     private val genericRepository: GenericRepository,
@@ -35,9 +35,10 @@ class HistoryTakingAndTestsViewModel@Inject constructor(
     private val patientLastUpdatedRepository: PatientLastUpdatedRepository,
     private val priorDxRepository: PriorDxRepository,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher
-): BaseViewModel() {
+) : BaseViewModel() {
     var isLaunched by mutableStateOf(false)
 
+    val user = preferenceRepository.getUserDetails()!!
     var patient by mutableStateOf<PatientResponse?>(null)
 
     var priorDxList by mutableStateOf(listOf<PriorDxResponse>())
@@ -50,6 +51,7 @@ class HistoryTakingAndTestsViewModel@Inject constructor(
     private val maxNumberOfAppointmentsInADay = 250
     var showAppointmentCompletedDialog by mutableStateOf(false)
     var isAppointmentCompleted by mutableStateOf(false)
+    var existsInOtherHospital by mutableStateOf(false)
 
     internal fun getAppointmentInfo(
         callback: () -> Unit,
@@ -66,22 +68,32 @@ class HistoryTakingAndTestsViewModel@Inject constructor(
 
             // Determine if assessment can be added
             appointmentsToday?.let {
+                existsInOtherHospital = it.hospitalCode != user.hospitalCode
                 val status = it.status
-                canAddAssessment = status == AppointmentStatusEnum.ARRIVED.value ||
+                canAddAssessment = (status == AppointmentStatusEnum.ARRIVED.value ||
                         status == AppointmentStatusEnum.WALK_IN.value ||
-                        status == AppointmentStatusEnum.IN_PROGRESS.value
+                        status == AppointmentStatusEnum.IN_PROGRESS.value)
+                        && it.hospitalCode == user.hospitalCode
 
                 isAppointmentCompleted = status == AppointmentStatusEnum.COMPLETED.value
+                        && it.hospitalCode == user.hospitalCode
             }
 
             // Get the appointment matching today's time window and scheduled status
             appointment = appointmentRepository
                 .getAppointmentsOfPatientByStatus(patientId, AppointmentStatusEnum.SCHEDULED.value)
-                .firstOrNull { it.slot.start.time in todayStart..todayEnd }
+                .firstOrNull {
+                    it.slot.start.time in todayStart..todayEnd
+                            && it.hospitalCode == user.hospitalCode
+                }
 
             // Check if all slots are booked
-            val bookedAppointments = appointmentRepository.getAppointmentListByDate(todayStart, todayEnd)
-                .count { it.status != AppointmentStatusEnum.CANCELLED.value }
+            val bookedAppointments =
+                appointmentRepository.getAppointmentListByDate(todayStart, todayEnd)
+                    .count {
+                        it.status != AppointmentStatusEnum.CANCELLED.value
+                                && it.hospitalCode == user.hospitalCode
+                    }
 
             ifAllSlotsBooked = bookedAppointments >= maxNumberOfAppointmentsInADay
 

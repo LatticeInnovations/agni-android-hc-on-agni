@@ -1502,10 +1502,13 @@ class SyncRepositoryImpl @Inject constructor(
 
     }
 
-    override suspend fun getAndInsertLevelsData(): ResponseMapper<List<LevelResponse>> {
+    override suspend fun getAndInsertLevelsData(
+        offset: Int
+    ): ResponseMapper<List<LevelResponse>> {
         val map = mutableMapOf<String, String>()
         map[TYPE] = "village,province,area-council,health-facility,island"
         map[COUNT] = "$COUNT_VALUE"
+        map[OFFSET] = offset.toString()
         if (preferenceRepository.getLastSyncLevelRecord() != 0L) map[LAST_UPDATED] =
             String.format(
                 GREATER_THAN_BUILDER,
@@ -1518,6 +1521,12 @@ class SyncRepositoryImpl @Inject constructor(
             )
         ).run {
             when (this) {
+                is ApiContinueResponse -> {
+                    insertLevels(body)
+                    //Call for next batch data
+                    getAndInsertLevelsData(offset + COUNT_VALUE)
+                }
+
                 is ApiEndResponse -> {
                     preferenceRepository.setLastSyncLevelRecord(Date().time)
                     insertLevels(body)

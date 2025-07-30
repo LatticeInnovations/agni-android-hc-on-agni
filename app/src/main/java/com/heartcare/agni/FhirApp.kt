@@ -192,7 +192,7 @@ class FhirApp : Application() {
                         // as there will be multiple callbacks from different coroutines
                         // list of errors is maintained.
                         // if the list is empty, then all the api calls were successful.
-                        listOfErrors.add(errorMessage)
+                        if (errorReceived) listOfErrors.add(errorMessage)
                     }.also {
                         checkPhotoWorkerStatus(listOfErrors)
                     }
