@@ -21,6 +21,7 @@ import com.heartcare.agni.utils.builders.UUIDBuilder
 import com.heartcare.agni.utils.common.Queries.checkAndUpdateAppointmentStatusToInProgress
 import com.heartcare.agni.utils.common.Queries.updatePatientLastUpdated
 import com.heartcare.agni.utils.converters.responseconverter.NameConverter.getFullName
+import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.isToday
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toEndOfDay
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toTodayStartDate
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -47,11 +48,41 @@ class AddPriorDxViewModel @Inject constructor(
     var appointmentResponseLocal by mutableStateOf<AppointmentResponseLocal?>(null)
     var isLaunched by mutableStateOf(false)
 
+    var lastPriorDx by mutableStateOf<PriorDxResponse?>(null)
     var selectedPriorDx by mutableStateOf(listOf<String>())
     var cancerField by mutableStateOf("")
     var isCancerFieldError by mutableStateOf(false)
     var otherField by mutableStateOf("")
     var isOtherFieldError by mutableStateOf(false)
+
+    fun getLastPriorDx(patientId: String) {
+        viewModelScope.launch(ioDispatcher) {
+            lastPriorDx = priorDxRepository.getPriorDxRecords(patientId)[0]
+            lastPriorDx?.let { priorDx ->
+                selectedPriorDx = mutableListOf<String>().apply {
+                    if (priorDx.hasHypertension) add(PriorDiagnosis.HYPERTENSION.display)
+                    if (priorDx.hasHeartDiseases) add(PriorDiagnosis.HEART_DISEASE.display)
+                    if (priorDx.hasTransientIschaemicAttack) add(PriorDiagnosis.TIA.display)
+                    if (priorDx.hasDiabetes) add(PriorDiagnosis.DIABETES.display)
+                    if (priorDx.hasHypercholesterolaemia) add(PriorDiagnosis.HYPERCHOLESTEROLAEMIA.display)
+                    if (priorDx.hasCovid) add(PriorDiagnosis.COVID_19.display)
+                    if (priorDx.hasCancer) {
+                        cancerField = priorDx.cancer!!
+                        add(PriorDiagnosis.CANCER.display)
+                    }
+                    if (priorDx.hasAsthma) add(PriorDiagnosis.ASTHMA.display)
+                    if (priorDx.hasChronicObstructivePulmonaryDisease) add(PriorDiagnosis.COPD.display)
+                    if (priorDx.hasChronicKidneyDiseases) add(PriorDiagnosis.CHRONIC_KIDNEY_DISEASE.display)
+                    if (priorDx.hasTuberculosis) add(PriorDiagnosis.TUBERCULOSIS.display)
+                    if (priorDx.hasAids) add(PriorDiagnosis.AIDS_OR_HIV.display)
+                    if (priorDx.hasOthers) {
+                        otherField = priorDx.others!!
+                        add(PriorDiagnosis.OTHERS.display)
+                    }
+                }
+            }
+        }
+    }
 
     fun isValid(): Boolean {
         return when {
@@ -110,7 +141,15 @@ class AddPriorDxViewModel @Inject constructor(
     ) {
         viewModelScope.launch(ioDispatcher) {
             getAppointment()
-            val priorDxResponse = getPriorDxResponse()
+            var uuid = UUIDBuilder.generateUUID()
+            var fhirId: String? = null
+            lastPriorDx?.let {
+                if (isToday(it.createdOn)) {
+                    uuid = it.priorDxUuid
+                    fhirId = it.priorDxFhirId
+                }
+            }
+            val priorDxResponse = getPriorDxResponse(uuid)
             priorDxRepository.insertPriorDx(
                 priorDxResponse.copy(
                     appointmentId = appointmentResponseLocal!!.uuid,
@@ -119,7 +158,8 @@ class AddPriorDxViewModel @Inject constructor(
                         user.firstName,
                         user.lastName
                     ),
-                    practitionerId = user.fhirId
+                    practitionerId = user.fhirId,
+                    priorDxFhirId = fhirId
                 )
             )
             genericRepository.insertPriorDxRecord(priorDxResponse)

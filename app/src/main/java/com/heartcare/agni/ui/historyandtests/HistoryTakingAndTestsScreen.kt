@@ -82,10 +82,10 @@ fun HistoryTakingAndTestsScreen(
             viewModel.getAppointmentInfo(callback = {})
             viewModel.isLaunched = true
         }
+        viewModel.getPreviousRecords(viewModel.patient!!.id)
         if (navController.currentBackStackEntry?.savedStateHandle?.remove<Boolean>(PRIOR_DX_SAVED) == true) {
             snackBarHostState.showSnackbar(message = context.getString(R.string.prior_dx_saved))
         }
-        viewModel.getPreviousRecords(viewModel.patient!!.id)
     }
 
     Scaffold(
@@ -200,7 +200,7 @@ private fun HistoryBottomAppBar(
                 modifier = Modifier.size(20.dp)
             )
             Spacer(Modifier.width(8.dp))
-            Text(getBtnText(pagerState.currentPage))
+            Text(getBtnText(pagerState.currentPage, viewModel))
         }
 
         // Navigation Buttons
@@ -243,9 +243,15 @@ private fun HistoryBottomAppBar(
 }
 
 @Composable
-private fun getBtnText(page: Int): String {
+private fun getBtnText(
+    page: Int,
+    viewModel: HistoryTakingAndTestsViewModel
+): String {
     return when (page) {
-        0 -> stringResource(R.string.add_prior_diagnosis)
+        0 -> {
+            if (viewModel.todayPriorDx != null) stringResource(R.string.update_prior_diagnosis)
+            else stringResource(R.string.add_prior_diagnosis)
+        }
         1 -> stringResource(R.string.add_medication)
         2 -> stringResource(R.string.add_family_history)
         3 -> stringResource(R.string.add_allergies)

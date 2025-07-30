@@ -17,6 +17,7 @@ import com.heartcare.agni.data.server.model.patient.PatientResponse
 import com.heartcare.agni.data.server.model.priordx.PriorDxResponse
 import com.heartcare.agni.di.dispatcher.IoDispatcher
 import com.heartcare.agni.utils.common.Queries
+import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.isToday
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toEndOfDay
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toTodayStartDate
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -42,6 +43,7 @@ class HistoryTakingAndTestsViewModel @Inject constructor(
     var patient by mutableStateOf<PatientResponse?>(null)
 
     var priorDxList by mutableStateOf(listOf<PriorDxResponse>())
+    var todayPriorDx by mutableStateOf<PriorDxResponse?>(null)
 
     var appointment by mutableStateOf<AppointmentResponseLocal?>(null)
     var canAddAssessment by mutableStateOf(false)
@@ -142,7 +144,9 @@ class HistoryTakingAndTestsViewModel @Inject constructor(
 
     fun getPreviousRecords(patientId: String) {
         viewModelScope.launch(ioDispatcher) {
-            priorDxList = priorDxRepository.getPriorDxRecords(patientId)
+            priorDxList = priorDxRepository.getPriorDxRecords(patientId).also {
+                todayPriorDx = it.firstOrNull { priorDx -> isToday(priorDx.createdOn) }
+            }
         }
     }
 }

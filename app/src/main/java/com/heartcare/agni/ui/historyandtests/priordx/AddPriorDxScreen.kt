@@ -61,6 +61,7 @@ fun AddPriorDxScreen(
             navController.previousBackStackEntry?.savedStateHandle
                 ?.get<PatientResponse>(PATIENT)?.let {
                     viewModel.patient = it
+                    viewModel.getLastPriorDx(it.id)
                 }
             viewModel.isLaunched = true
         }
