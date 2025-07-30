@@ -38,6 +38,7 @@ class HistoryTakingAndTestsViewModel @Inject constructor(
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) : BaseViewModel() {
     var isLaunched by mutableStateOf(false)
+    var isLoading by mutableStateOf(true)
 
     val user = preferenceRepository.getUserDetails()!!
     var patient by mutableStateOf<PatientResponse?>(null)
@@ -147,6 +148,7 @@ class HistoryTakingAndTestsViewModel @Inject constructor(
             priorDxList = priorDxRepository.getPriorDxRecords(patientId).also {
                 todayPriorDx = it.firstOrNull { priorDx -> isToday(priorDx.createdOn!!) }
             }
+            isLoading = false
         }
     }
 }

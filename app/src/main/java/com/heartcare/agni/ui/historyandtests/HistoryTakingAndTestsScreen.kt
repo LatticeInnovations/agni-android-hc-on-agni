@@ -5,6 +5,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -38,6 +39,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -50,6 +52,7 @@ import com.heartcare.agni.R
 import com.heartcare.agni.data.server.model.patient.PatientResponse
 import com.heartcare.agni.navigation.Screen
 import com.heartcare.agni.ui.common.CustomDialog
+import com.heartcare.agni.ui.common.Loader
 import com.heartcare.agni.ui.common.ScrollableTabRowComposable
 import com.heartcare.agni.ui.historyandtests.priordx.PriorDxView
 import com.heartcare.agni.ui.patientlandingscreen.AllSlotsBookedDialog
@@ -129,11 +132,19 @@ fun HistoryTakingAndTestsScreen(
                         pagerState.animateScrollToPage(index)
                     }
                 }
-
-                HorizontalPager(state = pagerState) { index ->
-                    when (index) {
-                        0 -> PriorDxView(viewModel)
-                        else -> Text(tabs[index], modifier = Modifier.padding(16.dp))
+                if (viewModel.isLoading) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Loader()
+                    }
+                } else {
+                    HorizontalPager(state = pagerState) { index ->
+                        when (index) {
+                            0 -> PriorDxView(viewModel)
+                            else -> Text(tabs[index], modifier = Modifier.padding(16.dp))
+                        }
                     }
                 }
             }
@@ -231,7 +242,10 @@ private fun HistoryBottomAppBar(
                     },
                     modifier = Modifier.weight(1f),
                     enabled = pagerState.canScrollBackward,
-                    border = if (!pagerState.canScrollBackward) BorderStroke(width = 1.dp, color = MaterialTheme.colorScheme.outlineVariant)
+                    border = if (!pagerState.canScrollBackward) BorderStroke(
+                        width = 1.dp,
+                        color = MaterialTheme.colorScheme.outlineVariant
+                    )
                     else ButtonDefaults.outlinedButtonBorder
                 ) {
                     Text(stringResource(R.string.back))
