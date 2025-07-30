@@ -62,11 +62,6 @@ fun CVDRiskAssessmentForm(
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Text(
-                text = stringResource(R.string.cvd_heading),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
             ScreeningDateComposable(viewModel)
             ChiefComplaintComposable(viewModel)
             DisplayField(
