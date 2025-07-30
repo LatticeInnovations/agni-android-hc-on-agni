@@ -49,7 +49,7 @@ fun PriorDxView(
             ) {
                 viewModel.priorDxList.forEach { priorDx ->
                     ExpandableCard(
-                        createdOn = priorDx.createdOn,
+                        createdOn = priorDx.createdOn!!,
                         practitionerName = priorDx.practitionerName ?: "",
                         lisOfItems = getListOfPriorDx(priorDx),
                         isBulleted = true

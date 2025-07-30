@@ -110,6 +110,11 @@ class PreferenceStorageImpl(private val sharedPreferences: SharedPreferences) : 
         PREF_LAST_LEVELS_SYNC_TIME,
         0L
     )
+    override var lastSyncPriorDxRecord by LongPreference(
+        sharedPreferences,
+        PREF_LAST_PRIOR_DX_SYNC_TIME,
+        0L
+    )
 
     override fun clear() {
         sharedPreferences.edit {
@@ -155,5 +160,6 @@ class PreferenceStorageImpl(private val sharedPreferences: SharedPreferences) : 
         const val PREF_LAST_MEDICAL_RECORD_SYNC_TIME = "pref_last_medical_record_sync_time"
         const val PREF_LAST_MANUFACTURER_SYNC_TIME = "pref_last_manufacturer_sync_time"
         const val PREF_LAST_LEVELS_SYNC_TIME = "pref_last_levels_sync_time"
+        const val PREF_LAST_PRIOR_DX_SYNC_TIME = "pref_last_prior_dx_sync_time"
     }
 }

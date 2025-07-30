@@ -225,6 +225,9 @@ class SyncService(
                 CoroutineScope(Dispatchers.IO).launch {
                     updateFhirIdInImmunization(logout)
                 }
+                CoroutineScope(Dispatchers.IO).launch {
+                    updateFhirIdInPriorDx(logout)
+                }
             }
         }
     }
@@ -294,6 +297,11 @@ class SyncService(
     /** Upload Immunization */
     private suspend fun uploadImmunization(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
         return checkAuthenticationStatus(syncRepository.sendImmunizationPostData(), logout)
+    }
+
+    /** Upload Prior Dx */
+    private suspend fun uploadPriorDx(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
+        return checkAuthenticationStatus(syncRepository.sendPriorDxPostData(), logout)
     }
 
     /**
@@ -456,6 +464,9 @@ class SyncService(
                     CoroutineScope(Dispatchers.IO).launch {
                         downloadLabAndMedicalRecordPhoto(logout)
                     }
+                    CoroutineScope(Dispatchers.IO).launch {
+                        downloadPriorDx(logout)
+                    }
                 }
             }
         }
@@ -603,6 +614,11 @@ class SyncService(
         checkAuthenticationStatus(syncRepository.getAndInsertLevelsData(0), logout)
     }
 
+    /** Download Prior Dx Data */
+    private suspend fun downloadPriorDx(logout: (Boolean, String) -> Unit) {
+        checkAuthenticationStatus(syncRepository.getAndInsertPriorDxData(0), logout)
+    }
+
     /**
      *
      *
@@ -679,6 +695,12 @@ class SyncService(
     private suspend fun updateFhirIdInImmunization(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
         genericRepository.updateImmunizationFhirId()
         return uploadImmunization(logout)
+    }
+
+    /** Update FHIR ID in Prior Dx */
+    private suspend fun updateFhirIdInPriorDx(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
+        genericRepository.updatePriorDxFhirId()
+        return uploadPriorDx(logout)
     }
 
     /** Check Session Expiry and Authorization */

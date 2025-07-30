@@ -57,7 +57,7 @@ class AddPriorDxViewModel @Inject constructor(
 
     fun getLastPriorDx(patientId: String) {
         viewModelScope.launch(ioDispatcher) {
-            lastPriorDx = priorDxRepository.getPriorDxRecords(patientId)[0]
+            lastPriorDx = priorDxRepository.getPriorDxRecords(patientId).firstOrNull()
             lastPriorDx?.let { priorDx ->
                 selectedPriorDx = mutableListOf<String>().apply {
                     if (priorDx.hasHypertension) add(PriorDiagnosis.HYPERTENSION.display)
@@ -144,7 +144,7 @@ class AddPriorDxViewModel @Inject constructor(
             var uuid = UUIDBuilder.generateUUID()
             var fhirId: String? = null
             lastPriorDx?.let {
-                if (isToday(it.createdOn)) {
+                if (isToday(it.createdOn!!)) {
                     uuid = it.priorDxUuid
                     fhirId = it.priorDxFhirId
                 }
@@ -162,9 +162,9 @@ class AddPriorDxViewModel @Inject constructor(
                     priorDxFhirId = fhirId
                 )
             )
-            genericRepository.insertPriorDxRecord(priorDxResponse)
+            genericRepository.insertPriorDxRecord(priorDxResponse.copy(createdOn = null))
             checkAndUpdateAppointmentStatusToInProgress(
-                inProgressTime = priorDxResponse.createdOn,
+                inProgressTime = priorDxResponse.createdOn!!,
                 patient = patient!!,
                 appointmentResponseLocal = appointmentResponseLocal!!,
                 appointmentRepository = appointmentRepository,

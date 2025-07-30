@@ -145,7 +145,7 @@ class HistoryTakingAndTestsViewModel @Inject constructor(
     fun getPreviousRecords(patientId: String) {
         viewModelScope.launch(ioDispatcher) {
             priorDxList = priorDxRepository.getPriorDxRecords(patientId).also {
-                todayPriorDx = it.firstOrNull { priorDx -> isToday(priorDx.createdOn) }
+                todayPriorDx = it.firstOrNull { priorDx -> isToday(priorDx.createdOn!!) }
             }
         }
     }

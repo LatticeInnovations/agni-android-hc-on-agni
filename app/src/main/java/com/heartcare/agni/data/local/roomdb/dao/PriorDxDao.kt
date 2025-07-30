@@ -13,4 +13,10 @@ interface PriorDxDao {
 
     @Query("SELECT * FROM PriorDxEntity WHERE patientId=:patientId ORDER BY createdOn DESC")
     fun getPriorDxRecords(patientId: String): List<PriorDxEntity>
+
+    @Query("UPDATE PriorDxEntity SET priorDxFhirId = :fhirId WHERE priorDxUuid = :id")
+    suspend fun updateFhirId(id: String, fhirId: String): Int
+
+    @Query("DELETE FROM PriorDxEntity WHERE priorDxUuid=:id")
+    suspend fun deletePriorDx(id: String): Int
 }

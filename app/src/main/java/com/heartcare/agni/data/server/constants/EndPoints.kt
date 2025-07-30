@@ -16,4 +16,5 @@ object EndPoints {
     const val IMMUNIZATION_RECOMMENDATION = "ImmunizationRecommendation"
     const val PATIENT_IMMUNIZATION_RECOMMENDATION = "patient"
     const val VACCINE_MANUFACTURER = "vaccine/manufacturer"
+    const val PRIOR_DX = "priorDx"
 }

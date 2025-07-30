@@ -1192,7 +1192,7 @@ internal fun PriorDxResponse.toPriorDxEntity(): PriorDxEntity {
         priorDxFhirId = priorDxFhirId,
         appointmentId = appointmentId,
         cancer = cancer,
-        createdOn = createdOn,
+        createdOn = createdOn!!,
         hasAids = hasAids,
         hasAsthma = hasAsthma,
         hasCancer = hasCancer,
@@ -1208,6 +1208,36 @@ internal fun PriorDxResponse.toPriorDxEntity(): PriorDxEntity {
         hasTuberculosis = hasTuberculosis,
         others = others,
         patientId = patientId,
+        practitionerId = practitionerId!!,
+        practitionerName = practitionerName!!
+    )
+}
+
+suspend fun PriorDxResponse.toPriorDxEntity(
+    patientDao: PatientDao,
+    appointmentDao: AppointmentDao
+): PriorDxEntity {
+    return PriorDxEntity(
+        priorDxUuid = priorDxUuid,
+        priorDxFhirId = priorDxFhirId,
+        appointmentId = appointmentDao.getAppointmentIdByFhirId(appointmentId),
+        cancer = cancer,
+        createdOn = createdOn!!,
+        hasAids = hasAids,
+        hasAsthma = hasAsthma,
+        hasCancer = hasCancer,
+        hasChronicKidneyDiseases = hasChronicKidneyDiseases,
+        hasChronicObstructivePulmonaryDisease = hasChronicObstructivePulmonaryDisease,
+        hasCovid = hasCovid,
+        hasDiabetes = hasDiabetes,
+        hasHeartDiseases = hasHeartDiseases,
+        hasHypercholesterolaemia = hasHypercholesterolaemia,
+        hasHypertension = hasHypertension,
+        hasOthers = hasOthers,
+        hasTransientIschaemicAttack = hasTransientIschaemicAttack,
+        hasTuberculosis = hasTuberculosis,
+        others = others,
+        patientId = patientDao.getPatientIdByFhirId(patientId)!!,
         practitionerId = practitionerId!!,
         practitionerName = practitionerName!!
     )

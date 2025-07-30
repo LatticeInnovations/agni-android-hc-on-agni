@@ -191,6 +191,13 @@ class GenericRepositoryImpl @Inject constructor(
             }
     }
 
+    override suspend fun updatePriorDxFhirId() {
+        genericDao.getNotSyncedData(GenericTypeEnum.PRIOR_DX)
+            .forEach { priorDxGenericEntity ->
+                updatePriorDxFhirIdInGenericEntity(priorDxGenericEntity)
+            }
+    }
+
     override suspend fun insertAppointment(
         appointmentResponse: AppointmentResponse,
         uuid: String

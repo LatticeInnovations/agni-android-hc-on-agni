@@ -11,7 +11,7 @@ data class PriorDxResponse(
     val priorDxFhirId: String?,
     val appointmentId: String,
     val cancer: String?,
-    val createdOn: Date,
+    val createdOn: Date?,
     val hasAids: Boolean,
     val hasAsthma: Boolean,
     val hasCancer: Boolean,

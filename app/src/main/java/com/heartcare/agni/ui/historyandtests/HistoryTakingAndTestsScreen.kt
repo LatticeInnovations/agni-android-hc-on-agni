@@ -249,7 +249,7 @@ private fun getBtnText(
 ): String {
     return when (page) {
         0 -> {
-            if (viewModel.todayPriorDx != null) stringResource(R.string.update_prior_diagnosis)
+            if (viewModel.todayPriorDx != null && !viewModel.existsInOtherHospital) stringResource(R.string.update_prior_diagnosis)
             else stringResource(R.string.add_prior_diagnosis)
         }
         1 -> stringResource(R.string.add_medication)
