@@ -11,8 +11,11 @@ import com.heartcare.agni.data.local.repository.appointment.AppointmentRepositor
 import com.heartcare.agni.data.local.repository.generic.GenericRepository
 import com.heartcare.agni.data.local.repository.patient.lastupdated.PatientLastUpdatedRepository
 import com.heartcare.agni.data.local.repository.preference.PreferenceRepository
+import com.heartcare.agni.data.local.repository.priordx.PriorDxRepository
 import com.heartcare.agni.data.local.repository.schedule.ScheduleRepository
 import com.heartcare.agni.data.server.model.patient.PatientResponse
+import com.heartcare.agni.data.server.model.priordx.PriorDxResponse
+import com.heartcare.agni.di.dispatcher.IoDispatcher
 import com.heartcare.agni.utils.common.Queries
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toEndOfDay
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toTodayStartDate
@@ -29,13 +32,15 @@ class HistoryTakingAndTestsViewModel@Inject constructor(
     private val preferenceRepository: PreferenceRepository,
     private val genericRepository: GenericRepository,
     private val scheduleRepository: ScheduleRepository,
-    private val patientLastUpdatedRepository: PatientLastUpdatedRepository
+    private val patientLastUpdatedRepository: PatientLastUpdatedRepository,
+    private val priorDxRepository: PriorDxRepository,
+    @IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ): BaseViewModel() {
     var isLaunched by mutableStateOf(false)
 
     var patient by mutableStateOf<PatientResponse?>(null)
 
-    var priorDxList by mutableStateOf(listOf("", "", ""))
+    var priorDxList by mutableStateOf(listOf<PriorDxResponse>())
 
     var appointment by mutableStateOf<AppointmentResponseLocal?>(null)
     var canAddAssessment by mutableStateOf(false)
@@ -120,6 +125,12 @@ class HistoryTakingAndTestsViewModel@Inject constructor(
                 patientLastUpdatedRepository,
                 updated
             )
+        }
+    }
+
+    fun getPreviousRecords(patientId: String) {
+        viewModelScope.launch(ioDispatcher) {
+            priorDxList = priorDxRepository.getPriorDxRecords(patientId)
         }
     }
 }

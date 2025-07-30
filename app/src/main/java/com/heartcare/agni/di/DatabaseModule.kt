@@ -15,6 +15,7 @@ import com.heartcare.agni.data.local.roomdb.dao.MedicationDao
 import com.heartcare.agni.data.local.roomdb.dao.PatientDao
 import com.heartcare.agni.data.local.roomdb.dao.PatientLastUpdatedDao
 import com.heartcare.agni.data.local.roomdb.dao.PrescriptionDao
+import com.heartcare.agni.data.local.roomdb.dao.PriorDxDao
 import com.heartcare.agni.data.local.roomdb.dao.RelationDao
 import com.heartcare.agni.data.local.roomdb.dao.RiskPredictionDao
 import com.heartcare.agni.data.local.roomdb.dao.ScheduleDao
@@ -173,5 +174,11 @@ object DatabaseModule {
     @Provides
     fun provideLevelsDao(fhirAppDatabase: FhirAppDatabase): LevelsDao {
         return fhirAppDatabase.getLevelsDao()
+    }
+
+    @Singleton
+    @Provides
+    fun providePriorDxDao(fhirAppDatabase: FhirAppDatabase): PriorDxDao {
+        return fhirAppDatabase.getPriorDxDao()
     }
 }
