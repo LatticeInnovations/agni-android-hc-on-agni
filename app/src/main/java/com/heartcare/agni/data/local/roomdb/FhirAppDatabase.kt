@@ -19,6 +19,7 @@ import com.heartcare.agni.data.local.roomdb.dao.MedicationDao
 import com.heartcare.agni.data.local.roomdb.dao.PatientDao
 import com.heartcare.agni.data.local.roomdb.dao.PatientLastUpdatedDao
 import com.heartcare.agni.data.local.roomdb.dao.PrescriptionDao
+import com.heartcare.agni.data.local.roomdb.dao.PriorDxDao
 import com.heartcare.agni.data.local.roomdb.dao.RelationDao
 import com.heartcare.agni.data.local.roomdb.dao.RiskPredictionDao
 import com.heartcare.agni.data.local.roomdb.dao.ScheduleDao
@@ -49,6 +50,7 @@ import com.heartcare.agni.data.local.roomdb.entities.patient.PatientLastUpdatedE
 import com.heartcare.agni.data.local.roomdb.entities.prescription.PrescriptionDirectionsEntity
 import com.heartcare.agni.data.local.roomdb.entities.prescription.PrescriptionEntity
 import com.heartcare.agni.data.local.roomdb.entities.prescription.photo.PrescriptionPhotoEntity
+import com.heartcare.agni.data.local.roomdb.entities.priordx.PriorDxEntity
 import com.heartcare.agni.data.local.roomdb.entities.relation.RelationEntity
 import com.heartcare.agni.data.local.roomdb.entities.schedule.ScheduleEntity
 import com.heartcare.agni.data.local.roomdb.entities.search.SearchHistoryEntity
@@ -104,7 +106,8 @@ import java.util.UUID
         ImmunizationEntity::class,
         ImmunizationFileEntity::class,
         ManufacturerEntity::class,
-        LevelEntity::class
+        LevelEntity::class,
+        PriorDxEntity::class
     ],
     views = [RelationView::class, PrescriptionDirectionAndMedicineView::class],
     version = 1,
@@ -135,6 +138,7 @@ abstract class FhirAppDatabase : RoomDatabase() {
     abstract fun getImmunizationDao(): ImmunizationDao
     abstract fun getImmunizationRecommendationDao(): ImmunizationRecommendationDao
     abstract fun getLevelsDao(): LevelsDao
+    abstract fun getPriorDxDao(): PriorDxDao
 
     companion object {
         @Volatile
