@@ -11,9 +11,13 @@ import com.heartcare.agni.data.local.repository.appointment.AppointmentRepositor
 import com.heartcare.agni.data.local.repository.generic.GenericRepository
 import com.heartcare.agni.data.local.repository.patient.lastupdated.PatientLastUpdatedRepository
 import com.heartcare.agni.data.local.repository.preference.PreferenceRepository
+import com.heartcare.agni.data.local.repository.priordx.PriorDxRepository
 import com.heartcare.agni.data.local.repository.schedule.ScheduleRepository
 import com.heartcare.agni.data.server.model.patient.PatientResponse
+import com.heartcare.agni.data.server.model.priordx.PriorDxResponse
+import com.heartcare.agni.di.dispatcher.IoDispatcher
 import com.heartcare.agni.utils.common.Queries
+import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.isToday
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toEndOfDay
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toTodayStartDate
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -24,18 +28,23 @@ import java.util.Date
 import javax.inject.Inject
 
 @HiltViewModel
-class HistoryTakingAndTestsViewModel@Inject constructor(
+class HistoryTakingAndTestsViewModel @Inject constructor(
     private val appointmentRepository: AppointmentRepository,
     private val preferenceRepository: PreferenceRepository,
     private val genericRepository: GenericRepository,
     private val scheduleRepository: ScheduleRepository,
-    private val patientLastUpdatedRepository: PatientLastUpdatedRepository
-): BaseViewModel() {
+    private val patientLastUpdatedRepository: PatientLastUpdatedRepository,
+    private val priorDxRepository: PriorDxRepository,
+    @IoDispatcher private val ioDispatcher: CoroutineDispatcher
+) : BaseViewModel() {
     var isLaunched by mutableStateOf(false)
+    var isLoading by mutableStateOf(true)
 
+    val user = preferenceRepository.getUserDetails()!!
     var patient by mutableStateOf<PatientResponse?>(null)
 
-    var priorDxList by mutableStateOf(listOf("", "", ""))
+    var priorDxList by mutableStateOf(listOf<PriorDxResponse>())
+    var todayPriorDx by mutableStateOf<PriorDxResponse?>(null)
 
     var appointment by mutableStateOf<AppointmentResponseLocal?>(null)
     var canAddAssessment by mutableStateOf(false)
@@ -45,6 +54,7 @@ class HistoryTakingAndTestsViewModel@Inject constructor(
     private val maxNumberOfAppointmentsInADay = 250
     var showAppointmentCompletedDialog by mutableStateOf(false)
     var isAppointmentCompleted by mutableStateOf(false)
+    var existsInOtherHospital by mutableStateOf(false)
 
     internal fun getAppointmentInfo(
         callback: () -> Unit,
@@ -61,22 +71,32 @@ class HistoryTakingAndTestsViewModel@Inject constructor(
 
             // Determine if assessment can be added
             appointmentsToday?.let {
+                existsInOtherHospital = it.hospitalCode != user.hospitalCode
                 val status = it.status
-                canAddAssessment = status == AppointmentStatusEnum.ARRIVED.value ||
+                canAddAssessment = (status == AppointmentStatusEnum.ARRIVED.value ||
                         status == AppointmentStatusEnum.WALK_IN.value ||
-                        status == AppointmentStatusEnum.IN_PROGRESS.value
+                        status == AppointmentStatusEnum.IN_PROGRESS.value)
+                        && it.hospitalCode == user.hospitalCode
 
                 isAppointmentCompleted = status == AppointmentStatusEnum.COMPLETED.value
+                        && it.hospitalCode == user.hospitalCode
             }
 
             // Get the appointment matching today's time window and scheduled status
             appointment = appointmentRepository
                 .getAppointmentsOfPatientByStatus(patientId, AppointmentStatusEnum.SCHEDULED.value)
-                .firstOrNull { it.slot.start.time in todayStart..todayEnd }
+                .firstOrNull {
+                    it.slot.start.time in todayStart..todayEnd
+                            && it.hospitalCode == user.hospitalCode
+                }
 
             // Check if all slots are booked
-            val bookedAppointments = appointmentRepository.getAppointmentListByDate(todayStart, todayEnd)
-                .count { it.status != AppointmentStatusEnum.CANCELLED.value }
+            val bookedAppointments =
+                appointmentRepository.getAppointmentListByDate(todayStart, todayEnd)
+                    .count {
+                        it.status != AppointmentStatusEnum.CANCELLED.value
+                                && it.hospitalCode == user.hospitalCode
+                    }
 
             ifAllSlotsBooked = bookedAppointments >= maxNumberOfAppointmentsInADay
 
@@ -120,6 +140,15 @@ class HistoryTakingAndTestsViewModel@Inject constructor(
                 patientLastUpdatedRepository,
                 updated
             )
+        }
+    }
+
+    fun getPreviousRecords(patientId: String) {
+        viewModelScope.launch(ioDispatcher) {
+            priorDxList = priorDxRepository.getPriorDxRecords(patientId).also {
+                todayPriorDx = it.firstOrNull { priorDx -> isToday(priorDx.createdOn!!) }
+            }
+            isLoading = false
         }
     }
 }

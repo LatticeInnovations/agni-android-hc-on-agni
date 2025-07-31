@@ -52,6 +52,7 @@ import androidx.navigation.NavController
 import com.heartcare.agni.R
 import com.heartcare.agni.data.local.enums.NationalIdUse
 import com.heartcare.agni.data.local.enums.PhotoUploadTypeEnum
+import com.heartcare.agni.data.local.enums.UserRoleEnum
 import com.heartcare.agni.data.server.model.patient.PatientResponse
 import com.heartcare.agni.navigation.Screen
 import com.heartcare.agni.ui.common.BottomNavBar
@@ -221,7 +222,7 @@ private fun CardComposableList(
             if (viewModel.cvdRisk.isBlank()) null
             else stringResource(R.string.percentage, viewModel.cvdRisk),
             isCardDisabled = viewModel.patient!!.birthDate.toTimeInMilli()
-                        .toAge() !in 40..74,
+                .toAge() !in 40..74,
             onClick = {
                 if (viewModel.patient!!.birthDate.toTimeInMilli().toAge() !in 40..74
                 ) {
@@ -242,21 +243,21 @@ private fun CardComposableList(
 
             }
         )
-        /**
-        CardComposable(
-        viewModel = viewModel,
-        label = stringResource(id = R.string.history_taking_and_tests),
-        icon = R.drawable.overview,
-        subText = null,
-        onClick = {
-        navController.currentBackStackEntry?.savedStateHandle?.set(
-        PATIENT,
-        viewModel.patient
-        )
-        navController.navigate(Screen.HistoryTakingAndTestsScreen.route)
+        if (viewModel.user.accountGroupId != UserRoleEnum.PHARMACIST.code) {
+            CardComposable(
+                viewModel = viewModel,
+                label = stringResource(id = R.string.history_taking_and_tests),
+                icon = R.drawable.overview,
+                subText = null,
+                onClick = {
+                    navController.currentBackStackEntry?.savedStateHandle?.set(
+                        PATIENT,
+                        viewModel.patient
+                    )
+                    navController.navigate(Screen.HistoryTakingAndTestsScreen.route)
+                }
+            )
         }
-        )
-         **/
         CardComposable(
             viewModel,
             stringResource(id = R.string.appointments),

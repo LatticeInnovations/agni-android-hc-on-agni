@@ -17,6 +17,7 @@ import com.heartcare.agni.data.server.model.patient.PatientResponse
 import com.heartcare.agni.data.server.model.prescription.photo.PrescriptionPhotoPatch
 import com.heartcare.agni.data.server.model.prescription.photo.PrescriptionPhotoResponse
 import com.heartcare.agni.data.server.model.prescription.prescriptionresponse.PrescriptionResponse
+import com.heartcare.agni.data.server.model.priordx.PriorDxResponse
 import com.heartcare.agni.data.server.model.relatedperson.RelatedPersonResponse
 import com.heartcare.agni.data.server.model.scheduleandappointment.appointment.AppointmentResponse
 import com.heartcare.agni.data.server.model.scheduleandappointment.schedule.ScheduleResponse
@@ -190,6 +191,13 @@ class GenericRepositoryImpl @Inject constructor(
             }
     }
 
+    override suspend fun updatePriorDxFhirId() {
+        genericDao.getNotSyncedData(GenericTypeEnum.PRIOR_DX)
+            .forEach { priorDxGenericEntity ->
+                updatePriorDxFhirIdInGenericEntity(priorDxGenericEntity)
+            }
+    }
+
     override suspend fun insertAppointment(
         appointmentResponse: AppointmentResponse,
         uuid: String
@@ -215,6 +223,7 @@ class GenericRepositoryImpl @Inject constructor(
             insertCVDGenericEntity(cvdGenericEntity, cvdResponse, uuid)
         }
     }
+
     override suspend fun insertSymDiag(local: SymptomsAndDiagnosisData, uuid: String): Long {
         return genericDao.getGenericEntityById(
             patientId = local.symDiagUuid,
@@ -235,6 +244,16 @@ class GenericRepositoryImpl @Inject constructor(
             syncType = SyncType.POST
         ).let { dispenseGenericEntity ->
             insertDispenseGenericEntity(medicineDispenseRequest, dispenseGenericEntity, uuid)
+        }
+    }
+
+    override suspend fun insertPriorDxRecord(priorDxResponse: PriorDxResponse, uuid: String): Long {
+        return genericDao.getGenericEntityById(
+            patientId = priorDxResponse.priorDxUuid,
+            genericTypeEnum = GenericTypeEnum.PRIOR_DX,
+            syncType = SyncType.POST
+        ).let { priorDxGenericEntity ->
+            insertPriorDxGenericEntity(priorDxGenericEntity, priorDxResponse, uuid)
         }
     }
 

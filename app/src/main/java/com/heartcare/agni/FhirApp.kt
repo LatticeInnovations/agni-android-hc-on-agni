@@ -19,6 +19,7 @@ import com.heartcare.agni.data.server.api.LabTestAndMedRecordService
 import com.heartcare.agni.data.server.api.LevelsApiService
 import com.heartcare.agni.data.server.api.PatientApiService
 import com.heartcare.agni.data.server.api.PrescriptionApiService
+import com.heartcare.agni.data.server.api.PriorDxApiService
 import com.heartcare.agni.data.server.api.ScheduleAndAppointmentApiService
 import com.heartcare.agni.data.server.api.SymptomsAndDiagnosisService
 import com.heartcare.agni.data.server.api.VaccinationApiService
@@ -77,6 +78,8 @@ class FhirApp : Application() {
     lateinit var vaccinationApiService: VaccinationApiService
     @Inject
     lateinit var levelsApiService: LevelsApiService
+    @Inject
+    lateinit var priorDxApiService: PriorDxApiService
 
     @Inject
     lateinit var fileUploadApiService: FileUploadApiService
@@ -121,6 +124,7 @@ class FhirApp : Application() {
             dispenseApiService,
             vaccinationApiService,
             levelsApiService,
+            priorDxApiService,
             fhirAppDatabase.getPatientDao(),
             fhirAppDatabase.getGenericDao(),
             preferenceRepository,
@@ -141,7 +145,8 @@ class FhirApp : Application() {
             fhirAppDatabase.getImmunizationDao(),
             fhirAppDatabase.getManufacturerDao(),
             fhirAppDatabase.getLevelsDao(),
-            fhirAppDatabase.getRiskPredictionDao()
+            fhirAppDatabase.getRiskPredictionDao(),
+            fhirAppDatabase.getPriorDxDao()
         )
 
         _fileSyncRepository = FileSyncRepositoryImpl(
@@ -192,7 +197,7 @@ class FhirApp : Application() {
                         // as there will be multiple callbacks from different coroutines
                         // list of errors is maintained.
                         // if the list is empty, then all the api calls were successful.
-                        listOfErrors.add(errorMessage)
+                        if (errorReceived) listOfErrors.add(errorMessage)
                     }.also {
                         checkPhotoWorkerStatus(listOfErrors)
                     }

@@ -13,6 +13,7 @@ import com.heartcare.agni.data.server.model.prescription.medication.MedicationRe
 import com.heartcare.agni.data.server.model.prescription.medication.MedicineTimeResponse
 import com.heartcare.agni.data.server.model.prescription.photo.PrescriptionPhotoResponse
 import com.heartcare.agni.data.server.model.prescription.prescriptionresponse.PrescriptionResponse
+import com.heartcare.agni.data.server.model.priordx.PriorDxResponse
 import com.heartcare.agni.data.server.model.relatedperson.RelatedPersonResponse
 import com.heartcare.agni.data.server.model.scheduleandappointment.appointment.AppointmentResponse
 import com.heartcare.agni.data.server.model.scheduleandappointment.schedule.ScheduleResponse
@@ -43,7 +44,8 @@ interface SyncRepository {
     suspend fun getAndInsertOTC(patientId: String?): ResponseMapper<List<DispenseData>>
     suspend fun getAndInsertImmunization(patientId: String?): ResponseMapper<List<ImmunizationResponse>>
     suspend fun getAndInsertManufacturer(): ResponseMapper<List<ManufacturerResponse>>
-    suspend fun getAndInsertLevelsData(): ResponseMapper<List<LevelResponse>>
+    suspend fun getAndInsertLevelsData(offset: Int): ResponseMapper<List<LevelResponse>>
+    suspend fun getAndInsertPriorDxData(offset: Int): ResponseMapper<List<PriorDxResponse>>
 
     //POST
     suspend fun sendPersonPostData(): ResponseMapper<List<CreateResponse>>
@@ -60,6 +62,7 @@ interface SyncRepository {
     suspend fun sendMedRecordPostData(): ResponseMapper<List<CreateResponse>>
     suspend fun sendDispensePostData(): ResponseMapper<List<CreateResponse>>
     suspend fun sendImmunizationPostData(): ResponseMapper<List<CreateResponse>>
+    suspend fun sendPriorDxPostData(): ResponseMapper<List<CreateResponse>>
 
     //PATCH
     suspend fun sendPersonPatchData(): ResponseMapper<List<CreateResponse>>

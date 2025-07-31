@@ -319,6 +319,7 @@ class CVDRiskAssessmentViewModel @Inject constructor(
                 Date().toEndOfDay()
             ).firstOrNull { appointmentEntity ->
                 appointmentEntity.patientId == patient!!.id && appointmentEntity.status != AppointmentStatusEnum.CANCELLED.value
+                        && user.hospitalCode == appointmentEntity.hospitalCode
             }
     }
 

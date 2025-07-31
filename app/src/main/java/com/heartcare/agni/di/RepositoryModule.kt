@@ -28,6 +28,8 @@ import com.heartcare.agni.data.local.repository.preference.PreferenceRepository
 import com.heartcare.agni.data.local.repository.preference.PreferenceRepositoryImpl
 import com.heartcare.agni.data.local.repository.prescription.PrescriptionRepository
 import com.heartcare.agni.data.local.repository.prescription.PrescriptionRepositoryImpl
+import com.heartcare.agni.data.local.repository.priordx.PriorDxRepository
+import com.heartcare.agni.data.local.repository.priordx.PriorDxRepositoryImpl
 import com.heartcare.agni.data.local.repository.relation.RelationRepository
 import com.heartcare.agni.data.local.repository.relation.RelationRepositoryImpl
 import com.heartcare.agni.data.local.repository.schedule.ScheduleRepository
@@ -170,5 +172,9 @@ abstract class RepositoryModule {
 
     @Binds
     @ViewModelScoped
-    abstract fun provideMLevelsRepository(levelRepositoryImpl: LevelRepositoryImpl): LevelRepository
+    abstract fun provideLevelsRepository(levelRepositoryImpl: LevelRepositoryImpl): LevelRepository
+
+    @Binds
+    @ViewModelScoped
+    abstract fun providePriorDxRepository(priorDxRepositoryImpl: PriorDxRepositoryImpl): PriorDxRepository
 }

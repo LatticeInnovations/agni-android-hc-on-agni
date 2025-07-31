@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "d80b7a11f5e631e6fea326397ca6c9b5",
+    "identityHash": "4aeb931d21526537266fa0e845a06394",
     "entities": [
       {
         "tableName": "PatientEntity",
@@ -2655,6 +2655,191 @@
             "fhirId"
           ]
         }
+      },
+      {
+        "tableName": "PriorDxEntity",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`priorDxUuid` TEXT NOT NULL, `priorDxFhirId` TEXT, `appointmentId` TEXT NOT NULL, `cancer` TEXT, `createdOn` INTEGER NOT NULL, `hasAids` INTEGER NOT NULL, `hasAsthma` INTEGER NOT NULL, `hasCancer` INTEGER NOT NULL, `hasChronicKidneyDiseases` INTEGER NOT NULL, `hasChronicObstructivePulmonaryDisease` INTEGER NOT NULL, `hasCovid` INTEGER NOT NULL, `hasDiabetes` INTEGER NOT NULL, `hasHeartDiseases` INTEGER NOT NULL, `hasHypercholesterolaemia` INTEGER NOT NULL, `hasHypertension` INTEGER NOT NULL, `hasOthers` INTEGER NOT NULL, `hasTransientIschaemicAttack` INTEGER NOT NULL, `hasTuberculosis` INTEGER NOT NULL, `others` TEXT, `patientId` TEXT NOT NULL, `practitionerId` TEXT NOT NULL, `practitionerName` TEXT NOT NULL, PRIMARY KEY(`priorDxUuid`), FOREIGN KEY(`patientId`) REFERENCES `PatientEntity`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION , FOREIGN KEY(`appointmentId`) REFERENCES `AppointmentEntity`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION )",
+        "fields": [
+          {
+            "fieldPath": "priorDxUuid",
+            "columnName": "priorDxUuid",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "priorDxFhirId",
+            "columnName": "priorDxFhirId",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "appointmentId",
+            "columnName": "appointmentId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "cancer",
+            "columnName": "cancer",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "createdOn",
+            "columnName": "createdOn",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "hasAids",
+            "columnName": "hasAids",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "hasAsthma",
+            "columnName": "hasAsthma",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "hasCancer",
+            "columnName": "hasCancer",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "hasChronicKidneyDiseases",
+            "columnName": "hasChronicKidneyDiseases",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "hasChronicObstructivePulmonaryDisease",
+            "columnName": "hasChronicObstructivePulmonaryDisease",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "hasCovid",
+            "columnName": "hasCovid",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "hasDiabetes",
+            "columnName": "hasDiabetes",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "hasHeartDiseases",
+            "columnName": "hasHeartDiseases",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "hasHypercholesterolaemia",
+            "columnName": "hasHypercholesterolaemia",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "hasHypertension",
+            "columnName": "hasHypertension",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "hasOthers",
+            "columnName": "hasOthers",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "hasTransientIschaemicAttack",
+            "columnName": "hasTransientIschaemicAttack",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "hasTuberculosis",
+            "columnName": "hasTuberculosis",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "others",
+            "columnName": "others",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "patientId",
+            "columnName": "patientId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "practitionerId",
+            "columnName": "practitionerId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "practitionerName",
+            "columnName": "practitionerName",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "priorDxUuid"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_PriorDxEntity_patientId",
+            "unique": false,
+            "columnNames": [
+              "patientId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_PriorDxEntity_patientId` ON `${TABLE_NAME}` (`patientId`)"
+          },
+          {
+            "name": "index_PriorDxEntity_appointmentId",
+            "unique": false,
+            "columnNames": [
+              "appointmentId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_PriorDxEntity_appointmentId` ON `${TABLE_NAME}` (`appointmentId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "PatientEntity",
+            "onDelete": "NO ACTION",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "patientId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          },
+          {
+            "table": "AppointmentEntity",
+            "onDelete": "NO ACTION",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "appointmentId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
       }
     ],
     "views": [
@@ -2669,7 +2854,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'd80b7a11f5e631e6fea326397ca6c9b5')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '4aeb931d21526537266fa0e845a06394')"
     ]
   }
 }

@@ -27,28 +27,45 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.heartcare.agni.R
 import com.heartcare.agni.data.local.enums.PriorDiagnosis
 import com.heartcare.agni.data.local.enums.PriorDiagnosis.Companion.getListOfPriorDx
+import com.heartcare.agni.data.server.model.patient.PatientResponse
 import com.heartcare.agni.ui.common.CheckBoxRow
 import com.heartcare.agni.ui.common.CustomTextFieldWithLength
 import com.heartcare.agni.ui.theme.Black
 import com.heartcare.agni.ui.theme.White
+import com.heartcare.agni.utils.constants.NavControllerConstants.PATIENT
 import com.heartcare.agni.utils.constants.NavControllerConstants.PRIOR_DX_SAVED
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddPriorDxScreen(
     navController: NavController,
-    viewModel: AddPriorDxViewModel = viewModel()
+    viewModel: AddPriorDxViewModel = hiltViewModel()
 ) {
+    val coroutineScope = rememberCoroutineScope()
+
+    LaunchedEffect(viewModel.isLaunched) {
+        if (!viewModel.isLaunched) {
+            navController.previousBackStackEntry?.savedStateHandle
+                ?.get<PatientResponse>(PATIENT)?.let {
+                    viewModel.patient = it
+                    viewModel.getLastPriorDx(it.id)
+                }
+            viewModel.isLaunched = true
+        }
+    }
     Scaffold(
         modifier = Modifier
             .imePadding(),
@@ -96,11 +113,15 @@ fun AddPriorDxScreen(
                 Button(
                     onClick = {
                         // save prior dx
-                        navController.previousBackStackEntry?.savedStateHandle?.set(
-                            PRIOR_DX_SAVED,
-                            true
-                        )
-                        navController.navigateUp()
+                        viewModel.addPriorDx {
+                            coroutineScope.launch {
+                                navController.previousBackStackEntry?.savedStateHandle?.set(
+                                    PRIOR_DX_SAVED,
+                                    true
+                                )
+                                navController.navigateUp()
+                            }
+                        }
                     },
                     enabled = viewModel.isValid(),
                     modifier = Modifier
