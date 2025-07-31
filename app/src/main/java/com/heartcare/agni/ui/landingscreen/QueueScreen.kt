@@ -75,7 +75,6 @@ import java.util.Date
 @Composable
 fun QueueScreen(
     navController: NavController,
-    landingViewModel: LandingScreenViewModel,
     dateScrollState: LazyListState,
     coroutineScope: CoroutineScope,
     snackbarHostState: SnackbarHostState,
@@ -132,7 +131,7 @@ fun QueueScreen(
             ) {
                 Loader()
             }
-        } else QueueList(queueListState, viewModel, landingViewModel, navController)
+        } else QueueList(queueListState, viewModel, navController)
     }
     if (viewModel.showCancelAppointmentDialog) {
         CancelAppointmentDialog(
@@ -161,7 +160,6 @@ fun QueueScreen(
 private fun QueueList(
     queueListState: LazyListState,
     viewModel: QueueViewModel,
-    landingViewModel: LandingScreenViewModel,
     navController: NavController
 ) {
     LazyColumn(
@@ -183,7 +181,6 @@ private fun QueueList(
                     ),
                     listOfAppointment = viewModel.scheduledQueueList,
                     viewModel = viewModel,
-                    landingViewModel = landingViewModel,
                     navController = navController
                 )
             }
@@ -197,7 +194,6 @@ private fun QueueList(
                     ),
                     listOfAppointment = viewModel.assessedQueueList,
                     viewModel = viewModel,
-                    landingViewModel = landingViewModel,
                     navController = navController
                 )
             }
@@ -211,7 +207,6 @@ private fun QueueList(
                     ),
                     listOfAppointment = viewModel.prescribedQueueList,
                     viewModel = viewModel,
-                    landingViewModel = landingViewModel,
                     navController = navController
                 )
             }
@@ -228,7 +223,6 @@ private fun ListWithLabel(
     label: String,
     listOfAppointment: List<AppointmentResponseLocal>,
     viewModel: QueueViewModel,
-    landingViewModel: LandingScreenViewModel,
     navController: NavController
 ) {
     Surface(
@@ -288,10 +282,6 @@ private fun QueuePatientCard(
     patient: PatientResponse?
 ) {
     val age = patient?.birthDate?.toTimeInMilli()?.toAge()
-    val subTitle = "${
-        patient?.gender?.get(0)?.uppercase()
-    }/$age${if (patient?.fhirId.isNullOrEmpty()) "" else ", PID: ${patient.fhirId}"} "
-
     ElevatedCard(
         modifier = Modifier
             .clickable {
@@ -323,7 +313,13 @@ private fun QueuePatientCard(
                     patient?.firstName,
                     patient?.lastName
                 ),
-                subTitle,
+                stringResource(
+                    R.string.patient_queue_card_subtitle,
+                    patient?.gender?.get(0)?.uppercase() ?: "",
+                    age ?: 0,
+                    if (patient?.heartcareId.isNullOrEmpty()) "--"
+                    else patient.heartcareId
+                ),
                 appointmentResponseLocal.slot.start.toAppointmentTime()
             )
         }

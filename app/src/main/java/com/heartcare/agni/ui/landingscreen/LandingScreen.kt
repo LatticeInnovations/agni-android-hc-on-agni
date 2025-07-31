@@ -395,7 +395,6 @@ fun LandingScreen(
                             0 -> MyPatientScreen(navController)
                             1 -> QueueScreen(
                                 navController,
-                                viewModel,
                                 dateScrollState,
                                 coroutineScope,
                                 snackbarHostState

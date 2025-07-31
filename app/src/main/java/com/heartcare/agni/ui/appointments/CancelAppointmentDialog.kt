@@ -25,9 +25,6 @@ fun CancelAppointmentDialog(
     dateAndTime: String,
     closeDialog: (Boolean) -> Unit
 ) {
-    val subtitle = "${patient.gender[0].uppercase()}/${
-        patient.birthDate.toTimeInMilli().toAge()
-    }, PID: ${patient.fhirId}"
     AlertDialog(
         onDismissRequest = { },
         title = {
@@ -48,7 +45,14 @@ fun CancelAppointmentDialog(
                     style = MaterialTheme.typography.bodyLarge
                 )
                 Text(
-                    text = subtitle,
+                    text =
+                        stringResource(
+                            R.string.patient_queue_card_subtitle,
+                            patient.gender[0].uppercase(),
+                            patient.birthDate.toTimeInMilli().toAge(),
+                            if (patient.heartcareId.isNullOrEmpty()) "--"
+                            else patient.heartcareId
+                        ),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     style = MaterialTheme.typography.bodyMedium
                 )

@@ -588,4 +588,5 @@ include them in the household</string>
     <string name="height_required">Height is required</string>
     <string name="appointment_exists_on_screening_date">Another appointment exists for the same screening date</string>
     <string name="update_prior_diagnosis">Update prior diagnosis</string>
+    <string name="patient_queue_card_subtitle">%s/%d, Heartcare ID: %s</string>
 </resources>
