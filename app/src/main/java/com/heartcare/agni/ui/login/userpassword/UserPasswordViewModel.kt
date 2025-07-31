@@ -46,6 +46,7 @@ class UserPasswordViewModel @Inject constructor(
     var password by mutableStateOf("")
     var isPasswordError by mutableStateOf(false)
     var passwordError by mutableStateOf("")
+    var isPasswordVisible by mutableStateOf(false)
 
     var snackBarError by mutableStateOf("")
     var isPasswordCreated by mutableStateOf(false)
