@@ -54,6 +54,7 @@ import com.heartcare.agni.navigation.Screen
 import com.heartcare.agni.ui.common.CustomDialog
 import com.heartcare.agni.ui.common.Loader
 import com.heartcare.agni.ui.common.ScrollableTabRowComposable
+import com.heartcare.agni.ui.historyandtests.medication.MedicationView
 import com.heartcare.agni.ui.historyandtests.priordx.PriorDxView
 import com.heartcare.agni.ui.patientlandingscreen.AllSlotsBookedDialog
 import com.heartcare.agni.ui.prescription.photo.view.AppointmentCompletedDialog
@@ -147,6 +148,7 @@ fun HistoryTakingAndTestsScreen(
                     HorizontalPager(state = pagerState) { index ->
                         when (index) {
                             0 -> PriorDxView(viewModel)
+                            1 -> MedicationView(viewModel)
                             else -> Text(tabs[index], modifier = Modifier.padding(16.dp))
                         }
                     }

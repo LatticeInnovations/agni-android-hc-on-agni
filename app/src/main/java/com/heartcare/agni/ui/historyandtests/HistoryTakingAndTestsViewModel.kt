@@ -46,6 +46,8 @@ class HistoryTakingAndTestsViewModel @Inject constructor(
     var priorDxList by mutableStateOf(listOf<PriorDxResponse>())
     var todayPriorDx by mutableStateOf<PriorDxResponse?>(null)
 
+    var medicationList by mutableStateOf(listOf<String>("", "", ""))
+
     var appointment by mutableStateOf<AppointmentResponseLocal?>(null)
     var canAddAssessment by mutableStateOf(false)
     var showAddToQueueDialog by mutableStateOf(false)
