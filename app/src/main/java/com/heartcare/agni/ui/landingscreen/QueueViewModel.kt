@@ -92,7 +92,7 @@ class QueueViewModel @Inject constructor(
             ).filter { appointmentResponseLocal ->
                 val patient = getPatientById(appointmentResponseLocal.patientId)
                 appointmentResponseLocal.hospitalCode == user.hospitalCode &&
-                        (patient.firstName.contains(searchQueueQuery, true) || patient.lastName.contains(searchQueueQuery, true) || patient.fhirId?.contains(searchQueueQuery, true) == true)
+                        (patient.firstName.contains(searchQueueQuery, true) || patient.lastName.contains(searchQueueQuery, true) || patient.heartcareId?.contains(searchQueueQuery, true) == true)
             }
             scheduledQueueList = appointmentsList.filter { appointmentResponseLocal ->
                 appointmentResponseLocal.status == AppointmentStatusEnum.WALK_IN.value
