@@ -181,7 +181,9 @@ fun EditBasicInformation(
                             it.trim()
                         viewModel.isFirstNameValid = viewModel.firstName.isBlank()
                     }
-                    Column {
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
                         Row(modifier = Modifier.fillMaxWidth()) {
                             CustomFilterChip(viewModel.dobAgeSelector, "dob", "Date of Birth") {
                                 viewModel.dobAgeSelector = it

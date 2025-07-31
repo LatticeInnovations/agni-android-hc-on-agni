@@ -169,7 +169,7 @@ private fun PatientItemCard(
 ) {
     val subtitle = "${patient.gender[0].uppercase()}/${
         patient.birthDate.toTimeInMilli().toAge()
-    } · PID ${patient.fhirId}"
+    } · Heartcare ID ${if (patient.heartcareId.isNullOrBlank()) "--" else patient.heartcareId}"
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -180,7 +180,7 @@ private fun PatientItemCard(
                 )
                 navController.currentBackStackEntry?.savedStateHandle?.set(
                     SELECTED_INDEX,
-                    viewModel.selectedIndex
+                    0
                 )
                 navController.navigate(Screen.PatientLandingScreen.route)
                 viewModel.hideSyncStatus()

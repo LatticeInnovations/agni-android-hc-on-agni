@@ -72,19 +72,6 @@ fun SearchPatientForm(
             PatientNameComposable(viewModel)
             RiskCategoryComposable(viewModel)
             CustomTextField(
-                value = viewModel.heartcareId,
-                label = stringResource(R.string.heartcare_id),
-                weight = 1f,
-                maxLength = viewModel.maxHeartcareIdLength,
-                isError = false,
-                error = "",
-                keyboardType = KeyboardType.Text,
-                keyboardCapitalization = KeyboardCapitalization.None,
-                updateValue = {
-                    viewModel.heartcareId = it
-                }
-            )
-            CustomTextField(
                 value = viewModel.hospitalId,
                 label = stringResource(R.string.hospital_id),
                 weight = 1f,

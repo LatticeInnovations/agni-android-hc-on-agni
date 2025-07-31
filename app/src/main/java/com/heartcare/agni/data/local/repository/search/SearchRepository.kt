@@ -25,7 +25,7 @@ interface SearchRepository {
         existingMembers: Set<String>
     ): Flow<PagingData<PaginationResponse<PatientResponse>>>
 
-    fun searchPatientByQuery(
+    fun searchPatientsByQuery(
         query: String,
         searchList: List<PatientAndIdentifierEntity>
     ): Flow<PagingData<PaginationResponse<PatientResponse>>>

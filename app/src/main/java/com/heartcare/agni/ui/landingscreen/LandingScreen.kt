@@ -27,6 +27,8 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -99,9 +101,18 @@ fun LandingScreen(
     val coroutineScope = rememberCoroutineScope()
     val activity = LocalActivity.current as Activity
     val dateScrollState = rememberLazyListState()
+    val pagerState = rememberPagerState(
+        initialPage = 0,
+        initialPageOffsetFraction = 0f
+    ) {
+        viewModel.headings.size
+    }
     BackHandler(enabled = true) {
-        when (viewModel.selectedIndex) {
-            2 -> viewModel.selectedIndex = 0
+        when (pagerState.currentPage) {
+            2 ->
+                coroutineScope.launch {
+                    pagerState.animateScrollToPage(0)
+                }
             1 -> {
                 if (queueViewModel.isSearchingInQueue || queueViewModel.searchQueueQuery.isNotBlank()) {
                     queueViewModel.isSearchingInQueue = false
@@ -109,7 +120,10 @@ fun LandingScreen(
                     queueViewModel.getAppointmentListByDate()
                 } else if (viewModel.showStatusChangeLayout) {
                     viewModel.showStatusChangeLayout = false
-                } else viewModel.selectedIndex = 0
+                } else
+                    coroutineScope.launch {
+                        pagerState.animateScrollToPage(0)
+                    }
             }
 
             0 -> {
@@ -126,10 +140,13 @@ fun LandingScreen(
     }
     LaunchedEffect(viewModel.isLaunched) {
         if (!viewModel.isLaunched) {
-            viewModel.selectedIndex =
+            val index =
                 navController.previousBackStackEntry?.savedStateHandle?.get<Int>(
                     SELECTED_INDEX
                 ) ?: 0
+            coroutineScope.launch {
+                pagerState.animateScrollToPage(index)
+            }
             if (navController.previousBackStackEntry?.savedStateHandle?.get<Boolean>(
                     "isSearchResult"
                 ) == true
@@ -163,8 +180,8 @@ fun LandingScreen(
                     PATIENT_ARRIVED
                 ) == true
             if (viewModel.addedToQueue) {
-                viewModel.selectedIndex = 1
                 coroutineScope.launch {
+                    pagerState.animateScrollToPage(1)
                     snackbarHostState.showSnackbar(
                         message = activity.getString(R.string.added_to_queue)
                     )
@@ -173,8 +190,8 @@ fun LandingScreen(
             }
 
             if (viewModel.patientArrived) {
-                viewModel.selectedIndex = 1
                 coroutineScope.launch {
+                    pagerState.animateScrollToPage(1)
                     snackbarHostState.showSnackbar(
                         message = activity.getString(R.string.status_updated_to_arrived)
                     )
@@ -213,7 +230,7 @@ fun LandingScreen(
             modifier = Modifier.fillMaxSize(),
             snackbarHost = { SnackbarHost(snackbarHostState) },
             topBar = {
-                if (viewModel.isSearchResult && viewModel.selectedIndex == 0) {
+                if (viewModel.isSearchResult && pagerState.currentPage == 0) {
                     TopAppBar(
                         title = {
                             Text(
@@ -247,11 +264,11 @@ fun LandingScreen(
                             }
                         }
                     )
-                } else if (viewModel.selectedIndex == 1) {
+                } else if (pagerState.currentPage == 1) {
                     TopAppBar(
                         title = {
                             Text(
-                                text = viewModel.headings[viewModel.selectedIndex],
+                                text = viewModel.headings[pagerState.currentPage],
                                 style = MaterialTheme.typography.titleLarge,
                                 modifier = Modifier.testTag("HEADING_TAG")
                             )
@@ -288,7 +305,7 @@ fun LandingScreen(
                     CenterAlignedTopAppBar(
                         title = {
                             Text(
-                                text = viewModel.headings[viewModel.selectedIndex],
+                                text = viewModel.headings[pagerState.currentPage],
                                 style = MaterialTheme.typography.titleLarge
                             )
                         },
@@ -296,7 +313,7 @@ fun LandingScreen(
                             containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(8.dp)
                         ),
                         actions = {
-                            if (viewModel.selectedIndex == 0)
+                            if (pagerState.currentPage == 0)
                                 IconButton(onClick = {
                                     viewModel.searchQuery = ""
                                     viewModel.isSearching = true
@@ -306,7 +323,7 @@ fun LandingScreen(
                                         Icons.Default.Search, contentDescription = "SEARCH_ICON"
                                     )
                                 }
-                            else if (viewModel.selectedIndex == 2) {
+                            else if (pagerState.currentPage == 2) {
                                 IconButton(onClick = {
                                     viewModel.isLoggingOut = true
                                 }) {
@@ -323,7 +340,7 @@ fun LandingScreen(
 
             },
             floatingActionButton = {
-                if (viewModel.selectedIndex == 0) {
+                if (pagerState.currentPage == 0) {
                     FloatingActionButton(
                         onClick = {
                             viewModel.hideSyncStatus()
@@ -356,10 +373,12 @@ fun LandingScreen(
             },
             bottomBar = {
                 BottomNavBar(
-                    selectedIndex = viewModel.selectedIndex,
+                    selectedIndex = pagerState.currentPage,
                     updateIndex = { index ->
                         if (index != 0) viewModel.hideSyncStatus()
-                        viewModel.selectedIndex = index
+                        coroutineScope.launch {
+                            pagerState.animateScrollToPage(index)
+                        }
                     }
                 )
             },
@@ -369,17 +388,20 @@ fun LandingScreen(
                         .fillMaxSize()
                         .padding(it)
                 ) {
-                    when (viewModel.selectedIndex) {
-                        0 -> MyPatientScreen(navController)
-                        1 -> QueueScreen(
-                            navController,
-                            viewModel,
-                            dateScrollState,
-                            coroutineScope,
-                            snackbarHostState
-                        )
+                    HorizontalPager(
+                        state = pagerState
+                    ) { index ->
+                        when (index) {
+                            0 -> MyPatientScreen(navController)
+                            1 -> QueueScreen(
+                                navController,
+                                dateScrollState,
+                                coroutineScope,
+                                snackbarHostState
+                            )
 
-                        2 -> ProfileScreen(navController, snackbarHostState)
+                            2 -> ProfileScreen(navController, snackbarHostState)
+                        }
                     }
                 }
                 if (viewModel.isLoggingOut) {
@@ -439,7 +461,7 @@ fun LandingScreen(
                 .statusBarsPadding()
         ) {
             AnimatedVisibility(
-                visible = queueViewModel.isSearchingInQueue && viewModel.selectedIndex == 1,
+                visible = queueViewModel.isSearchingInQueue && pagerState.currentPage == 1,
                 enter = slideInVertically(initialOffsetY = { -it }),
                 exit = slideOutVertically(targetOffsetY = { -it })
             ) {

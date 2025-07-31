@@ -77,7 +77,8 @@ object Search {
                 finalList = finalList.filter {
                     FuzzySearch.weightedRatio(
                         hospitalId,
-                        it.identifiers.firstOrNull { id -> id.identifierType == HOSPITAL_ID }?.identifierNumber ?: ""
+                        it.identifiers.firstOrNull { id -> id.identifierType == HOSPITAL_ID }?.identifierNumber
+                            ?: ""
                     ) > matchingRatio
                 }.toMutableList()
             }
@@ -85,11 +86,33 @@ object Search {
                 finalList = finalList.filter {
                     FuzzySearch.weightedRatio(
                         nationalId,
-                        it.identifiers.firstOrNull { id -> id.identifierType == NATIONAL_ID }?.identifierNumber ?: ""
+                        it.identifiers.firstOrNull { id -> id.identifierType == NATIONAL_ID }?.identifierNumber
+                            ?: ""
                     ) > matchingRatio
                 }.toMutableList()
             }
         }
+        return finalList
+    }
+
+    internal fun getFuzzySearchListByQuery(
+        totalList: List<PatientAndIdentifierEntity>,
+        query: String,
+        matchingRatio: Int
+    ): List<PatientAndIdentifierEntity> {
+        var finalList = totalList.toMutableList()
+        finalList = finalList.filter {
+            val fullName =
+                "${it.patientEntity.firstName}${it.patientEntity.lastName}"
+            FuzzySearch.weightedRatio(
+                query.replace(" ", "").trim().lowercase(),
+                fullName.lowercase()
+            ) > matchingRatio
+                    || FuzzySearch.weightedRatio(
+                query.trim().lowercase(),
+                it.patientEntity.heartcareId?.lowercase() ?: ""
+            ) > matchingRatio
+        }.toMutableList()
         return finalList
     }
 
