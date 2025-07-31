@@ -339,7 +339,7 @@ class LandingScreenViewModel @Inject constructor(
 
     private fun searchPatientByQuery() {
         viewModelScope.launch(ioDispatcher) {
-            searchResultList = searchRepository.searchPatientByQuery(
+            searchResultList = searchRepository.searchPatientsByQuery(
                 searchQuery.trim(),
                 searchRepository.getSearchList()
             ).map { data ->

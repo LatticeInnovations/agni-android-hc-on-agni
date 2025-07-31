@@ -20,6 +20,7 @@ import com.heartcare.agni.utils.converters.responseconverter.toPatientResponse
 import com.heartcare.agni.utils.paging.SearchPagingSource
 import com.heartcare.agni.utils.search.Search.getFuzzySearchDiagnosisList
 import com.heartcare.agni.utils.search.Search.getFuzzySearchList
+import com.heartcare.agni.utils.search.Search.getFuzzySearchListByQuery
 import com.heartcare.agni.utils.search.Search.getFuzzySearchMedicationList
 import com.heartcare.agni.utils.search.Search.getFuzzySearchSymptomsList
 import kotlinx.coroutines.flow.Flow
@@ -47,6 +48,36 @@ class SearchRepositoryImpl @Inject constructor(
         val fuzzySearchList = getFuzzySearchList(
             searchList,
             searchParameters,
+            68
+        )
+        return Pager(
+            config = PagingConfig(
+                pageSize = PAGE_SIZE,
+                enablePlaceholders = false
+            ),
+            pagingSourceFactory = {
+                SearchPagingSource(
+                    fuzzySearchList,
+                    PAGE_SIZE
+                )
+            }
+        ).flow.map { pagingData ->
+            pagingData.map { patientAndIdentifierEntity ->
+                PaginationResponse(
+                    patientAndIdentifierEntity.toPatientResponse(),
+                    fuzzySearchList.size
+                )
+            }
+        }
+    }
+
+    override fun searchPatientsByQuery(
+        query: String,
+        searchList: List<PatientAndIdentifierEntity>
+    ): Flow<PagingData<PaginationResponse<PatientResponse>>> {
+        val fuzzySearchList = getFuzzySearchListByQuery(
+            searchList,
+            query,
             68
         )
         return Pager(
@@ -101,49 +132,6 @@ class SearchRepositoryImpl @Inject constructor(
                     fuzzySearchList.size
                 )
             }
-        }
-    }
-
-    override fun searchPatientByQuery(
-        query: String,
-        searchList: List<PatientAndIdentifierEntity>
-    ): Flow<PagingData<PaginationResponse<PatientResponse>>> {
-        return if (query.contains("[0-9]".toRegex())) {
-            searchPatients(
-                SearchParameters(
-                    null,
-                    query,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null
-                ),
-                searchList
-            )
-        } else {
-            searchPatients(
-                SearchParameters(
-                    query,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null
-                ),
-                searchList
-            )
         }
     }
 
