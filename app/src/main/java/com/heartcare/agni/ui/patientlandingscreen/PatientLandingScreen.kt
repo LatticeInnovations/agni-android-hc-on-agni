@@ -413,7 +413,7 @@ private fun AppBarComposable(
             val age = viewModel.patient?.birthDate?.toTimeInMilli()?.toAge()
             val subTitle = "${viewModel.patient?.gender?.get(0)?.uppercase()}/$age" +
                     (if (viewModel.patient?.mobileNumber == null) "" else " · ${viewModel.patient?.mobileNumber}") +
-                    (if (viewModel.patient?.fhirId.isNullOrEmpty()) "" else " · ${viewModel.patient?.fhirId}")
+                    (if (viewModel.patient?.heartcareId.isNullOrEmpty()) " · --" else " · ${viewModel.patient?.heartcareId}")
             Column {
                 Row(
                     verticalAlignment = Alignment.CenterVertically

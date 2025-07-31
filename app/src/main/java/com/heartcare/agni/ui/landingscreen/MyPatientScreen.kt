@@ -169,7 +169,7 @@ private fun PatientItemCard(
 ) {
     val subtitle = "${patient.gender[0].uppercase()}/${
         patient.birthDate.toTimeInMilli().toAge()
-    } · PID ${patient.fhirId}"
+    } · Heartcare ID ${if (patient.heartcareId.isNullOrBlank()) "--" else patient.heartcareId}"
     Row(
         modifier = Modifier
             .fillMaxWidth()
