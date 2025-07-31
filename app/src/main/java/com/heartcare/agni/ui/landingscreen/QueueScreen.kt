@@ -271,7 +271,6 @@ private fun ListWithLabel(
                     QueuePatientCard(
                         navController,
                         viewModel,
-                        landingViewModel,
                         waitingAppointmentResponse,
                         patient
                     )
@@ -285,7 +284,6 @@ private fun ListWithLabel(
 private fun QueuePatientCard(
     navController: NavController,
     viewModel: QueueViewModel,
-    landingViewModel: LandingScreenViewModel,
     appointmentResponseLocal: AppointmentResponseLocal,
     patient: PatientResponse?
 ) {
@@ -303,7 +301,7 @@ private fun QueuePatientCard(
                 )
                 navController.currentBackStackEntry?.savedStateHandle?.set(
                     SELECTED_INDEX,
-                    landingViewModel.selectedIndex
+                    1
                 )
                 navController.navigate(Screen.PatientLandingScreen.route)
             }

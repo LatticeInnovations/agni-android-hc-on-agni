@@ -180,7 +180,7 @@ private fun PatientItemCard(
                 )
                 navController.currentBackStackEntry?.savedStateHandle?.set(
                     SELECTED_INDEX,
-                    viewModel.selectedIndex
+                    0
                 )
                 navController.navigate(Screen.PatientLandingScreen.route)
                 viewModel.hideSyncStatus()
