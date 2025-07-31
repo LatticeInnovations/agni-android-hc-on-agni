@@ -449,10 +449,6 @@ class SyncService(
                         downloadCVD(logout)
                     }
                     CoroutineScope(Dispatchers.IO).launch {
-                        downloadVitals(logout)
-                    }
-
-                    CoroutineScope(Dispatchers.IO).launch {
                         getAndInsertSymptoms()
                     }
                     CoroutineScope(Dispatchers.IO).launch {
