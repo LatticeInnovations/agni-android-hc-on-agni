@@ -1,8 +1,5 @@
 package com.heartcare.agni.ui.historyandtests.priordx
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
@@ -31,8 +28,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.input.KeyboardCapitalization
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
@@ -41,7 +36,7 @@ import com.heartcare.agni.data.local.enums.PriorDiagnosis
 import com.heartcare.agni.data.local.enums.PriorDiagnosis.Companion.getListOfPriorDx
 import com.heartcare.agni.data.server.model.patient.PatientResponse
 import com.heartcare.agni.ui.common.CheckBoxRow
-import com.heartcare.agni.ui.common.CustomTextFieldWithLength
+import com.heartcare.agni.ui.common.OtherField
 import com.heartcare.agni.ui.theme.Black
 import com.heartcare.agni.ui.theme.White
 import com.heartcare.agni.utils.constants.NavControllerConstants.PATIENT
@@ -192,32 +187,5 @@ private fun PriorDxListComposable(
                 }
             )
         }
-    }
-}
-
-@Composable
-private fun OtherField(
-    isVisible: Boolean,
-    value: String,
-    isError: Boolean,
-    maxLength: Int,
-    onValueChange: (String) -> Unit
-) {
-    AnimatedVisibility(
-        visible = isVisible,
-        enter = expandVertically(),
-        exit = shrinkVertically()
-    ) {
-        CustomTextFieldWithLength(
-            modifier = Modifier.padding(horizontal = 16.dp),
-            value = value,
-            placeholder = stringResource(R.string.please_specify_mandatory),
-            weight = 1f,
-            maxLength = maxLength,
-            isError = isError,
-            keyboardType = KeyboardType.Text,
-            keyboardCapitalization = KeyboardCapitalization.Sentences,
-            updateValue = onValueChange
-        )
     }
 }

@@ -59,6 +59,7 @@ import com.heartcare.agni.ui.patientlandingscreen.AllSlotsBookedDialog
 import com.heartcare.agni.ui.prescription.photo.view.AppointmentCompletedDialog
 import com.heartcare.agni.ui.theme.Black
 import com.heartcare.agni.ui.theme.White
+import com.heartcare.agni.utils.constants.NavControllerConstants.MEDICATION_SAVED
 import com.heartcare.agni.utils.constants.NavControllerConstants.PATIENT
 import com.heartcare.agni.utils.constants.NavControllerConstants.PRIOR_DX_SAVED
 import kotlinx.coroutines.CoroutineScope
@@ -91,6 +92,9 @@ fun HistoryTakingAndTestsScreen(
         viewModel.getPreviousRecords(viewModel.patient!!.id)
         if (navController.currentBackStackEntry?.savedStateHandle?.remove<Boolean>(PRIOR_DX_SAVED) == true) {
             snackBarHostState.showSnackbar(message = context.getString(R.string.prior_dx_saved))
+        }
+        if (navController.currentBackStackEntry?.savedStateHandle?.remove<Boolean>(MEDICATION_SAVED) == true) {
+            snackBarHostState.showSnackbar(message = context.getString(R.string.medication_saved))
         }
     }
 
@@ -304,6 +308,7 @@ private fun navigateToAddScreen(
         navController.currentBackStackEntry?.savedStateHandle?.set(PATIENT, patient)
         when (pagerState.currentPage) {
             0 -> navController.navigate(Screen.AddPriorDxScreen.route)
+            1 -> navController.navigate(Screen.AddMedicationScreen.route)
         }
     }
 }
