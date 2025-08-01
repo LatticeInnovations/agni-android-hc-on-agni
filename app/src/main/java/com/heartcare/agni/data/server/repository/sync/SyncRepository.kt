@@ -65,6 +65,7 @@ interface SyncRepository {
     suspend fun sendDispensePostData(): ResponseMapper<List<CreateResponse>>
     suspend fun sendImmunizationPostData(): ResponseMapper<List<CreateResponse>>
     suspend fun sendPriorDxPostData(): ResponseMapper<List<CreateResponse>>
+    suspend fun sendHistoryMedicationPostData(): ResponseMapper<List<CreateResponse>>
 
     //PATCH
     suspend fun sendPersonPatchData(): ResponseMapper<List<CreateResponse>>
