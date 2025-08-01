@@ -589,4 +589,8 @@ include them in the household</string>
     <string name="appointment_exists_on_screening_date">Another appointment exists for the same screening date</string>
     <string name="update_prior_diagnosis">Update prior diagnosis</string>
     <string name="patient_queue_card_subtitle">%s/%d, Heartcare ID: %s</string>
+    <string name="medication_header_text">Are you taking any medication prescribed by a doctor for:</string>
+    <string name="medication_saved">Medication saved</string>
+    <string name="side_effects_required">Side effects required</string>
+    <string name="adherence">Adherence</string>
 </resources>

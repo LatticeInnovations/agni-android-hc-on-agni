@@ -54,11 +54,13 @@ import com.heartcare.agni.navigation.Screen
 import com.heartcare.agni.ui.common.CustomDialog
 import com.heartcare.agni.ui.common.Loader
 import com.heartcare.agni.ui.common.ScrollableTabRowComposable
+import com.heartcare.agni.ui.historyandtests.medication.MedicationView
 import com.heartcare.agni.ui.historyandtests.priordx.PriorDxView
 import com.heartcare.agni.ui.patientlandingscreen.AllSlotsBookedDialog
 import com.heartcare.agni.ui.prescription.photo.view.AppointmentCompletedDialog
 import com.heartcare.agni.ui.theme.Black
 import com.heartcare.agni.ui.theme.White
+import com.heartcare.agni.utils.constants.NavControllerConstants.MEDICATION_SAVED
 import com.heartcare.agni.utils.constants.NavControllerConstants.PATIENT
 import com.heartcare.agni.utils.constants.NavControllerConstants.PRIOR_DX_SAVED
 import kotlinx.coroutines.CoroutineScope
@@ -91,6 +93,9 @@ fun HistoryTakingAndTestsScreen(
         viewModel.getPreviousRecords(viewModel.patient!!.id)
         if (navController.currentBackStackEntry?.savedStateHandle?.remove<Boolean>(PRIOR_DX_SAVED) == true) {
             snackBarHostState.showSnackbar(message = context.getString(R.string.prior_dx_saved))
+        }
+        if (navController.currentBackStackEntry?.savedStateHandle?.remove<Boolean>(MEDICATION_SAVED) == true) {
+            snackBarHostState.showSnackbar(message = context.getString(R.string.medication_saved))
         }
     }
 
@@ -143,6 +148,7 @@ fun HistoryTakingAndTestsScreen(
                     HorizontalPager(state = pagerState) { index ->
                         when (index) {
                             0 -> PriorDxView(viewModel)
+                            1 -> MedicationView(viewModel)
                             else -> Text(tabs[index], modifier = Modifier.padding(16.dp))
                         }
                     }
@@ -304,6 +310,7 @@ private fun navigateToAddScreen(
         navController.currentBackStackEntry?.savedStateHandle?.set(PATIENT, patient)
         when (pagerState.currentPage) {
             0 -> navController.navigate(Screen.AddPriorDxScreen.route)
+            1 -> navController.navigate(Screen.AddMedicationScreen.route)
         }
     }
 }
