@@ -52,6 +52,7 @@ interface PreferenceStorage {
 
     var lastSyncLevelRecord: Long
     var lastSyncPriorDxRecord: Long
+    var lastSyncHistoryMedicationRecord: Long
 
     fun clear()
 }

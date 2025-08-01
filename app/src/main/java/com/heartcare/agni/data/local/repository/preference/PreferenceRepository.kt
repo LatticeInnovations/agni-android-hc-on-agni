@@ -88,6 +88,10 @@ interface PreferenceRepository {
     fun setLastSyncPriorDx(long: Long)
     fun getLastSyncPriorDx(): Long
 
+    /** Last Sync CVD */
+    fun setLastSyncHistoryMedication(long: Long)
+    fun getLastSyncHistoryMedication(): Long
+
     /** User Data */
     fun setUserFhirId(userFhirId: String)
     fun getUserFhirId(): String

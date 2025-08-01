@@ -463,6 +463,9 @@ class SyncService(
                     CoroutineScope(Dispatchers.IO).launch {
                         downloadPriorDx(logout)
                     }
+                    CoroutineScope(Dispatchers.IO).launch {
+                        downloadHistoryMedication(logout)
+                    }
                 }
             }
         }
@@ -613,6 +616,11 @@ class SyncService(
     /** Download Prior Dx Data */
     private suspend fun downloadPriorDx(logout: (Boolean, String) -> Unit) {
         checkAuthenticationStatus(syncRepository.getAndInsertPriorDxData(0), logout)
+    }
+
+    /** Download History Medication Data */
+    private suspend fun downloadHistoryMedication(logout: (Boolean, String) -> Unit) {
+        checkAuthenticationStatus(syncRepository.getAndInsertHistoryMedicationData(0), logout)
     }
 
     /**

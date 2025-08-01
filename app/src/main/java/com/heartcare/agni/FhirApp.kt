@@ -19,7 +19,7 @@ import com.heartcare.agni.data.server.api.LabTestAndMedRecordService
 import com.heartcare.agni.data.server.api.LevelsApiService
 import com.heartcare.agni.data.server.api.PatientApiService
 import com.heartcare.agni.data.server.api.PrescriptionApiService
-import com.heartcare.agni.data.server.api.PriorDxApiService
+import com.heartcare.agni.data.server.api.HistoryAndTestsApiService
 import com.heartcare.agni.data.server.api.ScheduleAndAppointmentApiService
 import com.heartcare.agni.data.server.api.SymptomsAndDiagnosisService
 import com.heartcare.agni.data.server.api.VaccinationApiService
@@ -79,7 +79,7 @@ class FhirApp : Application() {
     @Inject
     lateinit var levelsApiService: LevelsApiService
     @Inject
-    lateinit var priorDxApiService: PriorDxApiService
+    lateinit var historyAndTestsApiService: HistoryAndTestsApiService
 
     @Inject
     lateinit var fileUploadApiService: FileUploadApiService
@@ -124,7 +124,7 @@ class FhirApp : Application() {
             dispenseApiService,
             vaccinationApiService,
             levelsApiService,
-            priorDxApiService,
+            historyAndTestsApiService,
             fhirAppDatabase.getPatientDao(),
             fhirAppDatabase.getGenericDao(),
             preferenceRepository,
@@ -146,7 +146,8 @@ class FhirApp : Application() {
             fhirAppDatabase.getManufacturerDao(),
             fhirAppDatabase.getLevelsDao(),
             fhirAppDatabase.getRiskPredictionDao(),
-            fhirAppDatabase.getPriorDxDao()
+            fhirAppDatabase.getPriorDxDao(),
+            fhirAppDatabase.getHistoryMedicationDao()
         )
 
         _fileSyncRepository = FileSyncRepositoryImpl(
