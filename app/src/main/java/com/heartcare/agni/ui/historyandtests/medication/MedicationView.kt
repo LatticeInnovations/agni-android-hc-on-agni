@@ -55,7 +55,24 @@ fun MedicationView(
                             "Hypercholesterolaemia: statin",
                             "Chronic obstructive pulmonary disease (COPD)"
                         ),
-                        isBulleted = true
+                        isBulleted = true,
+                        extraInfoComposable = @Composable fun() {
+                            Column(
+                                modifier = Modifier.padding(top = 8.dp),
+                                verticalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.adherence),
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                Text(
+                                    text = "Taking medication as prescribed",
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
                     )
                 }
             }

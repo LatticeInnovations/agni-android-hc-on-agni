@@ -34,7 +34,8 @@ fun ExpandableCard(
     createdOn: Date,
     practitionerName: String,
     lisOfItems: List<String>,
-    isBulleted: Boolean
+    isBulleted: Boolean,
+    extraInfoComposable: (@Composable () -> Unit)? = null
 ) {
     var expanded by rememberSaveable { mutableStateOf(false) }
     Surface(
@@ -95,6 +96,7 @@ fun ExpandableCard(
                                 )
                             }
                         }
+                        extraInfoComposable?.invoke()
                     }
                 }
             }
