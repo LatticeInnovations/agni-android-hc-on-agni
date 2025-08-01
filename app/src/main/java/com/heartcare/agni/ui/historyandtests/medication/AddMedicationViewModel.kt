@@ -50,7 +50,7 @@ class AddMedicationViewModel @Inject constructor(
     var patient by mutableStateOf<PatientResponse?>(null)
     var appointmentResponseLocal by mutableStateOf<AppointmentResponseLocal?>(null)
 
-    var lastHistoryMedication by mutableStateOf<HistoryMedicationResponse?>(null)
+    var todayHistoryMedication by mutableStateOf<HistoryMedicationResponse?>(null)
     var selectedMedication by mutableStateOf(listOf<String>())
     var sideEffectsField by mutableStateOf("")
     var isSideEffectsFieldError by mutableStateOf(false)
@@ -71,9 +71,11 @@ class AddMedicationViewModel @Inject constructor(
 
     fun getLastHistoryMedication(patientId: String) {
         viewModelScope.launch(ioDispatcher) {
-            lastHistoryMedication =
-                historyMedicationRepository.getHistoryMedicationRecords(patientId).firstOrNull()
-            lastHistoryMedication?.let { historyMedication ->
+            todayHistoryMedication =
+                historyMedicationRepository.getHistoryMedicationRecords(patientId).firstOrNull {
+                    isToday(it.appUpdatedDate)
+                }
+            todayHistoryMedication?.let { historyMedication ->
                 selectedMedication = mutableListOf<String>().apply {
                     addAll(historyMedication.medicinePrescribed.map { getMedicationFromCode(it) })
                 }.apply {
@@ -83,9 +85,9 @@ class AddMedicationViewModel @Inject constructor(
                     }
                 }
                 adherence = historyMedication.adherence?.let {
-                    showAdherenceCard = true
                     getAdherenceDisplay(it)
                 } ?: ""
+                showAdherenceCard = selectedMedication.any { it != MedicationEnum.SIDE_EFFECTS.display }
                 otherField = historyMedication.medicinePrescribedOthers ?: ""
             }
         }
@@ -132,11 +134,9 @@ class AddMedicationViewModel @Inject constructor(
             getAppointment()
             var uuid = UUIDBuilder.generateUUID()
             var fhirId: String? = null
-            lastHistoryMedication?.let {
-                if (isToday(it.appUpdatedDate)) {
-                    uuid = it.uuid
-                    fhirId = it.fhirId
-                }
+            todayHistoryMedication?.let {
+                uuid = it.uuid
+                fhirId = it.fhirId
             }
             val historyMedicationResponse = getHistoryMedicationResponse(uuid)
             historyMedicationRepository.insertHistoryMedication(
