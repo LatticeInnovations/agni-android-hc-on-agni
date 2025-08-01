@@ -1,11 +1,12 @@
 package com.heartcare.agni.data.server.model.historymedication
 
 import androidx.annotation.Keep
+import java.util.Date
 
 @Keep
 data class HistoryMedicationResponse(
     val adherence: String?,
-    val appUpdatedDate: String,
+    val appUpdatedDate: Date,
     val appointmentId: String,
     val fhirId: String?,
     val hasSideEffect: Boolean,

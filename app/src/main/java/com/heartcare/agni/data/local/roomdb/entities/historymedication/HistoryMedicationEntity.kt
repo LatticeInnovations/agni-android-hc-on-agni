@@ -6,6 +6,7 @@ import androidx.room.ForeignKey
 import androidx.room.Index
 import com.heartcare.agni.data.local.roomdb.entities.appointment.AppointmentEntity
 import com.heartcare.agni.data.local.roomdb.entities.patient.PatientEntity
+import java.util.Date
 
 @Keep
 @Entity(
@@ -28,7 +29,7 @@ data class HistoryMedicationEntity(
     val uuid: String,
     val fhirId: String?,
     val adherence: String?,
-    val appUpdatedDate: String,
+    val appUpdatedDate: Date,
     val appointmentId: String,
     val hasSideEffect: Boolean,
     val medicinePrescribed: List<String>,
