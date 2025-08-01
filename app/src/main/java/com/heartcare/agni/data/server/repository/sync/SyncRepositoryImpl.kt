@@ -1550,7 +1550,7 @@ class SyncRepositoryImpl @Inject constructor(
         return ApiResponseConverter.convert(
             levelsApiService.getLevelsData(
                 map
-            )
+            ), true
         ).run {
             when (this) {
                 is ApiContinueResponse -> {
