@@ -25,7 +25,9 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.heartcare.agni.R
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toDayFullMonthYear
 import java.util.Date
 
@@ -33,73 +35,106 @@ import java.util.Date
 fun ExpandableCard(
     createdOn: Date,
     practitionerName: String,
-    lisOfItems: List<String>,
+    listOfItems: List<String>,
     isBulleted: Boolean,
     extraInfoComposable: (@Composable () -> Unit)? = null
 ) {
     var expanded by rememberSaveable { mutableStateOf(false) }
+
     Surface(
         color = MaterialTheme.colorScheme.surfaceContainerLow,
         shape = RoundedCornerShape(12.dp)
     ) {
-        Column(
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 22.dp)
-        ) {
-            Row {
-                Text(
-                    text = createdOn.toDayFullMonthYear(),
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                Spacer(modifier = Modifier.weight(1f))
-                Icon(
-                    imageVector = if (expanded) Icons.Default.KeyboardArrowUp
-                    else Icons.Default.KeyboardArrowDown,
-                    contentDescription = null,
-                    modifier = Modifier.clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = null,
-                        onClick = {
-                            expanded = !expanded
-                        }
-                    )
-                )
+        Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 22.dp)) {
+            Header(createdOn = createdOn, expanded = expanded) {
+                expanded = !expanded
             }
+
             Text(
                 text = practitionerName,
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-            AnimatedVisibility(
-                visible = expanded,
-            ) {
-                Column(
-                    modifier = Modifier.padding(top = 18.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    HorizontalDivider(
-                        thickness = 1.dp,
-                        color = MaterialTheme.colorScheme.outlineVariant
-                    )
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        lisOfItems.forEach { item ->
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                if (isBulleted) BulletCircle(color = MaterialTheme.colorScheme.onSurface)
-                                Text(
-                                    text = item,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                        }
-                        extraInfoComposable?.invoke()
-                    }
-                }
+
+            AnimatedVisibility(visible = expanded) {
+                ExpandedContent(
+                    listOfItems = listOfItems,
+                    isBulleted = isBulleted,
+                    extraInfoComposable = extraInfoComposable
+                )
             }
         }
+    }
+}
+
+@Composable
+private fun Header(
+    createdOn: Date,
+    expanded: Boolean,
+    onToggleExpand: () -> Unit
+) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Text(
+            text = createdOn.toDayFullMonthYear(),
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        Spacer(modifier = Modifier.weight(1f))
+        Icon(
+            imageVector = if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+            contentDescription = null,
+            modifier = Modifier.clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                onClick = onToggleExpand
+            )
+        )
+    }
+}
+
+@Composable
+private fun ExpandedContent(
+    listOfItems: List<String>,
+    isBulleted: Boolean,
+    extraInfoComposable: (@Composable () -> Unit)?
+) {
+    Column(
+        modifier = Modifier.padding(top = 18.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        HorizontalDivider(
+            thickness = 1.dp,
+            color = MaterialTheme.colorScheme.outlineVariant
+        )
+
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            if (listOfItems.isEmpty()) {
+                Text(
+                    text = stringResource(R.string.dash),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            } else {
+                listOfItems.forEach { item ->
+                    ItemRow(item = item, isBulleted = isBulleted)
+                }
+            }
+
+            extraInfoComposable?.invoke()
+        }
+    }
+}
+
+@Composable
+private fun ItemRow(item: String, isBulleted: Boolean) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        if (isBulleted) {
+            BulletCircle(color = MaterialTheme.colorScheme.onSurface)
+        }
+        Text(
+            text = item,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
     }
 }

@@ -50,7 +50,7 @@ fun MedicationView(
                     ExpandableCard(
                         createdOn = Date(),
                         practitionerName = "Dr. Anamika Sood",
-                        lisOfItems = listOf(
+                        listOfItems = listOf(
                             "Hypertension",
                             "Hypercholesterolaemia: statin",
                             "Chronic obstructive pulmonary disease (COPD)"
