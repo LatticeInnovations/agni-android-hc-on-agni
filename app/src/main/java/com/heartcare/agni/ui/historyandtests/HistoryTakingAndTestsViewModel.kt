@@ -9,10 +9,12 @@ import com.heartcare.agni.data.local.enums.AppointmentStatusEnum
 import com.heartcare.agni.data.local.model.appointment.AppointmentResponseLocal
 import com.heartcare.agni.data.local.repository.appointment.AppointmentRepository
 import com.heartcare.agni.data.local.repository.generic.GenericRepository
+import com.heartcare.agni.data.local.repository.historymedication.HistoryMedicationRepository
 import com.heartcare.agni.data.local.repository.patient.lastupdated.PatientLastUpdatedRepository
 import com.heartcare.agni.data.local.repository.preference.PreferenceRepository
 import com.heartcare.agni.data.local.repository.priordx.PriorDxRepository
 import com.heartcare.agni.data.local.repository.schedule.ScheduleRepository
+import com.heartcare.agni.data.server.model.historymedication.HistoryMedicationResponse
 import com.heartcare.agni.data.server.model.patient.PatientResponse
 import com.heartcare.agni.data.server.model.priordx.PriorDxResponse
 import com.heartcare.agni.di.dispatcher.IoDispatcher
@@ -35,6 +37,7 @@ class HistoryTakingAndTestsViewModel @Inject constructor(
     private val scheduleRepository: ScheduleRepository,
     private val patientLastUpdatedRepository: PatientLastUpdatedRepository,
     private val priorDxRepository: PriorDxRepository,
+    private val historyMedicationRepository: HistoryMedicationRepository,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) : BaseViewModel() {
     var isLaunched by mutableStateOf(false)
@@ -46,7 +49,8 @@ class HistoryTakingAndTestsViewModel @Inject constructor(
     var priorDxList by mutableStateOf(listOf<PriorDxResponse>())
     var todayPriorDx by mutableStateOf<PriorDxResponse?>(null)
 
-    var medicationList by mutableStateOf(listOf<String>("", "", ""))
+    var medicationList by mutableStateOf(listOf<HistoryMedicationResponse>())
+    var todayHistoryMedication by mutableStateOf<HistoryMedicationResponse?>(null)
 
     var appointment by mutableStateOf<AppointmentResponseLocal?>(null)
     var canAddAssessment by mutableStateOf(false)
@@ -149,6 +153,9 @@ class HistoryTakingAndTestsViewModel @Inject constructor(
         viewModelScope.launch(ioDispatcher) {
             priorDxList = priorDxRepository.getPriorDxRecords(patientId).also {
                 todayPriorDx = it.firstOrNull { priorDx -> isToday(priorDx.createdOn!!) }
+            }
+            medicationList = historyMedicationRepository.getHistoryMedicationRecords(patientId).also {
+                todayHistoryMedication = it.firstOrNull { historyMedication -> isToday(historyMedication.appUpdatedDate) }
             }
             isLoading = false
         }

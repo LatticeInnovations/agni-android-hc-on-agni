@@ -10,6 +10,7 @@ import com.heartcare.agni.data.local.roomdb.dao.CVDDao
 import com.heartcare.agni.data.local.roomdb.dao.DispenseDao
 import com.heartcare.agni.data.local.roomdb.dao.FileUploadDao
 import com.heartcare.agni.data.local.roomdb.dao.GenericDao
+import com.heartcare.agni.data.local.roomdb.dao.HistoryMedicationDao
 import com.heartcare.agni.data.local.roomdb.dao.LabTestAndMedDao
 import com.heartcare.agni.data.local.roomdb.dao.LevelsDao
 import com.heartcare.agni.data.local.roomdb.dao.MedicationDao
@@ -41,6 +42,7 @@ import com.heartcare.agni.data.server.model.create.MedDocumentIdResponse
 import com.heartcare.agni.data.server.model.cvd.CVDResponse
 import com.heartcare.agni.data.server.model.dispense.response.DispenseData
 import com.heartcare.agni.data.server.model.dispense.response.MedicineDispenseResponse
+import com.heartcare.agni.data.server.model.historymedication.HistoryMedicationResponse
 import com.heartcare.agni.data.server.model.labormed.labtest.LabTestResponse
 import com.heartcare.agni.data.server.model.labormed.medicalrecord.MedicalRecordResponse
 import com.heartcare.agni.data.server.model.levels.LevelResponse
@@ -70,6 +72,7 @@ import com.heartcare.agni.utils.converters.responseconverter.Vaccination.toManuf
 import com.heartcare.agni.utils.converters.responseconverter.toAppointmentEntity
 import com.heartcare.agni.utils.converters.responseconverter.toCVDEntity
 import com.heartcare.agni.utils.converters.responseconverter.toDispensePrescriptionEntity
+import com.heartcare.agni.utils.converters.responseconverter.toHistoryMedicationEntity
 import com.heartcare.agni.utils.converters.responseconverter.toLabTestEntity
 import com.heartcare.agni.utils.converters.responseconverter.toLabTestPhotoResponseLocal
 import com.heartcare.agni.utils.converters.responseconverter.toLevelEntity
@@ -120,7 +123,8 @@ open class SyncRepositoryDatabaseTransactions(
     private val manufacturerDao: ManufacturerDao,
     private val levelsDao: LevelsDao,
     private val riskPredictionDao: RiskPredictionDao,
-    private val priorDxDao: PriorDxDao
+    private val priorDxDao: PriorDxDao,
+    private val historyMedicationDao: HistoryMedicationDao
 ) {
 
 
@@ -842,6 +846,30 @@ open class SyncRepositoryDatabaseTransactions(
         return deleteGenericEntityByListOfIds(idsToDelete.toList())
     }
 
+    protected suspend fun insertHistoryMedicationFhirIds(
+        body: List<CreateResponse>,
+        listOfGenericEntities: List<GenericEntity>
+    ): Int {
+        val idsToDelete = mutableSetOf<String>()
+        idsToDelete.addAll(listOfGenericEntities.map { genericEntity -> genericEntity.id })
+        body.forEach { createResponse ->
+            when (createResponse.error) {
+                null -> {
+                    historyMedicationDao.updateFhirId(
+                        createResponse.id!!, createResponse.fhirId!!
+                    )
+                }
+                DUPLICATE_RECORD -> {
+                    historyMedicationDao.deleteHistoryMedication(createResponse.id!!)
+                }
+                else -> {
+                    idsToDelete.remove(createResponse.id)
+                }
+            }
+        }
+        return deleteGenericEntityByListOfIds(idsToDelete.toList())
+    }
+
     protected suspend fun insertLevels(body: List<LevelResponse>) {
         levelsDao.insertLevelEntity(
             *body.map { it.toLevelEntity() }.toTypedArray()
@@ -851,6 +879,12 @@ open class SyncRepositoryDatabaseTransactions(
     protected suspend fun insertPriorDx(body: List<PriorDxResponse>) {
         priorDxDao.insertPriorDxRecord(
             *body.map { it.toPriorDxEntity(patientDao, appointmentDao) }.toTypedArray()
+        )
+    }
+
+    protected suspend fun insertHistoryMedication(body: List<HistoryMedicationResponse>) {
+        historyMedicationDao.insertHistoryMedicationRecord(
+            *body.map { it.toHistoryMedicationEntity(patientDao, appointmentDao) }.toTypedArray()
         )
     }
 }

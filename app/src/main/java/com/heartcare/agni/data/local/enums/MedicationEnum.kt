@@ -21,5 +21,7 @@ enum class MedicationEnum(val code: String, val display: String) {
 
     companion object {
         fun getMedicationList(): List<String> = MedicationEnum.entries.map { it.display }
+        fun getMedicationFromCode(code: String): String = MedicationEnum.entries.first { it.code == code }.display
+        fun getCodeFromMedication(display: String): String = MedicationEnum.entries.first { it.display == display }.code
     }
 }

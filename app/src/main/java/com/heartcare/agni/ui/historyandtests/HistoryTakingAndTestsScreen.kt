@@ -81,23 +81,12 @@ fun HistoryTakingAndTestsScreen(
         initialPageOffsetFraction = 0f
     ) { tabs.size }
 
-    LaunchedEffect(Unit) {
-        if (!viewModel.isLaunched) {
-            navController.previousBackStackEntry?.savedStateHandle
-                ?.get<PatientResponse>(PATIENT)?.let {
-                    viewModel.patient = it
-                }
-            viewModel.getAppointmentInfo(callback = {})
-            viewModel.isLaunched = true
-        }
-        viewModel.getPreviousRecords(viewModel.patient!!.id)
-        if (navController.currentBackStackEntry?.savedStateHandle?.remove<Boolean>(PRIOR_DX_SAVED) == true) {
-            snackBarHostState.showSnackbar(message = context.getString(R.string.prior_dx_saved))
-        }
-        if (navController.currentBackStackEntry?.savedStateHandle?.remove<Boolean>(MEDICATION_SAVED) == true) {
-            snackBarHostState.showSnackbar(message = context.getString(R.string.medication_saved))
-        }
-    }
+    HandleNavigationAndState(
+        viewModel = viewModel,
+        navController = navController,
+        snackBarHostState = snackBarHostState,
+        context = context
+    )
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -131,33 +120,86 @@ fun HistoryTakingAndTestsScreen(
             )
         },
         content = { paddingValues ->
-            Column(modifier = Modifier.padding(paddingValues)) {
-                ScrollableTabRowComposable(tabs, pagerState) { index ->
-                    coroutineScope.launch {
-                        pagerState.animateScrollToPage(index)
-                    }
-                }
-                if (viewModel.isLoading) {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Loader()
-                    }
-                } else {
-                    HorizontalPager(state = pagerState) { index ->
-                        when (index) {
-                            0 -> PriorDxView(viewModel)
-                            1 -> MedicationView(viewModel)
-                            else -> Text(tabs[index], modifier = Modifier.padding(16.dp))
-                        }
-                    }
-                }
-            }
+            HistoryScaffoldContent(
+                tabs = tabs,
+                pagerState = pagerState,
+                viewModel = viewModel,
+                coroutineScope = coroutineScope,
+                modifier = Modifier.padding(paddingValues)
+            )
         }
     )
 
-    // Dialogs
+    HistoryDialogs(viewModel, navController, pagerState, coroutineScope)
+}
+
+@Composable
+private fun HandleNavigationAndState(
+    viewModel: HistoryTakingAndTestsViewModel,
+    navController: NavController,
+    snackBarHostState: SnackbarHostState,
+    context: Context
+) {
+    LaunchedEffect(Unit) {
+        if (!viewModel.isLaunched) {
+            navController.previousBackStackEntry?.savedStateHandle
+                ?.get<PatientResponse>(PATIENT)?.let {
+                    viewModel.patient = it
+                }
+            viewModel.getAppointmentInfo(callback = {})
+            viewModel.isLaunched = true
+        }
+        viewModel.getPreviousRecords(viewModel.patient!!.id)
+
+        navController.currentBackStackEntry?.savedStateHandle?.let { handle ->
+            if (handle.remove<Boolean>(PRIOR_DX_SAVED) == true) {
+                snackBarHostState.showSnackbar(context.getString(R.string.prior_dx_saved))
+            }
+            if (handle.remove<Boolean>(MEDICATION_SAVED) == true) {
+                snackBarHostState.showSnackbar(context.getString(R.string.medication_saved))
+            }
+        }
+    }
+}
+
+@Composable
+private fun HistoryScaffoldContent(
+    tabs: List<String>,
+    pagerState: PagerState,
+    viewModel: HistoryTakingAndTestsViewModel,
+    coroutineScope: CoroutineScope,
+    modifier: Modifier = Modifier
+) {
+    Column(modifier = modifier) {
+        ScrollableTabRowComposable(tabs, pagerState) { index ->
+            coroutineScope.launch {
+                pagerState.animateScrollToPage(index)
+            }
+        }
+
+        if (viewModel.isLoading) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Loader()
+            }
+        } else {
+            HorizontalPager(state = pagerState) { index ->
+                when (index) {
+                    0 -> PriorDxView(viewModel)
+                    1 -> MedicationView(viewModel)
+                    else -> Text(tabs[index], modifier = Modifier.padding(16.dp))
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun HistoryDialogs(
+    viewModel: HistoryTakingAndTestsViewModel,
+    navController: NavController,
+    pagerState: PagerState,
+    coroutineScope: CoroutineScope
+) {
     if (viewModel.showAddToQueueDialog) {
         AddToQueueDialog(viewModel, navController, pagerState, coroutineScope)
     }
@@ -189,6 +231,7 @@ private fun HistoryBottomAppBar(
             thickness = 1.dp,
             color = MaterialTheme.colorScheme.outlineVariant
         )
+
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -197,85 +240,136 @@ private fun HistoryBottomAppBar(
                 .navigationBarsPadding(),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // Add Button
-            Button(
-                modifier = Modifier.fillMaxWidth(),
-                onClick = {
-                    viewModel.getAppointmentInfo(
-                        callback = {
-                            when {
-                                viewModel.existsInOtherHospital -> {
-                                    coroutineScope.launch {
-                                        snackBarHostState.showSnackbar(message = context.getString(R.string.appointment_exists_in_other_hospital))
-                                    }
-                                }
+            AddAssessmentButton(
+                pagerState = pagerState,
+                coroutineScope = coroutineScope,
+                navController = navController,
+                viewModel = viewModel,
+                snackBarHostState = snackBarHostState,
+                context = context
+            )
 
-                                viewModel.canAddAssessment -> navigateToAddScreen(
-                                    viewModel.patient!!,
-                                    pagerState,
-                                    navController,
-                                    coroutineScope
-                                )
+            NavigationButtons(
+                pagerState = pagerState,
+                coroutineScope = coroutineScope
+            )
+        }
+    }
+}
 
-                                viewModel.isAppointmentCompleted -> viewModel.showAppointmentCompletedDialog =
-                                    true
+@Composable
+private fun AddAssessmentButton(
+    pagerState: PagerState,
+    coroutineScope: CoroutineScope,
+    navController: NavController,
+    viewModel: HistoryTakingAndTestsViewModel,
+    snackBarHostState: SnackbarHostState,
+    context: Context
+) {
+    Button(
+        modifier = Modifier.fillMaxWidth(),
+        onClick = {
+            handleAddButtonClick(
+                viewModel = viewModel,
+                pagerState = pagerState,
+                coroutineScope = coroutineScope,
+                navController = navController,
+                snackBarHostState = snackBarHostState,
+                context = context
+            )
+        }
+    ) {
+        Icon(
+            painter = painterResource(R.drawable.add_icon),
+            contentDescription = null,
+            modifier = Modifier.size(20.dp)
+        )
+        Spacer(Modifier.width(8.dp))
+        Text(getBtnText(pagerState.currentPage, viewModel))
+    }
+}
 
-                                else -> viewModel.showAddToQueueDialog = true
-                            }
-                        }
+private fun handleAddButtonClick(
+    viewModel: HistoryTakingAndTestsViewModel,
+    pagerState: PagerState,
+    coroutineScope: CoroutineScope,
+    navController: NavController,
+    snackBarHostState: SnackbarHostState,
+    context: Context
+) {
+    viewModel.getAppointmentInfo (
+        callback = {
+            when {
+                viewModel.existsInOtherHospital -> {
+                    coroutineScope.launch {
+                        snackBarHostState.showSnackbar(
+                            message = context.getString(R.string.appointment_exists_in_other_hospital)
+                        )
+                    }
+                }
+
+                viewModel.canAddAssessment -> {
+                    navigateToAddScreen(
+                        viewModel.patient!!,
+                        pagerState,
+                        navController,
+                        coroutineScope
                     )
                 }
-            ) {
-                Icon(
-                    painter = painterResource(R.drawable.add_icon),
-                    contentDescription = null,
-                    modifier = Modifier.size(20.dp)
-                )
-                Spacer(Modifier.width(8.dp))
-                Text(getBtnText(pagerState.currentPage, viewModel))
+
+                viewModel.isAppointmentCompleted -> {
+                    viewModel.showAppointmentCompletedDialog = true
+                }
+
+                else -> {
+                    viewModel.showAddToQueueDialog = true
+                }
             }
+        }
+    )
+}
 
-            // Navigation Buttons
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                OutlinedButton(
-                    onClick = {
-                        coroutineScope.launch {
-                            pagerState.animateScrollToPage(pagerState.currentPage - 1)
-                        }
-                    },
-                    modifier = Modifier.weight(1f),
-                    enabled = pagerState.canScrollBackward,
-                    border = if (!pagerState.canScrollBackward) BorderStroke(
-                        width = 1.dp,
-                        color = MaterialTheme.colorScheme.outlineVariant
-                    )
-                    else ButtonDefaults.outlinedButtonBorder
-                ) {
-                    Text(stringResource(R.string.back))
+@Composable
+private fun NavigationButtons(
+    pagerState: PagerState,
+    coroutineScope: CoroutineScope
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        OutlinedButton(
+            onClick = {
+                coroutineScope.launch {
+                    pagerState.animateScrollToPage(pagerState.currentPage - 1)
                 }
+            },
+            modifier = Modifier.weight(1f),
+            enabled = pagerState.canScrollBackward,
+            border = if (!pagerState.canScrollBackward)
+                BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+            else ButtonDefaults.outlinedButtonBorder
+        ) {
+            Text(stringResource(R.string.back))
+        }
 
-                OutlinedButton(
-                    onClick = {
-                        if (pagerState.canScrollForward) {
-                            coroutineScope.launch {
-                                pagerState.animateScrollToPage(pagerState.currentPage + 1)
-                            }
-                        } else {
-                            // Done logic
-                        }
-                    },
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Text(
-                        text = if (pagerState.canScrollForward)
-                            stringResource(R.string.next)
-                        else stringResource(R.string.done)
-                    )
+        OutlinedButton(
+            onClick = {
+                coroutineScope.launch {
+                    if (pagerState.canScrollForward) {
+                        pagerState.animateScrollToPage(pagerState.currentPage + 1)
+                    } else {
+                        // Done logic here
+                    }
                 }
-            }
+            },
+            modifier = Modifier.weight(1f)
+        ) {
+            Text(
+                text = if (pagerState.canScrollForward)
+                    stringResource(R.string.next)
+                else stringResource(R.string.done)
+            )
         }
     }
 }
@@ -291,7 +385,10 @@ private fun getBtnText(
             else stringResource(R.string.add_prior_diagnosis)
         }
 
-        1 -> stringResource(R.string.add_medication)
+        1 -> {
+            if (viewModel.todayHistoryMedication != null && !viewModel.existsInOtherHospital) stringResource(R.string.update_medication)
+            else stringResource(R.string.add_medication)
+        }
         2 -> stringResource(R.string.add_family_history)
         3 -> stringResource(R.string.add_allergies)
         4 -> stringResource(R.string.add_risk_factor)

@@ -36,11 +36,13 @@ import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.heartcare.agni.R
 import com.heartcare.agni.data.local.enums.MedicationAdherence.Companion.getAdherenceList
@@ -53,18 +55,21 @@ import com.heartcare.agni.ui.theme.Black
 import com.heartcare.agni.ui.theme.White
 import com.heartcare.agni.utils.constants.NavControllerConstants.MEDICATION_SAVED
 import com.heartcare.agni.utils.constants.NavControllerConstants.PATIENT
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddMedicationScreen(
     navController: NavController,
-    viewModel: AddMedicationViewModel = viewModel()
+    viewModel: AddMedicationViewModel = hiltViewModel()
 ) {
+    val coroutineScope = rememberCoroutineScope()
     LaunchedEffect(viewModel.isLaunched) {
         if (!viewModel.isLaunched) {
             navController.previousBackStackEntry?.savedStateHandle
                 ?.get<PatientResponse>(PATIENT)?.let {
                     viewModel.patient = it
+                    viewModel.getLastHistoryMedication(it.id)
                 }
             viewModel.isLaunched = true
         }
@@ -117,7 +122,9 @@ fun AddMedicationScreen(
             .clickable(enabled = false) { },
         contentAlignment = Alignment.BottomCenter
     ) {
-        Column {
+        Column(
+            modifier = Modifier.imePadding()
+        ) {
             AnimatedVisibility(
                 visible = viewModel.showAdherenceCard
             ) {
@@ -134,11 +141,15 @@ fun AddMedicationScreen(
                 Button(
                     onClick = {
                         // save medication
-                        navController.previousBackStackEntry?.savedStateHandle?.set(
-                            MEDICATION_SAVED,
-                            true
-                        )
-                        navController.navigateUp()
+                        viewModel.addHistoryMedication {
+                            coroutineScope.launch {
+                                navController.previousBackStackEntry?.savedStateHandle?.set(
+                                    MEDICATION_SAVED,
+                                    true
+                                )
+                                navController.navigateUp()
+                            }
+                        }
                     },
                     enabled = viewModel.isValid(),
                     modifier = Modifier
@@ -236,6 +247,7 @@ fun updateList(
 private fun AdherenceComposable(
     viewModel: AddMedicationViewModel
 ) {
+    val focusManager = LocalFocusManager.current
     Column(
         modifier = Modifier
             .background(
@@ -257,6 +269,7 @@ private fun AdherenceComposable(
             Spacer(Modifier.weight(1f))
             IconButton(
                 onClick = {
+                    focusManager.clearFocus()
                     viewModel.isAdherenceExpanded = !viewModel.isAdherenceExpanded
                 }
             ) {

@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "4aeb931d21526537266fa0e845a06394",
+    "identityHash": "9e306e5e87f935856630a6d8810ef7ff",
     "entities": [
       {
         "tableName": "PatientEntity",
@@ -2840,6 +2840,130 @@
             ]
           }
         ]
+      },
+      {
+        "tableName": "HistoryMedicationEntity",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`uuid` TEXT NOT NULL, `fhirId` TEXT, `adherence` TEXT, `appUpdatedDate` INTEGER NOT NULL, `appointmentId` TEXT NOT NULL, `hasSideEffect` INTEGER NOT NULL, `medicinePrescribed` TEXT NOT NULL, `medicinePrescribedOthers` TEXT, `patientId` TEXT NOT NULL, `practitionerId` TEXT NOT NULL, `practitionerName` TEXT NOT NULL, `sideEffects` TEXT, PRIMARY KEY(`uuid`), FOREIGN KEY(`patientId`) REFERENCES `PatientEntity`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION , FOREIGN KEY(`appointmentId`) REFERENCES `AppointmentEntity`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION )",
+        "fields": [
+          {
+            "fieldPath": "uuid",
+            "columnName": "uuid",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "fhirId",
+            "columnName": "fhirId",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "adherence",
+            "columnName": "adherence",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "appUpdatedDate",
+            "columnName": "appUpdatedDate",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "appointmentId",
+            "columnName": "appointmentId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "hasSideEffect",
+            "columnName": "hasSideEffect",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "medicinePrescribed",
+            "columnName": "medicinePrescribed",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "medicinePrescribedOthers",
+            "columnName": "medicinePrescribedOthers",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "patientId",
+            "columnName": "patientId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "practitionerId",
+            "columnName": "practitionerId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "practitionerName",
+            "columnName": "practitionerName",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sideEffects",
+            "columnName": "sideEffects",
+            "affinity": "TEXT"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "uuid"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_HistoryMedicationEntity_patientId",
+            "unique": false,
+            "columnNames": [
+              "patientId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_HistoryMedicationEntity_patientId` ON `${TABLE_NAME}` (`patientId`)"
+          },
+          {
+            "name": "index_HistoryMedicationEntity_appointmentId",
+            "unique": false,
+            "columnNames": [
+              "appointmentId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_HistoryMedicationEntity_appointmentId` ON `${TABLE_NAME}` (`appointmentId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "PatientEntity",
+            "onDelete": "NO ACTION",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "patientId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          },
+          {
+            "table": "AppointmentEntity",
+            "onDelete": "NO ACTION",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "appointmentId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
       }
     ],
     "views": [
@@ -2854,7 +2978,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '4aeb931d21526537266fa0e845a06394')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '9e306e5e87f935856630a6d8810ef7ff')"
     ]
   }
 }

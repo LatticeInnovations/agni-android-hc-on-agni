@@ -12,6 +12,7 @@ import com.heartcare.agni.data.local.roomdb.dao.CVDDao
 import com.heartcare.agni.data.local.roomdb.dao.DispenseDao
 import com.heartcare.agni.data.local.roomdb.dao.FileUploadDao
 import com.heartcare.agni.data.local.roomdb.dao.GenericDao
+import com.heartcare.agni.data.local.roomdb.dao.HistoryMedicationDao
 import com.heartcare.agni.data.local.roomdb.dao.LabTestAndMedDao
 import com.heartcare.agni.data.local.roomdb.dao.LevelsDao
 import com.heartcare.agni.data.local.roomdb.dao.MedicationDao
@@ -33,7 +34,7 @@ import com.heartcare.agni.data.server.api.LabTestAndMedRecordService
 import com.heartcare.agni.data.server.api.LevelsApiService
 import com.heartcare.agni.data.server.api.PatientApiService
 import com.heartcare.agni.data.server.api.PrescriptionApiService
-import com.heartcare.agni.data.server.api.PriorDxApiService
+import com.heartcare.agni.data.server.api.HistoryAndTestsApiService
 import com.heartcare.agni.data.server.api.ScheduleAndAppointmentApiService
 import com.heartcare.agni.data.server.api.SymptomsAndDiagnosisService
 import com.heartcare.agni.data.server.api.VaccinationApiService
@@ -61,6 +62,7 @@ import com.heartcare.agni.data.server.model.cvd.CVDResponse
 import com.heartcare.agni.data.server.model.dispense.request.MedicineDispenseRequest
 import com.heartcare.agni.data.server.model.dispense.response.DispenseData
 import com.heartcare.agni.data.server.model.dispense.response.MedicineDispenseResponse
+import com.heartcare.agni.data.server.model.historymedication.HistoryMedicationResponse
 import com.heartcare.agni.data.server.model.labormed.labtest.LabTestResponse
 import com.heartcare.agni.data.server.model.labormed.medicalrecord.MedicalRecordResponse
 import com.heartcare.agni.data.server.model.levels.LevelResponse
@@ -105,7 +107,7 @@ class SyncRepositoryImpl @Inject constructor(
     private val dispenseApiService: DispenseApiService,
     private val vaccinationApiService: VaccinationApiService,
     private val levelsApiService: LevelsApiService,
-    private val priorDxApiService: PriorDxApiService,
+    private val historyAndTestsApiService: HistoryAndTestsApiService,
     patientDao: PatientDao,
     private val genericDao: GenericDao,
     private val preferenceRepository: PreferenceRepository,
@@ -127,7 +129,8 @@ class SyncRepositoryImpl @Inject constructor(
     manufacturerDao: ManufacturerDao,
     levelsDao: LevelsDao,
     riskPredictionDao: RiskPredictionDao,
-    priorDxDao: PriorDxDao
+    priorDxDao: PriorDxDao,
+    historyMedicationDao: HistoryMedicationDao
 ) : SyncRepository, SyncRepositoryDatabaseTransactions(
     patientApiService,
     patientDao,
@@ -150,7 +153,8 @@ class SyncRepositoryImpl @Inject constructor(
     manufacturerDao,
     levelsDao,
     riskPredictionDao,
-    priorDxDao
+    priorDxDao,
+    historyMedicationDao
 ) {
 
     override suspend fun getAndInsertListPatientData(
@@ -1212,7 +1216,7 @@ class SyncRepositoryImpl @Inject constructor(
             if (listOfGenericEntity.isEmpty()) ApiEmptyResponse()
             else {
                 ApiResponseConverter.convert(
-                    priorDxApiService.postPriorDx(
+                    historyAndTestsApiService.postPriorDx(
                         listOfGenericEntity.map {
                             it.payload.fromJson<LinkedTreeMap<*, *>>()
                                 .mapToObject(PriorDxResponse::class.java)!!
@@ -1223,6 +1227,32 @@ class SyncRepositoryImpl @Inject constructor(
                         insertPriorDxFhirIds(body, listOfGenericEntity)
                             .apply {
                                 if (this > 0) sendPriorDxPostData()
+                            }
+                    }
+                }
+            }
+        }
+    }
+
+    override suspend fun sendHistoryMedicationPostData(): ResponseMapper<List<CreateResponse>> {
+        return genericDao.getSameTypeGenericEntityPayload(
+            genericTypeEnum = GenericTypeEnum.HISTORY_MEDICATION,
+            syncType = SyncType.POST
+        ).let { listOfGenericEntity ->
+            if (listOfGenericEntity.isEmpty()) ApiEmptyResponse()
+            else {
+                ApiResponseConverter.convert(
+                    historyAndTestsApiService.postHistoryMedication(
+                        listOfGenericEntity.map {
+                            it.payload.fromJson<LinkedTreeMap<*, *>>()
+                                .mapToObject(HistoryMedicationResponse::class.java)!!
+                        }
+                    )
+                ).apply {
+                    if (this is ApiEndResponse) {
+                        insertHistoryMedicationFhirIds(body, listOfGenericEntity)
+                            .apply {
+                                if (this > 0) sendHistoryMedicationPostData()
                             }
                     }
                 }
@@ -1577,12 +1607,12 @@ class SyncRepositoryImpl @Inject constructor(
         map[COUNT] = COUNT_VALUE.toString()
         map[OFFSET] = offset.toString()
         map[SORT] = "-$ID"
-        if (preferenceRepository.getLastSyncCVD() != 0L) map[LAST_UPDATED] = String.format(
+        if (preferenceRepository.getLastSyncPriorDx() != 0L) map[LAST_UPDATED] = String.format(
             GREATER_THAN_BUILDER, preferenceRepository.getLastSyncPriorDx().toTimeStampDate()
         )
 
         ApiResponseConverter.convert(
-            priorDxApiService.getPriorDx(
+            historyAndTestsApiService.getPriorDx(
                 map
             ), true
         ).run {
@@ -1596,6 +1626,40 @@ class SyncRepositoryImpl @Inject constructor(
                 is ApiEndResponse -> {
                     preferenceRepository.setLastSyncPriorDx(Date().time)
                     insertPriorDx(body)
+                    this
+                }
+
+                else -> this
+            }
+        }
+    }
+
+    override suspend fun getAndInsertHistoryMedicationData(
+        offset: Int
+    ): ResponseMapper<List<HistoryMedicationResponse>> {
+        val map = mutableMapOf<String, String>()
+        map[COUNT] = COUNT_VALUE.toString()
+        map[OFFSET] = offset.toString()
+        map[SORT] = "-$ID"
+        if (preferenceRepository.getLastSyncHistoryMedication() != 0L) map[LAST_UPDATED] = String.format(
+            GREATER_THAN_BUILDER, preferenceRepository.getLastSyncHistoryMedication().toTimeStampDate()
+        )
+
+        ApiResponseConverter.convert(
+            historyAndTestsApiService.getHistoryMedication(
+                map
+            ), true
+        ).run {
+            return when (this) {
+                is ApiContinueResponse -> {
+                    insertHistoryMedication(body)
+                    //Call for next batch data
+                    getAndInsertHistoryMedicationData(offset + COUNT_VALUE)
+                }
+
+                is ApiEndResponse -> {
+                    preferenceRepository.setLastSyncHistoryMedication(Date().time)
+                    insertHistoryMedication(body)
                     this
                 }
 

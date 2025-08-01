@@ -8,5 +8,7 @@ enum class MedicationAdherence(val code: String, val display: String) {
 
     companion object {
         fun getAdherenceList() = MedicationAdherence.entries.map { it.display }
+        fun getAdherenceCode(display: String) = MedicationAdherence.entries.firstOrNull { it.display == display }?.code
+        fun getAdherenceDisplay(code: String) = MedicationAdherence.entries.first { it.code == code }.display
     }
 }

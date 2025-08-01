@@ -12,6 +12,7 @@ import com.heartcare.agni.data.local.roomdb.dao.ScheduleDao
 import com.heartcare.agni.data.local.roomdb.entities.generic.GenericEntity
 import com.heartcare.agni.data.server.model.cvd.CVDResponse
 import com.heartcare.agni.data.server.model.dispense.request.MedicineDispenseRequest
+import com.heartcare.agni.data.server.model.historymedication.HistoryMedicationResponse
 import com.heartcare.agni.data.server.model.patient.PatientLastUpdatedResponse
 import com.heartcare.agni.data.server.model.patient.PatientResponse
 import com.heartcare.agni.data.server.model.prescription.photo.PrescriptionPhotoPatch
@@ -198,6 +199,13 @@ class GenericRepositoryImpl @Inject constructor(
             }
     }
 
+    override suspend fun updateHistoryMedicationFhirId() {
+        genericDao.getNotSyncedData(GenericTypeEnum.HISTORY_MEDICATION)
+            .forEach { historyMedicationGenericEntity ->
+                updateHistoryMedicationFhirIdInGenericEntity(historyMedicationGenericEntity)
+            }
+    }
+
     override suspend fun insertAppointment(
         appointmentResponse: AppointmentResponse,
         uuid: String
@@ -254,6 +262,19 @@ class GenericRepositoryImpl @Inject constructor(
             syncType = SyncType.POST
         ).let { priorDxGenericEntity ->
             insertPriorDxGenericEntity(priorDxGenericEntity, priorDxResponse, uuid)
+        }
+    }
+
+    override suspend fun insertHistoryMedicationRecord(
+        historyMedicationResponse: HistoryMedicationResponse,
+        uuid: String
+    ): Long {
+        return genericDao.getGenericEntityById(
+            patientId = historyMedicationResponse.uuid,
+            genericTypeEnum = GenericTypeEnum.HISTORY_MEDICATION,
+            syncType = SyncType.POST
+        ).let { historyMedicationGenericEntity ->
+            insertHistoryMedicationGenericEntity(historyMedicationGenericEntity, historyMedicationResponse, uuid)
         }
     }
 

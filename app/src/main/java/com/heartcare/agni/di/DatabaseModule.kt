@@ -8,6 +8,7 @@ import com.heartcare.agni.data.local.roomdb.dao.DispenseDao
 import com.heartcare.agni.data.local.roomdb.dao.DownloadedFileDao
 import com.heartcare.agni.data.local.roomdb.dao.FileUploadDao
 import com.heartcare.agni.data.local.roomdb.dao.GenericDao
+import com.heartcare.agni.data.local.roomdb.dao.HistoryMedicationDao
 import com.heartcare.agni.data.local.roomdb.dao.IdentifierDao
 import com.heartcare.agni.data.local.roomdb.dao.LabTestAndMedDao
 import com.heartcare.agni.data.local.roomdb.dao.LevelsDao
@@ -180,5 +181,11 @@ object DatabaseModule {
     @Provides
     fun providePriorDxDao(fhirAppDatabase: FhirAppDatabase): PriorDxDao {
         return fhirAppDatabase.getPriorDxDao()
+    }
+
+    @Singleton
+    @Provides
+    fun provideHistoryMedicationDao(fhirAppDatabase: FhirAppDatabase): HistoryMedicationDao {
+        return fhirAppDatabase.getHistoryMedicationDao()
     }
 }

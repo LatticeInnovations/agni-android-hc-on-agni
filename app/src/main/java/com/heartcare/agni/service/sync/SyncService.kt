@@ -228,6 +228,9 @@ class SyncService(
                 CoroutineScope(Dispatchers.IO).launch {
                     updateFhirIdInPriorDx(logout)
                 }
+                CoroutineScope(Dispatchers.IO).launch {
+                    updateFhirIdInHistoryMedication(logout)
+                }
             }
         }
     }
@@ -302,6 +305,11 @@ class SyncService(
     /** Upload Prior Dx */
     private suspend fun uploadPriorDx(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
         return checkAuthenticationStatus(syncRepository.sendPriorDxPostData(), logout)
+    }
+
+    /** Upload History Medication */
+    private suspend fun uploadHistoryMedication(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
+        return checkAuthenticationStatus(syncRepository.sendHistoryMedicationPostData(), logout)
     }
 
     /**
@@ -463,6 +471,9 @@ class SyncService(
                     CoroutineScope(Dispatchers.IO).launch {
                         downloadPriorDx(logout)
                     }
+                    CoroutineScope(Dispatchers.IO).launch {
+                        downloadHistoryMedication(logout)
+                    }
                 }
             }
         }
@@ -615,6 +626,11 @@ class SyncService(
         checkAuthenticationStatus(syncRepository.getAndInsertPriorDxData(0), logout)
     }
 
+    /** Download History Medication Data */
+    private suspend fun downloadHistoryMedication(logout: (Boolean, String) -> Unit) {
+        checkAuthenticationStatus(syncRepository.getAndInsertHistoryMedicationData(0), logout)
+    }
+
     /**
      *
      *
@@ -697,6 +713,12 @@ class SyncService(
     private suspend fun updateFhirIdInPriorDx(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
         genericRepository.updatePriorDxFhirId()
         return uploadPriorDx(logout)
+    }
+
+    /** Update FHIR ID in History Medication */
+    private suspend fun updateFhirIdInHistoryMedication(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
+        genericRepository.updateHistoryMedicationFhirId()
+        return uploadHistoryMedication(logout)
     }
 
     /** Check Session Expiry and Authorization */

@@ -25,6 +25,7 @@ import com.heartcare.agni.data.local.roomdb.entities.dispense.DispenseDataEntity
 import com.heartcare.agni.data.local.roomdb.entities.dispense.DispensePrescriptionEntity
 import com.heartcare.agni.data.local.roomdb.entities.dispense.MedicineDispenseListEntity
 import com.heartcare.agni.data.local.roomdb.entities.generic.GenericEntity
+import com.heartcare.agni.data.local.roomdb.entities.historymedication.HistoryMedicationEntity
 import com.heartcare.agni.data.local.roomdb.entities.labtestandmedrecord.LabTestAndMedEntity
 import com.heartcare.agni.data.local.roomdb.entities.labtestandmedrecord.photo.LabTestAndFileEntity
 import com.heartcare.agni.data.local.roomdb.entities.labtestandmedrecord.photo.LabTestAndMedPhotoEntity
@@ -58,6 +59,7 @@ import com.heartcare.agni.data.server.constants.QueryParameters
 import com.heartcare.agni.data.server.model.cvd.CVDResponse
 import com.heartcare.agni.data.server.model.dispense.response.DispenseData
 import com.heartcare.agni.data.server.model.dispense.response.MedicineDispenseResponse
+import com.heartcare.agni.data.server.model.historymedication.HistoryMedicationResponse
 import com.heartcare.agni.data.server.model.labormed.labtest.DiagnosticReport
 import com.heartcare.agni.data.server.model.labormed.labtest.LabTestResponse
 import com.heartcare.agni.data.server.model.labormed.medicalrecord.MedicalRecord
@@ -1268,5 +1270,59 @@ internal fun PriorDxEntity.toPriorDxResponse(): PriorDxResponse {
         practitionerId = practitionerId,
         practitionerName = practitionerName,
         appUpdatedDate = null
+    )
+}
+
+internal fun HistoryMedicationResponse.toHistoryMedicationEntity(): HistoryMedicationEntity {
+    return HistoryMedicationEntity(
+        uuid = uuid,
+        fhirId = fhirId,
+        adherence = adherence,
+        appUpdatedDate = appUpdatedDate,
+        appointmentId = appointmentId,
+        hasSideEffect = hasSideEffect,
+        medicinePrescribed = medicinePrescribed,
+        medicinePrescribedOthers = medicinePrescribedOthers,
+        patientId = patientId,
+        practitionerId = practitionerId!!,
+        practitionerName = practitionerName!!,
+        sideEffects = sideEffects
+    )
+}
+
+suspend fun HistoryMedicationResponse.toHistoryMedicationEntity(
+    patientDao: PatientDao,
+    appointmentDao: AppointmentDao
+): HistoryMedicationEntity {
+    return HistoryMedicationEntity(
+        uuid = uuid,
+        fhirId = fhirId,
+        adherence = adherence,
+        appUpdatedDate = appUpdatedDate,
+        appointmentId = appointmentDao.getAppointmentIdByFhirId(appointmentId),
+        hasSideEffect = hasSideEffect,
+        medicinePrescribed = medicinePrescribed,
+        medicinePrescribedOthers = medicinePrescribedOthers,
+        patientId = patientDao.getPatientIdByFhirId(patientId)!!,
+        practitionerId = practitionerId!!,
+        practitionerName = practitionerName!!,
+        sideEffects = sideEffects
+    )
+}
+
+internal fun HistoryMedicationEntity.toHistoryMedicationResponse(): HistoryMedicationResponse {
+    return HistoryMedicationResponse(
+        uuid = uuid,
+        fhirId = fhirId,
+        adherence = adherence,
+        appUpdatedDate = appUpdatedDate,
+        appointmentId = appointmentId,
+        hasSideEffect = hasSideEffect,
+        medicinePrescribed = medicinePrescribed,
+        medicinePrescribedOthers = medicinePrescribedOthers,
+        patientId = patientId,
+        practitionerId = practitionerId,
+        practitionerName = practitionerName,
+        sideEffects = sideEffects
     )
 }
