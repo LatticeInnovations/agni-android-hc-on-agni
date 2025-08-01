@@ -65,7 +65,7 @@ class AddMedicationViewModel @Inject constructor(
         return when {
             MedicationEnum.OTHERS.display in selectedMedication && otherField.isBlank() -> false
             MedicationEnum.SIDE_EFFECTS.display in selectedMedication && sideEffectsField.isBlank() -> false
-            else -> selectedMedication.isNotEmpty()
+            else -> true
         }
     }
 
