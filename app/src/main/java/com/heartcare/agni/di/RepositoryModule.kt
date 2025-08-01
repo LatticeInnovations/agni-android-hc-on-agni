@@ -14,6 +14,8 @@ import com.heartcare.agni.data.local.repository.file.DownloadedFileRepository
 import com.heartcare.agni.data.local.repository.file.DownloadedFileRepositoryImpl
 import com.heartcare.agni.data.local.repository.generic.GenericRepository
 import com.heartcare.agni.data.local.repository.generic.GenericRepositoryImpl
+import com.heartcare.agni.data.local.repository.historymedication.HistoryMedicationRepository
+import com.heartcare.agni.data.local.repository.historymedication.HistoryMedicationRepositoryImpl
 import com.heartcare.agni.data.local.repository.identifier.IdentifierRepository
 import com.heartcare.agni.data.local.repository.identifier.IdentifierRepositoryImpl
 import com.heartcare.agni.data.local.repository.levels.LevelRepository
@@ -177,4 +179,8 @@ abstract class RepositoryModule {
     @Binds
     @ViewModelScoped
     abstract fun providePriorDxRepository(priorDxRepositoryImpl: PriorDxRepositoryImpl): PriorDxRepository
+
+    @Binds
+    @ViewModelScoped
+    abstract fun provideHistoryMedicationRepository(historyMedicationRepositoryImpl: HistoryMedicationRepositoryImpl): HistoryMedicationRepository
 }
