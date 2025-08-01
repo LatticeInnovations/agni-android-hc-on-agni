@@ -4,6 +4,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -127,9 +128,11 @@ private fun ExpandedContent(
 
 @Composable
 private fun ItemRow(item: String, isBulleted: Boolean) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
+    Row {
         if (isBulleted) {
-            BulletCircle(color = MaterialTheme.colorScheme.onSurface)
+            Box(modifier = Modifier.padding(top = 6.dp)) {
+                BulletCircle(color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
         }
         Text(
             text = item,

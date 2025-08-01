@@ -15,9 +15,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.heartcare.agni.R
+import com.heartcare.agni.data.local.enums.MedicationAdherence.Companion.getAdherenceDisplay
+import com.heartcare.agni.data.local.enums.MedicationEnum
+import com.heartcare.agni.data.local.enums.MedicationEnum.Companion.getMedicationFromCode
+import com.heartcare.agni.data.server.model.historymedication.HistoryMedicationResponse
 import com.heartcare.agni.ui.common.ExpandableCard
 import com.heartcare.agni.ui.historyandtests.HistoryTakingAndTestsViewModel
-import java.util.Date
 
 @Composable
 fun MedicationView(
@@ -46,36 +49,47 @@ fun MedicationView(
                 modifier = Modifier.padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                viewModel.medicationList.forEach { _ ->
+                viewModel.medicationList.forEach { historyMedication ->
                     ExpandableCard(
-                        createdOn = Date(),
-                        practitionerName = "Dr. Anamika Sood",
-                        listOfItems = listOf(
-                            "Hypertension",
-                            "Hypercholesterolaemia: statin",
-                            "Chronic obstructive pulmonary disease (COPD)"
-                        ),
+                        createdOn = historyMedication.appUpdatedDate,
+                        practitionerName = historyMedication.practitionerName!!,
+                        listOfItems = getListOfHistoryMedication(historyMedication),
                         isBulleted = true,
-                        extraInfoComposable = @Composable fun() {
-                            Column(
-                                modifier = Modifier.padding(top = 8.dp),
-                                verticalArrangement = Arrangement.spacedBy(6.dp)
-                            ) {
-                                Text(
-                                    text = stringResource(R.string.adherence),
-                                    style = MaterialTheme.typography.labelMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                                Text(
-                                    text = "Taking medication as prescribed",
-                                    style = MaterialTheme.typography.bodyLarge,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
+                        extraInfoComposable = historyMedication.adherence?.let {
+                            @Composable {
+                                Column(
+                                    modifier = Modifier.padding(top = 8.dp),
+                                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                                ) {
+                                    Text(
+                                        text = stringResource(R.string.adherence),
+                                        style = MaterialTheme.typography.labelMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                    Text(
+                                        text = getAdherenceDisplay(it),
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
                             }
                         }
                     )
                 }
             }
+        }
+    }
+}
+
+private fun getListOfHistoryMedication(
+    historyMedication: HistoryMedicationResponse
+): List<String> {
+    return mutableListOf<String>().apply {
+        addAll(historyMedication.medicinePrescribed.map {
+            getMedicationFromCode(it) + if (it == MedicationEnum.OTHERS.code) ": ${historyMedication.medicinePrescribedOthers}" else ""
+        })
+        if (historyMedication.hasSideEffect) {
+            add("${MedicationEnum.SIDE_EFFECTS.display}: ${historyMedication.sideEffects}")
         }
     }
 }
