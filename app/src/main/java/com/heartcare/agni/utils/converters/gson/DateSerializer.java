@@ -11,19 +11,15 @@ import java.lang.reflect.Type;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
+import java.util.TimeZone;
 
 public class DateSerializer implements JsonSerializer<Date> {
 
     @NonNull
     @Override
     public JsonElement serialize(@NonNull Date src, @NonNull Type typeOfSrc, @NonNull JsonSerializationContext context) {
-        SimpleDateFormat formatter;
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
-            formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX", Locale.getDefault());
-            return new JsonPrimitive(formatter.format(src.getTime()));
-        } else {
-            formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:sszzz", Locale.getDefault());
-            return new JsonPrimitive(formatter.format(src.getTime()).replace("GMT", ""));
-        }
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US);
+        formatter.setTimeZone(TimeZone.getTimeZone("UTC"));
+        return new JsonPrimitive(formatter.format(src));
     }
 }
