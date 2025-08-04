@@ -88,7 +88,7 @@ class AddPriorDxViewModel @Inject constructor(
         return when {
             PriorDiagnosis.OTHERS.display in selectedPriorDx && otherField.isBlank() -> false
             PriorDiagnosis.CANCER.display in selectedPriorDx && cancerField.isBlank() -> false
-            else -> selectedPriorDx.isNotEmpty()
+            else -> true
         }
     }
 
