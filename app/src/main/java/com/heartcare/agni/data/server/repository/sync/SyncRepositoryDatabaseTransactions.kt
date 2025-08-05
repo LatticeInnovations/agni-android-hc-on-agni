@@ -5,6 +5,7 @@ import com.heartcare.agni.data.local.enums.GenericTypeEnum
 import com.heartcare.agni.data.local.enums.PhotoDeleteEnum
 import com.heartcare.agni.data.local.enums.PhotoUploadTypeEnum
 import com.heartcare.agni.data.local.enums.SyncType
+import com.heartcare.agni.data.local.roomdb.dao.AllergyDao
 import com.heartcare.agni.data.local.roomdb.dao.AppointmentDao
 import com.heartcare.agni.data.local.roomdb.dao.CVDDao
 import com.heartcare.agni.data.local.roomdb.dao.DispenseDao
@@ -37,6 +38,7 @@ import com.heartcare.agni.data.local.roomdb.entities.prescription.PrescriptionDi
 import com.heartcare.agni.data.local.roomdb.entities.prescription.photo.PrescriptionPhotoEntity
 import com.heartcare.agni.data.local.roomdb.entities.relation.RelationEntity
 import com.heartcare.agni.data.server.api.PatientApiService
+import com.heartcare.agni.data.server.model.allergy.AllergyResponse
 import com.heartcare.agni.data.server.model.create.CreateResponse
 import com.heartcare.agni.data.server.model.create.LabDocumentIdResponse
 import com.heartcare.agni.data.server.model.create.MedDocumentIdResponse
@@ -71,6 +73,7 @@ import com.heartcare.agni.utils.converters.responseconverter.Vaccination.toImmun
 import com.heartcare.agni.utils.converters.responseconverter.Vaccination.toImmunizationFileEntity
 import com.heartcare.agni.utils.converters.responseconverter.Vaccination.toImmunizationRecommendationEntity
 import com.heartcare.agni.utils.converters.responseconverter.Vaccination.toManufacturerEntity
+import com.heartcare.agni.utils.converters.responseconverter.toAllergyEntity
 import com.heartcare.agni.utils.converters.responseconverter.toAppointmentEntity
 import com.heartcare.agni.utils.converters.responseconverter.toCVDEntity
 import com.heartcare.agni.utils.converters.responseconverter.toDispensePrescriptionEntity
@@ -128,7 +131,8 @@ open class SyncRepositoryDatabaseTransactions(
     private val riskPredictionDao: RiskPredictionDao,
     private val priorDxDao: PriorDxDao,
     private val historyMedicationDao: HistoryMedicationDao,
-    private val familyHistoryDao: FamilyHistoryDao
+    private val familyHistoryDao: FamilyHistoryDao,
+    private val allergyDao: AllergyDao
 ) {
 
 
@@ -919,6 +923,12 @@ open class SyncRepositoryDatabaseTransactions(
     protected suspend fun insertFamilyHistory(body: List<FamilyHistoryResponse>) {
         familyHistoryDao.insertFamilyHistoryRecord(
             *body.map { it.toFamilyHistoryEntity(patientDao, appointmentDao) }.toTypedArray()
+        )
+    }
+
+    protected suspend fun insertAllergy(body: List<AllergyResponse>) {
+        allergyDao.insertAllergyRecord(
+            *body.map { it.toAllergyEntity(patientDao, appointmentDao) }.toTypedArray()
         )
     }
 }

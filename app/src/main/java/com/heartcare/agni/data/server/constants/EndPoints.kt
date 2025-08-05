@@ -19,4 +19,5 @@ object EndPoints {
     const val PRIOR_DX = "priorDx"
     const val HISTORY_MEDICATION = "historyMedicine"
     const val FAMILY_HISTORY = "familyHistory"
+    const val ALLERGY = "allergy"
 }

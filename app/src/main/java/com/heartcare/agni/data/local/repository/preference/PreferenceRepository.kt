@@ -96,6 +96,10 @@ interface PreferenceRepository {
     fun setLastSyncFamilyHistory(long: Long)
     fun getLastSyncFamilyHistory(): Long
 
+    /** Last Sync Allergy */
+    fun setLastSyncAllergy(long: Long)
+    fun getLastSyncAllergy(): Long
+
     /** User Data */
     fun setUserFhirId(userFhirId: String)
     fun getUserFhirId(): String

@@ -7,6 +7,7 @@ import com.heartcare.agni.data.local.enums.SyncType
 import com.heartcare.agni.data.local.model.symdiag.SymptomsAndDiagnosisData
 import com.heartcare.agni.data.local.model.vital.VitalLocal
 import com.heartcare.agni.data.local.repository.preference.PreferenceRepository
+import com.heartcare.agni.data.local.roomdb.dao.AllergyDao
 import com.heartcare.agni.data.local.roomdb.dao.AppointmentDao
 import com.heartcare.agni.data.local.roomdb.dao.CVDDao
 import com.heartcare.agni.data.local.roomdb.dao.DispenseDao
@@ -58,6 +59,7 @@ import com.heartcare.agni.data.server.constants.QueryParameters.OFFSET
 import com.heartcare.agni.data.server.constants.QueryParameters.PATIENT_ID
 import com.heartcare.agni.data.server.constants.QueryParameters.SORT
 import com.heartcare.agni.data.server.constants.QueryParameters.TYPE
+import com.heartcare.agni.data.server.model.allergy.AllergyResponse
 import com.heartcare.agni.data.server.model.create.CreateResponse
 import com.heartcare.agni.data.server.model.cvd.CVDResponse
 import com.heartcare.agni.data.server.model.dispense.request.MedicineDispenseRequest
@@ -133,7 +135,8 @@ class SyncRepositoryImpl @Inject constructor(
     riskPredictionDao: RiskPredictionDao,
     priorDxDao: PriorDxDao,
     historyMedicationDao: HistoryMedicationDao,
-    familyHistoryDao: FamilyHistoryDao
+    familyHistoryDao: FamilyHistoryDao,
+    allergyDao: AllergyDao
 ) : SyncRepository, SyncRepositoryDatabaseTransactions(
     patientApiService,
     patientDao,
@@ -158,7 +161,8 @@ class SyncRepositoryImpl @Inject constructor(
     riskPredictionDao,
     priorDxDao,
     historyMedicationDao,
-    familyHistoryDao
+    familyHistoryDao,
+    allergyDao
 ) {
 
     override suspend fun getAndInsertListPatientData(
@@ -1722,6 +1726,38 @@ class SyncRepositoryImpl @Inject constructor(
                 is ApiEndResponse -> {
                     preferenceRepository.setLastSyncFamilyHistory(Date().time)
                     insertFamilyHistory(body)
+                    this
+                }
+
+                else -> this
+            }
+        }
+    }
+
+    override suspend fun getAndInsertAllergyData(offset: Int): ResponseMapper<List<AllergyResponse>> {
+        val map = mutableMapOf<String, String>()
+        map[COUNT] = COUNT_VALUE.toString()
+        map[OFFSET] = offset.toString()
+        map[SORT] = "-$ID"
+        if (preferenceRepository.getLastSyncAllergy() != 0L) map[LAST_UPDATED] = String.format(
+            GREATER_THAN_BUILDER, preferenceRepository.getLastSyncAllergy().toTimeStampDate()
+        )
+
+        ApiResponseConverter.convert(
+            historyAndTestsApiService.getAllergy(
+                map
+            ), true
+        ).run {
+            return when (this) {
+                is ApiContinueResponse -> {
+                    insertAllergy(body)
+                    //Call for next batch data
+                    getAndInsertAllergyData(offset + COUNT_VALUE)
+                }
+
+                is ApiEndResponse -> {
+                    preferenceRepository.setLastSyncAllergy(Date().time)
+                    insertAllergy(body)
                     this
                 }
 

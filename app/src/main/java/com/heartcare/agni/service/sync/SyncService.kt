@@ -485,6 +485,9 @@ class SyncService(
                     CoroutineScope(Dispatchers.IO).launch {
                         downloadFamilyHistory(logout)
                     }
+                    CoroutineScope(Dispatchers.IO).launch {
+                        downloadAllergy(logout)
+                    }
                 }
             }
         }
@@ -645,6 +648,11 @@ class SyncService(
     /** Download Family History Data */
     private suspend fun downloadFamilyHistory(logout: (Boolean, String) -> Unit) {
         checkAuthenticationStatus(syncRepository.getAndInsertFamilyHistoryData(0), logout)
+    }
+
+    /** Download Allergy Data */
+    private suspend fun downloadAllergy(logout: (Boolean, String) -> Unit) {
+        checkAuthenticationStatus(syncRepository.getAndInsertAllergyData(0), logout)
     }
 
     /**
