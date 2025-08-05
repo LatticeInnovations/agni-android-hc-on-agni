@@ -12,6 +12,7 @@ import com.heartcare.agni.data.local.roomdb.dao.PatientDao
 import com.heartcare.agni.data.local.roomdb.dao.PrescriptionDao
 import com.heartcare.agni.data.local.roomdb.dao.ScheduleDao
 import com.heartcare.agni.data.local.roomdb.entities.generic.GenericEntity
+import com.heartcare.agni.data.server.model.allergy.AllergyResponse
 import com.heartcare.agni.data.server.model.cvd.CVDResponse
 import com.heartcare.agni.data.server.model.dispense.request.MedicineDispenseRequest
 import com.heartcare.agni.data.server.model.family.FamilyHistoryResponse
@@ -354,6 +355,28 @@ open class GenericRepositoryDatabaseTransactions(
                     patientId = familyHistoryResponse.uuid,
                     payload = familyHistoryResponse.toJson(),
                     type = GenericTypeEnum.FAMILY_HISTORY,
+                    syncType = SyncType.POST
+                )
+            )[0]
+        }
+    }
+
+    protected suspend fun insertAllergyGenericEntity(
+        allergyGenericEntity: GenericEntity?,
+        allergyResponse: AllergyResponse,
+        uuid: String
+    ): Long {
+        return if (allergyGenericEntity != null) {
+            genericDao.insertGenericEntity(
+                allergyGenericEntity.copy(payload = allergyResponse.toJson())
+            )[0]
+        } else {
+            genericDao.insertGenericEntity(
+                GenericEntity(
+                    id = uuid,
+                    patientId = allergyResponse.uuid,
+                    payload = allergyResponse.toJson(),
+                    type = GenericTypeEnum.ALLERGY,
                     syncType = SyncType.POST
                 )
             )[0]

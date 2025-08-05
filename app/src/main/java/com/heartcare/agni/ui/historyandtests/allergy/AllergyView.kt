@@ -17,7 +17,6 @@ import androidx.compose.ui.unit.dp
 import com.heartcare.agni.R
 import com.heartcare.agni.ui.common.ExpandableCard
 import com.heartcare.agni.ui.historyandtests.HistoryTakingAndTestsViewModel
-import java.util.Date
 
 @Composable
 fun AllergyView(

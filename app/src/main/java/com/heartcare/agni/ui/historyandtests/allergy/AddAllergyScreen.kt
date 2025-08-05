@@ -29,7 +29,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.heartcare.agni.R
 import com.heartcare.agni.data.server.model.patient.PatientResponse
@@ -44,7 +44,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun AddAllergyScreen(
     navController: NavController,
-    viewModel: AddAllergyViewModel = viewModel()
+    viewModel: AddAllergyViewModel = hiltViewModel()
 ) {
     val coroutineScope = rememberCoroutineScope()
     LaunchedEffect(viewModel.isLaunched) {
@@ -52,6 +52,7 @@ fun AddAllergyScreen(
             navController.previousBackStackEntry?.savedStateHandle
                 ?.get<PatientResponse>(PATIENT)?.let {
                     viewModel.patient = it
+                    viewModel.getTodayAllergy(it.id)
                 }
             viewModel.isLaunched = true
         }
@@ -113,12 +114,14 @@ fun AddAllergyScreen(
                 Button(
                     onClick = {
                         // save allergies
-                        coroutineScope.launch {
-                            navController.previousBackStackEntry?.savedStateHandle?.set(
-                                ALLERGIES_SAVED,
-                                true
-                            )
-                            navController.navigateUp()
+                        viewModel.addAllergy {
+                            coroutineScope.launch {
+                                navController.previousBackStackEntry?.savedStateHandle?.set(
+                                    ALLERGIES_SAVED,
+                                    true
+                                )
+                                navController.navigateUp()
+                            }
                         }
                     },
                     modifier = Modifier
