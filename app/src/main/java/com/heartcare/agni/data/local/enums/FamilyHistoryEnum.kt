@@ -8,7 +8,7 @@ enum class FamilyHistoryEnum(val code: String, val display: String) {
 
     companion object {
         fun getFamilyHistoryConditionList() = entries.map { it.display }
-        fun displayFromCode(code: String) = entries.first { it.code == code }.display
-        fun codeFromDisplay(display: String) = entries.first { it.display == display }.code
+        fun familyHistoryDisplayFromCode(code: String) = entries.first { it.code == code }.display
+        fun familyHistoryCodeFromDisplay(display: String) = entries.first { it.display == display }.code
     }
 }

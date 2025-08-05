@@ -15,9 +15,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.heartcare.agni.R
+import com.heartcare.agni.data.local.enums.FamilyHistoryEnum.Companion.familyHistoryDisplayFromCode
 import com.heartcare.agni.ui.common.ExpandableCard
 import com.heartcare.agni.ui.historyandtests.HistoryTakingAndTestsViewModel
-import java.util.Date
+import com.heartcare.agni.utils.converters.responseconverter.StringUtils.capitalizeFirst
 
 @Composable
 fun FamilyHistoryView(
@@ -46,18 +47,13 @@ fun FamilyHistoryView(
                 modifier = Modifier.padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                viewModel.familyHistoryList.forEach { _ ->
+                viewModel.familyHistoryList.forEach { familyHistory ->
                     ExpandableCard(
-                        createdOn = Date(),
-                        practitionerName = "Dr. Anamika Sood",
-                        listOfItems = listOf(
-                            "Heart attack/ angina/ other heart disease",
-                            "Transient ischaemic attack (TIA)",
-                            "Diabetes",
-                            "Chronic kidney disease"
-                        ),
+                        createdOn = familyHistory.appUpdatedDate,
+                        practitionerName = familyHistory.practitionerName!!,
+                        listOfItems = familyHistory.familyDiseases.map { familyHistoryDisplayFromCode(it) },
                         isBulleted = true,
-                        extraInfoComposable =
+                        extraInfoComposable = familyHistory.occurrenceAgeData?.let {
                             @Composable {
                                 Column(
                                     modifier = Modifier.padding(top = 8.dp),
@@ -69,11 +65,12 @@ fun FamilyHistoryView(
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                     Text(
-                                        text = "Yes",
+                                        text = it.capitalizeFirst(),
                                         style = MaterialTheme.typography.bodyLarge,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
+                            }
                         }
                     )
                 }

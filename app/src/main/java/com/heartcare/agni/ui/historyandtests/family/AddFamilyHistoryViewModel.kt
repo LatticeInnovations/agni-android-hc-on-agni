@@ -6,8 +6,8 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewModelScope
 import com.heartcare.agni.base.viewmodel.BaseViewModel
 import com.heartcare.agni.data.local.enums.AppointmentStatusEnum
-import com.heartcare.agni.data.local.enums.FamilyHistoryEnum.Companion.codeFromDisplay
-import com.heartcare.agni.data.local.enums.FamilyHistoryEnum.Companion.displayFromCode
+import com.heartcare.agni.data.local.enums.FamilyHistoryEnum.Companion.familyHistoryCodeFromDisplay
+import com.heartcare.agni.data.local.enums.FamilyHistoryEnum.Companion.familyHistoryDisplayFromCode
 import com.heartcare.agni.data.local.model.appointment.AppointmentResponseLocal
 import com.heartcare.agni.data.local.repository.appointment.AppointmentRepository
 import com.heartcare.agni.data.local.repository.family.FamilyHistoryRepository
@@ -60,7 +60,7 @@ class AddFamilyHistoryViewModel@Inject constructor(
                 familyHistoryRepository.getFamilyHistoryRecords(patientId).firstOrNull()
             lastFamilyHistory?.let { familyHistory ->
                 selectedFamilyHistory = mutableListOf<String>().apply {
-                    addAll(familyHistory.familyDiseases.map { displayFromCode(it) })
+                    addAll(familyHistory.familyDiseases.map { familyHistoryDisplayFromCode(it) })
                 }
                 ageAnswer = familyHistory.occurrenceAgeData?.capitalizeFirst() ?: ""
                 showAgeQuestionCard = selectedFamilyHistory.isNotEmpty()
@@ -93,7 +93,7 @@ class AddFamilyHistoryViewModel@Inject constructor(
             practitionerId = null,
             practitionerName = null,
             appUpdatedDate = appUpdatedDate,
-            familyDiseases = selectedFamilyHistory.map { codeFromDisplay(it) },
+            familyDiseases = selectedFamilyHistory.map { familyHistoryCodeFromDisplay(it) },
             occurrenceAgeData = ageAnswer.lowercase().ifBlank { null },
         )
     }
