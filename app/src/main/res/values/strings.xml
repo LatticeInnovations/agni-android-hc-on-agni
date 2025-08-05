@@ -594,4 +594,5 @@ include them in the household</string>
     <string name="side_effects_required">Side effects required</string>
     <string name="adherence">Adherence</string>
     <string name="update_medication">Update Medication</string>
+    <string name="occurence_age_question">Did this occur before he/she was the age of 55 (male) / 65 (female)?</string>
 </resources>

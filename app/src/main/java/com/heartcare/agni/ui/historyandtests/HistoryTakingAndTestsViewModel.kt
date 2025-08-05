@@ -52,6 +52,8 @@ class HistoryTakingAndTestsViewModel @Inject constructor(
     var medicationList by mutableStateOf(listOf<HistoryMedicationResponse>())
     var todayHistoryMedication by mutableStateOf<HistoryMedicationResponse?>(null)
 
+    var familyHistoryList by mutableStateOf(listOf<String>(""))
+
     var appointment by mutableStateOf<AppointmentResponseLocal?>(null)
     var canAddAssessment by mutableStateOf(false)
     var showAddToQueueDialog by mutableStateOf(false)
