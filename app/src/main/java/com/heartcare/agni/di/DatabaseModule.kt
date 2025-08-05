@@ -2,6 +2,7 @@ package com.heartcare.agni.di
 
 import android.content.Context
 import com.heartcare.agni.data.local.roomdb.FhirAppDatabase
+import com.heartcare.agni.data.local.roomdb.dao.AllergyDao
 import com.heartcare.agni.data.local.roomdb.dao.AppointmentDao
 import com.heartcare.agni.data.local.roomdb.dao.CVDDao
 import com.heartcare.agni.data.local.roomdb.dao.DispenseDao
@@ -194,5 +195,11 @@ object DatabaseModule {
     @Provides
     fun provideFamilyHistoryDao(fhirAppDatabase: FhirAppDatabase): FamilyHistoryDao {
         return fhirAppDatabase.getFamilyHistoryDao()
+    }
+
+    @Singleton
+    @Provides
+    fun provideAllergyDao(fhirAppDatabase: FhirAppDatabase): AllergyDao {
+        return fhirAppDatabase.getAllergyDao()
     }
 }
