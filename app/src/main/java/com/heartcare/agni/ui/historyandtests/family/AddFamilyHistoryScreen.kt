@@ -41,7 +41,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.heartcare.agni.R
 import com.heartcare.agni.data.local.enums.FamilyHistoryEnum.Companion.getFamilyHistoryConditionList
@@ -59,7 +59,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun AddFamilyHistoryScreen(
     navController: NavController,
-    viewModel: AddFamilyHistoryViewModel = viewModel()
+    viewModel: AddFamilyHistoryViewModel = hiltViewModel()
 ) {
     val coroutineScope = rememberCoroutineScope()
     LaunchedEffect(viewModel.isLaunched) {
@@ -67,6 +67,7 @@ fun AddFamilyHistoryScreen(
             navController.previousBackStackEntry?.savedStateHandle
                 ?.get<PatientResponse>(PATIENT)?.let {
                     viewModel.patient = it
+                    viewModel.getLastFamilyHistory(it.id)
                 }
             viewModel.isLaunched = true
         }
@@ -185,12 +186,14 @@ private fun AgeQuestionOverlay(
                 Button(
                     onClick = {
                         // save family history
-                        coroutineScope.launch {
-                            navController.previousBackStackEntry?.savedStateHandle?.set(
-                                FAMILY_HISTORY_SAVED,
-                                true
-                            )
-                            navController.navigateUp()
+                        viewModel.addFamilyHistory{
+                            coroutineScope.launch {
+                                navController.previousBackStackEntry?.savedStateHandle?.set(
+                                    FAMILY_HISTORY_SAVED,
+                                    true
+                                )
+                                navController.navigateUp()
+                            }
                         }
                     },
                     modifier = Modifier
