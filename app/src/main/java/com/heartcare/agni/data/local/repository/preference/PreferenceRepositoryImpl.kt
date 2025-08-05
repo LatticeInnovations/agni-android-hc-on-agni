@@ -147,6 +147,12 @@ class PreferenceRepositoryImpl @Inject constructor(private val preferenceStorage
 
     override fun getLastSyncHistoryMedication(): Long = preferenceStorage.lastSyncHistoryMedicationRecord
 
+    override fun setLastSyncFamilyHistory(long: Long) {
+        preferenceStorage.lastSyncFamilyHistoryRecord = long
+    }
+
+    override fun getLastSyncFamilyHistory(): Long = preferenceStorage.lastSyncFamilyHistoryRecord
+
     override fun getLastMedicineDosageInstructionSyncDate() =
         preferenceStorage.lastMedicineDosageInstructionSyncTime
 

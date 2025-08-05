@@ -474,6 +474,9 @@ class SyncService(
                     CoroutineScope(Dispatchers.IO).launch {
                         downloadHistoryMedication(logout)
                     }
+                    CoroutineScope(Dispatchers.IO).launch {
+                        downloadFamilyHistory(logout)
+                    }
                 }
             }
         }
@@ -629,6 +632,11 @@ class SyncService(
     /** Download History Medication Data */
     private suspend fun downloadHistoryMedication(logout: (Boolean, String) -> Unit) {
         checkAuthenticationStatus(syncRepository.getAndInsertHistoryMedicationData(0), logout)
+    }
+
+    /** Download Family History Data */
+    private suspend fun downloadFamilyHistory(logout: (Boolean, String) -> Unit) {
+        checkAuthenticationStatus(syncRepository.getAndInsertFamilyHistoryData(0), logout)
     }
 
     /**
