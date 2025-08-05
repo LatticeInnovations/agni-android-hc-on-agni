@@ -46,13 +46,11 @@ fun AllergyView(
                 modifier = Modifier.padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                viewModel.allergyList.forEach { _ ->
+                viewModel.allergyList.forEach { allergy ->
                     ExpandableCard(
-                        createdOn = Date(),
-                        practitionerName = "Dr. Anamika Sood",
-                        listOfItems = listOf(
-                            "Feeling nausea and pain in the chest"
-                        ),
+                        createdOn = allergy.appUpdatedDate,
+                        practitionerName = allergy.practitionerName!!,
+                        listOfItems = allergy.allergy?.let { listOf(it) } ?: emptyList(),
                         isBulleted = false
                     )
                 }
