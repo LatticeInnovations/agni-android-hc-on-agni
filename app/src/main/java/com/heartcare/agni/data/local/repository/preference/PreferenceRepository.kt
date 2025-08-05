@@ -84,13 +84,17 @@ interface PreferenceRepository {
     fun setLastSyncLevelRecord(long: Long)
     fun getLastSyncLevelRecord(): Long
 
-    /** Last Sync CVD */
+    /** Last Sync Prior Dx */
     fun setLastSyncPriorDx(long: Long)
     fun getLastSyncPriorDx(): Long
 
-    /** Last Sync CVD */
+    /** Last Sync History Medication */
     fun setLastSyncHistoryMedication(long: Long)
     fun getLastSyncHistoryMedication(): Long
+
+    /** Last Sync Family History */
+    fun setLastSyncFamilyHistory(long: Long)
+    fun getLastSyncFamilyHistory(): Long
 
     /** User Data */
     fun setUserFhirId(userFhirId: String)

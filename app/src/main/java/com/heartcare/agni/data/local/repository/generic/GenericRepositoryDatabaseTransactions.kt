@@ -14,6 +14,7 @@ import com.heartcare.agni.data.local.roomdb.dao.ScheduleDao
 import com.heartcare.agni.data.local.roomdb.entities.generic.GenericEntity
 import com.heartcare.agni.data.server.model.cvd.CVDResponse
 import com.heartcare.agni.data.server.model.dispense.request.MedicineDispenseRequest
+import com.heartcare.agni.data.server.model.family.FamilyHistoryResponse
 import com.heartcare.agni.data.server.model.historymedication.HistoryMedicationResponse
 import com.heartcare.agni.data.server.model.labormed.labtest.LabTestRequest
 import com.heartcare.agni.data.server.model.labormed.medicalrecord.MedicalRecordRequest
@@ -337,6 +338,28 @@ open class GenericRepositoryDatabaseTransactions(
         }
     }
 
+    protected suspend fun insertFamilyHistoryGenericEntity(
+        familyHistoryGenericEntity: GenericEntity?,
+        familyHistoryResponse: FamilyHistoryResponse,
+        uuid: String
+    ): Long {
+        return if (familyHistoryGenericEntity != null) {
+            genericDao.insertGenericEntity(
+                familyHistoryGenericEntity.copy(payload = familyHistoryResponse.toJson())
+            )[0]
+        } else {
+            genericDao.insertGenericEntity(
+                GenericEntity(
+                    id = uuid,
+                    patientId = familyHistoryResponse.uuid,
+                    payload = familyHistoryResponse.toJson(),
+                    type = GenericTypeEnum.FAMILY_HISTORY,
+                    syncType = SyncType.POST
+                )
+            )[0]
+        }
+    }
+
     protected suspend fun updateAppointmentFhirIdInGenericEntity(appointmentGenericEntity: GenericEntity) {
         val existingMap = appointmentGenericEntity.payload.fromJson<MutableMap<String, Any>>()
             .mapToObject(AppointmentResponse::class.java)
@@ -551,6 +574,26 @@ open class GenericRepositoryDatabaseTransactions(
         if (existingMap != null) {
             genericDao.insertGenericEntity(
                 historyMedicationGenericEntity.copy(
+                    payload = existingMap.copy(
+                        patientId = if (!existingMap.patientId.isFhirId()) getPatientFhirIdById(
+                            existingMap.patientId
+                        )!! else existingMap.patientId,
+                        appointmentId = if (!existingMap.appointmentId.isFhirId()) getAppointmentFhirIdById(
+                            existingMap.appointmentId
+                        )!! else existingMap.appointmentId
+                    ).toJson()
+                )
+            )
+        }
+    }
+
+    protected suspend fun updateFamilyHistoryFhirIdInGenericEntity(familyHistoryGenericEntity: GenericEntity) {
+        val existingMap = familyHistoryGenericEntity.payload.fromJson<MutableMap<String, Any>>()
+            .mapToObject(FamilyHistoryResponse::class.java)
+
+        if (existingMap != null) {
+            genericDao.insertGenericEntity(
+                familyHistoryGenericEntity.copy(
                     payload = existingMap.copy(
                         patientId = if (!existingMap.patientId.isFhirId()) getPatientFhirIdById(
                             existingMap.patientId

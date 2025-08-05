@@ -309,7 +309,7 @@ private fun handleAddButtonClick(
     snackBarHostState: SnackbarHostState,
     context: Context
 ) {
-    viewModel.getAppointmentInfo (
+    viewModel.getAppointmentInfo(
         callback = {
             when {
                 viewModel.existsInOtherHospital -> {
@@ -401,7 +401,12 @@ private fun getBtnText(
             if (viewModel.todayHistoryMedication != null && !viewModel.existsInOtherHospital) stringResource(R.string.update_medication)
             else stringResource(R.string.add_medication)
         }
-        2 -> stringResource(R.string.add_family_history)
+
+        2 -> {
+            if (viewModel.todayFamilyHistory != null && !viewModel.existsInOtherHospital) stringResource(R.string.update_family_history)
+            else stringResource(R.string.add_family_history)
+        }
+
         3 -> stringResource(R.string.add_allergies)
         4 -> stringResource(R.string.add_risk_factor)
         5 -> stringResource(R.string.add_tobacco_cessation)

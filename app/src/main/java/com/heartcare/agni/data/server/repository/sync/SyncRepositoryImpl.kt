@@ -10,6 +10,7 @@ import com.heartcare.agni.data.local.repository.preference.PreferenceRepository
 import com.heartcare.agni.data.local.roomdb.dao.AppointmentDao
 import com.heartcare.agni.data.local.roomdb.dao.CVDDao
 import com.heartcare.agni.data.local.roomdb.dao.DispenseDao
+import com.heartcare.agni.data.local.roomdb.dao.FamilyHistoryDao
 import com.heartcare.agni.data.local.roomdb.dao.FileUploadDao
 import com.heartcare.agni.data.local.roomdb.dao.GenericDao
 import com.heartcare.agni.data.local.roomdb.dao.HistoryMedicationDao
@@ -62,6 +63,7 @@ import com.heartcare.agni.data.server.model.cvd.CVDResponse
 import com.heartcare.agni.data.server.model.dispense.request.MedicineDispenseRequest
 import com.heartcare.agni.data.server.model.dispense.response.DispenseData
 import com.heartcare.agni.data.server.model.dispense.response.MedicineDispenseResponse
+import com.heartcare.agni.data.server.model.family.FamilyHistoryResponse
 import com.heartcare.agni.data.server.model.historymedication.HistoryMedicationResponse
 import com.heartcare.agni.data.server.model.labormed.labtest.LabTestResponse
 import com.heartcare.agni.data.server.model.labormed.medicalrecord.MedicalRecordResponse
@@ -130,7 +132,8 @@ class SyncRepositoryImpl @Inject constructor(
     levelsDao: LevelsDao,
     riskPredictionDao: RiskPredictionDao,
     priorDxDao: PriorDxDao,
-    historyMedicationDao: HistoryMedicationDao
+    historyMedicationDao: HistoryMedicationDao,
+    familyHistoryDao: FamilyHistoryDao
 ) : SyncRepository, SyncRepositoryDatabaseTransactions(
     patientApiService,
     patientDao,
@@ -154,7 +157,8 @@ class SyncRepositoryImpl @Inject constructor(
     levelsDao,
     riskPredictionDao,
     priorDxDao,
-    historyMedicationDao
+    historyMedicationDao,
+    familyHistoryDao
 ) {
 
     override suspend fun getAndInsertListPatientData(
@@ -1260,6 +1264,32 @@ class SyncRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun sendFamilyHistoryPostData(): ResponseMapper<List<CreateResponse>> {
+        return genericDao.getSameTypeGenericEntityPayload(
+            genericTypeEnum = GenericTypeEnum.FAMILY_HISTORY,
+            syncType = SyncType.POST
+        ).let { listOfGenericEntity ->
+            if (listOfGenericEntity.isEmpty()) ApiEmptyResponse()
+            else {
+                ApiResponseConverter.convert(
+                    historyAndTestsApiService.postFamilyHistory(
+                        listOfGenericEntity.map {
+                            it.payload.fromJson<LinkedTreeMap<*, *>>()
+                                .mapToObject(FamilyHistoryResponse::class.java)!!
+                        }
+                    )
+                ).apply {
+                    if (this is ApiEndResponse) {
+                        insertFamilyHistoryFhirIds(body, listOfGenericEntity)
+                            .apply {
+                                if (this > 0) sendFamilyHistoryPostData()
+                            }
+                    }
+                }
+            }
+        }
+    }
+
     override suspend fun sendPersonPatchData(): ResponseMapper<List<CreateResponse>> {
         return genericDao.getSameTypeGenericEntityPayload(
             genericTypeEnum = GenericTypeEnum.PATIENT, syncType = SyncType.PATCH
@@ -1660,6 +1690,38 @@ class SyncRepositoryImpl @Inject constructor(
                 is ApiEndResponse -> {
                     preferenceRepository.setLastSyncHistoryMedication(Date().time)
                     insertHistoryMedication(body)
+                    this
+                }
+
+                else -> this
+            }
+        }
+    }
+
+    override suspend fun getAndInsertFamilyHistoryData(offset: Int): ResponseMapper<List<FamilyHistoryResponse>> {
+        val map = mutableMapOf<String, String>()
+        map[COUNT] = COUNT_VALUE.toString()
+        map[OFFSET] = offset.toString()
+        map[SORT] = "-$ID"
+        if (preferenceRepository.getLastSyncFamilyHistory() != 0L) map[LAST_UPDATED] = String.format(
+            GREATER_THAN_BUILDER, preferenceRepository.getLastSyncFamilyHistory().toTimeStampDate()
+        )
+
+        ApiResponseConverter.convert(
+            historyAndTestsApiService.getFamilyHistory(
+                map
+            ), true
+        ).run {
+            return when (this) {
+                is ApiContinueResponse -> {
+                    insertFamilyHistory(body)
+                    //Call for next batch data
+                    getAndInsertFamilyHistoryData(offset + COUNT_VALUE)
+                }
+
+                is ApiEndResponse -> {
+                    preferenceRepository.setLastSyncFamilyHistory(Date().time)
+                    insertFamilyHistory(body)
                     this
                 }
 

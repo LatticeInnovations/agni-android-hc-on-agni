@@ -599,4 +599,5 @@ include them in the household</string>
     <string name="family_history_saved">Family history saved</string>
     <string name="type_known_allergies_here">Type known allergies here</string>
     <string name="allergies_saved">Allergies saved</string>
+    <string name="update_family_history">Update family history</string>
 </resources>

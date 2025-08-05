@@ -6,6 +6,7 @@ import com.heartcare.agni.data.local.roomdb.dao.AppointmentDao
 import com.heartcare.agni.data.local.roomdb.dao.CVDDao
 import com.heartcare.agni.data.local.roomdb.dao.DispenseDao
 import com.heartcare.agni.data.local.roomdb.dao.DownloadedFileDao
+import com.heartcare.agni.data.local.roomdb.dao.FamilyHistoryDao
 import com.heartcare.agni.data.local.roomdb.dao.FileUploadDao
 import com.heartcare.agni.data.local.roomdb.dao.GenericDao
 import com.heartcare.agni.data.local.roomdb.dao.HistoryMedicationDao
@@ -187,5 +188,11 @@ object DatabaseModule {
     @Provides
     fun provideHistoryMedicationDao(fhirAppDatabase: FhirAppDatabase): HistoryMedicationDao {
         return fhirAppDatabase.getHistoryMedicationDao()
+    }
+
+    @Singleton
+    @Provides
+    fun provideFamilyHistoryDao(fhirAppDatabase: FhirAppDatabase): FamilyHistoryDao {
+        return fhirAppDatabase.getFamilyHistoryDao()
     }
 }

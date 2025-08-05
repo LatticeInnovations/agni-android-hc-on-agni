@@ -231,6 +231,9 @@ class SyncService(
                 CoroutineScope(Dispatchers.IO).launch {
                     updateFhirIdInHistoryMedication(logout)
                 }
+                CoroutineScope(Dispatchers.IO).launch {
+                    updateFhirIdInFamilyHistory(logout)
+                }
             }
         }
     }
@@ -310,6 +313,11 @@ class SyncService(
     /** Upload History Medication */
     private suspend fun uploadHistoryMedication(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
         return checkAuthenticationStatus(syncRepository.sendHistoryMedicationPostData(), logout)
+    }
+
+    /** Upload Family History */
+    private suspend fun uploadFamilyHistory(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
+        return checkAuthenticationStatus(syncRepository.sendFamilyHistoryPostData(), logout)
     }
 
     /**
@@ -474,6 +482,9 @@ class SyncService(
                     CoroutineScope(Dispatchers.IO).launch {
                         downloadHistoryMedication(logout)
                     }
+                    CoroutineScope(Dispatchers.IO).launch {
+                        downloadFamilyHistory(logout)
+                    }
                 }
             }
         }
@@ -631,6 +642,11 @@ class SyncService(
         checkAuthenticationStatus(syncRepository.getAndInsertHistoryMedicationData(0), logout)
     }
 
+    /** Download Family History Data */
+    private suspend fun downloadFamilyHistory(logout: (Boolean, String) -> Unit) {
+        checkAuthenticationStatus(syncRepository.getAndInsertFamilyHistoryData(0), logout)
+    }
+
     /**
      *
      *
@@ -719,6 +735,12 @@ class SyncService(
     private suspend fun updateFhirIdInHistoryMedication(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
         genericRepository.updateHistoryMedicationFhirId()
         return uploadHistoryMedication(logout)
+    }
+
+    /** Update FHIR ID in Family History */
+    private suspend fun updateFhirIdInFamilyHistory(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
+        genericRepository.updateFamilyHistoryFhirId()
+        return uploadFamilyHistory(logout)
     }
 
     /** Check Session Expiry and Authorization */

@@ -18,4 +18,5 @@ object EndPoints {
     const val VACCINE_MANUFACTURER = "vaccine/manufacturer"
     const val PRIOR_DX = "priorDx"
     const val HISTORY_MEDICATION = "historyMedicine"
+    const val FAMILY_HISTORY = "familyHistory"
 }
