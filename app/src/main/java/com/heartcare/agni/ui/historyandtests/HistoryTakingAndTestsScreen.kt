@@ -62,6 +62,7 @@ import com.heartcare.agni.ui.patientlandingscreen.AllSlotsBookedDialog
 import com.heartcare.agni.ui.prescription.photo.view.AppointmentCompletedDialog
 import com.heartcare.agni.ui.theme.Black
 import com.heartcare.agni.ui.theme.White
+import com.heartcare.agni.utils.constants.NavControllerConstants.ALLERGIES_SAVED
 import com.heartcare.agni.utils.constants.NavControllerConstants.FAMILY_HISTORY_SAVED
 import com.heartcare.agni.utils.constants.NavControllerConstants.MEDICATION_SAVED
 import com.heartcare.agni.utils.constants.NavControllerConstants.PATIENT
@@ -163,6 +164,9 @@ private fun HandleLaunchedEffectsAndSnackBars(
             }
             if (handle.remove<Boolean>(FAMILY_HISTORY_SAVED) == true) {
                 snackBarHostState.showSnackbar(context.getString(R.string.family_history_saved))
+            }
+            if (handle.remove<Boolean>(ALLERGIES_SAVED) == true) {
+                snackBarHostState.showSnackbar(context.getString(R.string.allergies_saved))
             }
         }
     }
@@ -417,6 +421,7 @@ private fun navigateToAddScreen(
             0 -> navController.navigate(Screen.AddPriorDxScreen.route)
             1 -> navController.navigate(Screen.AddMedicationScreen.route)
             2 -> navController.navigate(Screen.AddFamilyHistoryScreen.route)
+            3 -> navController.navigate(Screen.AddAllergyScreen.route)
         }
     }
 }

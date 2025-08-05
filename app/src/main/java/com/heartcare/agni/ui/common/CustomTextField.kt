@@ -30,6 +30,8 @@ fun CustomTextField(
     error: String,
     keyboardType: KeyboardType,
     keyboardCapitalization: KeyboardCapitalization,
+    singleLine: Boolean = true,
+    modifier: Modifier = Modifier,
     updateValue: (String) -> Unit
 ) {
     OutlinedTextField(
@@ -38,7 +40,7 @@ fun CustomTextField(
             if (it.length <= maxLength)
                 updateValue(it)
         },
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth(weight)
             .testTag(label),
         label = {
@@ -48,7 +50,7 @@ fun CustomTextField(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         },
-        singleLine = true,
+        singleLine = singleLine,
         keyboardOptions = KeyboardOptions(
             imeAction = if (label == stringResource(id = R.string.email)) ImeAction.Done else ImeAction.Next,
             keyboardType = keyboardType,
