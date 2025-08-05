@@ -595,4 +595,6 @@ include them in the household</string>
     <string name="adherence">Adherence</string>
     <string name="update_medication">Update Medication</string>
     <string name="occurence_age_question">Did this occur before he/she was the age of 55 (male) / 65 (female)?</string>
+    <string name="family_history_header_text">Does (or did) a parent, brother or sister have:</string>
+    <string name="family_history_saved">Family history saved</string>
 </resources>

@@ -61,6 +61,7 @@ import com.heartcare.agni.ui.patientlandingscreen.AllSlotsBookedDialog
 import com.heartcare.agni.ui.prescription.photo.view.AppointmentCompletedDialog
 import com.heartcare.agni.ui.theme.Black
 import com.heartcare.agni.ui.theme.White
+import com.heartcare.agni.utils.constants.NavControllerConstants.FAMILY_HISTORY_SAVED
 import com.heartcare.agni.utils.constants.NavControllerConstants.MEDICATION_SAVED
 import com.heartcare.agni.utils.constants.NavControllerConstants.PATIENT
 import com.heartcare.agni.utils.constants.NavControllerConstants.PRIOR_DX_SAVED
@@ -82,7 +83,7 @@ fun HistoryTakingAndTestsScreen(
         initialPageOffsetFraction = 0f
     ) { tabs.size }
 
-    HandleNavigationAndState(
+    HandleLaunchedEffectsAndSnackBars(
         viewModel = viewModel,
         navController = navController,
         snackBarHostState = snackBarHostState,
@@ -135,7 +136,7 @@ fun HistoryTakingAndTestsScreen(
 }
 
 @Composable
-private fun HandleNavigationAndState(
+private fun HandleLaunchedEffectsAndSnackBars(
     viewModel: HistoryTakingAndTestsViewModel,
     navController: NavController,
     snackBarHostState: SnackbarHostState,
@@ -158,6 +159,9 @@ private fun HandleNavigationAndState(
             }
             if (handle.remove<Boolean>(MEDICATION_SAVED) == true) {
                 snackBarHostState.showSnackbar(context.getString(R.string.medication_saved))
+            }
+            if (handle.remove<Boolean>(FAMILY_HISTORY_SAVED) == true) {
+                snackBarHostState.showSnackbar(context.getString(R.string.family_history_saved))
             }
         }
     }
@@ -410,6 +414,7 @@ private fun navigateToAddScreen(
         when (pagerState.currentPage) {
             0 -> navController.navigate(Screen.AddPriorDxScreen.route)
             1 -> navController.navigate(Screen.AddMedicationScreen.route)
+            2 -> navController.navigate(Screen.AddFamilyHistoryScreen.route)
         }
     }
 }

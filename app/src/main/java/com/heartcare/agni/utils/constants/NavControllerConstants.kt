@@ -22,4 +22,5 @@ object NavControllerConstants {
     const val PASSWORD_SAVED = "password_saved"
     const val EMAIL = "email"
     const val MEDICATION_SAVED = "medication_saved"
+    const val FAMILY_HISTORY_SAVED = "family_history_saved"
 }
