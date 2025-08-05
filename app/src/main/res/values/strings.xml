@@ -600,4 +600,5 @@ include them in the household</string>
     <string name="type_known_allergies_here">Type known allergies here</string>
     <string name="allergies_saved">Allergies saved</string>
     <string name="update_family_history">Update family history</string>
+    <string name="update_allergies">Update allergies</string>
 </resources>

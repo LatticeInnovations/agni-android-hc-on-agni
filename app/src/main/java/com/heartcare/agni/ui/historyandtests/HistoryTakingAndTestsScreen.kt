@@ -407,7 +407,11 @@ private fun getBtnText(
             else stringResource(R.string.add_family_history)
         }
 
-        3 -> stringResource(R.string.add_allergies)
+        3 -> {
+            if (viewModel.todayAllergy != null && !viewModel.existsInOtherHospital) stringResource(R.string.update_allergies)
+            else stringResource(R.string.add_allergies)
+        }
+
         4 -> stringResource(R.string.add_risk_factor)
         5 -> stringResource(R.string.add_tobacco_cessation)
         else -> ""

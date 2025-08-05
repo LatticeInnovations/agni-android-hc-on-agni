@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "8593f395de7b314566d9cf9106d4e818",
+    "identityHash": "9616081e753ef8d09f1a92d460da66a1",
     "entities": [
       {
         "tableName": "PatientEntity",
@@ -3075,7 +3075,7 @@
       },
       {
         "tableName": "AllergyEntity",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`uuid` TEXT NOT NULL, `fhirId` TEXT, `allergy` TEXT, `appUpdatedDate` TEXT NOT NULL, `appointmentId` TEXT NOT NULL, `patientId` TEXT NOT NULL, `practitionerId` TEXT NOT NULL, `practitionerName` TEXT NOT NULL, PRIMARY KEY(`uuid`), FOREIGN KEY(`patientId`) REFERENCES `PatientEntity`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION , FOREIGN KEY(`appointmentId`) REFERENCES `AppointmentEntity`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`uuid` TEXT NOT NULL, `fhirId` TEXT, `allergy` TEXT, `appUpdatedDate` INTEGER NOT NULL, `appointmentId` TEXT NOT NULL, `patientId` TEXT NOT NULL, `practitionerId` TEXT NOT NULL, `practitionerName` TEXT NOT NULL, PRIMARY KEY(`uuid`), FOREIGN KEY(`patientId`) REFERENCES `PatientEntity`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION , FOREIGN KEY(`appointmentId`) REFERENCES `AppointmentEntity`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION )",
         "fields": [
           {
             "fieldPath": "uuid",
@@ -3096,7 +3096,7 @@
           {
             "fieldPath": "appUpdatedDate",
             "columnName": "appUpdatedDate",
-            "affinity": "TEXT",
+            "affinity": "INTEGER",
             "notNull": true
           },
           {
@@ -3188,7 +3188,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '8593f395de7b314566d9cf9106d4e818')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '9616081e753ef8d09f1a92d460da66a1')"
     ]
   }
 }
