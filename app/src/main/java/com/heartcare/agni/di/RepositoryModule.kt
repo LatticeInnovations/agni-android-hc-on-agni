@@ -1,5 +1,7 @@
 package com.heartcare.agni.di
 
+import com.heartcare.agni.data.local.repository.allergy.AllergyRepository
+import com.heartcare.agni.data.local.repository.allergy.AllergyRepositoryImpl
 import com.heartcare.agni.data.local.repository.labtest.LabTestRepository
 import com.heartcare.agni.data.local.repository.labtest.LabTestRepositoryImpl
 import com.heartcare.agni.data.local.repository.appointment.AppointmentRepository
@@ -189,4 +191,8 @@ abstract class RepositoryModule {
     @Binds
     @ViewModelScoped
     abstract fun provideFamilyHistoryRepository(familyHistoryRepositoryImpl: FamilyHistoryRepositoryImpl): FamilyHistoryRepository
+
+    @Binds
+    @ViewModelScoped
+    abstract fun provideAllergyRepository(allergyRepositoryImpl: AllergyRepositoryImpl): AllergyRepository
 }

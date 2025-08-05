@@ -1,9 +1,11 @@
 package com.heartcare.agni.data.server.api
 
 import com.heartcare.agni.base.server.BaseResponse
+import com.heartcare.agni.data.server.constants.EndPoints.ALLERGY
 import com.heartcare.agni.data.server.constants.EndPoints.FAMILY_HISTORY
 import com.heartcare.agni.data.server.constants.EndPoints.HISTORY_MEDICATION
 import com.heartcare.agni.data.server.constants.EndPoints.PRIOR_DX
+import com.heartcare.agni.data.server.model.allergy.AllergyResponse
 import com.heartcare.agni.data.server.model.create.CreateResponse
 import com.heartcare.agni.data.server.model.family.FamilyHistoryResponse
 import com.heartcare.agni.data.server.model.historymedication.HistoryMedicationResponse
@@ -32,4 +34,10 @@ interface HistoryAndTestsApiService {
 
     @GET(FAMILY_HISTORY)
     suspend fun getFamilyHistory(@QueryMap(encoded = true) map: Map<String, String>?): Response<BaseResponse<List<FamilyHistoryResponse>>>
+
+    @POST(ALLERGY)
+    suspend fun postAllergy(@Body allergyResponse: List<AllergyResponse>): Response<BaseResponse<List<CreateResponse>>>
+
+    @GET(ALLERGY)
+    suspend fun getAllergy(@QueryMap(encoded = true) map: Map<String, String>?): Response<BaseResponse<List<AllergyResponse>>>
 }

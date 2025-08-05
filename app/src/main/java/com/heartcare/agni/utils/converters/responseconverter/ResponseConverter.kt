@@ -19,6 +19,7 @@ import com.heartcare.agni.data.local.roomdb.dao.PatientDao
 import com.heartcare.agni.data.local.roomdb.dao.PrescriptionDao
 import com.heartcare.agni.data.local.roomdb.dao.RiskPredictionDao
 import com.heartcare.agni.data.local.roomdb.dao.ScheduleDao
+import com.heartcare.agni.data.local.roomdb.entities.allergy.AllergyEntity
 import com.heartcare.agni.data.local.roomdb.entities.appointment.AppointmentEntity
 import com.heartcare.agni.data.local.roomdb.entities.cvd.CVDEntity
 import com.heartcare.agni.data.local.roomdb.entities.dispense.DispenseDataEntity
@@ -57,6 +58,7 @@ import com.heartcare.agni.data.local.roomdb.views.PrescriptionDirectionAndMedici
 import com.heartcare.agni.data.server.api.PatientApiService
 import com.heartcare.agni.data.server.constants.EndPoints.PATIENT
 import com.heartcare.agni.data.server.constants.QueryParameters
+import com.heartcare.agni.data.server.model.allergy.AllergyResponse
 import com.heartcare.agni.data.server.model.cvd.CVDResponse
 import com.heartcare.agni.data.server.model.dispense.response.DispenseData
 import com.heartcare.agni.data.server.model.dispense.response.MedicineDispenseResponse
@@ -1379,5 +1381,47 @@ internal fun FamilyHistoryEntity.toFamilyHistoryResponse(): FamilyHistoryRespons
         practitionerName = practitionerName,
         familyDiseases = familyDiseases,
         occurrenceAgeData = occurrenceAgeData
+    )
+}
+
+internal fun AllergyResponse.toAllergyEntity(): AllergyEntity {
+    return AllergyEntity(
+        uuid = uuid,
+        fhirId = fhirId,
+        patientId = patientId,
+        appointmentId = appointmentId,
+        appUpdatedDate = appUpdatedDate,
+        practitionerId = practitionerId!!,
+        practitionerName = practitionerName!!,
+        allergy = allergy
+    )
+}
+
+suspend fun AllergyResponse.toAllergyEntity(
+    patientDao: PatientDao,
+    appointmentDao: AppointmentDao
+): AllergyEntity {
+    return AllergyEntity(
+        uuid = uuid,
+        fhirId = fhirId,
+        appUpdatedDate = appUpdatedDate,
+        appointmentId = appointmentDao.getAppointmentIdByFhirId(appointmentId),
+        patientId = patientDao.getPatientIdByFhirId(patientId)!!,
+        practitionerId = practitionerId!!,
+        practitionerName = practitionerName!!,
+        allergy = allergy,
+    )
+}
+
+internal fun AllergyEntity.toAllergyResponse(): AllergyResponse {
+    return AllergyResponse(
+        uuid = uuid,
+        fhirId = fhirId,
+        appUpdatedDate = appUpdatedDate,
+        appointmentId = appointmentId,
+        patientId = patientId,
+        practitionerId = practitionerId,
+        practitionerName = practitionerName,
+        allergy = allergy,
     )
 }

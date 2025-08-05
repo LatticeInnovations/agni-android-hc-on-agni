@@ -6,6 +6,7 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import com.heartcare.agni.BuildConfig
+import com.heartcare.agni.data.local.roomdb.dao.AllergyDao
 import com.heartcare.agni.data.local.roomdb.dao.AppointmentDao
 import com.heartcare.agni.data.local.roomdb.dao.CVDDao
 import com.heartcare.agni.data.local.roomdb.dao.DispenseDao
@@ -31,6 +32,7 @@ import com.heartcare.agni.data.local.roomdb.dao.VitalDao
 import com.heartcare.agni.data.local.roomdb.dao.vaccincation.ImmunizationDao
 import com.heartcare.agni.data.local.roomdb.dao.vaccincation.ImmunizationRecommendationDao
 import com.heartcare.agni.data.local.roomdb.dao.vaccincation.ManufacturerDao
+import com.heartcare.agni.data.local.roomdb.entities.allergy.AllergyEntity
 import com.heartcare.agni.data.local.roomdb.entities.appointment.AppointmentEntity
 import com.heartcare.agni.data.local.roomdb.entities.cvd.CVDEntity
 import com.heartcare.agni.data.local.roomdb.entities.cvd.RiskPredictionCharts
@@ -113,7 +115,8 @@ import java.util.UUID
         LevelEntity::class,
         PriorDxEntity::class,
         HistoryMedicationEntity::class,
-        FamilyHistoryEntity::class
+        FamilyHistoryEntity::class,
+        AllergyEntity::class
     ],
     views = [RelationView::class, PrescriptionDirectionAndMedicineView::class],
     version = 1,
@@ -147,6 +150,7 @@ abstract class FhirAppDatabase : RoomDatabase() {
     abstract fun getPriorDxDao(): PriorDxDao
     abstract fun getHistoryMedicationDao(): HistoryMedicationDao
     abstract fun getFamilyHistoryDao(): FamilyHistoryDao
+    abstract fun getAllergyDao(): AllergyDao
 
     companion object {
         @Volatile
