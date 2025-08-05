@@ -54,12 +54,16 @@ import com.heartcare.agni.navigation.Screen
 import com.heartcare.agni.ui.common.CustomDialog
 import com.heartcare.agni.ui.common.Loader
 import com.heartcare.agni.ui.common.ScrollableTabRowComposable
+import com.heartcare.agni.ui.historyandtests.allergy.AllergyView
+import com.heartcare.agni.ui.historyandtests.family.FamilyHistoryView
 import com.heartcare.agni.ui.historyandtests.medication.MedicationView
 import com.heartcare.agni.ui.historyandtests.priordx.PriorDxView
 import com.heartcare.agni.ui.patientlandingscreen.AllSlotsBookedDialog
 import com.heartcare.agni.ui.prescription.photo.view.AppointmentCompletedDialog
 import com.heartcare.agni.ui.theme.Black
 import com.heartcare.agni.ui.theme.White
+import com.heartcare.agni.utils.constants.NavControllerConstants.ALLERGIES_SAVED
+import com.heartcare.agni.utils.constants.NavControllerConstants.FAMILY_HISTORY_SAVED
 import com.heartcare.agni.utils.constants.NavControllerConstants.MEDICATION_SAVED
 import com.heartcare.agni.utils.constants.NavControllerConstants.PATIENT
 import com.heartcare.agni.utils.constants.NavControllerConstants.PRIOR_DX_SAVED
@@ -81,7 +85,7 @@ fun HistoryTakingAndTestsScreen(
         initialPageOffsetFraction = 0f
     ) { tabs.size }
 
-    HandleNavigationAndState(
+    HandleLaunchedEffectsAndSnackBars(
         viewModel = viewModel,
         navController = navController,
         snackBarHostState = snackBarHostState,
@@ -134,7 +138,7 @@ fun HistoryTakingAndTestsScreen(
 }
 
 @Composable
-private fun HandleNavigationAndState(
+private fun HandleLaunchedEffectsAndSnackBars(
     viewModel: HistoryTakingAndTestsViewModel,
     navController: NavController,
     snackBarHostState: SnackbarHostState,
@@ -157,6 +161,12 @@ private fun HandleNavigationAndState(
             }
             if (handle.remove<Boolean>(MEDICATION_SAVED) == true) {
                 snackBarHostState.showSnackbar(context.getString(R.string.medication_saved))
+            }
+            if (handle.remove<Boolean>(FAMILY_HISTORY_SAVED) == true) {
+                snackBarHostState.showSnackbar(context.getString(R.string.family_history_saved))
+            }
+            if (handle.remove<Boolean>(ALLERGIES_SAVED) == true) {
+                snackBarHostState.showSnackbar(context.getString(R.string.allergies_saved))
             }
         }
     }
@@ -186,6 +196,8 @@ private fun HistoryScaffoldContent(
                 when (index) {
                     0 -> PriorDxView(viewModel)
                     1 -> MedicationView(viewModel)
+                    2 -> FamilyHistoryView(viewModel)
+                    3 -> AllergyView(viewModel)
                     else -> Text(tabs[index], modifier = Modifier.padding(16.dp))
                 }
             }
@@ -408,6 +420,8 @@ private fun navigateToAddScreen(
         when (pagerState.currentPage) {
             0 -> navController.navigate(Screen.AddPriorDxScreen.route)
             1 -> navController.navigate(Screen.AddMedicationScreen.route)
+            2 -> navController.navigate(Screen.AddFamilyHistoryScreen.route)
+            3 -> navController.navigate(Screen.AddAllergyScreen.route)
         }
     }
 }
