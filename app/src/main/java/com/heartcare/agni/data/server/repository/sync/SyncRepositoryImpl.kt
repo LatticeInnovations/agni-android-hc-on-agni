@@ -1294,6 +1294,32 @@ class SyncRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun sendAllergyPostData(): ResponseMapper<List<CreateResponse>> {
+        return genericDao.getSameTypeGenericEntityPayload(
+            genericTypeEnum = GenericTypeEnum.ALLERGY,
+            syncType = SyncType.POST
+        ).let { listOfGenericEntity ->
+            if (listOfGenericEntity.isEmpty()) ApiEmptyResponse()
+            else {
+                ApiResponseConverter.convert(
+                    historyAndTestsApiService.postAllergy(
+                        listOfGenericEntity.map {
+                            it.payload.fromJson<LinkedTreeMap<*, *>>()
+                                .mapToObject(AllergyResponse::class.java)!!
+                        }
+                    )
+                ).apply {
+                    if (this is ApiEndResponse) {
+                        insertAllergyFhirIds(body, listOfGenericEntity)
+                            .apply {
+                                if (this > 0) sendAllergyPostData()
+                            }
+                    }
+                }
+            }
+        }
+    }
+
     override suspend fun sendPersonPatchData(): ResponseMapper<List<CreateResponse>> {
         return genericDao.getSameTypeGenericEntityPayload(
             genericTypeEnum = GenericTypeEnum.PATIENT, syncType = SyncType.PATCH

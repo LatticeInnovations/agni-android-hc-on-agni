@@ -112,6 +112,7 @@ interface GenericRepository {
     suspend fun updatePriorDxFhirId()
     suspend fun updateHistoryMedicationFhirId()
     suspend fun updateFamilyHistoryFhirId()
+    suspend fun updateAllergyFhirId()
 
     suspend fun insertOrUpdatePatientPatchEntity(
         patientFhirId: String,

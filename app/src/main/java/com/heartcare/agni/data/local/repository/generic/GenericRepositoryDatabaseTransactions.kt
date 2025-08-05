@@ -630,6 +630,26 @@ open class GenericRepositoryDatabaseTransactions(
         }
     }
 
+    protected suspend fun updateAllergyFhirIdInGenericEntity(allergyGenericEntity: GenericEntity) {
+        val existingMap = allergyGenericEntity.payload.fromJson<MutableMap<String, Any>>()
+            .mapToObject(AllergyResponse::class.java)
+
+        if (existingMap != null) {
+            genericDao.insertGenericEntity(
+                allergyGenericEntity.copy(
+                    payload = existingMap.copy(
+                        patientId = if (!existingMap.patientId.isFhirId()) getPatientFhirIdById(
+                            existingMap.patientId
+                        )!! else existingMap.patientId,
+                        appointmentId = if (!existingMap.appointmentId.isFhirId()) getAppointmentFhirIdById(
+                            existingMap.appointmentId
+                        )!! else existingMap.appointmentId
+                    ).toJson()
+                )
+            )
+        }
+    }
+
     protected suspend fun insertOrUpdateAppointmentGenericEntityPatch(
         appointmentGenericEntity: GenericEntity?,
         map: Map<String, Any>,

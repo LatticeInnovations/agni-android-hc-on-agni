@@ -234,6 +234,9 @@ class SyncService(
                 CoroutineScope(Dispatchers.IO).launch {
                     updateFhirIdInFamilyHistory(logout)
                 }
+                CoroutineScope(Dispatchers.IO).launch {
+                    updateFhirIdInAllergy(logout)
+                }
             }
         }
     }
@@ -318,6 +321,11 @@ class SyncService(
     /** Upload Family History */
     private suspend fun uploadFamilyHistory(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
         return checkAuthenticationStatus(syncRepository.sendFamilyHistoryPostData(), logout)
+    }
+
+    /** Upload Allergy */
+    private suspend fun uploadAllergy(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
+        return checkAuthenticationStatus(syncRepository.sendAllergyPostData(), logout)
     }
 
     /**
@@ -749,6 +757,12 @@ class SyncService(
     private suspend fun updateFhirIdInFamilyHistory(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
         genericRepository.updateFamilyHistoryFhirId()
         return uploadFamilyHistory(logout)
+    }
+
+    /** Update FHIR ID in Allergy */
+    private suspend fun updateFhirIdInAllergy(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
+        genericRepository.updateAllergyFhirId()
+        return uploadAllergy(logout)
     }
 
     /** Check Session Expiry and Authorization */
