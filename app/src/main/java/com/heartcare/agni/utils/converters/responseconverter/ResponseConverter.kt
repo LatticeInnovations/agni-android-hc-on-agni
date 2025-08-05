@@ -24,6 +24,7 @@ import com.heartcare.agni.data.local.roomdb.entities.cvd.CVDEntity
 import com.heartcare.agni.data.local.roomdb.entities.dispense.DispenseDataEntity
 import com.heartcare.agni.data.local.roomdb.entities.dispense.DispensePrescriptionEntity
 import com.heartcare.agni.data.local.roomdb.entities.dispense.MedicineDispenseListEntity
+import com.heartcare.agni.data.local.roomdb.entities.family.FamilyHistoryEntity
 import com.heartcare.agni.data.local.roomdb.entities.generic.GenericEntity
 import com.heartcare.agni.data.local.roomdb.entities.historymedication.HistoryMedicationEntity
 import com.heartcare.agni.data.local.roomdb.entities.labtestandmedrecord.LabTestAndMedEntity
@@ -59,6 +60,7 @@ import com.heartcare.agni.data.server.constants.QueryParameters
 import com.heartcare.agni.data.server.model.cvd.CVDResponse
 import com.heartcare.agni.data.server.model.dispense.response.DispenseData
 import com.heartcare.agni.data.server.model.dispense.response.MedicineDispenseResponse
+import com.heartcare.agni.data.server.model.family.FamilyHistoryResponse
 import com.heartcare.agni.data.server.model.historymedication.HistoryMedicationResponse
 import com.heartcare.agni.data.server.model.labormed.labtest.DiagnosticReport
 import com.heartcare.agni.data.server.model.labormed.labtest.LabTestResponse
@@ -677,7 +679,8 @@ internal suspend fun CVDResponse.toCVDEntity(
     appointmentDao: AppointmentDao,
     riskPredictionDao: RiskPredictionDao
 ): CVDEntity {
-    val patient = patientDao.getPatientDataById(patientDao.getPatientIdByFhirId(patientId)!!)[0].patientEntity
+    val patient =
+        patientDao.getPatientDataById(patientDao.getPatientIdByFhirId(patientId)!!)[0].patientEntity
     val cholesterolUnits = listOf("mmol/L", "mg/dl")
     var cholesterolInMMHG: Double? = null
     if (cholesterol != null) {
@@ -686,7 +689,14 @@ internal suspend fun CVDResponse.toCVDEntity(
             else cholesterol
     }
     val riskPercent = riskPredictionDao.predictRisk(
-        patient.gender[0].uppercaseChar().toString(), smoker, patient.birthDate.toAge(), bpSystolic, cholesterolInMMHG, bmi, "oc", diabetic
+        patient.gender[0].uppercaseChar().toString(),
+        smoker,
+        patient.birthDate.toAge(),
+        bpSystolic,
+        cholesterolInMMHG,
+        bmi,
+        "oc",
+        diabetic
     ).toInt()
     return CVDEntity(
         cvdFhirId = cvdFhirId,
@@ -1324,5 +1334,50 @@ internal fun HistoryMedicationEntity.toHistoryMedicationResponse(): HistoryMedic
         practitionerId = practitionerId,
         practitionerName = practitionerName,
         sideEffects = sideEffects
+    )
+}
+
+internal fun FamilyHistoryResponse.toFamilyHistoryEntity(): FamilyHistoryEntity {
+    return FamilyHistoryEntity(
+        uuid = uuid,
+        fhirId = fhirId,
+        patientId = patientId,
+        appointmentId = appointmentId,
+        appUpdatedDate = appUpdatedDate,
+        familyDiseases = familyDiseases,
+        occurrenceAgeData = occurrenceAgeData,
+        practitionerId = practitionerId!!,
+        practitionerName = practitionerName!!
+    )
+}
+
+suspend fun FamilyHistoryResponse.toFamilyHistoryEntity(
+    patientDao: PatientDao,
+    appointmentDao: AppointmentDao
+): FamilyHistoryEntity {
+    return FamilyHistoryEntity(
+        uuid = uuid,
+        fhirId = fhirId,
+        appUpdatedDate = appUpdatedDate,
+        appointmentId = appointmentDao.getAppointmentIdByFhirId(appointmentId),
+        patientId = patientDao.getPatientIdByFhirId(patientId)!!,
+        practitionerId = practitionerId!!,
+        practitionerName = practitionerName!!,
+        familyDiseases = familyDiseases,
+        occurrenceAgeData = occurrenceAgeData
+    )
+}
+
+internal fun FamilyHistoryEntity.toFamilyHistoryResponse(): FamilyHistoryResponse {
+    return FamilyHistoryResponse(
+        uuid = uuid,
+        fhirId = fhirId,
+        appUpdatedDate = appUpdatedDate,
+        appointmentId = appointmentId,
+        patientId = patientId,
+        practitionerId = practitionerId,
+        practitionerName = practitionerName,
+        familyDiseases = familyDiseases,
+        occurrenceAgeData = occurrenceAgeData
     )
 }
