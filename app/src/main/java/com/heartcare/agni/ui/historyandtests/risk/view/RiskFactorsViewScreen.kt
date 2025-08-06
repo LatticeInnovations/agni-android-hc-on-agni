@@ -352,7 +352,7 @@ private fun DiningOutComposable() {
 }
 
 @Composable
-private fun Header(
+fun Header(
     heading: String
 ) {
     Text(

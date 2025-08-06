@@ -24,4 +24,5 @@ object NavControllerConstants {
     const val MEDICATION_SAVED = "medication_saved"
     const val FAMILY_HISTORY_SAVED = "family_history_saved"
     const val ALLERGIES_SAVED = "allergies_saved"
+    const val RISK_FACTORS_SAVED = "risk_factors_saved"
 }

@@ -68,6 +68,7 @@ import com.heartcare.agni.utils.constants.NavControllerConstants.FAMILY_HISTORY_
 import com.heartcare.agni.utils.constants.NavControllerConstants.MEDICATION_SAVED
 import com.heartcare.agni.utils.constants.NavControllerConstants.PATIENT
 import com.heartcare.agni.utils.constants.NavControllerConstants.PRIOR_DX_SAVED
+import com.heartcare.agni.utils.constants.NavControllerConstants.RISK_FACTORS_SAVED
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -169,6 +170,9 @@ private fun HandleLaunchedEffectsAndSnackBars(
             }
             if (handle.remove<Boolean>(ALLERGIES_SAVED) == true) {
                 snackBarHostState.showSnackbar(context.getString(R.string.allergies_saved))
+            }
+            if (handle.remove<Boolean>(RISK_FACTORS_SAVED) == true) {
+                snackBarHostState.showSnackbar(context.getString(R.string.risk_factors_saved))
             }
         }
     }
@@ -435,6 +439,7 @@ private fun navigateToAddScreen(
             1 -> navController.navigate(Screen.AddMedicationScreen.route)
             2 -> navController.navigate(Screen.AddFamilyHistoryScreen.route)
             3 -> navController.navigate(Screen.AddAllergyScreen.route)
+            4 -> navController.navigate(Screen.AddRiskFactorsScreen.route)
         }
     }
 }
