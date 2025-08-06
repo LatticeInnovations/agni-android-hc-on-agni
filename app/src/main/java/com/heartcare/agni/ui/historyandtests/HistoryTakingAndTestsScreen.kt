@@ -58,6 +58,7 @@ import com.heartcare.agni.ui.historyandtests.allergy.AllergyView
 import com.heartcare.agni.ui.historyandtests.family.FamilyHistoryView
 import com.heartcare.agni.ui.historyandtests.medication.MedicationView
 import com.heartcare.agni.ui.historyandtests.priordx.PriorDxView
+import com.heartcare.agni.ui.historyandtests.risk.view.RiskFactorsView
 import com.heartcare.agni.ui.patientlandingscreen.AllSlotsBookedDialog
 import com.heartcare.agni.ui.prescription.photo.view.AppointmentCompletedDialog
 import com.heartcare.agni.ui.theme.Black
@@ -129,7 +130,8 @@ fun HistoryTakingAndTestsScreen(
                 pagerState = pagerState,
                 viewModel = viewModel,
                 coroutineScope = coroutineScope,
-                modifier = Modifier.padding(paddingValues)
+                modifier = Modifier.padding(paddingValues),
+                navController = navController
             )
         }
     )
@@ -178,7 +180,8 @@ private fun HistoryScaffoldContent(
     pagerState: PagerState,
     viewModel: HistoryTakingAndTestsViewModel,
     coroutineScope: CoroutineScope,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    navController: NavController
 ) {
     Column(modifier = modifier) {
         ScrollableTabRowComposable(tabs, pagerState) { index ->
@@ -198,6 +201,7 @@ private fun HistoryScaffoldContent(
                     1 -> MedicationView(viewModel)
                     2 -> FamilyHistoryView(viewModel)
                     3 -> AllergyView(viewModel)
+                    4 -> RiskFactorsView(viewModel, navController)
                     else -> Text(tabs[index], modifier = Modifier.padding(16.dp))
                 }
             }
