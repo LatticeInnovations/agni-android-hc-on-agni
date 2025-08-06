@@ -24,6 +24,14 @@ class AddRiskFactorViewModel: BaseViewModel() {
     var startAgeErrorMsg by mutableStateOf("")
     var willingToQuit by mutableStateOf("")
 
+    var consumedWithin30Days by mutableStateOf("")
+    var alcoholQ1 by mutableStateOf("")
+    var alcoholQ1Error by mutableStateOf(false)
+    var alcoholQ2 by mutableStateOf("")
+    var alcoholQ2Error by mutableStateOf(false)
+    var alcoholQ3 by mutableStateOf("")
+    var alcoholQ3Error by mutableStateOf(false)
+
     fun resetTobaccoValues() {
         tobaccoType = ""
         otherTobacco = ""
@@ -35,5 +43,14 @@ class AddRiskFactorViewModel: BaseViewModel() {
         startAgeError = false
         startAgeErrorMsg = ""
         willingToQuit = ""
+    }
+
+    fun resetAlcoholValues() {
+        alcoholQ1 = ""
+        alcoholQ1Error = false
+        alcoholQ2 = ""
+        alcoholQ2Error = false
+        alcoholQ3 = ""
+        alcoholQ3Error = false
     }
 }

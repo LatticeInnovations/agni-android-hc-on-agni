@@ -33,6 +33,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.heartcare.agni.R
 import com.heartcare.agni.data.server.model.patient.PatientResponse
+import com.heartcare.agni.ui.historyandtests.risk.add.questions.AlcoholQuestions
 import com.heartcare.agni.ui.historyandtests.risk.add.questions.TobaccoQuestions
 import com.heartcare.agni.ui.theme.Black
 import com.heartcare.agni.ui.theme.White
@@ -128,6 +129,7 @@ private fun RiskFactorContent(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         TobaccoQuestions(viewModel)
+        AlcoholQuestions(viewModel)
     }
 }
 

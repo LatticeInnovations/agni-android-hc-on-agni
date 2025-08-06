@@ -64,7 +64,7 @@ fun TobaccoQuestions(
                 visible = viewModel.useTobacco == YesNoEnum.YES.display
             ) {
                 Column(
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     TobaccoQuestionTwo(viewModel)
                     TobaccoQuestionThree(viewModel)

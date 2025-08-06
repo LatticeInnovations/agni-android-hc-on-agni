@@ -645,4 +645,5 @@ include them in the household</string>
     <string name="value_in_range">Value must range from %d to %d</string>
     <string name="enter_age">Enter age (years) *</string>
     <string name="age_cannot_be_greater">Value cannot be greater than current age</string>
+    <string name="number_of_times">Number of times *</string>
 </resources>
