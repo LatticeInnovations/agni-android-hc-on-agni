@@ -26,7 +26,8 @@ enum class GenericTypeEnum(val number: Int, val value: String) {
     PRIOR_DX(23, "prior_dx"),
     HISTORY_MEDICATION(24, "history_medication"),
     FAMILY_HISTORY(25, "family_history"),
-    ALLERGY(26, "allergy");
+    ALLERGY(26, "allergy"),
+    RISK_FACTOR(27, "risk_factor");
 
     companion object {
         fun fromString(value: String) = entries.firstOrNull { it.value == value }

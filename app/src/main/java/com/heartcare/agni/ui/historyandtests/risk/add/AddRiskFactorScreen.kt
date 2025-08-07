@@ -29,7 +29,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.heartcare.agni.R
 import com.heartcare.agni.data.server.model.patient.PatientResponse
@@ -51,7 +51,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun AddRiskFactorScreen(
     navController: NavController,
-    viewModel: AddRiskFactorViewModel = viewModel()
+    viewModel: AddRiskFactorViewModel = hiltViewModel()
 ) {
     val coroutineScope = rememberCoroutineScope()
 
@@ -60,6 +60,7 @@ fun AddRiskFactorScreen(
             navController.previousBackStackEntry?.savedStateHandle
                 ?.get<PatientResponse>(PATIENT)?.let {
                     viewModel.patient = it
+                    viewModel.getTodayRiskFactor(it.id)
                 }
             viewModel.isLaunched = true
         }
@@ -107,14 +108,17 @@ fun AddRiskFactorScreen(
                 Button(
                     onClick = {
                         // save
-                        coroutineScope.launch {
-                            navController.previousBackStackEntry?.savedStateHandle?.set(
-                                RISK_FACTORS_SAVED,
-                                true
-                            )
-                            navController.navigateUp()
+                        viewModel.addRiskFactor {
+                            coroutineScope.launch {
+                                navController.previousBackStackEntry?.savedStateHandle?.set(
+                                    RISK_FACTORS_SAVED,
+                                    true
+                                )
+                                navController.navigateUp()
+                            }
                         }
                     },
+                    enabled = viewModel.isValid(),
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(8.dp)

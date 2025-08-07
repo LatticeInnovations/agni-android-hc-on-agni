@@ -4,12 +4,68 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.viewModelScope
 import com.heartcare.agni.base.viewmodel.BaseViewModel
+import com.heartcare.agni.data.local.enums.AppointmentStatusEnum
+import com.heartcare.agni.data.local.enums.FatFrequency.Companion.fatFrequencyCodeFromDisplay
+import com.heartcare.agni.data.local.enums.FatType
+import com.heartcare.agni.data.local.enums.FatType.Companion.fatTypeCodeFromDisplay
+import com.heartcare.agni.data.local.enums.FruitJuiceFrequency.Companion.fruitJuiceFrequencyCodeFromDisplay
+import com.heartcare.agni.data.local.enums.KnowEnum
+import com.heartcare.agni.data.local.enums.SaltAmountEnum.Companion.saltAmountCodeFromDisplay
+import com.heartcare.agni.data.local.enums.SaltFrequencyEnum.Companion.saltFrequencyCodeFromDisplay
+import com.heartcare.agni.data.local.enums.SoftDrinkFrequency.Companion.softDrinkFrequencyCodeFromDisplay
+import com.heartcare.agni.data.local.enums.TobaccoProduct
+import com.heartcare.agni.data.local.enums.TobaccoProduct.Companion.tobaccoTypeCodeFromDisplay
+import com.heartcare.agni.data.local.enums.YesNoEnum
+import com.heartcare.agni.data.local.enums.YesNoEnum.Companion.booleanFromDisplay
+import com.heartcare.agni.data.local.model.appointment.AppointmentResponseLocal
+import com.heartcare.agni.data.local.repository.appointment.AppointmentRepository
+import com.heartcare.agni.data.local.repository.generic.GenericRepository
+import com.heartcare.agni.data.local.repository.patient.lastupdated.PatientLastUpdatedRepository
+import com.heartcare.agni.data.local.repository.preference.PreferenceRepository
+import com.heartcare.agni.data.local.repository.risk.RiskFactorRepository
+import com.heartcare.agni.data.local.repository.schedule.ScheduleRepository
 import com.heartcare.agni.data.server.model.patient.PatientResponse
+import com.heartcare.agni.data.server.model.risk.AlcoholResponse
+import com.heartcare.agni.data.server.model.risk.FatAndOilResponse
+import com.heartcare.agni.data.server.model.risk.FruitsVegetablesResponse
+import com.heartcare.agni.data.server.model.risk.MealsOutsideHomeResponse
+import com.heartcare.agni.data.server.model.risk.PhysicalActivityResponse
+import com.heartcare.agni.data.server.model.risk.RiskFactorResponse
+import com.heartcare.agni.data.server.model.risk.SaltResponse
+import com.heartcare.agni.data.server.model.risk.SugarResponse
+import com.heartcare.agni.data.server.model.risk.TobaccoResponse
+import com.heartcare.agni.di.dispatcher.IoDispatcher
+import com.heartcare.agni.utils.builders.UUIDBuilder
+import com.heartcare.agni.utils.common.Queries.checkAndUpdateAppointmentStatusToInProgress
+import com.heartcare.agni.utils.common.Queries.updatePatientLastUpdated
+import com.heartcare.agni.utils.converters.responseconverter.NameConverter.getFullName
+import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.isToday
+import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toEndOfDay
+import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toTodayStartDate
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.launch
+import java.util.Date
+import javax.inject.Inject
 
-class AddRiskFactorViewModel: BaseViewModel() {
+@HiltViewModel
+class AddRiskFactorViewModel @Inject constructor(
+    private val riskFactorRepository: RiskFactorRepository,
+    private val appointmentRepository: AppointmentRepository,
+    private val preferenceRepository: PreferenceRepository,
+    private val genericRepository: GenericRepository,
+    private val scheduleRepository: ScheduleRepository,
+    private val patientLastUpdatedRepository: PatientLastUpdatedRepository,
+    @IoDispatcher private val ioDispatcher: CoroutineDispatcher
+) : BaseViewModel() {
+    val user = preferenceRepository.getUserDetails()!!
     var patient by mutableStateOf<PatientResponse?>(null)
     var isLaunched by mutableStateOf(false)
+    var appointmentResponseLocal by mutableStateOf<AppointmentResponseLocal?>(null)
+
+    var todayRiskFactor by mutableStateOf<RiskFactorResponse?>(null)
 
     var useTobacco by mutableStateOf("")
     var tobaccoType by mutableStateOf("")
@@ -111,5 +167,246 @@ class AddRiskFactorViewModel: BaseViewModel() {
         vigorousTimeError = false
         moderateTime = ""
         moderateTimeError = false
+    }
+
+    fun isValid(): Boolean {
+        return isTobaccoValid()
+                && isAlcoholValid()
+                && isDietValid()
+                && isPhysicalActivityValid()
+                && isFatTypeValid()
+                && isEatingOutValid()
+    }
+
+    private fun isTobaccoValid(): Boolean {
+        if (useTobacco != YesNoEnum.YES.display) return true
+
+        return tobaccoType.isNotBlank()
+                && (tobaccoType != TobaccoProduct.OTHER.display || otherTobacco.isNotBlank())
+                && tobaccoQuantity.isNotBlank()
+                && !tobaccoQuantityError
+                && startAge.isNotBlank()
+                && !startAgeError
+                && willingToQuit.isNotBlank()
+    }
+
+    private fun isAlcoholValid(): Boolean {
+        if (consumedWithin30Days != YesNoEnum.YES.display) return true
+
+        return alcoholQ1.isNotBlank()
+                && alcoholQ2.isNotBlank()
+                && alcoholQ3.isNotBlank()
+                && !alcoholQ1Error
+                && !alcoholQ2Error
+                && !alcoholQ3Error
+    }
+
+    private fun isDietValid(): Boolean {
+        if (consumptionInWeek != YesNoEnum.YES.display) return true
+
+        return fruitsDays.isNotBlank()
+                && vegetablesDays.isNotBlank()
+                && fruitServings.isNotBlank()
+                && vegetableServings.isNotBlank()
+                && !fruitsDaysError
+                && !vegetablesDaysError
+                && !fruitServingsError
+                && !vegetableServingsError
+    }
+
+    private fun isPhysicalActivityValid(): Boolean {
+        if (weeklyEngagement != YesNoEnum.YES.display) return true
+
+        return vigorousDays.isNotBlank()
+                && vigorousTime.isNotBlank()
+                && moderateDays.isNotBlank()
+                && moderateTime.isNotBlank()
+                && !vigorousDaysError
+                && !vigorousTimeError
+                && !moderateDaysError
+                && !moderateTimeError
+    }
+
+    private fun isFatTypeValid(): Boolean {
+        return oilUsed != FatType.OTHERS.display || otherFatAndOils.isNotBlank()
+    }
+
+    private fun isEatingOutValid(): Boolean {
+        return eatsOut != KnowEnum.KNOW.display || (mealsPerWeek.isNotBlank() && !mealsPerWeekError)
+    }
+
+    fun getTodayRiskFactor(patientId: String) {
+        viewModelScope.launch(ioDispatcher) {
+            todayRiskFactor =
+                riskFactorRepository.getRiskFactorRecords(patientId).firstOrNull {
+                    isToday(it.appUpdatedDate)
+                }
+            todayRiskFactor?.let {
+
+            }
+        }
+    }
+
+    private suspend fun getAppointment() {
+        appointmentResponseLocal =
+            appointmentRepository.getAppointmentListByDate(
+                Date().toTodayStartDate(),
+                Date().toEndOfDay()
+            ).firstOrNull { appointmentEntity ->
+                appointmentEntity.patientId == patient!!.id && appointmentEntity.status != AppointmentStatusEnum.CANCELLED.value
+                        && user.hospitalCode == appointmentEntity.hospitalCode
+            }
+    }
+
+    private fun getRiskFactorResponse(
+        uuid: String = UUIDBuilder.generateUUID(),
+        fhirId: String? = null,
+        appUpdatedDate: Date = Date()
+    ): RiskFactorResponse {
+        return RiskFactorResponse(
+            uuid = uuid,
+            fhirId = fhirId,
+            appointmentId = appointmentResponseLocal!!.appointmentId
+                ?: appointmentResponseLocal!!.uuid,
+            patientId = patient!!.fhirId ?: patient!!.id,
+            practitionerId = null,
+            practitionerName = null,
+            appUpdatedDate = appUpdatedDate,
+            tobacco = getTobaccoResponse(),
+            alcohol = getAlcoholResponse(),
+            fruitsVegetables = getFruitAndVegetableResponse(),
+            physicalActivity = getPhysicalActivityResponse(),
+            salt = getSaltResponse(),
+            fatAndOil = getFatAndOilResponse(),
+            sugar = getSugarResponse(),
+            mealsOutsideHome = getMealsOutsideHome(),
+        )
+    }
+
+    private fun getTobaccoResponse(): TobaccoResponse? {
+        return if (useTobacco.isBlank()) null
+        else TobaccoResponse(
+            tobaccoUser = booleanFromDisplay(useTobacco)!!,
+            tobaccoItemType = tobaccoTypeCodeFromDisplay(tobaccoType),
+            tobaccoOther = otherTobacco.ifBlank { null },
+            consumptionAmount = tobaccoQuantity.ifBlank { null }?.toInt(),
+            consumptionUnit = if (tobaccoQuantity.isBlank()) null else quantityOptions[selectedQuantityOption],
+            startAge = startAge.ifBlank { null }?.toInt(),
+            willingToQuit = booleanFromDisplay(willingToQuit)
+        )
+    }
+
+    private fun getAlcoholResponse(): AlcoholResponse? {
+        return if (consumedWithin30Days.isBlank()) null
+        else AlcoholResponse(
+            consumedWithin30Days = booleanFromDisplay(consumedWithin30Days)!!,
+            alcoholQ1 = alcoholQ1.ifBlank { null }?.toInt(),
+            alcoholQ2 = alcoholQ2.ifBlank { null }?.toInt(),
+            alcoholQ3 = alcoholQ3.ifBlank { null }?.toInt()
+        )
+    }
+
+    private fun getFruitAndVegetableResponse(): FruitsVegetablesResponse? {
+        return if (consumptionInWeek.isBlank()) null
+        else FruitsVegetablesResponse(
+            consumptionInWeek = booleanFromDisplay(consumptionInWeek)!!,
+            fruitServings = fruitServings.ifBlank { null }?.toInt(),
+            fruitsDays = fruitsDays.ifBlank { null }?.toInt(),
+            vegetableDays = vegetablesDays.ifBlank { null }?.toInt(),
+            vegetableServings = vegetableServings.ifBlank { null }?.toInt()
+        )
+    }
+
+    private fun getPhysicalActivityResponse(): PhysicalActivityResponse? {
+        return if (weeklyEngagement.isBlank()) null
+        else PhysicalActivityResponse(
+            weeklyEngagement = booleanFromDisplay(weeklyEngagement)!!,
+            moderateDays = moderateDays.ifBlank { null }?.toInt(),
+            moderateTime = moderateTime.ifBlank { null }?.toInt(),
+            vigorousDays = vigorousDays.ifBlank { null }?.toInt(),
+            vigorousTime = vigorousTime.ifBlank { null }?.toInt()
+        )
+    }
+
+    private fun getSaltResponse(): SaltResponse? {
+        return if (saltAddCooking.isBlank()
+            && saltAddMeal.isBlank()
+            && saltAmount.isBlank()
+            && saltProcessedFood.isBlank()
+        ) null
+        else SaltResponse(
+            saltAddCooking = saltAmountCodeFromDisplay(saltAddCooking),
+            saltAddMeal = saltFrequencyCodeFromDisplay(saltAddMeal),
+            saltAmount = saltFrequencyCodeFromDisplay(saltAmount),
+            saltProcessedFood = saltFrequencyCodeFromDisplay(saltProcessedFood)
+        )
+    }
+
+    private fun getFatAndOilResponse(): FatAndOilResponse? {
+        return if (oilUsed.isBlank() && fatFoodFrequency.isBlank()) null
+        else FatAndOilResponse(
+            oilUsed = fatTypeCodeFromDisplay(oilUsed),
+            fatFoodFrequency = fatFrequencyCodeFromDisplay(fatFoodFrequency),
+            otherFatAndOils = otherFatAndOils.ifBlank { null }
+        )
+    }
+
+    private fun getSugarResponse(): SugarResponse? {
+        return if (juiceFrequency.isBlank() && softDrinkFrequency.isBlank()) null
+        else SugarResponse(
+            juiceFrequency = fruitJuiceFrequencyCodeFromDisplay(juiceFrequency),
+            softDrinkFrequency = softDrinkFrequencyCodeFromDisplay(softDrinkFrequency)
+        )
+    }
+
+    private fun getMealsOutsideHome(): MealsOutsideHomeResponse? {
+        return if (eatsOut.isBlank()) null
+        else MealsOutsideHomeResponse(
+            eatsOut = if (eatsOut.isBlank()) null else eatsOut == KnowEnum.KNOW.display,
+            mealsPerWeek = mealsPerWeek.ifBlank { null }?.toInt()
+        )
+    }
+
+    fun addRiskFactor(
+        added: () -> Unit
+    ) {
+        viewModelScope.launch(ioDispatcher) {
+            getAppointment()
+            var uuid = UUIDBuilder.generateUUID()
+            var fhirId: String? = null
+            todayRiskFactor?.let {
+                uuid = it.uuid
+                fhirId = it.fhirId
+            }
+            val riskFactorResponse = getRiskFactorResponse(uuid)
+            riskFactorRepository.insertRiskFactor(
+                riskFactorResponse.copy(
+                    appointmentId = appointmentResponseLocal!!.uuid,
+                    patientId = patient!!.id,
+                    practitionerName = getFullName(
+                        user.firstName,
+                        user.lastName
+                    ),
+                    practitionerId = user.fhirId,
+                    fhirId = fhirId
+                )
+            )
+            genericRepository.insertRiskFactorRecord(riskFactorResponse)
+            checkAndUpdateAppointmentStatusToInProgress(
+                inProgressTime = riskFactorResponse.appUpdatedDate,
+                patient = patient!!,
+                appointmentResponseLocal = appointmentResponseLocal!!,
+                appointmentRepository = appointmentRepository,
+                scheduleRepository = scheduleRepository,
+                genericRepository = genericRepository,
+                preferenceRepository = preferenceRepository
+            )
+            updatePatientLastUpdated(
+                patient!!.id,
+                patientLastUpdatedRepository,
+                genericRepository
+            )
+            added()
+        }
     }
 }

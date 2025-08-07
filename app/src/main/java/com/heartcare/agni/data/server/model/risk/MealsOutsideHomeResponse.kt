@@ -4,6 +4,6 @@ import androidx.annotation.Keep
 
 @Keep
 data class MealsOutsideHomeResponse(
-    val eatsOut: Boolean,
+    val eatsOut: Boolean?,
     val mealsPerWeek: Int?
 )

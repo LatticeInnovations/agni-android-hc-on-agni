@@ -10,5 +10,6 @@ enum class SaltAmountEnum(val code: Int, val display: String) {
 
     companion object {
         fun listOfSaltAmount() = entries.map { it.display }
+        fun saltAmountCodeFromDisplay(display: String) = entries.firstOrNull { it.display == display }?.code
     }
 }

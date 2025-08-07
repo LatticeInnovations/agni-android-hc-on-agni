@@ -11,5 +11,6 @@ enum class FatType(val code: Int, val display: String) {
 
     companion object {
         fun listOfFatType() = entries.map { it.display }
+        fun fatTypeCodeFromDisplay(display: String) = entries.firstOrNull { it.display == display }?.code
     }
 }
