@@ -42,6 +42,16 @@ class AddRiskFactorViewModel: BaseViewModel() {
     var vegetableServings by mutableStateOf("")
     var vegetableServingsError by mutableStateOf(false)
 
+    var weeklyEngagement by mutableStateOf("")
+    var vigorousDays by mutableStateOf("")
+    var vigorousDaysError by mutableStateOf(false)
+    var moderateDays by mutableStateOf("")
+    var moderateDaysError by mutableStateOf(false)
+    var vigorousTime by mutableStateOf("")
+    var vigorousTimeError by mutableStateOf(false)
+    var moderateTime by mutableStateOf("")
+    var moderateTimeError by mutableStateOf(false)
+
     fun resetTobaccoValues() {
         tobaccoType = ""
         otherTobacco = ""
@@ -73,5 +83,16 @@ class AddRiskFactorViewModel: BaseViewModel() {
         fruitServingsError = false
         vegetableServings = ""
         vegetableServingsError = false
+    }
+
+    fun resetPhysicalActivityValues() {
+        vigorousDays = ""
+        vigorousDaysError = false
+        moderateDays = ""
+        moderateDaysError = false
+        vigorousTime = ""
+        vigorousTimeError = false
+        moderateTime = ""
+        moderateTimeError = false
     }
 }

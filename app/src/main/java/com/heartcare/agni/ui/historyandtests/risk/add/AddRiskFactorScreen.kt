@@ -35,6 +35,7 @@ import com.heartcare.agni.R
 import com.heartcare.agni.data.server.model.patient.PatientResponse
 import com.heartcare.agni.ui.historyandtests.risk.add.questions.AlcoholQuestions
 import com.heartcare.agni.ui.historyandtests.risk.add.questions.FruitsAndVegetables
+import com.heartcare.agni.ui.historyandtests.risk.add.questions.PhysicalActivityQuestions
 import com.heartcare.agni.ui.historyandtests.risk.add.questions.TobaccoQuestions
 import com.heartcare.agni.ui.theme.Black
 import com.heartcare.agni.ui.theme.White
@@ -132,6 +133,7 @@ private fun RiskFactorContent(
         TobaccoQuestions(viewModel)
         AlcoholQuestions(viewModel)
         FruitsAndVegetables(viewModel)
+        PhysicalActivityQuestions(viewModel)
     }
 }
 

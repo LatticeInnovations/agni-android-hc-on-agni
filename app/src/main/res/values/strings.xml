@@ -650,4 +650,6 @@ include them in the household</string>
     <string name="days_in_week_vegetables">Days/week eating vegetables *</string>
     <string name="fruits_serving">Fruit servings/day *</string>
     <string name="vegetable_serving">Vegetable servings/day *</string>
+    <string name="number_of_days">Number of days *</string>
+    <string name="duration_in_minutes">Duration in minutes *</string>
 </resources>
