@@ -52,6 +52,11 @@ class AddRiskFactorViewModel: BaseViewModel() {
     var moderateTime by mutableStateOf("")
     var moderateTimeError by mutableStateOf(false)
 
+    var saltAmount by mutableStateOf("")
+    var saltAddCooking by mutableStateOf("")
+    var saltAddMeal by mutableStateOf("")
+    var saltProcessedFood by mutableStateOf("")
+
     fun resetTobaccoValues() {
         tobaccoType = ""
         otherTobacco = ""
