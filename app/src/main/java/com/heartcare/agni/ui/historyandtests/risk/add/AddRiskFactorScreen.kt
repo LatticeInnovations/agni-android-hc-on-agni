@@ -38,6 +38,7 @@ import com.heartcare.agni.ui.historyandtests.risk.add.questions.FatAndOilQuestio
 import com.heartcare.agni.ui.historyandtests.risk.add.questions.FruitsAndVegetables
 import com.heartcare.agni.ui.historyandtests.risk.add.questions.PhysicalActivityQuestions
 import com.heartcare.agni.ui.historyandtests.risk.add.questions.SaltQuestions
+import com.heartcare.agni.ui.historyandtests.risk.add.questions.SugarQuestions
 import com.heartcare.agni.ui.historyandtests.risk.add.questions.TobaccoQuestions
 import com.heartcare.agni.ui.theme.Black
 import com.heartcare.agni.ui.theme.White
@@ -138,6 +139,7 @@ private fun RiskFactorContent(
         PhysicalActivityQuestions(viewModel)
         SaltQuestions(viewModel)
         FatAndOilQuestions(viewModel)
+        SugarQuestions(viewModel)
     }
 }
 

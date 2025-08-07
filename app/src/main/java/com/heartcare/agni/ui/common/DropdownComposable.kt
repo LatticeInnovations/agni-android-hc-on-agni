@@ -44,7 +44,6 @@ fun DropdownComposable(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             },
-            singleLine = true,
             readOnly = true,
             modifier = Modifier
                 .fillMaxWidth(),
