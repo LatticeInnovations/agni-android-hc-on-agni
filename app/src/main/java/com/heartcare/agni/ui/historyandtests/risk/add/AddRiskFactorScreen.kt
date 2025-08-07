@@ -34,6 +34,7 @@ import androidx.navigation.NavController
 import com.heartcare.agni.R
 import com.heartcare.agni.data.server.model.patient.PatientResponse
 import com.heartcare.agni.ui.historyandtests.risk.add.questions.AlcoholQuestions
+import com.heartcare.agni.ui.historyandtests.risk.add.questions.FatAndOilQuestions
 import com.heartcare.agni.ui.historyandtests.risk.add.questions.FruitsAndVegetables
 import com.heartcare.agni.ui.historyandtests.risk.add.questions.PhysicalActivityQuestions
 import com.heartcare.agni.ui.historyandtests.risk.add.questions.SaltQuestions
@@ -136,6 +137,7 @@ private fun RiskFactorContent(
         FruitsAndVegetables(viewModel)
         PhysicalActivityQuestions(viewModel)
         SaltQuestions(viewModel)
+        FatAndOilQuestions(viewModel)
     }
 }
 

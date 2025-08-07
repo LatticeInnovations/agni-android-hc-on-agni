@@ -57,6 +57,11 @@ class AddRiskFactorViewModel: BaseViewModel() {
     var saltAddMeal by mutableStateOf("")
     var saltProcessedFood by mutableStateOf("")
 
+    var oilUsed by mutableStateOf("")
+    var fatFoodFrequency by mutableStateOf("")
+    var otherFatAndOils by mutableStateOf("")
+    var otherFatAndOilsError by mutableStateOf(false)
+
     fun resetTobaccoValues() {
         tobaccoType = ""
         otherTobacco = ""

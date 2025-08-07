@@ -653,4 +653,5 @@ include them in the household</string>
     <string name="number_of_days">Number of days *</string>
     <string name="duration_in_minutes">Duration in minutes *</string>
     <string name="select">Select</string>
+    <string name="other_fat_and_oil">Other fats and oils</string>
 </resources>
