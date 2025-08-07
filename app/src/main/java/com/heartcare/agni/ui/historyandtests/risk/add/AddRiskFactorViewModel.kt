@@ -32,6 +32,16 @@ class AddRiskFactorViewModel: BaseViewModel() {
     var alcoholQ3 by mutableStateOf("")
     var alcoholQ3Error by mutableStateOf(false)
 
+    var consumptionInWeek by mutableStateOf("")
+    var fruitsDays by mutableStateOf("")
+    var fruitsDaysError by mutableStateOf(false)
+    var vegetablesDays by mutableStateOf("")
+    var vegetablesDaysError by mutableStateOf(false)
+    var fruitServings by mutableStateOf("")
+    var fruitServingsError by mutableStateOf(false)
+    var vegetableServings by mutableStateOf("")
+    var vegetableServingsError by mutableStateOf(false)
+
     fun resetTobaccoValues() {
         tobaccoType = ""
         otherTobacco = ""
@@ -52,5 +62,16 @@ class AddRiskFactorViewModel: BaseViewModel() {
         alcoholQ2Error = false
         alcoholQ3 = ""
         alcoholQ3Error = false
+    }
+
+    fun resetFruitsVegetablesValues() {
+        fruitsDays = ""
+        fruitsDaysError = false
+        vegetablesDays = ""
+        vegetablesDaysError = false
+        fruitServings = ""
+        fruitServingsError = false
+        vegetableServings = ""
+        vegetableServingsError = false
     }
 }

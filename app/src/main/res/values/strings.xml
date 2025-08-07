@@ -646,4 +646,8 @@ include them in the household</string>
     <string name="enter_age">Enter age (years) *</string>
     <string name="age_cannot_be_greater">Value cannot be greater than current age</string>
     <string name="number_of_times">Number of times *</string>
+    <string name="days_in_week_fruits">Days/week eating fruits *</string>
+    <string name="days_in_week_vegetables">Days/week eating vegetables *</string>
+    <string name="fruits_serving">Fruit servings/day *</string>
+    <string name="vegetable_serving">Vegetable servings/day *</string>
 </resources>
