@@ -65,6 +65,10 @@ class AddRiskFactorViewModel: BaseViewModel() {
     var softDrinkFrequency by mutableStateOf("")
     var juiceFrequency by mutableStateOf("")
 
+    var eatsOut by mutableStateOf("")
+    var mealsPerWeek by mutableStateOf("")
+    var mealsPerWeekError by mutableStateOf(false)
+
     fun resetTobaccoValues() {
         tobaccoType = ""
         otherTobacco = ""
