@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "9616081e753ef8d09f1a92d460da66a1",
+    "identityHash": "9699378755cd456107800a8501f14259",
     "entities": [
       {
         "tableName": "PatientEntity",
@@ -3174,6 +3174,261 @@
             ]
           }
         ]
+      },
+      {
+        "tableName": "RiskFactorEntity",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`uuid` TEXT NOT NULL, `fhirId` TEXT, `appointmentId` TEXT NOT NULL, `patientId` TEXT NOT NULL, `appUpdatedDate` INTEGER NOT NULL, `practitionerId` TEXT, `practitionerName` TEXT, `tobaccoUser` INTEGER, `tobaccoItemType` INTEGER, `tobaccoOther` TEXT, `consumptionAmount` INTEGER, `consumptionUnit` TEXT, `startAge` INTEGER, `willingToQuit` INTEGER, `consumedWithin30Days` INTEGER, `alcoholQ1` INTEGER, `alcoholQ2` INTEGER, `alcoholQ3` INTEGER, `consumptionInWeek` INTEGER, `fruitsDays` INTEGER, `fruitServings` INTEGER, `vegetableDays` INTEGER, `vegetableServings` INTEGER, `weeklyEngagement` INTEGER, `vigorousDays` INTEGER, `vigorousTime` INTEGER, `moderateDays` INTEGER, `moderateTime` INTEGER, `saltAmount` INTEGER, `saltAddMeal` INTEGER, `saltAddCooking` INTEGER, `saltProcessedFood` INTEGER, `oilUsed` INTEGER, `fatFoodFrequency` INTEGER, `otherFatAndOils` TEXT, `softDrinkFrequency` INTEGER, `juiceFrequency` INTEGER, `eatsOut` INTEGER, `mealsPerWeek` INTEGER, PRIMARY KEY(`uuid`), FOREIGN KEY(`patientId`) REFERENCES `PatientEntity`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION , FOREIGN KEY(`appointmentId`) REFERENCES `AppointmentEntity`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION )",
+        "fields": [
+          {
+            "fieldPath": "uuid",
+            "columnName": "uuid",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "fhirId",
+            "columnName": "fhirId",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "appointmentId",
+            "columnName": "appointmentId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "patientId",
+            "columnName": "patientId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "appUpdatedDate",
+            "columnName": "appUpdatedDate",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "practitionerId",
+            "columnName": "practitionerId",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "practitionerName",
+            "columnName": "practitionerName",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "tobacco.tobaccoUser",
+            "columnName": "tobaccoUser",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "tobacco.tobaccoItemType",
+            "columnName": "tobaccoItemType",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "tobacco.tobaccoOther",
+            "columnName": "tobaccoOther",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "tobacco.consumptionAmount",
+            "columnName": "consumptionAmount",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "tobacco.consumptionUnit",
+            "columnName": "consumptionUnit",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "tobacco.startAge",
+            "columnName": "startAge",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "tobacco.willingToQuit",
+            "columnName": "willingToQuit",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "alcohol.consumedWithin30Days",
+            "columnName": "consumedWithin30Days",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "alcohol.alcoholQ1",
+            "columnName": "alcoholQ1",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "alcohol.alcoholQ2",
+            "columnName": "alcoholQ2",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "alcohol.alcoholQ3",
+            "columnName": "alcoholQ3",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "fruitsVegetables.consumptionInWeek",
+            "columnName": "consumptionInWeek",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "fruitsVegetables.fruitsDays",
+            "columnName": "fruitsDays",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "fruitsVegetables.fruitServings",
+            "columnName": "fruitServings",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "fruitsVegetables.vegetableDays",
+            "columnName": "vegetableDays",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "fruitsVegetables.vegetableServings",
+            "columnName": "vegetableServings",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "physicalActivity.weeklyEngagement",
+            "columnName": "weeklyEngagement",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "physicalActivity.vigorousDays",
+            "columnName": "vigorousDays",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "physicalActivity.vigorousTime",
+            "columnName": "vigorousTime",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "physicalActivity.moderateDays",
+            "columnName": "moderateDays",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "physicalActivity.moderateTime",
+            "columnName": "moderateTime",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "salt.saltAmount",
+            "columnName": "saltAmount",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "salt.saltAddMeal",
+            "columnName": "saltAddMeal",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "salt.saltAddCooking",
+            "columnName": "saltAddCooking",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "salt.saltProcessedFood",
+            "columnName": "saltProcessedFood",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "fatAndOil.oilUsed",
+            "columnName": "oilUsed",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "fatAndOil.fatFoodFrequency",
+            "columnName": "fatFoodFrequency",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "fatAndOil.otherFatAndOils",
+            "columnName": "otherFatAndOils",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "sugar.softDrinkFrequency",
+            "columnName": "softDrinkFrequency",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "sugar.juiceFrequency",
+            "columnName": "juiceFrequency",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "mealsOutsideHome.eatsOut",
+            "columnName": "eatsOut",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "mealsOutsideHome.mealsPerWeek",
+            "columnName": "mealsPerWeek",
+            "affinity": "INTEGER"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "uuid"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_RiskFactorEntity_patientId",
+            "unique": false,
+            "columnNames": [
+              "patientId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_RiskFactorEntity_patientId` ON `${TABLE_NAME}` (`patientId`)"
+          },
+          {
+            "name": "index_RiskFactorEntity_appointmentId",
+            "unique": false,
+            "columnNames": [
+              "appointmentId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_RiskFactorEntity_appointmentId` ON `${TABLE_NAME}` (`appointmentId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "PatientEntity",
+            "onDelete": "NO ACTION",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "patientId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          },
+          {
+            "table": "AppointmentEntity",
+            "onDelete": "NO ACTION",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "appointmentId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
       }
     ],
     "views": [
@@ -3188,7 +3443,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '9616081e753ef8d09f1a92d460da66a1')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '9699378755cd456107800a8501f14259')"
     ]
   }
 }

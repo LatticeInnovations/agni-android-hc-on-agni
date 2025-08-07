@@ -38,6 +38,8 @@ import com.heartcare.agni.data.local.repository.priordx.PriorDxRepository
 import com.heartcare.agni.data.local.repository.priordx.PriorDxRepositoryImpl
 import com.heartcare.agni.data.local.repository.relation.RelationRepository
 import com.heartcare.agni.data.local.repository.relation.RelationRepositoryImpl
+import com.heartcare.agni.data.local.repository.risk.RiskFactorRepository
+import com.heartcare.agni.data.local.repository.risk.RiskFactorRepositoryImpl
 import com.heartcare.agni.data.local.repository.schedule.ScheduleRepository
 import com.heartcare.agni.data.local.repository.schedule.ScheduleRepositoryImpl
 import com.heartcare.agni.data.local.repository.search.SearchRepository
@@ -195,4 +197,8 @@ abstract class RepositoryModule {
     @Binds
     @ViewModelScoped
     abstract fun provideAllergyRepository(allergyRepositoryImpl: AllergyRepositoryImpl): AllergyRepository
+
+    @Binds
+    @ViewModelScoped
+    abstract fun provideRiskFactorRepository(riskFactorRepositoryImpl: RiskFactorRepositoryImpl): RiskFactorRepository
 }
