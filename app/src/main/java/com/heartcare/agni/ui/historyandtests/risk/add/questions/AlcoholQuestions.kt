@@ -132,10 +132,10 @@ private fun AlcoholQuestionThree(
 private fun AlcoholQuestionFour(
     viewModel: AddRiskFactorViewModel
 ) {
-    Question(stringResource(R.string.alcohol_question_two))
+    Question(stringResource(R.string.alcohol_question_four))
     CustomTextField(
         value = viewModel.alcoholQ3,
-        label = stringResource(R.string.number_of_times),
+        label = stringResource(R.string.number_of_standard_drinks),
         weight = 1f,
         maxLength = 2,
         isError = viewModel.alcoholQ3Error,

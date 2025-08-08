@@ -656,4 +656,5 @@ include them in the household</string>
     <string name="other_fat_and_oil">Other fats and oils</string>
     <string name="number_of_meals_per_week">Number of meals per week *</string>
     <string name="update_risk_factor">Update risk factor</string>
+    <string name="number_of_standard_drinks">Number of standard drinks *</string>
 </resources>
