@@ -159,7 +159,7 @@ private fun TobaccoQuestionThree(
             keyboardCapitalization = KeyboardCapitalization.None,
             singleLine = true,
             updateValue = {
-                if (it.matches(onlyNumbers) || it.isBlank()) viewModel.tobaccoQuantity = it
+                if (it.matches(onlyNumbers) || it.isEmpty()) viewModel.tobaccoQuantity = it
                 viewModel.tobaccoQuantityError =
                     viewModel.tobaccoQuantity.isBlank() || viewModel.tobaccoQuantity.toInt() !in 0..100
             },
@@ -212,7 +212,7 @@ private fun TobaccoQuestionFour(
         keyboardCapitalization = KeyboardCapitalization.None,
         singleLine = true,
         updateValue = {
-            if (it.matches(onlyNumbers) || it.isBlank()) viewModel.startAge = it
+            if (it.matches(onlyNumbers) || it.isEmpty()) viewModel.startAge = it
             viewModel.startAgeError =
                 viewModel.startAge.isBlank() || viewModel.startAge.toInt() !in 0..viewModel.patient!!.birthDate.toTimeInMilli()
                     .toAge()

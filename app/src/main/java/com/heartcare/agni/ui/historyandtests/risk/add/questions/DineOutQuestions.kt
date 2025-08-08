@@ -60,7 +60,7 @@ fun DineOutQuestions(
                     keyboardCapitalization = KeyboardCapitalization.None,
                     singleLine = true,
                     updateValue = {
-                        if (it.matches(onlyNumbers) || it.isBlank()) viewModel.mealsPerWeek = it
+                        if (it.matches(onlyNumbers) || it.isEmpty()) viewModel.mealsPerWeek = it
                         viewModel.mealsPerWeekError =
                             viewModel.mealsPerWeek.isBlank() || viewModel.mealsPerWeek.toInt() !in 0..50
                     }

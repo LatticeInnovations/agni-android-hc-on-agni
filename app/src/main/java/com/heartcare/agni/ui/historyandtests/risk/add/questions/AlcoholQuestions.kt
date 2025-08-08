@@ -98,7 +98,7 @@ private fun AlcoholQuestionTwo(
         keyboardCapitalization = KeyboardCapitalization.None,
         singleLine = true,
         updateValue = {
-            if (it.matches(onlyNumbers) || it.isBlank()) viewModel.alcoholQ1 = it
+            if (it.matches(onlyNumbers) || it.isEmpty()) viewModel.alcoholQ1 = it
             viewModel.alcoholQ1Error =
                 viewModel.alcoholQ1.isBlank() || viewModel.alcoholQ1.toInt() !in 0..30
         }
@@ -112,7 +112,7 @@ private fun AlcoholQuestionThree(
     Question(stringResource(R.string.alcohol_question_three))
     CustomTextField(
         value = viewModel.alcoholQ2,
-        label = stringResource(R.string.number_of_times),
+        label = stringResource(R.string.number_of_standard_drinks),
         weight = 1f,
         maxLength = 2,
         isError = viewModel.alcoholQ2Error,
@@ -121,7 +121,7 @@ private fun AlcoholQuestionThree(
         keyboardCapitalization = KeyboardCapitalization.None,
         singleLine = true,
         updateValue = {
-            if (it.matches(onlyNumbers) || it.isBlank()) viewModel.alcoholQ2 = it
+            if (it.matches(onlyNumbers) || it.isEmpty()) viewModel.alcoholQ2 = it
             viewModel.alcoholQ2Error =
                 viewModel.alcoholQ2.isBlank() || viewModel.alcoholQ2.toInt() !in 0..20
         }
@@ -135,7 +135,7 @@ private fun AlcoholQuestionFour(
     Question(stringResource(R.string.alcohol_question_four))
     CustomTextField(
         value = viewModel.alcoholQ3,
-        label = stringResource(R.string.number_of_standard_drinks),
+        label = stringResource(R.string.number_of_times),
         weight = 1f,
         maxLength = 2,
         isError = viewModel.alcoholQ3Error,
@@ -144,7 +144,7 @@ private fun AlcoholQuestionFour(
         keyboardCapitalization = KeyboardCapitalization.None,
         singleLine = true,
         updateValue = {
-            if (it.matches(onlyNumbers) || it.isBlank()) viewModel.alcoholQ3 = it
+            if (it.matches(onlyNumbers) || it.isEmpty()) viewModel.alcoholQ3 = it
             viewModel.alcoholQ3Error =
                 viewModel.alcoholQ3.isBlank() || viewModel.alcoholQ3.toInt() !in 0..30
         }
