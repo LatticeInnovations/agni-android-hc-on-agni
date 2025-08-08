@@ -72,8 +72,10 @@ private fun AlcoholQuestionOne(
                 selected = viewModel.consumedWithin30Days,
                 option = option,
                 onClick = {
-                    viewModel.consumedWithin30Days = option
-                    if (option == YesNoEnum.NO.display) viewModel.resetAlcoholValues()
+                    if (option == viewModel.consumedWithin30Days) viewModel.consumedWithin30Days = ""
+                    else viewModel.consumedWithin30Days = option
+                    if (viewModel.consumedWithin30Days == YesNoEnum.NO.display
+                        || viewModel.consumedWithin30Days.isBlank()) viewModel.resetAlcoholValues()
                 }
             )
         }

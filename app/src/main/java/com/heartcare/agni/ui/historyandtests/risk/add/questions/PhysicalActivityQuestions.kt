@@ -73,8 +73,10 @@ private fun PhysicalActivityQuestionOne(
                 selected = viewModel.weeklyEngagement,
                 option = option,
                 onClick = {
-                    viewModel.weeklyEngagement = option
-                    if (option == YesNoEnum.NO.display) viewModel.resetPhysicalActivityValues()
+                    if (option == viewModel.weeklyEngagement) viewModel.weeklyEngagement = ""
+                    else viewModel.weeklyEngagement = option
+                    if (viewModel.weeklyEngagement == YesNoEnum.NO.display
+                        || viewModel.weeklyEngagement.isBlank()) viewModel.resetPhysicalActivityValues()
                 }
             )
         }

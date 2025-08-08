@@ -73,8 +73,10 @@ private fun FruitsAndVegetablesOne(
                 selected = viewModel.consumptionInWeek,
                 option = option,
                 onClick = {
-                    viewModel.consumptionInWeek = option
-                    if (option == YesNoEnum.NO.display) viewModel.resetFruitsVegetablesValues()
+                    if (option == viewModel.consumptionInWeek) viewModel.consumptionInWeek = ""
+                    else viewModel.consumptionInWeek = option
+                    if (viewModel.consumptionInWeek == YesNoEnum.NO.display
+                        || viewModel.consumptionInWeek.isBlank()) viewModel.resetFruitsVegetablesValues()
                 }
             )
         }

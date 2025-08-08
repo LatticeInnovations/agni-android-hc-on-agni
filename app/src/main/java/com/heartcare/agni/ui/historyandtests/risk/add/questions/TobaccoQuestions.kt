@@ -89,8 +89,10 @@ private fun TobaccoQuestionOne(
                 selected = viewModel.useTobacco,
                 option = option,
                 onClick = {
-                    viewModel.useTobacco = option
-                    if (option == YesNoEnum.NO.display) viewModel.resetTobaccoValues()
+                    if (option == viewModel.useTobacco) viewModel.useTobacco = ""
+                    else viewModel.useTobacco = option
+                    if (viewModel.useTobacco == YesNoEnum.NO.display
+                        || viewModel.useTobacco.isBlank()) viewModel.resetTobaccoValues()
                 }
             )
         }
