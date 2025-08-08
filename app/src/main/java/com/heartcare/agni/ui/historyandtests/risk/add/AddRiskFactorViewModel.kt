@@ -28,6 +28,7 @@ import com.heartcare.agni.data.local.enums.YesNoEnum
 import com.heartcare.agni.data.local.enums.YesNoEnum.Companion.booleanFromDisplay
 import com.heartcare.agni.data.local.model.appointment.AppointmentResponseLocal
 import com.heartcare.agni.data.local.repository.appointment.AppointmentRepository
+import com.heartcare.agni.data.local.repository.cvd.records.CVDAssessmentRepository
 import com.heartcare.agni.data.local.repository.generic.GenericRepository
 import com.heartcare.agni.data.local.repository.patient.lastupdated.PatientLastUpdatedRepository
 import com.heartcare.agni.data.local.repository.preference.PreferenceRepository
@@ -61,6 +62,7 @@ import kotlin.text.toInt
 @HiltViewModel
 class AddRiskFactorViewModel @Inject constructor(
     private val riskFactorRepository: RiskFactorRepository,
+    private val cvdAssessmentRepository: CVDAssessmentRepository,
     private val appointmentRepository: AppointmentRepository,
     private val preferenceRepository: PreferenceRepository,
     private val genericRepository: GenericRepository,
@@ -257,6 +259,12 @@ class AddRiskFactorViewModel @Inject constructor(
                 mapFatAndOil(rf.fatAndOil)
                 mapSugar(rf.sugar)
                 mapMealsOutside(rf.mealsOutsideHome)
+            }
+
+            if (todayRiskFactor == null) {
+                cvdAssessmentRepository.getCVDRecord(patient!!.id).firstOrNull()?.let { record ->
+                    useTobacco = YesNoEnum.displayFromCode(record.smoker)
+                }
             }
         }
     }
