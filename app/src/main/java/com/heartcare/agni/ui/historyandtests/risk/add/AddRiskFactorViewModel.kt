@@ -8,15 +8,22 @@ import androidx.lifecycle.viewModelScope
 import com.heartcare.agni.base.viewmodel.BaseViewModel
 import com.heartcare.agni.data.local.enums.AppointmentStatusEnum
 import com.heartcare.agni.data.local.enums.FatFrequency.Companion.fatFrequencyCodeFromDisplay
+import com.heartcare.agni.data.local.enums.FatFrequency.Companion.fatFrequencyDisplayFromCode
 import com.heartcare.agni.data.local.enums.FatType
 import com.heartcare.agni.data.local.enums.FatType.Companion.fatTypeCodeFromDisplay
+import com.heartcare.agni.data.local.enums.FatType.Companion.fatTypeDisplayFromCode
 import com.heartcare.agni.data.local.enums.FruitJuiceFrequency.Companion.fruitJuiceFrequencyCodeFromDisplay
+import com.heartcare.agni.data.local.enums.FruitJuiceFrequency.Companion.fruitJuiceFrequencyDisplayFromCode
 import com.heartcare.agni.data.local.enums.KnowEnum
 import com.heartcare.agni.data.local.enums.SaltAmountEnum.Companion.saltAmountCodeFromDisplay
+import com.heartcare.agni.data.local.enums.SaltAmountEnum.Companion.saltAmountDisplayFromCode
 import com.heartcare.agni.data.local.enums.SaltFrequencyEnum.Companion.saltFrequencyCodeFromDisplay
+import com.heartcare.agni.data.local.enums.SaltFrequencyEnum.Companion.saltFrequencyDisplayFromCode
 import com.heartcare.agni.data.local.enums.SoftDrinkFrequency.Companion.softDrinkFrequencyCodeFromDisplay
+import com.heartcare.agni.data.local.enums.SoftDrinkFrequency.Companion.softDrinkFrequencyDisplayFromCode
 import com.heartcare.agni.data.local.enums.TobaccoProduct
 import com.heartcare.agni.data.local.enums.TobaccoProduct.Companion.tobaccoTypeCodeFromDisplay
+import com.heartcare.agni.data.local.enums.TobaccoProduct.Companion.tobaccoTypeDisplayFromCode
 import com.heartcare.agni.data.local.enums.YesNoEnum
 import com.heartcare.agni.data.local.enums.YesNoEnum.Companion.booleanFromDisplay
 import com.heartcare.agni.data.local.model.appointment.AppointmentResponseLocal
@@ -49,6 +56,7 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.launch
 import java.util.Date
 import javax.inject.Inject
+import kotlin.text.toInt
 
 @HiltViewModel
 class AddRiskFactorViewModel @Inject constructor(
@@ -237,15 +245,95 @@ class AddRiskFactorViewModel @Inject constructor(
 
     fun getTodayRiskFactor(patientId: String) {
         viewModelScope.launch(ioDispatcher) {
-            todayRiskFactor =
-                riskFactorRepository.getRiskFactorRecords(patientId).firstOrNull {
-                    isToday(it.appUpdatedDate)
-                }
-            todayRiskFactor?.let {
+            todayRiskFactor = riskFactorRepository.getRiskFactorRecords(patientId)
+                .firstOrNull { isToday(it.appUpdatedDate) }
 
+            todayRiskFactor?.let { rf ->
+                mapTobacco(rf.tobacco)
+                mapAlcohol(rf.alcohol)
+                mapFruitsVegetables(rf.fruitsVegetables)
+                mapPhysicalActivity(rf.physicalActivity)
+                mapSalt(rf.salt)
+                mapFatAndOil(rf.fatAndOil)
+                mapSugar(rf.sugar)
+                mapMealsOutside(rf.mealsOutsideHome)
             }
         }
     }
+
+    private fun mapTobacco(tobacco: TobaccoResponse?) {
+        tobacco ?: return
+        useTobacco = if (tobacco.tobaccoUser) YesNoEnum.YES.display else YesNoEnum.NO.display
+        tobacco.tobaccoItemType?.let { tobaccoType = tobaccoTypeDisplayFromCode(it) }
+        otherTobacco = tobacco.tobaccoOther.orEmpty()
+        tobaccoQuantity = tobacco.consumptionAmount?.toString().orEmpty()
+        selectedQuantityOption = if (tobacco.consumptionUnit.isNullOrBlank()) 0
+        else quantityOptions.indexOf(tobacco.consumptionUnit)
+        startAge = tobacco.startAge?.toString().orEmpty()
+        willingToQuit = when (tobacco.willingToQuit) {
+            null -> ""
+            true -> YesNoEnum.YES.display
+            false -> YesNoEnum.NO.display
+        }
+    }
+
+    private fun mapAlcohol(alcohol: AlcoholResponse?) {
+        alcohol ?: return
+        consumedWithin30Days = if (alcohol.consumedWithin30Days) YesNoEnum.YES.display else YesNoEnum.NO.display
+        alcoholQ1 = alcohol.alcoholQ1?.toString().orEmpty()
+        alcoholQ2 = alcohol.alcoholQ2?.toString().orEmpty()
+        alcoholQ3 = alcohol.alcoholQ3?.toString().orEmpty()
+    }
+
+    private fun mapFruitsVegetables(fv: FruitsVegetablesResponse?) {
+        fv ?: return
+        consumptionInWeek = if (fv.consumptionInWeek) YesNoEnum.YES.display else YesNoEnum.NO.display
+        fruitsDays = fv.fruitsDays?.toString().orEmpty()
+        vegetablesDays = fv.vegetableDays?.toString().orEmpty()
+        fruitServings = fv.fruitServings?.toString().orEmpty()
+        vegetableServings = fv.vegetableServings?.toString().orEmpty()
+    }
+
+    private fun mapPhysicalActivity(pa: PhysicalActivityResponse?) {
+        pa ?: return
+        weeklyEngagement = if (pa.weeklyEngagement) YesNoEnum.YES.display else YesNoEnum.NO.display
+        vigorousDays = pa.vigorousDays?.toString().orEmpty()
+        moderateDays = pa.moderateDays?.toString().orEmpty()
+        vigorousTime = pa.vigorousTime?.toString().orEmpty()
+        moderateTime = pa.moderateTime?.toString().orEmpty()
+    }
+
+    private fun mapSalt(salt: SaltResponse?) {
+        salt ?: return
+        saltAmount = saltAmountDisplayFromCode(salt.saltAmount ?: -1).orEmpty()
+        saltAddCooking = saltFrequencyDisplayFromCode(salt.saltAddCooking ?: -1).orEmpty()
+        saltAddMeal = saltFrequencyDisplayFromCode(salt.saltAddMeal ?: -1).orEmpty()
+        saltProcessedFood = saltFrequencyDisplayFromCode(salt.saltProcessedFood ?: -1).orEmpty()
+    }
+
+    private fun mapFatAndOil(fat: FatAndOilResponse?) {
+        fat ?: return
+        oilUsed = fatTypeDisplayFromCode(fat.oilUsed ?: -1).orEmpty()
+        fatFoodFrequency = fatFrequencyDisplayFromCode(fat.fatFoodFrequency ?: -1).orEmpty()
+        otherFatAndOils = fat.otherFatAndOils.orEmpty()
+    }
+
+    private fun mapSugar(sugar: SugarResponse?) {
+        sugar ?: return
+        juiceFrequency = fruitJuiceFrequencyDisplayFromCode(sugar.juiceFrequency ?: -1).orEmpty()
+        softDrinkFrequency = softDrinkFrequencyDisplayFromCode(sugar.softDrinkFrequency ?: -1).orEmpty()
+    }
+
+    private fun mapMealsOutside(meals: MealsOutsideHomeResponse?) {
+        meals ?: return
+        eatsOut = when (meals.eatsOut) {
+            null -> ""
+            true -> KnowEnum.KNOW.display
+            false -> KnowEnum.DO_NOT_KNOW.display
+        }
+        mealsPerWeek = meals.mealsPerWeek?.toString().orEmpty()
+    }
+
 
     private suspend fun getAppointment() {
         appointmentResponseLocal =
@@ -335,9 +423,9 @@ class AddRiskFactorViewModel @Inject constructor(
             && saltProcessedFood.isBlank()
         ) null
         else SaltResponse(
-            saltAddCooking = saltAmountCodeFromDisplay(saltAddCooking),
+            saltAmount = saltAmountCodeFromDisplay(saltAmount),
+            saltAddCooking = saltFrequencyCodeFromDisplay(saltAddCooking),
             saltAddMeal = saltFrequencyCodeFromDisplay(saltAddMeal),
-            saltAmount = saltFrequencyCodeFromDisplay(saltAmount),
             saltProcessedFood = saltFrequencyCodeFromDisplay(saltProcessedFood)
         )
     }
