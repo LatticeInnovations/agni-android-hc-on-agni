@@ -223,6 +223,13 @@ class GenericRepositoryImpl @Inject constructor(
             }
     }
 
+    override suspend fun updateRiskFactorsFhirId() {
+        genericDao.getNotSyncedData(GenericTypeEnum.RISK_FACTOR)
+            .forEach { riskFactoGenericEntity ->
+                updateRiskFactorFhirIdInGenericEntity(riskFactoGenericEntity)
+            }
+    }
+
     override suspend fun insertAppointment(
         appointmentResponse: AppointmentResponse,
         uuid: String

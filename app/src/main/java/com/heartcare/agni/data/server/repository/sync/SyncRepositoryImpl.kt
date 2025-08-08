@@ -1324,6 +1324,32 @@ class SyncRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun sendRiskFactorPostData(): ResponseMapper<List<CreateResponse>> {
+        return genericDao.getSameTypeGenericEntityPayload(
+            genericTypeEnum = GenericTypeEnum.RISK_FACTOR,
+            syncType = SyncType.POST
+        ).let { listOfGenericEntity ->
+            if (listOfGenericEntity.isEmpty()) ApiEmptyResponse()
+            else {
+                ApiResponseConverter.convert(
+                    historyAndTestsApiService.postRiskFactor(
+                        listOfGenericEntity.map {
+                            it.payload.fromJson<LinkedTreeMap<*, *>>()
+                                .mapToObject(RiskFactorResponse::class.java)!!
+                        }
+                    )
+                ).apply {
+                    if (this is ApiEndResponse) {
+                        insertRiskFactorsFhirIds(body, listOfGenericEntity)
+                            .apply {
+                                if (this > 0) sendRiskFactorPostData()
+                            }
+                    }
+                }
+            }
+        }
+    }
+
     override suspend fun sendPersonPatchData(): ResponseMapper<List<CreateResponse>> {
         return genericDao.getSameTypeGenericEntityPayload(
             genericTypeEnum = GenericTypeEnum.PATIENT, syncType = SyncType.PATCH
