@@ -496,6 +496,9 @@ class SyncService(
                     CoroutineScope(Dispatchers.IO).launch {
                         downloadAllergy(logout)
                     }
+                    CoroutineScope(Dispatchers.IO).launch {
+                        downloadRiskFactors(logout)
+                    }
                 }
             }
         }
@@ -661,6 +664,11 @@ class SyncService(
     /** Download Allergy Data */
     private suspend fun downloadAllergy(logout: (Boolean, String) -> Unit) {
         checkAuthenticationStatus(syncRepository.getAndInsertAllergyData(0), logout)
+    }
+
+    /** Download Risk Factors Data */
+    private suspend fun downloadRiskFactors(logout: (Boolean, String) -> Unit) {
+        checkAuthenticationStatus(syncRepository.getAndInsertRiskFactorData(0), logout)
     }
 
     /**

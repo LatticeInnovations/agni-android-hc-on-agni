@@ -20,7 +20,6 @@ import com.heartcare.agni.navigation.Screen
 import com.heartcare.agni.ui.common.CardWithRightArrow
 import com.heartcare.agni.ui.historyandtests.HistoryTakingAndTestsViewModel
 import com.heartcare.agni.utils.constants.NavControllerConstants.RISK_FACTOR
-import java.util.Date
 
 @Composable
 fun RiskFactorsView(

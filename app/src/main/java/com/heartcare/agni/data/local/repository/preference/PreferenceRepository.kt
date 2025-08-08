@@ -100,6 +100,10 @@ interface PreferenceRepository {
     fun setLastSyncAllergy(long: Long)
     fun getLastSyncAllergy(): Long
 
+    /** Last Sync Risk Factors */
+    fun setLastSyncRiskFactors(long: Long)
+    fun getLastSyncRiskFactors(): Long
+
     /** User Data */
     fun setUserFhirId(userFhirId: String)
     fun getUserFhirId(): String

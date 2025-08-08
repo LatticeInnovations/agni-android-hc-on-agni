@@ -20,4 +20,5 @@ object EndPoints {
     const val HISTORY_MEDICATION = "historyMedicine"
     const val FAMILY_HISTORY = "familyHistory"
     const val ALLERGY = "allergy"
+    const val RISK_FACTOR = "riskFactor"
 }
