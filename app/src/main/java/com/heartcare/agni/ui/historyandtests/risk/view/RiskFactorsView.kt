@@ -19,6 +19,7 @@ import com.heartcare.agni.R
 import com.heartcare.agni.navigation.Screen
 import com.heartcare.agni.ui.common.CardWithRightArrow
 import com.heartcare.agni.ui.historyandtests.HistoryTakingAndTestsViewModel
+import com.heartcare.agni.utils.constants.NavControllerConstants.RISK_FACTOR
 import java.util.Date
 
 @Composable
@@ -49,10 +50,11 @@ fun RiskFactorsView(
                 modifier = Modifier.padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                viewModel.riskFactorsList.forEach { _ ->
+                viewModel.riskFactorsList.forEach { riskFactor ->
                     CardWithRightArrow(
-                        date = Date(),
+                        date = riskFactor.appUpdatedDate,
                         onClick = {
+                            navController.currentBackStackEntry?.savedStateHandle?.set(RISK_FACTOR, riskFactor)
                             navController.navigate(Screen.RiskFactorsViewScreen.route)
                         }
                     )

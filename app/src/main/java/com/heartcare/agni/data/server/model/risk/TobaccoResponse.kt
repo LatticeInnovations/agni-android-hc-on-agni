@@ -1,8 +1,11 @@
 package com.heartcare.agni.data.server.model.risk
 
+import android.os.Parcelable
 import androidx.annotation.Keep
+import kotlinx.parcelize.Parcelize
 
 @Keep
+@Parcelize
 data class TobaccoResponse(
     val tobaccoUser: Boolean,
     val tobaccoItemType: Int?,
@@ -11,4 +14,4 @@ data class TobaccoResponse(
     val consumptionUnit: String?,
     val startAge: Int?,
     val willingToQuit: Boolean?
-)
+): Parcelable

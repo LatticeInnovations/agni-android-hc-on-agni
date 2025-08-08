@@ -1,9 +1,12 @@
 package com.heartcare.agni.data.server.model.risk
 
+import android.os.Parcelable
 import androidx.annotation.Keep
+import kotlinx.parcelize.Parcelize
 import java.util.Date
 
 @Keep
+@Parcelize
 data class RiskFactorResponse(
     val uuid: String,
     val fhirId: String?,
@@ -20,4 +23,4 @@ data class RiskFactorResponse(
     val fatAndOil: FatAndOilResponse?,
     val sugar: SugarResponse?,
     val mealsOutsideHome: MealsOutsideHomeResponse?
-)
+) : Parcelable
