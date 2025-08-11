@@ -11,5 +11,7 @@ enum class FruitJuiceFrequency(val code: Int, val display: String) {
 
     companion object {
         fun listOfFruitJuiceFrequency() = entries.map { it.display }
+        fun fruitJuiceFrequencyCodeFromDisplay(display: String) = entries.firstOrNull { it.display == display }?.code
+        fun fruitJuiceFrequencyDisplayFromCode(code: Int) = entries.firstOrNull { it.code == code }?.display
     }
 }

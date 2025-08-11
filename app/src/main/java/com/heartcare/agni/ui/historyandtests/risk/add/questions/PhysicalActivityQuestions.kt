@@ -73,8 +73,10 @@ private fun PhysicalActivityQuestionOne(
                 selected = viewModel.weeklyEngagement,
                 option = option,
                 onClick = {
-                    viewModel.weeklyEngagement = option
-                    if (option == YesNoEnum.NO.display) viewModel.resetPhysicalActivityValues()
+                    if (option == viewModel.weeklyEngagement) viewModel.weeklyEngagement = ""
+                    else viewModel.weeklyEngagement = option
+                    if (viewModel.weeklyEngagement == YesNoEnum.NO.display
+                        || viewModel.weeklyEngagement.isBlank()) viewModel.resetPhysicalActivityValues()
                 }
             )
         }
@@ -97,7 +99,7 @@ private fun PhysicalActivityQuestionTwo(
         keyboardCapitalization = KeyboardCapitalization.None,
         singleLine = true,
         updateValue = {
-            if (it.matches(onlyNumbers) || it.isBlank()) viewModel.vigorousDays = it
+            if (it.matches(onlyNumbers) || it.isEmpty()) viewModel.vigorousDays = it
             viewModel.vigorousDaysError =
                 viewModel.vigorousDays.isBlank() || viewModel.vigorousDays.toInt() !in 0..7
         }
@@ -120,7 +122,7 @@ private fun PhysicalActivityQuestionThree(
         keyboardCapitalization = KeyboardCapitalization.None,
         singleLine = true,
         updateValue = {
-            if (it.matches(onlyNumbers) || it.isBlank()) viewModel.moderateDays = it
+            if (it.matches(onlyNumbers) || it.isEmpty()) viewModel.moderateDays = it
             viewModel.moderateDaysError =
                 viewModel.moderateDays.isBlank() || viewModel.moderateDays.toInt() !in 0..7
         }
@@ -143,7 +145,7 @@ private fun PhysicalActivityQuestionFour(
         keyboardCapitalization = KeyboardCapitalization.None,
         singleLine = true,
         updateValue = {
-            if (it.matches(onlyNumbers) || it.isBlank()) viewModel.vigorousTime = it
+            if (it.matches(onlyNumbers) || it.isEmpty()) viewModel.vigorousTime = it
             viewModel.vigorousTimeError =
                 viewModel.vigorousTime.isBlank() || viewModel.vigorousTime.toInt() !in 0..1440
         }
@@ -166,7 +168,7 @@ private fun PhysicalActivityQuestionFive(
         keyboardCapitalization = KeyboardCapitalization.None,
         singleLine = true,
         updateValue = {
-            if (it.matches(onlyNumbers) || it.isBlank()) viewModel.moderateTime = it
+            if (it.matches(onlyNumbers) || it.isEmpty()) viewModel.moderateTime = it
             viewModel.moderateTimeError =
                 viewModel.moderateTime.isBlank() || viewModel.moderateTime.toInt() !in 0..1440
         }

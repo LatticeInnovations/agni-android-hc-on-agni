@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import com.heartcare.agni.R
 import com.heartcare.agni.data.local.enums.KnowEnum
 import com.heartcare.agni.data.local.enums.KnowEnum.Companion.knowOptions
+import com.heartcare.agni.data.local.enums.YesNoEnum
 import com.heartcare.agni.ui.common.CustomTextField
 import com.heartcare.agni.ui.common.RadioButtonRow
 import com.heartcare.agni.ui.historyandtests.risk.add.AddRiskFactorViewModel
@@ -59,7 +60,7 @@ fun DineOutQuestions(
                     keyboardCapitalization = KeyboardCapitalization.None,
                     singleLine = true,
                     updateValue = {
-                        if (it.matches(onlyNumbers) || it.isBlank()) viewModel.mealsPerWeek = it
+                        if (it.matches(onlyNumbers) || it.isEmpty()) viewModel.mealsPerWeek = it
                         viewModel.mealsPerWeekError =
                             viewModel.mealsPerWeek.isBlank() || viewModel.mealsPerWeek.toInt() !in 0..50
                     }
@@ -83,7 +84,8 @@ private fun DineOutQuestionOne(
                 option = option,
                 onClick = {
                     viewModel.eatsOut = option
-                    if (option == KnowEnum.DO_NOT_KNOW.display) {
+                    if (viewModel.eatsOut == YesNoEnum.NO.display
+                        || viewModel.eatsOut.isBlank()) {
                         viewModel.mealsPerWeek = ""
                         viewModel.mealsPerWeekError = false
                     }

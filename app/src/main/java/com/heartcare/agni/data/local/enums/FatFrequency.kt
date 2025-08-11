@@ -11,5 +11,7 @@ enum class FatFrequency(val code: Int, val display: String) {
 
     companion object {
         fun listOfFatFrequency() = entries.map { it.display }
+        fun fatFrequencyCodeFromDisplay(display: String) = entries.firstOrNull { it.display == display }?.code
+        fun fatFrequencyDisplayFromCode(code: Int) = entries.firstOrNull { it.code == code }?.display
     }
 }

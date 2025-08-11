@@ -20,6 +20,7 @@ import com.heartcare.agni.data.local.roomdb.dao.PatientLastUpdatedDao
 import com.heartcare.agni.data.local.roomdb.dao.PrescriptionDao
 import com.heartcare.agni.data.local.roomdb.dao.PriorDxDao
 import com.heartcare.agni.data.local.roomdb.dao.RelationDao
+import com.heartcare.agni.data.local.roomdb.dao.RiskFactorDao
 import com.heartcare.agni.data.local.roomdb.dao.RiskPredictionDao
 import com.heartcare.agni.data.local.roomdb.dao.ScheduleDao
 import com.heartcare.agni.data.local.roomdb.dao.SearchDao
@@ -201,5 +202,11 @@ object DatabaseModule {
     @Provides
     fun provideAllergyDao(fhirAppDatabase: FhirAppDatabase): AllergyDao {
         return fhirAppDatabase.getAllergyDao()
+    }
+
+    @Singleton
+    @Provides
+    fun provideRiskFactorDao(fhirAppDatabase: FhirAppDatabase): RiskFactorDao {
+        return fhirAppDatabase.getRiskFactorDao()
     }
 }

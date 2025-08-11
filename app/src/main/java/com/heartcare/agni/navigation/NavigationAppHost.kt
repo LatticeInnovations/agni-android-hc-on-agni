@@ -1,5 +1,8 @@
 package com.heartcare.agni.navigation
 
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
@@ -121,7 +124,21 @@ fun NavigationAppHost(navController: NavController, startDest: String) {
         composable(Screen.AddMedicationScreen.route) { AddMedicationScreen(navController = navController) }
         composable(Screen.AddFamilyHistoryScreen.route) { AddFamilyHistoryScreen(navController = navController) }
         composable(Screen.AddAllergyScreen.route) { AddAllergyScreen(navController = navController) }
-        composable(Screen.RiskFactorsViewScreen.route) { RiskFactorsViewScreen(navController = navController) }
+        composable(
+            route = Screen.RiskFactorsViewScreen.route,
+            enterTransition = {
+                slideInVertically(
+                    initialOffsetY = { it },
+                    animationSpec = tween(300)
+                )
+            },
+            exitTransition = {
+                slideOutVertically(
+                    targetOffsetY = { it },
+                    animationSpec = tween(500)
+                )
+            }
+        ) { RiskFactorsViewScreen(navController = navController) }
         composable(Screen.AddRiskFactorsScreen.route) { AddRiskFactorScreen(navController = navController) }
     }
 }

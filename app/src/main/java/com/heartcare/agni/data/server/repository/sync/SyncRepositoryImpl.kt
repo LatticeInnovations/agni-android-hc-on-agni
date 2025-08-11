@@ -23,6 +23,7 @@ import com.heartcare.agni.data.local.roomdb.dao.PatientLastUpdatedDao
 import com.heartcare.agni.data.local.roomdb.dao.PrescriptionDao
 import com.heartcare.agni.data.local.roomdb.dao.PriorDxDao
 import com.heartcare.agni.data.local.roomdb.dao.RelationDao
+import com.heartcare.agni.data.local.roomdb.dao.RiskFactorDao
 import com.heartcare.agni.data.local.roomdb.dao.RiskPredictionDao
 import com.heartcare.agni.data.local.roomdb.dao.ScheduleDao
 import com.heartcare.agni.data.local.roomdb.dao.SymptomsAndDiagnosisDao
@@ -78,6 +79,7 @@ import com.heartcare.agni.data.server.model.prescription.photo.PrescriptionPhoto
 import com.heartcare.agni.data.server.model.prescription.prescriptionresponse.PrescriptionResponse
 import com.heartcare.agni.data.server.model.priordx.PriorDxResponse
 import com.heartcare.agni.data.server.model.relatedperson.RelatedPersonResponse
+import com.heartcare.agni.data.server.model.risk.RiskFactorResponse
 import com.heartcare.agni.data.server.model.scheduleandappointment.appointment.AppointmentResponse
 import com.heartcare.agni.data.server.model.scheduleandappointment.schedule.ScheduleResponse
 import com.heartcare.agni.data.server.model.symptomsanddiagnosis.SymptomsAndDiagnosisResponse
@@ -136,7 +138,8 @@ class SyncRepositoryImpl @Inject constructor(
     priorDxDao: PriorDxDao,
     historyMedicationDao: HistoryMedicationDao,
     familyHistoryDao: FamilyHistoryDao,
-    allergyDao: AllergyDao
+    allergyDao: AllergyDao,
+    riskFactorDao: RiskFactorDao
 ) : SyncRepository, SyncRepositoryDatabaseTransactions(
     patientApiService,
     patientDao,
@@ -162,7 +165,8 @@ class SyncRepositoryImpl @Inject constructor(
     priorDxDao,
     historyMedicationDao,
     familyHistoryDao,
-    allergyDao
+    allergyDao,
+    riskFactorDao
 ) {
 
     override suspend fun getAndInsertListPatientData(
@@ -1320,6 +1324,32 @@ class SyncRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun sendRiskFactorPostData(): ResponseMapper<List<CreateResponse>> {
+        return genericDao.getSameTypeGenericEntityPayload(
+            genericTypeEnum = GenericTypeEnum.RISK_FACTOR,
+            syncType = SyncType.POST
+        ).let { listOfGenericEntity ->
+            if (listOfGenericEntity.isEmpty()) ApiEmptyResponse()
+            else {
+                ApiResponseConverter.convert(
+                    historyAndTestsApiService.postRiskFactor(
+                        listOfGenericEntity.map {
+                            it.payload.fromJson<LinkedTreeMap<*, *>>()
+                                .mapToObject(RiskFactorResponse::class.java)!!
+                        }
+                    )
+                ).apply {
+                    if (this is ApiEndResponse) {
+                        insertRiskFactorsFhirIds(body, listOfGenericEntity)
+                            .apply {
+                                if (this > 0) sendRiskFactorPostData()
+                            }
+                    }
+                }
+            }
+        }
+    }
+
     override suspend fun sendPersonPatchData(): ResponseMapper<List<CreateResponse>> {
         return genericDao.getSameTypeGenericEntityPayload(
             genericTypeEnum = GenericTypeEnum.PATIENT, syncType = SyncType.PATCH
@@ -1784,6 +1814,38 @@ class SyncRepositoryImpl @Inject constructor(
                 is ApiEndResponse -> {
                     preferenceRepository.setLastSyncAllergy(Date().time)
                     insertAllergy(body)
+                    this
+                }
+
+                else -> this
+            }
+        }
+    }
+
+    override suspend fun getAndInsertRiskFactorData(offset: Int): ResponseMapper<List<RiskFactorResponse>> {
+        val map = mutableMapOf<String, String>()
+        map[COUNT] = COUNT_VALUE.toString()
+        map[OFFSET] = offset.toString()
+        map[SORT] = "-$ID"
+        if (preferenceRepository.getLastSyncRiskFactors() != 0L) map[LAST_UPDATED] = String.format(
+            GREATER_THAN_BUILDER, preferenceRepository.getLastSyncRiskFactors().toTimeStampDate()
+        )
+
+        ApiResponseConverter.convert(
+            historyAndTestsApiService.getRiskFactors(
+                map
+            ), true
+        ).run {
+            return when (this) {
+                is ApiContinueResponse -> {
+                    insertRiskFactors(body)
+                    //Call for next batch data
+                    getAndInsertRiskFactorData(offset + COUNT_VALUE)
+                }
+
+                is ApiEndResponse -> {
+                    preferenceRepository.setLastSyncRiskFactors(Date().time)
+                    insertRiskFactors(body)
                     this
                 }
 

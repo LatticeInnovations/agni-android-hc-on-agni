@@ -31,6 +31,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.heartcare.agni.R
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toDayFullMonthYear
+import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toPrescriptionDate
 import java.util.Date
 
 @Composable
@@ -160,7 +161,7 @@ fun CardWithRightArrow(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = date.toDayFullMonthYear(),
+                text = date.toPrescriptionDate(),
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurface
             )

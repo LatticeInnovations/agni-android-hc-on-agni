@@ -22,6 +22,7 @@ import com.heartcare.agni.data.server.model.prescription.photo.PrescriptionPhoto
 import com.heartcare.agni.data.server.model.prescription.prescriptionresponse.PrescriptionResponse
 import com.heartcare.agni.data.server.model.priordx.PriorDxResponse
 import com.heartcare.agni.data.server.model.relatedperson.RelatedPersonResponse
+import com.heartcare.agni.data.server.model.risk.RiskFactorResponse
 import com.heartcare.agni.data.server.model.scheduleandappointment.appointment.AppointmentResponse
 import com.heartcare.agni.data.server.model.scheduleandappointment.schedule.ScheduleResponse
 import com.heartcare.agni.data.server.model.vaccination.ImmunizationResponse
@@ -222,6 +223,13 @@ class GenericRepositoryImpl @Inject constructor(
             }
     }
 
+    override suspend fun updateRiskFactorsFhirId() {
+        genericDao.getNotSyncedData(GenericTypeEnum.RISK_FACTOR)
+            .forEach { riskFactoGenericEntity ->
+                updateRiskFactorFhirIdInGenericEntity(riskFactoGenericEntity)
+            }
+    }
+
     override suspend fun insertAppointment(
         appointmentResponse: AppointmentResponse,
         uuid: String
@@ -317,6 +325,19 @@ class GenericRepositoryImpl @Inject constructor(
             syncType = SyncType.POST
         ).let { allergyGenericEntity ->
             insertAllergyGenericEntity(allergyGenericEntity, allergyResponse, uuid)
+        }
+    }
+
+    override suspend fun insertRiskFactorRecord(
+        riskFactorResponse: RiskFactorResponse,
+        uuid: String
+    ): Long {
+        return genericDao.getGenericEntityById(
+            patientId = riskFactorResponse.uuid,
+            genericTypeEnum = GenericTypeEnum.RISK_FACTOR,
+            syncType = SyncType.POST
+        ).let { riskFactorGenericEntity ->
+            insertRiskFactorGenericEntity(riskFactorGenericEntity, riskFactorResponse, uuid)
         }
     }
 

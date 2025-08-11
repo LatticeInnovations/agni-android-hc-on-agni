@@ -149,7 +149,8 @@ class FhirApp : Application() {
             fhirAppDatabase.getPriorDxDao(),
             fhirAppDatabase.getHistoryMedicationDao(),
             fhirAppDatabase.getFamilyHistoryDao(),
-            fhirAppDatabase.getAllergyDao()
+            fhirAppDatabase.getAllergyDao(),
+            fhirAppDatabase.getRiskFactorDao()
         )
 
         _fileSyncRepository = FileSyncRepositoryImpl(

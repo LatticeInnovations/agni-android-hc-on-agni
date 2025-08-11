@@ -26,6 +26,7 @@ import com.heartcare.agni.data.server.model.prescription.photo.PrescriptionPhoto
 import com.heartcare.agni.data.server.model.prescription.prescriptionresponse.PrescriptionResponse
 import com.heartcare.agni.data.server.model.priordx.PriorDxResponse
 import com.heartcare.agni.data.server.model.relatedperson.RelatedPersonResponse
+import com.heartcare.agni.data.server.model.risk.RiskFactorResponse
 import com.heartcare.agni.data.server.model.scheduleandappointment.appointment.AppointmentResponse
 import com.heartcare.agni.data.server.model.scheduleandappointment.schedule.ScheduleResponse
 import com.heartcare.agni.data.server.model.vaccination.ImmunizationResponse
@@ -383,6 +384,28 @@ open class GenericRepositoryDatabaseTransactions(
         }
     }
 
+    protected suspend fun insertRiskFactorGenericEntity(
+        riskFactorGenericEntity: GenericEntity?,
+        riskFactorResponse: RiskFactorResponse,
+        uuid: String
+    ): Long {
+        return if (riskFactorGenericEntity != null) {
+            genericDao.insertGenericEntity(
+                riskFactorGenericEntity.copy(payload = riskFactorResponse.toJson())
+            )[0]
+        } else {
+            genericDao.insertGenericEntity(
+                GenericEntity(
+                    id = uuid,
+                    patientId = riskFactorResponse.uuid,
+                    payload = riskFactorResponse.toJson(),
+                    type = GenericTypeEnum.RISK_FACTOR,
+                    syncType = SyncType.POST
+                )
+            )[0]
+        }
+    }
+
     protected suspend fun updateAppointmentFhirIdInGenericEntity(appointmentGenericEntity: GenericEntity) {
         val existingMap = appointmentGenericEntity.payload.fromJson<MutableMap<String, Any>>()
             .mapToObject(AppointmentResponse::class.java)
@@ -637,6 +660,26 @@ open class GenericRepositoryDatabaseTransactions(
         if (existingMap != null) {
             genericDao.insertGenericEntity(
                 allergyGenericEntity.copy(
+                    payload = existingMap.copy(
+                        patientId = if (!existingMap.patientId.isFhirId()) getPatientFhirIdById(
+                            existingMap.patientId
+                        )!! else existingMap.patientId,
+                        appointmentId = if (!existingMap.appointmentId.isFhirId()) getAppointmentFhirIdById(
+                            existingMap.appointmentId
+                        )!! else existingMap.appointmentId
+                    ).toJson()
+                )
+            )
+        }
+    }
+
+    protected suspend fun updateRiskFactorFhirIdInGenericEntity(riskFactorGenericEntity: GenericEntity) {
+        val existingMap = riskFactorGenericEntity.payload.fromJson<MutableMap<String, Any>>()
+            .mapToObject(RiskFactorResponse::class.java)
+
+        if (existingMap != null) {
+            genericDao.insertGenericEntity(
+                riskFactorGenericEntity.copy(
                     payload = existingMap.copy(
                         patientId = if (!existingMap.patientId.isFhirId()) getPatientFhirIdById(
                             existingMap.patientId

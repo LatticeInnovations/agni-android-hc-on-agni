@@ -11,5 +11,7 @@ enum class SoftDrinkFrequency(val code: Int, val display: String) {
 
     companion object {
         fun listOfSoftDrinkFrequency() = entries.map { it.display }
+        fun softDrinkFrequencyCodeFromDisplay(display: String) = entries.firstOrNull { it.display == display }?.code
+        fun softDrinkFrequencyDisplayFromCode(code: Int) = entries.firstOrNull { it.code == code }?.display
     }
 }

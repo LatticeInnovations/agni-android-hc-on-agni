@@ -73,8 +73,10 @@ private fun FruitsAndVegetablesOne(
                 selected = viewModel.consumptionInWeek,
                 option = option,
                 onClick = {
-                    viewModel.consumptionInWeek = option
-                    if (option == YesNoEnum.NO.display) viewModel.resetFruitsVegetablesValues()
+                    if (option == viewModel.consumptionInWeek) viewModel.consumptionInWeek = ""
+                    else viewModel.consumptionInWeek = option
+                    if (viewModel.consumptionInWeek == YesNoEnum.NO.display
+                        || viewModel.consumptionInWeek.isBlank()) viewModel.resetFruitsVegetablesValues()
                 }
             )
         }
@@ -97,7 +99,7 @@ private fun FruitsAndVegetablesTwo(
         keyboardCapitalization = KeyboardCapitalization.None,
         singleLine = true,
         updateValue = {
-            if (it.matches(onlyNumbers) || it.isBlank()) viewModel.fruitsDays = it
+            if (it.matches(onlyNumbers) || it.isEmpty()) viewModel.fruitsDays = it
             viewModel.fruitsDaysError =
                 viewModel.fruitsDays.isBlank() || viewModel.fruitsDays.toInt() !in 0..7
         }
@@ -120,7 +122,7 @@ private fun FruitsAndVegetablesThree(
         keyboardCapitalization = KeyboardCapitalization.None,
         singleLine = true,
         updateValue = {
-            if (it.matches(onlyNumbers) || it.isBlank()) viewModel.vegetablesDays = it
+            if (it.matches(onlyNumbers) || it.isEmpty()) viewModel.vegetablesDays = it
             viewModel.vegetablesDaysError =
                 viewModel.vegetablesDays.isBlank() || viewModel.vegetablesDays.toInt() !in 0..7
         }
@@ -143,7 +145,7 @@ private fun FruitsAndVegetablesFour(
         keyboardCapitalization = KeyboardCapitalization.None,
         singleLine = true,
         updateValue = {
-            if (it.matches(onlyNumbers) || it.isBlank()) viewModel.fruitServings = it
+            if (it.matches(onlyNumbers) || it.isEmpty()) viewModel.fruitServings = it
             viewModel.fruitServingsError =
                 viewModel.fruitServings.isBlank() || viewModel.fruitServings.toInt() !in 0..20
         }
@@ -166,7 +168,7 @@ private fun FruitsAndVegetablesFive(
         keyboardCapitalization = KeyboardCapitalization.None,
         singleLine = true,
         updateValue = {
-            if (it.matches(onlyNumbers) || it.isBlank()) viewModel.vegetableServings = it
+            if (it.matches(onlyNumbers) || it.isEmpty()) viewModel.vegetableServings = it
             viewModel.vegetableServingsError =
                 viewModel.vegetableServings.isBlank() || viewModel.vegetableServings.toInt() !in 0..20
         }

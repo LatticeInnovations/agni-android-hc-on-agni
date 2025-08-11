@@ -10,5 +10,7 @@ enum class SaltFrequencyEnum (val code: Int, val display: String) {
 
     companion object {
         fun listOfSaltFrequency() = entries.map { it.display }
+        fun saltFrequencyCodeFromDisplay(display: String) = entries.firstOrNull { it.display == display }?.code
+        fun saltFrequencyDisplayFromCode(code: Int) = entries.firstOrNull { it.code == code }?.display
     }
 }

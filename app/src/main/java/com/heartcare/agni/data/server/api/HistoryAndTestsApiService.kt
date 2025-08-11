@@ -5,11 +5,13 @@ import com.heartcare.agni.data.server.constants.EndPoints.ALLERGY
 import com.heartcare.agni.data.server.constants.EndPoints.FAMILY_HISTORY
 import com.heartcare.agni.data.server.constants.EndPoints.HISTORY_MEDICATION
 import com.heartcare.agni.data.server.constants.EndPoints.PRIOR_DX
+import com.heartcare.agni.data.server.constants.EndPoints.RISK_FACTOR
 import com.heartcare.agni.data.server.model.allergy.AllergyResponse
 import com.heartcare.agni.data.server.model.create.CreateResponse
 import com.heartcare.agni.data.server.model.family.FamilyHistoryResponse
 import com.heartcare.agni.data.server.model.historymedication.HistoryMedicationResponse
 import com.heartcare.agni.data.server.model.priordx.PriorDxResponse
+import com.heartcare.agni.data.server.model.risk.RiskFactorResponse
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
@@ -40,4 +42,10 @@ interface HistoryAndTestsApiService {
 
     @GET(ALLERGY)
     suspend fun getAllergy(@QueryMap(encoded = true) map: Map<String, String>?): Response<BaseResponse<List<AllergyResponse>>>
+
+    @POST(RISK_FACTOR)
+    suspend fun postRiskFactor(@Body riskFactorResponse: List<RiskFactorResponse>): Response<BaseResponse<List<CreateResponse>>>
+
+    @GET(RISK_FACTOR)
+    suspend fun getRiskFactors(@QueryMap(encoded = true) map: Map<String, String>?): Response<BaseResponse<List<RiskFactorResponse>>>
 }

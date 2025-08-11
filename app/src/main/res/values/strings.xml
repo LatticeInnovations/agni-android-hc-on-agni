@@ -610,8 +610,8 @@ include them in the household</string>
     <string name="alcohol">Alcohol</string>
     <string name="alcohol_question_one">Have you consumed any alcohol in the past 30 days?</string>
     <string name="alcohol_question_two">During the past 30 days, on how many occasions did you have at least one standard alcoholic drink?</string>
-    <string name="alcohol_question_three">During the past 30 days, how many times did you have six or more standard drinks in a single drinking occasion?</string>
-    <string name="alcohol_question_four">During the past 30 days, when you drank alcohol, how many standard drinks on average did you have during one drinking occasion?</string>
+    <string name="alcohol_question_three">During the past 30 days, when you drank alcohol, how many standard drinks on average did you have during one drinking occasion?</string>
+    <string name="alcohol_question_four">During the past 30 days, how many times did you have six or more standard drinks in a single drinking occasion?</string>
     <string name="fruits_and_vegetable">Fruits and vegetables</string>
     <string name="fruits_vegetable_question_one">In a typical week do you eat any fruits or vegetables?</string>
     <string name="fruits_vegetable_question_two">In a typical week, how many days do you eat fruits?</string>
@@ -655,4 +655,6 @@ include them in the household</string>
     <string name="select">Select</string>
     <string name="other_fat_and_oil">Other fats and oils</string>
     <string name="number_of_meals_per_week">Number of meals per week *</string>
+    <string name="update_risk_factor">Update risk factor</string>
+    <string name="number_of_standard_drinks">Number of standard drinks *</string>
 </resources>

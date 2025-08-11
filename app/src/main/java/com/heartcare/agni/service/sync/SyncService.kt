@@ -237,6 +237,9 @@ class SyncService(
                 CoroutineScope(Dispatchers.IO).launch {
                     updateFhirIdInAllergy(logout)
                 }
+                CoroutineScope(Dispatchers.IO).launch {
+                    updateFhirIdInRiskFactors(logout)
+                }
             }
         }
     }
@@ -326,6 +329,11 @@ class SyncService(
     /** Upload Allergy */
     private suspend fun uploadAllergy(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
         return checkAuthenticationStatus(syncRepository.sendAllergyPostData(), logout)
+    }
+
+    /** Upload Risk Factors */
+    private suspend fun uploadRiskFactors(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
+        return checkAuthenticationStatus(syncRepository.sendRiskFactorPostData(), logout)
     }
 
     /**
@@ -496,6 +504,9 @@ class SyncService(
                     CoroutineScope(Dispatchers.IO).launch {
                         downloadAllergy(logout)
                     }
+                    CoroutineScope(Dispatchers.IO).launch {
+                        downloadRiskFactors(logout)
+                    }
                 }
             }
         }
@@ -663,6 +674,11 @@ class SyncService(
         checkAuthenticationStatus(syncRepository.getAndInsertAllergyData(0), logout)
     }
 
+    /** Download Risk Factors Data */
+    private suspend fun downloadRiskFactors(logout: (Boolean, String) -> Unit) {
+        checkAuthenticationStatus(syncRepository.getAndInsertRiskFactorData(0), logout)
+    }
+
     /**
      *
      *
@@ -763,6 +779,12 @@ class SyncService(
     private suspend fun updateFhirIdInAllergy(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
         genericRepository.updateAllergyFhirId()
         return uploadAllergy(logout)
+    }
+
+    /** Update FHIR ID in Risk Factors */
+    private suspend fun updateFhirIdInRiskFactors(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
+        genericRepository.updateRiskFactorsFhirId()
+        return uploadRiskFactors(logout)
     }
 
     /** Check Session Expiry and Authorization */

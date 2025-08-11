@@ -48,6 +48,15 @@ import com.heartcare.agni.data.local.roomdb.entities.prescription.photo.Prescrip
 import com.heartcare.agni.data.local.roomdb.entities.prescription.photo.PrescriptionPhotoEntity
 import com.heartcare.agni.data.local.roomdb.entities.priordx.PriorDxEntity
 import com.heartcare.agni.data.local.roomdb.entities.relation.RelationEntity
+import com.heartcare.agni.data.local.roomdb.entities.risk.AlcoholEntity
+import com.heartcare.agni.data.local.roomdb.entities.risk.FatAndOilEntity
+import com.heartcare.agni.data.local.roomdb.entities.risk.FruitsVegetablesEntity
+import com.heartcare.agni.data.local.roomdb.entities.risk.MealsOutsideHomeEntity
+import com.heartcare.agni.data.local.roomdb.entities.risk.PhysicalActivityEntity
+import com.heartcare.agni.data.local.roomdb.entities.risk.RiskFactorEntity
+import com.heartcare.agni.data.local.roomdb.entities.risk.SaltEntity
+import com.heartcare.agni.data.local.roomdb.entities.risk.SugarEntity
+import com.heartcare.agni.data.local.roomdb.entities.risk.TobaccoEntity
 import com.heartcare.agni.data.local.roomdb.entities.schedule.ScheduleEntity
 import com.heartcare.agni.data.local.roomdb.entities.symptomsanddiagnosis.DiagnosisEntity
 import com.heartcare.agni.data.local.roomdb.entities.symptomsanddiagnosis.SymptomAndDiagnosisEntity
@@ -83,6 +92,15 @@ import com.heartcare.agni.data.server.model.prescription.photo.PrescriptionPhoto
 import com.heartcare.agni.data.server.model.prescription.prescriptionresponse.PrescriptionResponse
 import com.heartcare.agni.data.server.model.priordx.PriorDxResponse
 import com.heartcare.agni.data.server.model.relatedperson.Relationship
+import com.heartcare.agni.data.server.model.risk.AlcoholResponse
+import com.heartcare.agni.data.server.model.risk.FatAndOilResponse
+import com.heartcare.agni.data.server.model.risk.FruitsVegetablesResponse
+import com.heartcare.agni.data.server.model.risk.MealsOutsideHomeResponse
+import com.heartcare.agni.data.server.model.risk.PhysicalActivityResponse
+import com.heartcare.agni.data.server.model.risk.RiskFactorResponse
+import com.heartcare.agni.data.server.model.risk.SaltResponse
+import com.heartcare.agni.data.server.model.risk.SugarResponse
+import com.heartcare.agni.data.server.model.risk.TobaccoResponse
 import com.heartcare.agni.data.server.model.scheduleandappointment.Slot
 import com.heartcare.agni.data.server.model.scheduleandappointment.appointment.AppointmentResponse
 import com.heartcare.agni.data.server.model.scheduleandappointment.schedule.ScheduleResponse
@@ -100,7 +118,6 @@ import com.heartcare.agni.utils.converters.server.responsemapper.ApiEndResponse
 import com.heartcare.agni.utils.converters.server.responsemapper.ApiResponseConverter
 import java.util.Date
 import java.util.UUID
-import kotlin.collections.indexOf
 
 fun PatientResponse.toPatientEntity(): PatientEntity {
     return PatientEntity(
@@ -1423,5 +1440,172 @@ internal fun AllergyEntity.toAllergyResponse(): AllergyResponse {
         practitionerId = practitionerId,
         practitionerName = practitionerName,
         allergy = allergy,
+    )
+}
+
+internal fun RiskFactorResponse.toRiskFactorEntity(): RiskFactorEntity {
+    return RiskFactorEntity(
+        uuid = uuid,
+        fhirId = fhirId,
+        patientId = patientId,
+        appointmentId = appointmentId,
+        appUpdatedDate = appUpdatedDate,
+        practitionerId = practitionerId!!,
+        practitionerName = practitionerName!!,
+        tobacco = tobacco?.run {
+            TobaccoEntity(
+                tobaccoUser = tobaccoUser,
+                tobaccoItemType = tobaccoItemType,
+                tobaccoOther = tobaccoOther,
+                consumptionAmount = consumptionAmount,
+                consumptionUnit = consumptionUnit,
+                startAge = startAge,
+                willingToQuit = willingToQuit
+            )
+        },
+        alcohol = alcohol?.run {
+            AlcoholEntity(
+                consumedWithin30Days = consumedWithin30Days,
+                alcoholQ1 = alcoholQ1,
+                alcoholQ2 = alcoholQ2,
+                alcoholQ3 = alcoholQ3
+            )
+        },
+        fruitsVegetables = fruitsVegetables?.run {
+            FruitsVegetablesEntity(
+                consumptionInWeek = consumptionInWeek,
+                fruitsDays = fruitsDays,
+                fruitServings = fruitServings,
+                vegetableDays = vegetableDays,
+                vegetableServings = vegetableServings
+            )
+        },
+        physicalActivity = physicalActivity?.run {
+            PhysicalActivityEntity(
+                weeklyEngagement = weeklyEngagement,
+                vigorousDays = vigorousDays,
+                vigorousTime = vigorousTime,
+                moderateDays = moderateDays,
+                moderateTime = moderateTime
+            )
+        },
+        salt = salt?.run {
+            SaltEntity(
+                saltAmount = saltAmount,
+                saltAddMeal = saltAddMeal,
+                saltAddCooking = saltAddCooking,
+                saltProcessedFood = saltProcessedFood
+            )
+        },
+        fatAndOil = fatAndOil?.run {
+            FatAndOilEntity(
+                oilUsed = oilUsed,
+                fatFoodFrequency = fatFoodFrequency,
+                otherFatAndOils = otherFatAndOils
+            )
+        },
+        sugar = sugar?.run {
+            SugarEntity(
+                softDrinkFrequency = softDrinkFrequency,
+                juiceFrequency = juiceFrequency
+            )
+        },
+        mealsOutsideHome = mealsOutsideHome?.run {
+            MealsOutsideHomeEntity(
+                eatsOut = eatsOut,
+                mealsPerWeek = mealsPerWeek
+            )
+        }
+    )
+}
+
+suspend fun RiskFactorResponse.toRiskFactorEntity(
+    patientDao: PatientDao,
+    appointmentDao: AppointmentDao
+): RiskFactorEntity {
+    return this.toRiskFactorEntity().copy(
+        appointmentId = appointmentDao.getAppointmentIdByFhirId(appointmentId),
+        patientId = patientDao.getPatientIdByFhirId(patientId)!!,
+    )
+}
+
+internal fun RiskFactorEntity.toRiskFactorResponse(): RiskFactorResponse {
+    return RiskFactorResponse(
+        uuid = uuid,
+        fhirId = fhirId,
+        appUpdatedDate = appUpdatedDate,
+        appointmentId = appointmentId,
+        patientId = patientId,
+        practitionerId = practitionerId,
+        practitionerName = practitionerName,
+        tobacco = tobacco?.run {
+            if (tobaccoUser == null) null
+            else TobaccoResponse(
+                tobaccoUser = tobaccoUser,
+                tobaccoItemType = tobaccoItemType,
+                tobaccoOther = tobaccoOther,
+                consumptionAmount = consumptionAmount,
+                consumptionUnit = consumptionUnit,
+                startAge = startAge,
+                willingToQuit = willingToQuit
+            )
+        },
+        alcohol = alcohol?.run {
+            if (consumedWithin30Days == null) null
+            else AlcoholResponse(
+                consumedWithin30Days = consumedWithin30Days,
+                alcoholQ1 = alcoholQ1,
+                alcoholQ2 = alcoholQ2,
+                alcoholQ3 = alcoholQ3
+            )
+        },
+        fruitsVegetables = fruitsVegetables?.run {
+            if (consumptionInWeek == null) null
+            else FruitsVegetablesResponse(
+                consumptionInWeek = consumptionInWeek,
+                fruitsDays = fruitsDays,
+                fruitServings = fruitServings,
+                vegetableDays = vegetableDays,
+                vegetableServings = vegetableServings
+            )
+        },
+        physicalActivity = physicalActivity?.run {
+            if (weeklyEngagement == null) null
+            else PhysicalActivityResponse(
+                weeklyEngagement = weeklyEngagement,
+                vigorousDays = vigorousDays,
+                vigorousTime = vigorousTime,
+                moderateDays = moderateDays,
+                moderateTime = moderateTime
+            )
+        },
+        salt = salt?.run {
+            SaltResponse(
+                saltAmount = saltAmount,
+                saltAddMeal = saltAddMeal,
+                saltAddCooking = saltAddCooking,
+                saltProcessedFood = saltProcessedFood
+            )
+        },
+        fatAndOil = fatAndOil?.run {
+            FatAndOilResponse(
+                oilUsed = oilUsed,
+                fatFoodFrequency = fatFoodFrequency,
+                otherFatAndOils = otherFatAndOils
+            )
+        },
+        sugar = sugar?.run {
+            SugarResponse(
+                softDrinkFrequency = softDrinkFrequency,
+                juiceFrequency = juiceFrequency
+            )
+        },
+        mealsOutsideHome = mealsOutsideHome?.run {
+            if (eatsOut == null) null
+            else MealsOutsideHomeResponse(
+                eatsOut = eatsOut,
+                mealsPerWeek = mealsPerWeek
+            )
+        }
     )
 }

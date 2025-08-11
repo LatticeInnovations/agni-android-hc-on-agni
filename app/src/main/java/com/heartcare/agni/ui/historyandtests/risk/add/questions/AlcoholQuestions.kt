@@ -72,8 +72,10 @@ private fun AlcoholQuestionOne(
                 selected = viewModel.consumedWithin30Days,
                 option = option,
                 onClick = {
-                    viewModel.consumedWithin30Days = option
-                    if (option == YesNoEnum.NO.display) viewModel.resetAlcoholValues()
+                    if (option == viewModel.consumedWithin30Days) viewModel.consumedWithin30Days = ""
+                    else viewModel.consumedWithin30Days = option
+                    if (viewModel.consumedWithin30Days == YesNoEnum.NO.display
+                        || viewModel.consumedWithin30Days.isBlank()) viewModel.resetAlcoholValues()
                 }
             )
         }
@@ -96,7 +98,7 @@ private fun AlcoholQuestionTwo(
         keyboardCapitalization = KeyboardCapitalization.None,
         singleLine = true,
         updateValue = {
-            if (it.matches(onlyNumbers) || it.isBlank()) viewModel.alcoholQ1 = it
+            if (it.matches(onlyNumbers) || it.isEmpty()) viewModel.alcoholQ1 = it
             viewModel.alcoholQ1Error =
                 viewModel.alcoholQ1.isBlank() || viewModel.alcoholQ1.toInt() !in 0..30
         }
@@ -110,7 +112,7 @@ private fun AlcoholQuestionThree(
     Question(stringResource(R.string.alcohol_question_three))
     CustomTextField(
         value = viewModel.alcoholQ2,
-        label = stringResource(R.string.number_of_times),
+        label = stringResource(R.string.number_of_standard_drinks),
         weight = 1f,
         maxLength = 2,
         isError = viewModel.alcoholQ2Error,
@@ -119,7 +121,7 @@ private fun AlcoholQuestionThree(
         keyboardCapitalization = KeyboardCapitalization.None,
         singleLine = true,
         updateValue = {
-            if (it.matches(onlyNumbers) || it.isBlank()) viewModel.alcoholQ2 = it
+            if (it.matches(onlyNumbers) || it.isEmpty()) viewModel.alcoholQ2 = it
             viewModel.alcoholQ2Error =
                 viewModel.alcoholQ2.isBlank() || viewModel.alcoholQ2.toInt() !in 0..20
         }
@@ -130,7 +132,7 @@ private fun AlcoholQuestionThree(
 private fun AlcoholQuestionFour(
     viewModel: AddRiskFactorViewModel
 ) {
-    Question(stringResource(R.string.alcohol_question_two))
+    Question(stringResource(R.string.alcohol_question_four))
     CustomTextField(
         value = viewModel.alcoholQ3,
         label = stringResource(R.string.number_of_times),
@@ -142,7 +144,7 @@ private fun AlcoholQuestionFour(
         keyboardCapitalization = KeyboardCapitalization.None,
         singleLine = true,
         updateValue = {
-            if (it.matches(onlyNumbers) || it.isBlank()) viewModel.alcoholQ3 = it
+            if (it.matches(onlyNumbers) || it.isEmpty()) viewModel.alcoholQ3 = it
             viewModel.alcoholQ3Error =
                 viewModel.alcoholQ3.isBlank() || viewModel.alcoholQ3.toInt() !in 0..30
         }

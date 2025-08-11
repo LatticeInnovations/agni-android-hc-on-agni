@@ -14,5 +14,10 @@ enum class TobaccoProduct(val code: Int, val display: String) {
 
     companion object {
         fun listOfTobaccoProducts() = entries.map { it.display }
+        fun tobaccoTypeCodeFromDisplay(display: String) =
+            entries.firstOrNull { it.display == display }?.code
+
+        fun tobaccoTypeDisplayFromCode(code: Int) =
+            entries.firstOrNull { it.code == code }?.display ?: ""
     }
 }
