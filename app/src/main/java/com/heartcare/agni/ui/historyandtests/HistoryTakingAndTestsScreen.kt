@@ -59,6 +59,7 @@ import com.heartcare.agni.ui.historyandtests.family.FamilyHistoryView
 import com.heartcare.agni.ui.historyandtests.medication.MedicationView
 import com.heartcare.agni.ui.historyandtests.priordx.PriorDxView
 import com.heartcare.agni.ui.historyandtests.risk.view.RiskFactorsView
+import com.heartcare.agni.ui.historyandtests.tobacco.view.TobaccoCessationView
 import com.heartcare.agni.ui.patientlandingscreen.AllSlotsBookedDialog
 import com.heartcare.agni.ui.prescription.photo.view.AppointmentCompletedDialog
 import com.heartcare.agni.ui.theme.Black
@@ -69,6 +70,7 @@ import com.heartcare.agni.utils.constants.NavControllerConstants.MEDICATION_SAVE
 import com.heartcare.agni.utils.constants.NavControllerConstants.PATIENT
 import com.heartcare.agni.utils.constants.NavControllerConstants.PRIOR_DX_SAVED
 import com.heartcare.agni.utils.constants.NavControllerConstants.RISK_FACTORS_SAVED
+import com.heartcare.agni.utils.constants.NavControllerConstants.TOBACCO_CESSATION_SAVED
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -174,6 +176,9 @@ private fun HandleLaunchedEffectsAndSnackBars(
             if (handle.remove<Boolean>(RISK_FACTORS_SAVED) == true) {
                 snackBarHostState.showSnackbar(context.getString(R.string.risk_factors_saved))
             }
+            if (handle.remove<Boolean>(TOBACCO_CESSATION_SAVED) == true) {
+                snackBarHostState.showSnackbar(context.getString(R.string.tobacco_cessation_saved))
+            }
         }
     }
 }
@@ -206,7 +211,7 @@ private fun HistoryScaffoldContent(
                     2 -> FamilyHistoryView(viewModel)
                     3 -> AllergyView(viewModel)
                     4 -> RiskFactorsView(viewModel, navController)
-                    else -> Text(tabs[index], modifier = Modifier.padding(16.dp))
+                    5 -> TobaccoCessationView(viewModel, navController)
                 }
             }
         }
@@ -271,7 +276,8 @@ private fun HistoryBottomAppBar(
 
             NavigationButtons(
                 pagerState = pagerState,
-                coroutineScope = coroutineScope
+                coroutineScope = coroutineScope,
+                navController = navController
             )
         }
     }
@@ -352,7 +358,8 @@ private fun handleAddButtonClick(
 @Composable
 private fun NavigationButtons(
     pagerState: PagerState,
-    coroutineScope: CoroutineScope
+    coroutineScope: CoroutineScope,
+    navController: NavController
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -380,6 +387,7 @@ private fun NavigationButtons(
                         pagerState.animateScrollToPage(pagerState.currentPage + 1)
                     } else {
                         // Done logic here
+                        navController.navigateUp()
                     }
                 }
             },
@@ -441,6 +449,7 @@ private fun navigateToAddScreen(
             2 -> navController.navigate(Screen.AddFamilyHistoryScreen.route)
             3 -> navController.navigate(Screen.AddAllergyScreen.route)
             4 -> navController.navigate(Screen.AddRiskFactorsScreen.route)
+            5 -> navController.navigate(Screen.AddTobaccoCessationScreen.route)
         }
     }
 }

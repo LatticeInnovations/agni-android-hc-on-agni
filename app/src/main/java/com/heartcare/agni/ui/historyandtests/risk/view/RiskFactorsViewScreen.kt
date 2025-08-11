@@ -47,6 +47,8 @@ import com.heartcare.agni.data.server.model.risk.RiskFactorResponse
 import com.heartcare.agni.data.server.model.risk.SaltResponse
 import com.heartcare.agni.data.server.model.risk.SugarResponse
 import com.heartcare.agni.data.server.model.risk.TobaccoResponse
+import com.heartcare.agni.ui.common.Detail
+import com.heartcare.agni.ui.common.Header
 import com.heartcare.agni.utils.constants.NavControllerConstants.RISK_FACTOR
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toPrescriptionDate
 
@@ -123,34 +125,6 @@ private fun RiskFactorSection(
         }
     }
 }
-
-@Composable
-fun Header(text: String) {
-    Text(
-        text = text,
-        style = MaterialTheme.typography.labelLarge,
-        color = MaterialTheme.colorScheme.onSurfaceVariant
-    )
-}
-
-@Composable
-private fun Detail(label: String, value: String?) {
-    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        Text(
-            label,
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.outline
-        )
-        Text(
-            value.displayOrDash(),
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-    }
-}
-
-@Composable
-private fun String?.displayOrDash(): String = this?.takeIf { it.isNotBlank() } ?: stringResource(R.string.dash)
 
 @Composable
 private fun TobaccoSection(tobacco: TobaccoResponse?) =

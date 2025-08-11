@@ -18,7 +18,7 @@ import com.heartcare.agni.data.local.enums.SaltFrequencyEnum.Companion.listOfSal
 import com.heartcare.agni.ui.common.DropdownComposable
 import com.heartcare.agni.ui.historyandtests.risk.add.AddRiskFactorViewModel
 import com.heartcare.agni.ui.historyandtests.risk.add.Question
-import com.heartcare.agni.ui.historyandtests.risk.view.Header
+import com.heartcare.agni.ui.common.Header
 
 @Composable
 fun SaltQuestions(
