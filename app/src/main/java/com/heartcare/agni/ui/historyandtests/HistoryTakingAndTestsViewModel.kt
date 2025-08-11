@@ -70,6 +70,8 @@ class HistoryTakingAndTestsViewModel @Inject constructor(
     var riskFactorsList by mutableStateOf(listOf<RiskFactorResponse>())
     var todayRiskFactor by mutableStateOf<RiskFactorResponse?>(null)
 
+    var tobaccoCessationList by mutableStateOf(listOf<String>("", ""))
+
     var appointment by mutableStateOf<AppointmentResponseLocal?>(null)
     var canAddAssessment by mutableStateOf(false)
     var showAddToQueueDialog by mutableStateOf(false)

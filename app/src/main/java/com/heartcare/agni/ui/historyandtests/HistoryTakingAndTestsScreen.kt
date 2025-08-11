@@ -59,6 +59,7 @@ import com.heartcare.agni.ui.historyandtests.family.FamilyHistoryView
 import com.heartcare.agni.ui.historyandtests.medication.MedicationView
 import com.heartcare.agni.ui.historyandtests.priordx.PriorDxView
 import com.heartcare.agni.ui.historyandtests.risk.view.RiskFactorsView
+import com.heartcare.agni.ui.historyandtests.tobacco.view.TobaccoCessationView
 import com.heartcare.agni.ui.patientlandingscreen.AllSlotsBookedDialog
 import com.heartcare.agni.ui.prescription.photo.view.AppointmentCompletedDialog
 import com.heartcare.agni.ui.theme.Black
@@ -210,7 +211,7 @@ private fun HistoryScaffoldContent(
                     2 -> FamilyHistoryView(viewModel)
                     3 -> AllergyView(viewModel)
                     4 -> RiskFactorsView(viewModel, navController)
-                    else -> Text(tabs[index], modifier = Modifier.padding(16.dp))
+                    5 -> TobaccoCessationView(viewModel, navController)
                 }
             }
         }

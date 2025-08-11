@@ -48,6 +48,7 @@ import com.heartcare.agni.data.local.enums.TobaccoUsage.Companion.tobaccoUsageLi
 import com.heartcare.agni.data.local.enums.YesNoEnum
 import com.heartcare.agni.data.server.model.patient.PatientResponse
 import com.heartcare.agni.ui.common.DatePickerDialog
+import com.heartcare.agni.ui.common.Header
 import com.heartcare.agni.ui.common.RadioButtonRow
 import com.heartcare.agni.ui.theme.Black
 import com.heartcare.agni.ui.theme.White
@@ -312,11 +313,7 @@ private fun RadioQuestion(
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         if (title.isNotEmpty()) {
-            Text(
-                title,
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            Header(title)
         }
         Text(
             question,
