@@ -131,7 +131,7 @@ class AddRiskFactorViewModel @Inject constructor(
     var softDrinkFrequency by mutableStateOf("")
     var juiceFrequency by mutableStateOf("")
 
-    var eatsOut by mutableStateOf("")
+    var eatsOut by mutableStateOf(KnowEnum.DO_NOT_KNOW.display)
     var mealsPerWeek by mutableStateOf("")
     var mealsPerWeekError by mutableStateOf(false)
 

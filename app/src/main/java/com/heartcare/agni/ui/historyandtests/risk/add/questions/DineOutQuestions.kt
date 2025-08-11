@@ -83,8 +83,7 @@ private fun DineOutQuestionOne(
                 selected = viewModel.eatsOut,
                 option = option,
                 onClick = {
-                    if (option == viewModel.eatsOut) viewModel.eatsOut = ""
-                    else viewModel.eatsOut = option
+                    viewModel.eatsOut = option
                     if (viewModel.eatsOut == YesNoEnum.NO.display
                         || viewModel.eatsOut.isBlank()) {
                         viewModel.mealsPerWeek = ""
