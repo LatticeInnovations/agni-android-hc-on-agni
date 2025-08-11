@@ -276,7 +276,8 @@ private fun HistoryBottomAppBar(
 
             NavigationButtons(
                 pagerState = pagerState,
-                coroutineScope = coroutineScope
+                coroutineScope = coroutineScope,
+                navController = navController
             )
         }
     }
@@ -357,7 +358,8 @@ private fun handleAddButtonClick(
 @Composable
 private fun NavigationButtons(
     pagerState: PagerState,
-    coroutineScope: CoroutineScope
+    coroutineScope: CoroutineScope,
+    navController: NavController
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -385,6 +387,7 @@ private fun NavigationButtons(
                         pagerState.animateScrollToPage(pagerState.currentPage + 1)
                     } else {
                         // Done logic here
+                        navController.navigateUp()
                     }
                 }
             },
