@@ -561,7 +561,7 @@ include them in the household</string>
     <string name="add_medication">Add medication</string>
     <string name="add_family_history">Add family history</string>
     <string name="add_risk_factor">Add risk factor</string>
-    <string name="add_tobacco_cessation">Add tobaccoo cessation</string>
+    <string name="add_tobacco_cessation">Add tobacco cessation</string>
     <string name="prior_dx_header_text">Have you ever been diagnosed with any of the following conditions:</string>
     <string name="please_specify_mandatory">Please specify*</string>
     <string name="prior_dx_saved">Prior Dx saved</string>
@@ -657,4 +657,16 @@ include them in the household</string>
     <string name="number_of_meals_per_week">Number of meals per week *</string>
     <string name="update_risk_factor">Update risk factor</string>
     <string name="number_of_standard_drinks">Number of standard drinks *</string>
+    <string name="tobacco_cessation_saved">Tobacco cessation saved</string>
+    <string name="tobacco_cessation_question_one">Does the patient use tobacco?</string>
+    <string name="brief_advice">Brief advice</string>
+    <string name="brief_advice_question">Has patient been given personalized advice on quitting tobacco use?</string>
+    <string name="assessed_status">Assessed status</string>
+    <string name="assessed_status_question">Is the patient ready to quit?</string>
+    <string name="assist_to_quit">Assist to quit</string>
+    <string name="assist_to_quit_question">Quit plan completed?</string>
+    <string name="pharmacotherapy">Pharmacotherapy</string>
+    <string name="pharmacotherapy_provided_question">Pharmacotherapy (PH) provided?</string>
+    <string name="start_date_of_plan">Start date of plan*</string>
+    <string name="status_of_plan">Status of plan</string>
 </resources>
