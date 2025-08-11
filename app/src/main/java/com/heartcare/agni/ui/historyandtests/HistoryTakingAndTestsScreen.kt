@@ -69,6 +69,7 @@ import com.heartcare.agni.utils.constants.NavControllerConstants.MEDICATION_SAVE
 import com.heartcare.agni.utils.constants.NavControllerConstants.PATIENT
 import com.heartcare.agni.utils.constants.NavControllerConstants.PRIOR_DX_SAVED
 import com.heartcare.agni.utils.constants.NavControllerConstants.RISK_FACTORS_SAVED
+import com.heartcare.agni.utils.constants.NavControllerConstants.TOBACCO_CESSATION_SAVED
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -173,6 +174,9 @@ private fun HandleLaunchedEffectsAndSnackBars(
             }
             if (handle.remove<Boolean>(RISK_FACTORS_SAVED) == true) {
                 snackBarHostState.showSnackbar(context.getString(R.string.risk_factors_saved))
+            }
+            if (handle.remove<Boolean>(TOBACCO_CESSATION_SAVED) == true) {
+                snackBarHostState.showSnackbar(context.getString(R.string.tobacco_cessation_saved))
             }
         }
     }
@@ -441,6 +445,7 @@ private fun navigateToAddScreen(
             2 -> navController.navigate(Screen.AddFamilyHistoryScreen.route)
             3 -> navController.navigate(Screen.AddAllergyScreen.route)
             4 -> navController.navigate(Screen.AddRiskFactorsScreen.route)
+            5 -> navController.navigate(Screen.AddTobaccoCessationScreen.route)
         }
     }
 }
