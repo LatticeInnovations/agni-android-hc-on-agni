@@ -3,6 +3,8 @@ package com.heartcare.agni.ui.historyandtests.tobacco.add
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -31,6 +33,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -54,6 +57,7 @@ import com.heartcare.agni.ui.theme.Black
 import com.heartcare.agni.ui.theme.White
 import com.heartcare.agni.utils.constants.NavControllerConstants.PATIENT
 import com.heartcare.agni.utils.constants.NavControllerConstants.TOBACCO_CESSATION_SAVED
+import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.currentYear
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toEndOfDay
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toddMMYYYYString
 import kotlinx.coroutines.launch
@@ -146,6 +150,9 @@ fun AddTobaccoCessationScreen(
             selectableDates = object : SelectableDates {
                 override fun isSelectableDate(utcTimeMillis: Long) =
                     utcTimeMillis <= Date().toEndOfDay()
+                override fun isSelectableYear(year: Int): Boolean {
+                    return year <= currentYear()
+                }
             },
             initialSelectedDate = viewModel.dateOfPlan,
             dismissBtnText = stringResource(R.string.cancel),
@@ -350,6 +357,17 @@ private fun StartDateField(label: String, value: String, onClick: () -> Unit) {
                 Icon(painterResource(R.drawable.today_calendar), null)
             }
         },
-        readOnly = true
+        readOnly = true,
+        interactionSource = remember {
+            MutableInteractionSource()
+        }.also { interactionSource ->
+            LaunchedEffect(interactionSource) {
+                interactionSource.interactions.collect {
+                    if (it is PressInteraction.Release) {
+                        onClick()
+                    }
+                }
+            }
+        }
     )
 }
