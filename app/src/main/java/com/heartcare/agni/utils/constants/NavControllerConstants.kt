@@ -27,4 +27,5 @@ object NavControllerConstants {
     const val RISK_FACTORS_SAVED = "risk_factors_saved"
     const val RISK_FACTOR = "risk_factor"
     const val TOBACCO_CESSATION_SAVED = "tobacco_cessation_saved"
+    const val TOBACCO_CESSATION = "tobacco_cessation"
 }

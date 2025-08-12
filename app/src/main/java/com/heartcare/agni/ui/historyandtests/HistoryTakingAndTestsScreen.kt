@@ -428,9 +428,16 @@ private fun getBtnText(
             else stringResource(R.string.add_allergies)
         }
 
-        4 -> if (viewModel.todayRiskFactor != null && !viewModel.existsInOtherHospital) stringResource(R.string.update_risk_factor)
-        else stringResource(R.string.add_risk_factor)
-        5 -> stringResource(R.string.add_tobacco_cessation)
+        4 -> {
+            if (viewModel.todayRiskFactor != null && !viewModel.existsInOtherHospital) stringResource(R.string.update_risk_factor)
+            else stringResource(R.string.add_risk_factor)
+        }
+
+        5 -> {
+            if (viewModel.todayTobaccoCessation != null && !viewModel.existsInOtherHospital) stringResource(R.string.update_tobacco_cessation)
+            else stringResource(R.string.add_tobacco_cessation)
+        }
+
         else -> ""
     }
 }

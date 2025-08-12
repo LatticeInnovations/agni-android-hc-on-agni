@@ -669,4 +669,5 @@ include them in the household</string>
     <string name="pharmacotherapy_provided_question">Pharmacotherapy (PH) provided?</string>
     <string name="start_date_of_plan">Start date of plan*</string>
     <string name="status_of_plan">Status of plan</string>
+    <string name="update_tobacco_cessation">Update tobacco cessation</string>
 </resources>
