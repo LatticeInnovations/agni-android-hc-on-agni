@@ -1883,4 +1883,36 @@ class SyncRepositoryImpl @Inject constructor(
             }
         }
     }
+
+    override suspend fun getAndInsertTobaccoCessationData(offset: Int): ResponseMapper<List<TobaccoCessationResponse>> {
+        val map = mutableMapOf<String, String>()
+        map[COUNT] = COUNT_VALUE.toString()
+        map[OFFSET] = offset.toString()
+        map[SORT] = "-$ID"
+        if (preferenceRepository.getLastSyncTobaccoCessation() != 0L) map[LAST_UPDATED] = String.format(
+            GREATER_THAN_BUILDER, preferenceRepository.getLastSyncTobaccoCessation().toTimeStampDate()
+        )
+
+        ApiResponseConverter.convert(
+            historyAndTestsApiService.getTobaccoCessation(
+                map
+            ), true
+        ).run {
+            return when (this) {
+                is ApiContinueResponse -> {
+                    insertTobaccoCessation(body)
+                    //Call for next batch data
+                    getAndInsertTobaccoCessationData(offset + COUNT_VALUE)
+                }
+
+                is ApiEndResponse -> {
+                    preferenceRepository.setLastSyncTobaccoCessation(Date().time)
+                    insertTobaccoCessation(body)
+                    this
+                }
+
+                else -> this
+            }
+        }
+    }
 }

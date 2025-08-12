@@ -165,6 +165,12 @@ class PreferenceRepositoryImpl @Inject constructor(private val preferenceStorage
 
     override fun getLastSyncRiskFactors(): Long = preferenceStorage.lastSyncRiskFactorsRecord
 
+    override fun setLastSyncTobaccoCessation(long: Long) {
+        preferenceStorage.lastSyncTobaccoCessationRecord = long
+    }
+
+    override fun getLastSyncTobaccoCessation(): Long = preferenceStorage.lastSyncTobaccoCessationRecord
+
     override fun getLastMedicineDosageInstructionSyncDate() =
         preferenceStorage.lastMedicineDosageInstructionSyncTime
 

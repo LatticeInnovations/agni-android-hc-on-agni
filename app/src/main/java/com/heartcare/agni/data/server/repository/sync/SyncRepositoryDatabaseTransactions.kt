@@ -64,6 +64,7 @@ import com.heartcare.agni.data.server.model.risk.RiskFactorResponse
 import com.heartcare.agni.data.server.model.scheduleandappointment.appointment.AppointmentResponse
 import com.heartcare.agni.data.server.model.scheduleandappointment.schedule.ScheduleResponse
 import com.heartcare.agni.data.server.model.symptomsanddiagnosis.SymptomsAndDiagnosisResponse
+import com.heartcare.agni.data.server.model.tobacco.TobaccoCessationResponse
 import com.heartcare.agni.data.server.model.vaccination.ImmunizationRecommendationResponse
 import com.heartcare.agni.data.server.model.vaccination.ImmunizationResponse
 import com.heartcare.agni.data.server.model.vaccination.ManufacturerResponse
@@ -104,6 +105,7 @@ import com.heartcare.agni.utils.converters.responseconverter.toRelationEntity
 import com.heartcare.agni.utils.converters.responseconverter.toRiskFactorEntity
 import com.heartcare.agni.utils.converters.responseconverter.toScheduleEntity
 import com.heartcare.agni.utils.converters.responseconverter.toSymptomsAndDiagnosisEntity
+import com.heartcare.agni.utils.converters.responseconverter.toTobaccoCessationEntity
 import com.heartcare.agni.utils.converters.responseconverter.toVitalEntity
 import com.heartcare.agni.utils.file.DeleteFileManager
 import kotlinx.coroutines.CoroutineScope
@@ -1013,6 +1015,12 @@ open class SyncRepositoryDatabaseTransactions(
     protected suspend fun insertRiskFactors(body: List<RiskFactorResponse>) {
         riskFactorDao.insertRiskFactorRecord(
             *body.map { it.toRiskFactorEntity(patientDao, appointmentDao) }.toTypedArray()
+        )
+    }
+
+    protected suspend fun insertTobaccoCessation(body: List<TobaccoCessationResponse>) {
+        tobaccoCessationDao.insertTobaccoCessationRecord(
+            *body.map { it.toTobaccoCessationEntity(patientDao, appointmentDao) }.toTypedArray()
         )
     }
 }

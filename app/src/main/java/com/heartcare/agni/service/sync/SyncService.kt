@@ -515,6 +515,9 @@ class SyncService(
                     CoroutineScope(Dispatchers.IO).launch {
                         downloadRiskFactors(logout)
                     }
+                    CoroutineScope(Dispatchers.IO).launch {
+                        downloadTobaccoCessation(logout)
+                    }
                 }
             }
         }
@@ -685,6 +688,11 @@ class SyncService(
     /** Download Risk Factors Data */
     private suspend fun downloadRiskFactors(logout: (Boolean, String) -> Unit) {
         checkAuthenticationStatus(syncRepository.getAndInsertRiskFactorData(0), logout)
+    }
+
+    /** Download Tobacco Cessation Data */
+    private suspend fun downloadTobaccoCessation(logout: (Boolean, String) -> Unit) {
+        checkAuthenticationStatus(syncRepository.getAndInsertTobaccoCessationData(0), logout)
     }
 
     /**
