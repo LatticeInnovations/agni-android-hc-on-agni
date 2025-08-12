@@ -6,12 +6,14 @@ import com.heartcare.agni.data.server.constants.EndPoints.FAMILY_HISTORY
 import com.heartcare.agni.data.server.constants.EndPoints.HISTORY_MEDICATION
 import com.heartcare.agni.data.server.constants.EndPoints.PRIOR_DX
 import com.heartcare.agni.data.server.constants.EndPoints.RISK_FACTOR
+import com.heartcare.agni.data.server.constants.EndPoints.TOBACCO_CESSATION
 import com.heartcare.agni.data.server.model.allergy.AllergyResponse
 import com.heartcare.agni.data.server.model.create.CreateResponse
 import com.heartcare.agni.data.server.model.family.FamilyHistoryResponse
 import com.heartcare.agni.data.server.model.historymedication.HistoryMedicationResponse
 import com.heartcare.agni.data.server.model.priordx.PriorDxResponse
 import com.heartcare.agni.data.server.model.risk.RiskFactorResponse
+import com.heartcare.agni.data.server.model.tobacco.TobaccoCessationResponse
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
@@ -48,4 +50,10 @@ interface HistoryAndTestsApiService {
 
     @GET(RISK_FACTOR)
     suspend fun getRiskFactors(@QueryMap(encoded = true) map: Map<String, String>?): Response<BaseResponse<List<RiskFactorResponse>>>
+
+    @POST(TOBACCO_CESSATION)
+    suspend fun postTobaccoCessation(@Body tobaccoCessationResponse: List<TobaccoCessationResponse>): Response<BaseResponse<List<CreateResponse>>>
+
+    @GET(TOBACCO_CESSATION)
+    suspend fun getTobaccoCessation(@QueryMap(encoded = true) map: Map<String, String>?): Response<BaseResponse<List<TobaccoCessationResponse>>>
 }

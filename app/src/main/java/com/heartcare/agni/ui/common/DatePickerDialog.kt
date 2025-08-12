@@ -10,6 +10,7 @@ import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.remember
+import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.addLocalTimeZoneOffSet
 import java.util.Date
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -23,7 +24,7 @@ fun DatePickerDialog(
     confirm: (Date) -> Unit
 ) {
     val datePickerState = rememberDatePickerState(
-        initialSelectedDateMillis = initialSelectedDate.time,
+        initialSelectedDateMillis = initialSelectedDate.addLocalTimeZoneOffSet(),
         selectableDates = selectableDates
     )
     val confirmEnabled = remember {

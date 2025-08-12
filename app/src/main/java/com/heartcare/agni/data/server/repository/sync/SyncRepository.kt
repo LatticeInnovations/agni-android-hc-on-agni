@@ -22,6 +22,7 @@ import com.heartcare.agni.data.server.model.risk.RiskFactorResponse
 import com.heartcare.agni.data.server.model.scheduleandappointment.appointment.AppointmentResponse
 import com.heartcare.agni.data.server.model.scheduleandappointment.schedule.ScheduleResponse
 import com.heartcare.agni.data.server.model.symptomsanddiagnosis.SymptomsAndDiagnosisResponse
+import com.heartcare.agni.data.server.model.tobacco.TobaccoCessationResponse
 import com.heartcare.agni.data.server.model.vaccination.ImmunizationResponse
 import com.heartcare.agni.data.server.model.vaccination.ManufacturerResponse
 import com.heartcare.agni.data.server.model.vitals.VitalResponse
@@ -54,6 +55,7 @@ interface SyncRepository {
     suspend fun getAndInsertFamilyHistoryData(offset: Int): ResponseMapper<List<FamilyHistoryResponse>>
     suspend fun getAndInsertAllergyData(offset: Int): ResponseMapper<List<AllergyResponse>>
     suspend fun getAndInsertRiskFactorData(offset: Int): ResponseMapper<List<RiskFactorResponse>>
+    suspend fun getAndInsertTobaccoCessationData(offset: Int): ResponseMapper<List<TobaccoCessationResponse>>
 
     //POST
     suspend fun sendPersonPostData(): ResponseMapper<List<CreateResponse>>
@@ -75,6 +77,7 @@ interface SyncRepository {
     suspend fun sendFamilyHistoryPostData(): ResponseMapper<List<CreateResponse>>
     suspend fun sendAllergyPostData(): ResponseMapper<List<CreateResponse>>
     suspend fun sendRiskFactorPostData(): ResponseMapper<List<CreateResponse>>
+    suspend fun sendTobaccoCessationPostData(): ResponseMapper<List<CreateResponse>>
 
     //PATCH
     suspend fun sendPersonPatchData(): ResponseMapper<List<CreateResponse>>

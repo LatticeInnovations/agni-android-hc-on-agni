@@ -17,12 +17,14 @@ import com.heartcare.agni.data.local.repository.preference.PreferenceRepository
 import com.heartcare.agni.data.local.repository.priordx.PriorDxRepository
 import com.heartcare.agni.data.local.repository.risk.RiskFactorRepository
 import com.heartcare.agni.data.local.repository.schedule.ScheduleRepository
+import com.heartcare.agni.data.local.repository.tobacco.TobaccoCessationRepository
 import com.heartcare.agni.data.server.model.allergy.AllergyResponse
 import com.heartcare.agni.data.server.model.family.FamilyHistoryResponse
 import com.heartcare.agni.data.server.model.historymedication.HistoryMedicationResponse
 import com.heartcare.agni.data.server.model.patient.PatientResponse
 import com.heartcare.agni.data.server.model.priordx.PriorDxResponse
 import com.heartcare.agni.data.server.model.risk.RiskFactorResponse
+import com.heartcare.agni.data.server.model.tobacco.TobaccoCessationResponse
 import com.heartcare.agni.di.dispatcher.IoDispatcher
 import com.heartcare.agni.utils.common.Queries
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.isToday
@@ -47,6 +49,7 @@ class HistoryTakingAndTestsViewModel @Inject constructor(
     private val familyHistoryRepository: FamilyHistoryRepository,
     private val allergyRepository: AllergyRepository,
     private val riskFactorRepository: RiskFactorRepository,
+    private val tobaccoCessationRepository: TobaccoCessationRepository,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) : BaseViewModel() {
     var isLaunched by mutableStateOf(false)
@@ -70,7 +73,8 @@ class HistoryTakingAndTestsViewModel @Inject constructor(
     var riskFactorsList by mutableStateOf(listOf<RiskFactorResponse>())
     var todayRiskFactor by mutableStateOf<RiskFactorResponse?>(null)
 
-    var tobaccoCessationList by mutableStateOf(listOf<String>("", ""))
+    var tobaccoCessationList by mutableStateOf(listOf<TobaccoCessationResponse>())
+    var todayTobaccoCessation by mutableStateOf<TobaccoCessationResponse?>(null)
 
     var appointment by mutableStateOf<AppointmentResponseLocal?>(null)
     var canAddAssessment by mutableStateOf(false)
@@ -185,6 +189,9 @@ class HistoryTakingAndTestsViewModel @Inject constructor(
             }
             riskFactorsList = riskFactorRepository.getRiskFactorRecords(patientId).also {
                 todayRiskFactor = it.firstOrNull { riskFactor -> isToday(riskFactor.appUpdatedDate) }
+            }
+            tobaccoCessationList = tobaccoCessationRepository.getTobaccoCessationRecords(patientId).also {
+                todayTobaccoCessation = it.firstOrNull { tobaccoCessation -> isToday(tobaccoCessation.appUpdatedDate) }
             }
             isLoading = false
         }

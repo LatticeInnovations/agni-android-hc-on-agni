@@ -26,6 +26,7 @@ import com.heartcare.agni.data.local.roomdb.dao.ScheduleDao
 import com.heartcare.agni.data.local.roomdb.dao.SearchDao
 import com.heartcare.agni.data.local.roomdb.dao.VitalDao
 import com.heartcare.agni.data.local.roomdb.dao.SymptomsAndDiagnosisDao
+import com.heartcare.agni.data.local.roomdb.dao.TobaccoCessationDao
 import com.heartcare.agni.data.local.roomdb.dao.vaccincation.ImmunizationDao
 import com.heartcare.agni.data.local.roomdb.dao.vaccincation.ImmunizationRecommendationDao
 import com.heartcare.agni.data.local.roomdb.dao.vaccincation.ManufacturerDao
@@ -208,5 +209,11 @@ object DatabaseModule {
     @Provides
     fun provideRiskFactorDao(fhirAppDatabase: FhirAppDatabase): RiskFactorDao {
         return fhirAppDatabase.getRiskFactorDao()
+    }
+
+    @Singleton
+    @Provides
+    fun provideTobaccoCessationDaoDao(fhirAppDatabase: FhirAppDatabase): TobaccoCessationDao {
+        return fhirAppDatabase.getTobaccoCessationDao()
     }
 }

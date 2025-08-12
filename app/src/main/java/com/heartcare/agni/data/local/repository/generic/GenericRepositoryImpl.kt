@@ -25,6 +25,7 @@ import com.heartcare.agni.data.server.model.relatedperson.RelatedPersonResponse
 import com.heartcare.agni.data.server.model.risk.RiskFactorResponse
 import com.heartcare.agni.data.server.model.scheduleandappointment.appointment.AppointmentResponse
 import com.heartcare.agni.data.server.model.scheduleandappointment.schedule.ScheduleResponse
+import com.heartcare.agni.data.server.model.tobacco.TobaccoCessationResponse
 import com.heartcare.agni.data.server.model.vaccination.ImmunizationResponse
 import com.heartcare.agni.utils.builders.UUIDBuilder
 import com.heartcare.agni.utils.converters.responseconverter.GsonConverters.toJson
@@ -230,6 +231,13 @@ class GenericRepositoryImpl @Inject constructor(
             }
     }
 
+    override suspend fun updateTobaccoCessationFhirId() {
+        genericDao.getNotSyncedData(GenericTypeEnum.TOBACCO_CESSATION)
+            .forEach { tobaccoCessationGenericEntity ->
+                updateTobaccoCessationFhirIdInGenericEntity(tobaccoCessationGenericEntity)
+            }
+    }
+
     override suspend fun insertAppointment(
         appointmentResponse: AppointmentResponse,
         uuid: String
@@ -338,6 +346,19 @@ class GenericRepositoryImpl @Inject constructor(
             syncType = SyncType.POST
         ).let { riskFactorGenericEntity ->
             insertRiskFactorGenericEntity(riskFactorGenericEntity, riskFactorResponse, uuid)
+        }
+    }
+
+    override suspend fun insertTobaccoCessationRecord(
+        tobaccoCessationResponse: TobaccoCessationResponse,
+        uuid: String
+    ): Long {
+        return genericDao.getGenericEntityById(
+            patientId = tobaccoCessationResponse.uuid,
+            genericTypeEnum = GenericTypeEnum.TOBACCO_CESSATION,
+            syncType = SyncType.POST
+        ).let { tobaccoCessationGenericEntity ->
+            insertTobaccoCessationGenericEntity(tobaccoCessationGenericEntity, tobaccoCessationResponse, uuid)
         }
     }
 

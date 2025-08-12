@@ -62,6 +62,7 @@ import com.heartcare.agni.data.local.roomdb.entities.symptomsanddiagnosis.Diagno
 import com.heartcare.agni.data.local.roomdb.entities.symptomsanddiagnosis.SymptomAndDiagnosisEntity
 import com.heartcare.agni.data.local.roomdb.entities.symptomsanddiagnosis.SymptomsAndDiagnosisLocal
 import com.heartcare.agni.data.local.roomdb.entities.symptomsanddiagnosis.SymptomsEntity
+import com.heartcare.agni.data.local.roomdb.entities.tobacco.TobaccoCessationEntity
 import com.heartcare.agni.data.local.roomdb.entities.vitals.VitalEntity
 import com.heartcare.agni.data.local.roomdb.views.PrescriptionDirectionAndMedicineView
 import com.heartcare.agni.data.server.api.PatientApiService
@@ -107,6 +108,7 @@ import com.heartcare.agni.data.server.model.scheduleandappointment.schedule.Sche
 import com.heartcare.agni.data.server.model.symptomsanddiagnosis.SymptomsAndDiagnosisItem
 import com.heartcare.agni.data.server.model.symptomsanddiagnosis.SymptomsAndDiagnosisResponse
 import com.heartcare.agni.data.server.model.symptomsanddiagnosis.SymptomsItem
+import com.heartcare.agni.data.server.model.tobacco.TobaccoCessationResponse
 import com.heartcare.agni.data.server.model.vitals.VitalResponse
 import com.heartcare.agni.utils.builders.UUIDBuilder
 import com.heartcare.agni.utils.converters.responseconverter.RelationConverter.getInverseRelation
@@ -1607,5 +1609,53 @@ internal fun RiskFactorEntity.toRiskFactorResponse(): RiskFactorResponse {
                 mealsPerWeek = mealsPerWeek
             )
         }
+    )
+}
+
+internal fun TobaccoCessationResponse.toTobaccoCessationEntity(): TobaccoCessationEntity {
+    return TobaccoCessationEntity(
+        uuid = uuid,
+        fhirId = fhirId,
+        patientId = patientId,
+        appointmentId = appointmentId,
+        appUpdatedDate = appUpdatedDate,
+        practitionerId = practitionerId!!,
+        practitionerName = practitionerName!!,
+        tobaccoUse = tobaccoUse,
+        briefAdvice = briefAdvice,
+        assessedStatus = assessedStatus,
+        assistQuit = assistQuit,
+        dateOfPlan = dateOfPlan,
+        pharmacotherapy = pharmacotherapy,
+        planStatus = planStatus
+    )
+}
+
+suspend fun TobaccoCessationResponse.toTobaccoCessationEntity(
+    patientDao: PatientDao,
+    appointmentDao: AppointmentDao
+): TobaccoCessationEntity {
+    return this.toTobaccoCessationEntity().copy(
+        appointmentId = appointmentDao.getAppointmentIdByFhirId(appointmentId),
+        patientId = patientDao.getPatientIdByFhirId(patientId)!!,
+    )
+}
+
+internal fun TobaccoCessationEntity.toTobaccoCessationResponse(): TobaccoCessationResponse {
+    return TobaccoCessationResponse(
+        uuid = uuid,
+        fhirId = fhirId,
+        appUpdatedDate = appUpdatedDate,
+        appointmentId = appointmentId,
+        patientId = patientId,
+        practitionerId = practitionerId,
+        practitionerName = practitionerName,
+        tobaccoUse = tobaccoUse,
+        briefAdvice = briefAdvice,
+        assessedStatus = assessedStatus,
+        assistQuit = assistQuit,
+        dateOfPlan = dateOfPlan,
+        pharmacotherapy = pharmacotherapy,
+        planStatus = planStatus
     )
 }

@@ -29,6 +29,7 @@ import com.heartcare.agni.data.local.roomdb.dao.RiskPredictionDao
 import com.heartcare.agni.data.local.roomdb.dao.ScheduleDao
 import com.heartcare.agni.data.local.roomdb.dao.SearchDao
 import com.heartcare.agni.data.local.roomdb.dao.SymptomsAndDiagnosisDao
+import com.heartcare.agni.data.local.roomdb.dao.TobaccoCessationDao
 import com.heartcare.agni.data.local.roomdb.dao.VitalDao
 import com.heartcare.agni.data.local.roomdb.dao.vaccincation.ImmunizationDao
 import com.heartcare.agni.data.local.roomdb.dao.vaccincation.ImmunizationRecommendationDao
@@ -66,6 +67,7 @@ import com.heartcare.agni.data.local.roomdb.entities.search.SymDiagSearchEntity
 import com.heartcare.agni.data.local.roomdb.entities.symptomsanddiagnosis.DiagnosisEntity
 import com.heartcare.agni.data.local.roomdb.entities.symptomsanddiagnosis.SymptomAndDiagnosisEntity
 import com.heartcare.agni.data.local.roomdb.entities.symptomsanddiagnosis.SymptomsEntity
+import com.heartcare.agni.data.local.roomdb.entities.tobacco.TobaccoCessationEntity
 import com.heartcare.agni.data.local.roomdb.entities.vaccination.ImmunizationEntity
 import com.heartcare.agni.data.local.roomdb.entities.vaccination.ImmunizationFileEntity
 import com.heartcare.agni.data.local.roomdb.entities.vaccination.ImmunizationRecommendationEntity
@@ -119,7 +121,8 @@ import java.util.UUID
         HistoryMedicationEntity::class,
         FamilyHistoryEntity::class,
         AllergyEntity::class,
-        RiskFactorEntity::class
+        RiskFactorEntity::class,
+        TobaccoCessationEntity::class
     ],
     views = [RelationView::class, PrescriptionDirectionAndMedicineView::class],
     version = 1,
@@ -155,6 +158,7 @@ abstract class FhirAppDatabase : RoomDatabase() {
     abstract fun getFamilyHistoryDao(): FamilyHistoryDao
     abstract fun getAllergyDao(): AllergyDao
     abstract fun getRiskFactorDao(): RiskFactorDao
+    abstract fun getTobaccoCessationDao(): TobaccoCessationDao
 
     companion object {
         @Volatile

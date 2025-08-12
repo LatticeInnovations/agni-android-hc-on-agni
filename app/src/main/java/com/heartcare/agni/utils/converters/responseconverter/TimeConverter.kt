@@ -1,6 +1,8 @@
 package com.heartcare.agni.utils.converters.responseconverter
 
 import java.text.SimpleDateFormat
+import java.time.Instant
+import java.time.ZoneId
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
@@ -80,17 +82,6 @@ object TimeConverter {
     private fun Calendar.isLeapYear(): Boolean {
         return (this[Calendar.YEAR] % 400 == 0 ||
                 (this[Calendar.YEAR] % 4 == 0 && this[Calendar.YEAR] % 100 != 0))
-    }
-
-    internal fun Long.toDate(): String {
-        return if (this != 0.toLong()) {
-            val formatter = SimpleDateFormat(DD_MM_YYYY, Locale.getDefault())
-            val calendar = Calendar.getInstance()
-            calendar.timeInMillis = this
-            formatter.format(calendar.time)
-        } else {
-            ""
-        }
     }
 
     internal fun isDOBValid(day: Int, month: Int, year: Int): Boolean {
@@ -359,8 +350,8 @@ object TimeConverter {
         val cal2 = Calendar.getInstance()
         cal1.time = date1
         cal2.time = date2
-        return cal1.get(Calendar.YEAR) == cal2.get(Calendar.YEAR) &&
-                cal1.get(Calendar.DAY_OF_YEAR) == cal2.get(Calendar.DAY_OF_YEAR)
+        return cal1[Calendar.YEAR] == cal2[Calendar.YEAR] &&
+                cal1[Calendar.DAY_OF_YEAR] == cal2[Calendar.DAY_OF_YEAR]
     }
 
     fun isYesterday(date: Date): Boolean {
@@ -424,10 +415,12 @@ object TimeConverter {
         val formatter = SimpleDateFormat("dd MMM", Locale.getDefault())
         return formatter.format(this)
     }
+
     fun String.convertStringToDate(): Date {
         val formatter = SimpleDateFormat(YYYY_MM_DD, Locale.getDefault())
-        return formatter.parse(this)?:Date()
+        return formatter.parse(this) ?: Date()
     }
+
     fun String.convertDateFormat(): String {
         // Define the input and output date formats
         val inputFormat = SimpleDateFormat(YYYY_MM_DD, Locale.ENGLISH)
@@ -443,6 +436,7 @@ object TimeConverter {
             "Invalid Date"
         }
     }
+
     fun Date.convertedDate(): String {
         val sdf = SimpleDateFormat(YYYY_MM_DD, Locale.getDefault())
         return sdf.format(this)
@@ -495,5 +489,18 @@ object TimeConverter {
         calendar.time = this
         calendar.add(Calendar.DATE, days)
         return calendar.time
+    }
+
+    fun currentYear(): Int {
+        return Calendar.getInstance()[Calendar.YEAR]
+    }
+
+    fun Date.addLocalTimeZoneOffSet(): Long {
+        val offset = ZoneId.systemDefault()
+            .rules
+            .getOffset(Instant.ofEpochMilli(this.time))
+            .totalSeconds * 1000L
+
+        return this.time + offset
     }
 }

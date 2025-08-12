@@ -25,6 +25,7 @@ import com.heartcare.agni.data.local.roomdb.dao.RiskFactorDao
 import com.heartcare.agni.data.local.roomdb.dao.RiskPredictionDao
 import com.heartcare.agni.data.local.roomdb.dao.ScheduleDao
 import com.heartcare.agni.data.local.roomdb.dao.SymptomsAndDiagnosisDao
+import com.heartcare.agni.data.local.roomdb.dao.TobaccoCessationDao
 import com.heartcare.agni.data.local.roomdb.dao.VitalDao
 import com.heartcare.agni.data.local.roomdb.dao.vaccincation.ImmunizationDao
 import com.heartcare.agni.data.local.roomdb.dao.vaccincation.ImmunizationRecommendationDao
@@ -63,6 +64,7 @@ import com.heartcare.agni.data.server.model.risk.RiskFactorResponse
 import com.heartcare.agni.data.server.model.scheduleandappointment.appointment.AppointmentResponse
 import com.heartcare.agni.data.server.model.scheduleandappointment.schedule.ScheduleResponse
 import com.heartcare.agni.data.server.model.symptomsanddiagnosis.SymptomsAndDiagnosisResponse
+import com.heartcare.agni.data.server.model.tobacco.TobaccoCessationResponse
 import com.heartcare.agni.data.server.model.vaccination.ImmunizationRecommendationResponse
 import com.heartcare.agni.data.server.model.vaccination.ImmunizationResponse
 import com.heartcare.agni.data.server.model.vaccination.ManufacturerResponse
@@ -103,6 +105,7 @@ import com.heartcare.agni.utils.converters.responseconverter.toRelationEntity
 import com.heartcare.agni.utils.converters.responseconverter.toRiskFactorEntity
 import com.heartcare.agni.utils.converters.responseconverter.toScheduleEntity
 import com.heartcare.agni.utils.converters.responseconverter.toSymptomsAndDiagnosisEntity
+import com.heartcare.agni.utils.converters.responseconverter.toTobaccoCessationEntity
 import com.heartcare.agni.utils.converters.responseconverter.toVitalEntity
 import com.heartcare.agni.utils.file.DeleteFileManager
 import kotlinx.coroutines.CoroutineScope
@@ -136,7 +139,8 @@ open class SyncRepositoryDatabaseTransactions(
     private val historyMedicationDao: HistoryMedicationDao,
     private val familyHistoryDao: FamilyHistoryDao,
     private val allergyDao: AllergyDao,
-    private val riskFactorDao: RiskFactorDao
+    private val riskFactorDao: RiskFactorDao,
+    private val tobaccoCessationDao: TobaccoCessationDao
 ) {
 
 
@@ -954,6 +958,30 @@ open class SyncRepositoryDatabaseTransactions(
         return deleteGenericEntityByListOfIds(idsToDelete.toList())
     }
 
+    protected suspend fun insertTobaccoCessationFhirIds(
+        body: List<CreateResponse>,
+        listOfGenericEntities: List<GenericEntity>
+    ): Int {
+        val idsToDelete = mutableSetOf<String>()
+        idsToDelete.addAll(listOfGenericEntities.map { genericEntity -> genericEntity.id })
+        body.forEach { createResponse ->
+            when (createResponse.error) {
+                null -> {
+                    tobaccoCessationDao.updateFhirId(
+                        createResponse.id!!, createResponse.fhirId!!
+                    )
+                }
+                DUPLICATE_RECORD -> {
+                    tobaccoCessationDao.deleteTobaccoCessation(createResponse.id!!)
+                }
+                else -> {
+                    idsToDelete.remove(createResponse.id)
+                }
+            }
+        }
+        return deleteGenericEntityByListOfIds(idsToDelete.toList())
+    }
+
     protected suspend fun insertLevels(body: List<LevelResponse>) {
         levelsDao.insertLevelEntity(
             *body.map { it.toLevelEntity() }.toTypedArray()
@@ -987,6 +1015,12 @@ open class SyncRepositoryDatabaseTransactions(
     protected suspend fun insertRiskFactors(body: List<RiskFactorResponse>) {
         riskFactorDao.insertRiskFactorRecord(
             *body.map { it.toRiskFactorEntity(patientDao, appointmentDao) }.toTypedArray()
+        )
+    }
+
+    protected suspend fun insertTobaccoCessation(body: List<TobaccoCessationResponse>) {
+        tobaccoCessationDao.insertTobaccoCessationRecord(
+            *body.map { it.toTobaccoCessationEntity(patientDao, appointmentDao) }.toTypedArray()
         )
     }
 }
