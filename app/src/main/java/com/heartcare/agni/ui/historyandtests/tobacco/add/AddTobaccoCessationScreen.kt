@@ -36,7 +36,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.heartcare.agni.R
 import com.heartcare.agni.data.local.enums.Pharmacotherapy.Companion.pharmacotherapyList
@@ -63,7 +63,7 @@ import java.util.Date
 @Composable
 fun AddTobaccoCessationScreen(
     navController: NavController,
-    viewModel: AddTobaccoCessationViewModel = viewModel()
+    viewModel: AddTobaccoCessationViewModel = hiltViewModel()
 ) {
     val coroutineScope = rememberCoroutineScope()
 
@@ -71,7 +71,10 @@ fun AddTobaccoCessationScreen(
         if (!viewModel.isLaunched) {
             navController.previousBackStackEntry?.savedStateHandle
                 ?.get<PatientResponse>(PATIENT)
-                ?.let { viewModel.patient = it }
+                ?.let {
+                    viewModel.patient = it
+                    viewModel.getTodayTobaccoCessation(it.id)
+                }
             viewModel.isLaunched = true
         }
     }
@@ -117,12 +120,14 @@ fun AddTobaccoCessationScreen(
             ) {
                 Button(
                     onClick = {
-                        coroutineScope.launch {
-                            navController.previousBackStackEntry?.savedStateHandle?.set(
-                                TOBACCO_CESSATION_SAVED,
-                                true
-                            )
-                            navController.navigateUp()
+                        viewModel.addTobaccoCessation {
+                            coroutineScope.launch {
+                                navController.previousBackStackEntry?.savedStateHandle?.set(
+                                    TOBACCO_CESSATION_SAVED,
+                                    true
+                                )
+                                navController.navigateUp()
+                            }
                         }
                     },
                     enabled = viewModel.isValid(),
