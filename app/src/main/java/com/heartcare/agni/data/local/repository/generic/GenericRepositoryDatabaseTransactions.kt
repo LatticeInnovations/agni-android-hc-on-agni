@@ -29,6 +29,7 @@ import com.heartcare.agni.data.server.model.relatedperson.RelatedPersonResponse
 import com.heartcare.agni.data.server.model.risk.RiskFactorResponse
 import com.heartcare.agni.data.server.model.scheduleandappointment.appointment.AppointmentResponse
 import com.heartcare.agni.data.server.model.scheduleandappointment.schedule.ScheduleResponse
+import com.heartcare.agni.data.server.model.tobacco.TobaccoCessationResponse
 import com.heartcare.agni.data.server.model.vaccination.ImmunizationResponse
 import com.heartcare.agni.utils.builders.GenericEntityPatchBuilder.processPatch
 import com.heartcare.agni.utils.constants.Id
@@ -406,6 +407,28 @@ open class GenericRepositoryDatabaseTransactions(
         }
     }
 
+    protected suspend fun insertTobaccoCessationGenericEntity(
+        tobaccoCessationGenericEntity: GenericEntity?,
+        tobaccoCessationResponse: TobaccoCessationResponse,
+        uuid: String
+    ): Long {
+        return if (tobaccoCessationGenericEntity != null) {
+            genericDao.insertGenericEntity(
+                tobaccoCessationGenericEntity.copy(payload = tobaccoCessationResponse.toJson())
+            )[0]
+        } else {
+            genericDao.insertGenericEntity(
+                GenericEntity(
+                    id = uuid,
+                    patientId = tobaccoCessationResponse.uuid,
+                    payload = tobaccoCessationResponse.toJson(),
+                    type = GenericTypeEnum.TOBACCO_CESSATION,
+                    syncType = SyncType.POST
+                )
+            )[0]
+        }
+    }
+
     protected suspend fun updateAppointmentFhirIdInGenericEntity(appointmentGenericEntity: GenericEntity) {
         val existingMap = appointmentGenericEntity.payload.fromJson<MutableMap<String, Any>>()
             .mapToObject(AppointmentResponse::class.java)
@@ -680,6 +703,26 @@ open class GenericRepositoryDatabaseTransactions(
         if (existingMap != null) {
             genericDao.insertGenericEntity(
                 riskFactorGenericEntity.copy(
+                    payload = existingMap.copy(
+                        patientId = if (!existingMap.patientId.isFhirId()) getPatientFhirIdById(
+                            existingMap.patientId
+                        )!! else existingMap.patientId,
+                        appointmentId = if (!existingMap.appointmentId.isFhirId()) getAppointmentFhirIdById(
+                            existingMap.appointmentId
+                        )!! else existingMap.appointmentId
+                    ).toJson()
+                )
+            )
+        }
+    }
+
+    protected suspend fun updateTobaccoCessationFhirIdInGenericEntity(tobaccoCessationGenericEntity: GenericEntity) {
+        val existingMap = tobaccoCessationGenericEntity.payload.fromJson<MutableMap<String, Any>>()
+            .mapToObject(TobaccoCessationResponse::class.java)
+
+        if (existingMap != null) {
+            genericDao.insertGenericEntity(
+                tobaccoCessationGenericEntity.copy(
                     payload = existingMap.copy(
                         patientId = if (!existingMap.patientId.isFhirId()) getPatientFhirIdById(
                             existingMap.patientId
