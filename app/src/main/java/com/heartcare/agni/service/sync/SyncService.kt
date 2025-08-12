@@ -240,6 +240,9 @@ class SyncService(
                 CoroutineScope(Dispatchers.IO).launch {
                     updateFhirIdInRiskFactors(logout)
                 }
+                CoroutineScope(Dispatchers.IO).launch {
+                    updateFhirIdInTobaccoCessation(logout)
+                }
             }
         }
     }
@@ -334,6 +337,11 @@ class SyncService(
     /** Upload Risk Factors */
     private suspend fun uploadRiskFactors(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
         return checkAuthenticationStatus(syncRepository.sendRiskFactorPostData(), logout)
+    }
+
+    /** Upload Tobacco Cessation */
+    private suspend fun uploadTobaccoCessation(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
+        return checkAuthenticationStatus(syncRepository.sendTobaccoCessationPostData(), logout)
     }
 
     /**
@@ -785,6 +793,12 @@ class SyncService(
     private suspend fun updateFhirIdInRiskFactors(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
         genericRepository.updateRiskFactorsFhirId()
         return uploadRiskFactors(logout)
+    }
+
+    /** Update FHIR ID in Tobacco Cessation */
+    private suspend fun updateFhirIdInTobaccoCessation(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
+        genericRepository.updateTobaccoCessationFhirId()
+        return uploadTobaccoCessation(logout)
     }
 
     /** Check Session Expiry and Authorization */

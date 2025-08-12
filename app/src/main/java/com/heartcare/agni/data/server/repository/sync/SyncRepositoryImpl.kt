@@ -27,6 +27,7 @@ import com.heartcare.agni.data.local.roomdb.dao.RiskFactorDao
 import com.heartcare.agni.data.local.roomdb.dao.RiskPredictionDao
 import com.heartcare.agni.data.local.roomdb.dao.ScheduleDao
 import com.heartcare.agni.data.local.roomdb.dao.SymptomsAndDiagnosisDao
+import com.heartcare.agni.data.local.roomdb.dao.TobaccoCessationDao
 import com.heartcare.agni.data.local.roomdb.dao.VitalDao
 import com.heartcare.agni.data.local.roomdb.dao.vaccincation.ImmunizationDao
 import com.heartcare.agni.data.local.roomdb.dao.vaccincation.ImmunizationRecommendationDao
@@ -83,6 +84,7 @@ import com.heartcare.agni.data.server.model.risk.RiskFactorResponse
 import com.heartcare.agni.data.server.model.scheduleandappointment.appointment.AppointmentResponse
 import com.heartcare.agni.data.server.model.scheduleandappointment.schedule.ScheduleResponse
 import com.heartcare.agni.data.server.model.symptomsanddiagnosis.SymptomsAndDiagnosisResponse
+import com.heartcare.agni.data.server.model.tobacco.TobaccoCessationResponse
 import com.heartcare.agni.data.server.model.vaccination.ImmunizationRecommendationResponse
 import com.heartcare.agni.data.server.model.vaccination.ImmunizationResponse
 import com.heartcare.agni.data.server.model.vaccination.ManufacturerResponse
@@ -139,7 +141,8 @@ class SyncRepositoryImpl @Inject constructor(
     historyMedicationDao: HistoryMedicationDao,
     familyHistoryDao: FamilyHistoryDao,
     allergyDao: AllergyDao,
-    riskFactorDao: RiskFactorDao
+    riskFactorDao: RiskFactorDao,
+    tobaccoCessationDao: TobaccoCessationDao
 ) : SyncRepository, SyncRepositoryDatabaseTransactions(
     patientApiService,
     patientDao,
@@ -166,7 +169,8 @@ class SyncRepositoryImpl @Inject constructor(
     historyMedicationDao,
     familyHistoryDao,
     allergyDao,
-    riskFactorDao
+    riskFactorDao,
+    tobaccoCessationDao
 ) {
 
     override suspend fun getAndInsertListPatientData(
@@ -1343,6 +1347,32 @@ class SyncRepositoryImpl @Inject constructor(
                         insertRiskFactorsFhirIds(body, listOfGenericEntity)
                             .apply {
                                 if (this > 0) sendRiskFactorPostData()
+                            }
+                    }
+                }
+            }
+        }
+    }
+
+    override suspend fun sendTobaccoCessationPostData(): ResponseMapper<List<CreateResponse>> {
+        return genericDao.getSameTypeGenericEntityPayload(
+            genericTypeEnum = GenericTypeEnum.TOBACCO_CESSATION,
+            syncType = SyncType.POST
+        ).let { listOfGenericEntity ->
+            if (listOfGenericEntity.isEmpty()) ApiEmptyResponse()
+            else {
+                ApiResponseConverter.convert(
+                    historyAndTestsApiService.postTobaccoCessation(
+                        listOfGenericEntity.map {
+                            it.payload.fromJson<LinkedTreeMap<*, *>>()
+                                .mapToObject(TobaccoCessationResponse::class.java)!!
+                        }
+                    )
+                ).apply {
+                    if (this is ApiEndResponse) {
+                        insertTobaccoCessationFhirIds(body, listOfGenericEntity)
+                            .apply {
+                                if (this > 0) sendTobaccoCessationPostData()
                             }
                     }
                 }

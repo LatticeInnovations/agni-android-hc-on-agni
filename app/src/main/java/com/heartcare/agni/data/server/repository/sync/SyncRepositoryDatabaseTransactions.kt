@@ -25,6 +25,7 @@ import com.heartcare.agni.data.local.roomdb.dao.RiskFactorDao
 import com.heartcare.agni.data.local.roomdb.dao.RiskPredictionDao
 import com.heartcare.agni.data.local.roomdb.dao.ScheduleDao
 import com.heartcare.agni.data.local.roomdb.dao.SymptomsAndDiagnosisDao
+import com.heartcare.agni.data.local.roomdb.dao.TobaccoCessationDao
 import com.heartcare.agni.data.local.roomdb.dao.VitalDao
 import com.heartcare.agni.data.local.roomdb.dao.vaccincation.ImmunizationDao
 import com.heartcare.agni.data.local.roomdb.dao.vaccincation.ImmunizationRecommendationDao
@@ -136,7 +137,8 @@ open class SyncRepositoryDatabaseTransactions(
     private val historyMedicationDao: HistoryMedicationDao,
     private val familyHistoryDao: FamilyHistoryDao,
     private val allergyDao: AllergyDao,
-    private val riskFactorDao: RiskFactorDao
+    private val riskFactorDao: RiskFactorDao,
+    private val tobaccoCessationDao: TobaccoCessationDao
 ) {
 
 
@@ -945,6 +947,30 @@ open class SyncRepositoryDatabaseTransactions(
                 }
                 DUPLICATE_RECORD -> {
                     riskFactorDao.deleteRiskFactor(createResponse.id!!)
+                }
+                else -> {
+                    idsToDelete.remove(createResponse.id)
+                }
+            }
+        }
+        return deleteGenericEntityByListOfIds(idsToDelete.toList())
+    }
+
+    protected suspend fun insertTobaccoCessationFhirIds(
+        body: List<CreateResponse>,
+        listOfGenericEntities: List<GenericEntity>
+    ): Int {
+        val idsToDelete = mutableSetOf<String>()
+        idsToDelete.addAll(listOfGenericEntities.map { genericEntity -> genericEntity.id })
+        body.forEach { createResponse ->
+            when (createResponse.error) {
+                null -> {
+                    tobaccoCessationDao.updateFhirId(
+                        createResponse.id!!, createResponse.fhirId!!
+                    )
+                }
+                DUPLICATE_RECORD -> {
+                    tobaccoCessationDao.deleteTobaccoCessation(createResponse.id!!)
                 }
                 else -> {
                     idsToDelete.remove(createResponse.id)
