@@ -17,14 +17,14 @@ import com.heartcare.agni.data.local.repository.vital.VitalRepository
 import com.heartcare.agni.data.server.model.cvd.CVDResponse
 import com.heartcare.agni.data.server.model.patient.PatientResponse
 import com.heartcare.agni.data.server.model.vitals.VitalResponse
+import com.heartcare.agni.di.dispatcher.IoDispatcher
 import com.heartcare.agni.utils.common.Queries
 import com.heartcare.agni.utils.constants.VitalConstants.ALL
-import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.convertedDate
+import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.isToday
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toEndOfDay
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toTodayStartDate
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -33,32 +33,30 @@ import javax.inject.Inject
 
 @HiltViewModel
 class VitalsViewModel @Inject constructor(
-
     private val vitalRepository: VitalRepository,
     private val appointmentRepository: AppointmentRepository,
     private val preferenceRepository: PreferenceRepository,
     private val genericRepository: GenericRepository,
     private val scheduleRepository: ScheduleRepository,
     private val patientLastUpdatedRepository: PatientLastUpdatedRepository,
-    private val cvdAssessmentRepository: CVDAssessmentRepository
-
+    private val cvdAssessmentRepository: CVDAssessmentRepository,
+    @IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) : ViewModel() {
+    val user = preferenceRepository.getUserDetails()!!
+    var isLaunched by mutableStateOf(false)
+    var patient by mutableStateOf<PatientResponse?>(null)
+
     var isVitalExist by mutableStateOf(false)
     private var vitals = MutableStateFlow<List<VitalResponse>>(emptyList())
     var _vitals: StateFlow<List<VitalResponse>> = vitals
-    var vital: VitalResponse? = null
-    var isLaunched by mutableStateOf(false)
-    var patient by mutableStateOf<PatientResponse?>(null)
-    var isAppointmentExist by mutableStateOf(false)
-    internal var appointmentResponseLocal: AppointmentResponseLocal? = null
+    var todayVital by mutableStateOf<VitalResponse?>(null)
+
     var isWeightSelected by mutableStateOf(true)
-    var isHRSelected by mutableStateOf(false)
-    var isRRSelected by mutableStateOf(false)
-    var isSpO2Selected by mutableStateOf(false)
     var isGlucoseSelected by mutableStateOf(false)
     var isBPSelected by mutableStateOf(false)
+
     var msg by mutableStateOf("")
-    var isFistLaunch by mutableStateOf(false)
+    var isFirstLaunch by mutableStateOf(false)
 
     var appointment by mutableStateOf<AppointmentResponseLocal?>(null)
     var canAddAssessment by mutableStateOf(false)
@@ -68,82 +66,71 @@ class VitalsViewModel @Inject constructor(
     private val maxNumberOfAppointmentsInADay = 250
     var showAppointmentCompletedDialog by mutableStateOf(false)
     var isAppointmentCompleted by mutableStateOf(false)
+    var existsInOtherHospital by mutableStateOf(false)
+
     var selectedOption by mutableStateOf(ALL)
 
     var previousRecords by mutableStateOf(listOf<CVDResponse>())
 
     internal fun getAppointmentInfo(
-        ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
         callback: () -> Unit
     ) {
         viewModelScope.launch(ioDispatcher) {
-            appointment = appointmentRepository.getAppointmentsOfPatientByStatus(
-                patient!!.id,
-                AppointmentStatusEnum.SCHEDULED.value
-            ).firstOrNull { appointmentResponse ->
-                appointmentResponse.slot.start.time < Date().toEndOfDay() && appointmentResponse.slot.start.time > Date().toTodayStartDate()
+            val todayStart = Date().toTodayStartDate()
+            val todayEnd = Date().toEndOfDay()
+            val patientId = patient?.id ?: return@launch callback()
+
+            val appointmentsToday = appointmentRepository.getAppointmentsOfPatientByDate(
+                patientId, todayStart, todayEnd
+            )
+
+            // Determine if assessment can be added
+            appointmentsToday?.let {
+                existsInOtherHospital = it.hospitalCode != user.hospitalCode
+                val status = it.status
+                canAddAssessment = (status == AppointmentStatusEnum.ARRIVED.value ||
+                        status == AppointmentStatusEnum.WALK_IN.value ||
+                        status == AppointmentStatusEnum.IN_PROGRESS.value)
+                        && it.hospitalCode == user.hospitalCode
+
+                isAppointmentCompleted = status == AppointmentStatusEnum.COMPLETED.value
+                        && it.hospitalCode == user.hospitalCode
             }
-            appointmentRepository.getAppointmentsOfPatientByDate(
-                patient!!.id,
-                Date().toTodayStartDate(),
-                Date().toEndOfDay()
-            ).let { appointmentResponse ->
-                canAddAssessment =
-                    appointmentResponse?.status == AppointmentStatusEnum.ARRIVED.value || appointmentResponse?.status == AppointmentStatusEnum.WALK_IN.value
-                            || appointmentResponse?.status == AppointmentStatusEnum.IN_PROGRESS.value
-                isAppointmentCompleted =
-                    appointmentResponse?.status == AppointmentStatusEnum.COMPLETED.value
-            }
-            ifAllSlotsBooked = appointmentRepository.getAppointmentListByDate(
-                Date().toTodayStartDate(),
-                Date().toEndOfDay()
-            ).filter { appointmentResponseLocal ->
-                appointmentResponseLocal.status != AppointmentStatusEnum.CANCELLED.value
-            }.size >= maxNumberOfAppointmentsInADay
+
+            // Get the appointment matching today's time window and scheduled status
+            appointment = appointmentRepository
+                .getAppointmentsOfPatientByStatus(patientId, AppointmentStatusEnum.SCHEDULED.value)
+                .firstOrNull {
+                    it.slot.start.time in todayStart..todayEnd
+                            && it.hospitalCode == user.hospitalCode
+                }
+
+            // Check if all slots are booked
+            val bookedAppointments =
+                appointmentRepository.getAppointmentListByDate(todayStart, todayEnd)
+                    .count {
+                        it.status != AppointmentStatusEnum.CANCELLED.value
+                                && it.hospitalCode == user.hospitalCode
+                    }
+
+            ifAllSlotsBooked = bookedAppointments >= maxNumberOfAppointmentsInADay
+
             callback()
         }
     }
 
-    internal fun getStudentTodayAppointment(
-        startDate: Date, endDate: Date, patientId: String,
-        ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
-
-        ) {
-        viewModelScope.launch(ioDispatcher)
-        {
-            appointmentResponseLocal =
-                appointmentRepository.getAppointmentListByDate(startDate.time, endDate.time)
-                    .firstOrNull { appointmentEntity ->
-                        appointmentEntity.patientId == patientId && appointmentEntity.status != AppointmentStatusEnum.CANCELLED.value
-                    }
-        }
-    }
-
-    internal fun getVitals(
-        ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
-    ) {
+    internal fun getVitalsAndCVDRecords() {
         viewModelScope.launch(ioDispatcher) {
-            val list = vitalRepository.getLastVital(patient!!.id)
-            vitals.value =
-                list.sortedByDescending { it.appUpdatedDate }
-            if (vitals.value.isNotEmpty()) {
-                isVitalExist = true
-                val vitalList =
-                    vitals.value.filter { it.appUpdatedDate.convertedDate() == Date().convertedDate() }
-                if (vitalList.isNotEmpty()) {
-                    vital = vitalList[0]
-                }
-                appointmentResponseLocal?.let {
-                    isAppointmentExist = true
-                }
+            vitals.value = vitalRepository.getLastVital(patient!!.id).also {
+                todayVital = it.firstOrNull { vital -> isToday(vital.appUpdatedDate) }
             }
-
+            isVitalExist = vitals.value.isNotEmpty()
+            previousRecords = cvdAssessmentRepository.getCVDRecord(patient!!.id)
         }
     }
 
     internal fun addPatientToQueue(
         patient: PatientResponse,
-        ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
         addedToQueue: (List<Long>) -> Unit
     ) {
         viewModelScope.launch(ioDispatcher) {
@@ -162,7 +149,6 @@ class VitalsViewModel @Inject constructor(
     internal fun updateStatusToArrived(
         patient: PatientResponse,
         appointment: AppointmentResponseLocal,
-        ioDispatcher: CoroutineDispatcher=Dispatchers.IO,
         updated: (Int) -> Unit
     ) {
         viewModelScope.launch(ioDispatcher) {
@@ -176,12 +162,6 @@ class VitalsViewModel @Inject constructor(
                 patientLastUpdatedRepository,
                 updated
             )
-        }
-    }
-
-    internal fun getRecords(ioDispatcher: CoroutineDispatcher=Dispatchers.IO) {
-        viewModelScope.launch(ioDispatcher) {
-            previousRecords = cvdAssessmentRepository.getCVDRecord(patient!!.id)
         }
     }
 }

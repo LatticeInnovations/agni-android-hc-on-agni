@@ -680,4 +680,6 @@ include them in the household</string>
     <string name="urine_ketones">Urine ketones</string>
     <string name="serum_creatinine">Serum. creatinine</string>
     <string name="serum_potassium">Serum. potassium</string>
+    <string name="cvd_record">CVD record</string>
+    <string name="update_vitals">Update vitals</string>
 </resources>
