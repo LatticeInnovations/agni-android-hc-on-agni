@@ -47,36 +47,23 @@ class AddVitalsViewModel @Inject constructor(
     var isLaunched by mutableStateOf(false)
     var patient by mutableStateOf<PatientResponse?>(null)
     var vitalLocal by mutableStateOf<VitalLocal?>(null)
-    var isShowLeftEyeSheet by mutableStateOf(false)
-    var isShowRightEyeSheet by mutableStateOf(false)
+
     var heightType by mutableStateOf("ft/in")
     var feet by mutableStateOf("")
-    var isFeetNotValid by mutableStateOf(false)
     var inch by mutableStateOf("")
-    var isInchNotValid by mutableStateOf(false)
     var centimeter by mutableStateOf("")
-    var isCmNotValid by mutableStateOf(false)
     var weight by mutableStateOf("")
-    var isWeightNotValid by mutableStateOf(false)
     var withGlassChipSelected by mutableStateOf(false)
     var withoutGlassChipSelected by mutableStateOf(true)
     var leftEye by mutableStateOf("")
     var rightEye by mutableStateOf("")
     var heartRate by mutableStateOf("")
-    var isHeartNotValid by mutableStateOf(false)
     var respiratoryRate by mutableStateOf("")
-    var isRespNotValid by mutableStateOf(false)
     var spo2 by mutableStateOf("")
-    var isSpo2NotValid by mutableStateOf(false)
     var temperature by mutableStateOf("")
-    var isTempNotValid by mutableStateOf(false)
     var temperatureType by mutableStateOf("Fahrenheit")
     var bpDiastolic by mutableStateOf("")
-    var isDiastolicNotValid by mutableStateOf(false)
     var bpSystolic by mutableStateOf("")
-    var isSystolicNotValid by mutableStateOf(false)
-    var bloodGlucose by mutableStateOf("")
-    var isBgNotValid by mutableStateOf(false)
     var bgRandomChipSelected by mutableStateOf(true)
     var bgFastingChipSelected by mutableStateOf(false)
     var bgType by mutableStateOf("mg/dl")
@@ -85,67 +72,52 @@ class AddVitalsViewModel @Inject constructor(
     var isButtonClicked by mutableStateOf(false)
 
     var cholesterol by mutableStateOf("")
-    var cholesterolError by mutableStateOf(false)
     var selectedCholesterolIndex by mutableIntStateOf(0)
     var cholesterolUnits = listOf("mmol/L", "mg/dl")
 
-    fun validateVitalsDetails(): Boolean {
-        return !(checkHeight() || checkWeight() || checkHearRate() || checkRR() || checkSpo2() || checkTemp() || checkBG() || checkBP() || checkCholesterol() || checkEyes() || checkAllFields())
+    var bloodGlucose by mutableStateOf("")
+    var bloodGlucoseError by mutableStateOf(false)
+    val bloodGlucoseUnits = listOf("mg/dl", "mmol/L")
+    var selectedBloodGlucoseUnit by mutableIntStateOf(0)
+
+    var footExamination by mutableStateOf("")
+    var eyeExamination by mutableStateOf("")
+
+    var abnormalCircumference by mutableStateOf("")
+    var abnormalCircumferenceError by mutableStateOf(false)
+    val abnormalCircumferenceUnits = listOf("cm", "in")
+    var selectedAbnormalCircumferenceUnit by mutableIntStateOf(0)
+
+    var hipCircumference by mutableStateOf("")
+    var hipCircumferenceError by mutableStateOf(false)
+    val hipCircumferenceUnits = listOf("cm", "in")
+    var selectedHipCircumferenceUnit by mutableIntStateOf(0)
+
+    var hbA1c by mutableStateOf("")
+    var hbA1cError by mutableStateOf(false)
+
+    var serumCreatinine by mutableStateOf("")
+    var serumCreatinineError by mutableStateOf(false)
+    val serumCreatinineUnits = listOf("mg/dL", "µmol/L")
+    var selectedSerumCreatinineUnit by mutableIntStateOf(0)
+
+    var serumPotassium by mutableStateOf("")
+    var serumPotassiumError by mutableStateOf(false)
+    val serumPotassiumUnits = listOf("mEq/L", "mmol/L")
+    var selectedSerumPotassiumUnit by mutableIntStateOf(0)
+
+    var urineProtein by mutableStateOf("")
+    var urineKetones by mutableStateOf("")
+    var other by mutableStateOf("")
+
+    fun isValid(): Boolean {
+        return !(bloodGlucoseError
+                || abnormalCircumferenceError
+                || hipCircumferenceError
+                || hbA1cError
+                || serumCreatinineError
+                || serumPotassiumError)
     }
-
-    private fun checkAllFields(): Boolean {
-        return (feet.isBlank() && inch.isBlank() && centimeter.isBlank() && weight.isBlank() && heartRate.isBlank() && respiratoryRate.isBlank() && spo2.isBlank() && temperature.isBlank() && bpSystolic.isBlank() && bpDiastolic.isBlank() && bloodGlucose.isBlank() && leftEye.isBlank() && rightEye.isBlank() && cholesterol.isBlank())
-
-    }
-
-    private fun checkEyes(): Boolean {
-        return ((leftEye.isNotBlank() || rightEye.isNotBlank()) && (isFeetNotValid || isWeightNotValid || isHeartNotValid || isRespNotValid || isSpo2NotValid || isTempNotValid || isSystolicNotValid || isDiastolicNotValid || isBgNotValid || cholesterolError))
-
-    }
-
-    private fun checkHeight(): Boolean {
-        return ((feet.isNotBlank() && isFeetNotValid) || (inch.isNotBlank() && isInchNotValid) || (centimeter.isNotBlank() && isCmNotValid))
-
-    }
-
-    private fun checkCholesterol(): Boolean {
-        return (cholesterol.isNotBlank() && cholesterolError)
-    }
-
-    private fun checkBP(): Boolean {
-        return ((bpSystolic.isNotBlank() || bpDiastolic.isNotBlank()) && (bpSystolic.isBlank() || bpDiastolic.isBlank() || isSystolicNotValid || isDiastolicNotValid))
-
-    }
-
-    private fun checkBG(): Boolean {
-        return (bloodGlucose.isNotBlank() && isBgNotValid)
-
-    }
-
-    private fun checkTemp(): Boolean {
-        return (temperature.isNotBlank() && isTempNotValid)
-
-    }
-
-    private fun checkSpo2(): Boolean {
-        return (spo2.isNotBlank() && isSpo2NotValid)
-
-    }
-
-    private fun checkRR(): Boolean {
-        return (respiratoryRate.isNotBlank() && isRespNotValid)
-
-    }
-
-    private fun checkHearRate(): Boolean {
-        return (heartRate.isNotBlank() && isHeartNotValid)
-
-    }
-
-    private fun checkWeight(): Boolean {
-        return (weight.isNotBlank() && isWeightNotValid)
-    }
-
 
     internal suspend fun getStudentTodayAppointment(
         startDate: Date, endDate: Date, patientId: String

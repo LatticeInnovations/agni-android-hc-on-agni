@@ -643,6 +643,7 @@ include them in the household</string>
     <string name="quantity">Quantity *</string>
     <string name="other_is_required">Others is required</string>
     <string name="value_in_range">Value must range from %d to %d</string>
+    <string name="value_in_range_with_unit">Value must range from %s to %s %s</string>
     <string name="enter_age">Enter age (years) *</string>
     <string name="age_cannot_be_greater">Value cannot be greater than current age</string>
     <string name="number_of_times">Number of times *</string>
@@ -670,4 +671,13 @@ include them in the household</string>
     <string name="start_date_of_plan">Start date of plan*</string>
     <string name="status_of_plan">Status of plan</string>
     <string name="update_tobacco_cessation">Update tobacco cessation</string>
+    <string name="foot_examination">Foot examination</string>
+    <string name="eye_examination">Eye examination</string>
+    <string name="abnormal_circumference">Abnormal circumference</string>
+    <string name="hip_circumference">Hip circumference</string>
+    <string name="HbA1c">HbA1c</string>
+    <string name="urine_protein">Urine protein</string>
+    <string name="urine_ketones">Urine ketones</string>
+    <string name="serum_creatinine">Serum. creatinine</string>
+    <string name="serum_potassium">Serum. potassium</string>
 </resources>

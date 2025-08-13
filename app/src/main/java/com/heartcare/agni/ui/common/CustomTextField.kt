@@ -57,9 +57,11 @@ fun CustomTextField(
             capitalization = keyboardCapitalization
         ),
         isError = isError,
-        supportingText = {
-            if (isError) Text(text = error, style = MaterialTheme.typography.bodySmall)
-        }
+        supportingText = if (isError) {
+            {
+                Text(text = error, style = MaterialTheme.typography.bodySmall)
+            }
+        } else null
     )
 }
 
@@ -75,6 +77,7 @@ fun CustomTextFieldWithLength(
     error: String? = null,
     keyboardType: KeyboardType,
     keyboardCapitalization: KeyboardCapitalization,
+    singleLine: Boolean = true,
     updateValue: (String) -> Unit
 ) {
     OutlinedTextField(
@@ -103,7 +106,7 @@ fun CustomTextFieldWithLength(
                 )
             }
         },
-        singleLine = true,
+        singleLine = singleLine,
         keyboardOptions = KeyboardOptions(
             keyboardType = keyboardType,
             capitalization = keyboardCapitalization
@@ -113,7 +116,10 @@ fun CustomTextFieldWithLength(
             Row(
                 modifier = Modifier.fillMaxWidth()
             ) {
-                if (isError && error != null) Text(text = error, style = MaterialTheme.typography.bodySmall)
+                if (isError && error != null) Text(
+                    text = error,
+                    style = MaterialTheme.typography.bodySmall
+                )
                 Spacer(modifier = Modifier.weight(1f))
                 Text(
                     text = "${value.length}/$maxLength",
@@ -163,9 +169,11 @@ fun CustomTextField(
             capitalization = keyboardCapitalization
         ),
         isError = isError,
-        supportingText = {
-            if (isError) Text(text = error, style = MaterialTheme.typography.bodySmall)
-        },
+        supportingText = if (isError) {
+            {
+                Text(text = error, style = MaterialTheme.typography.bodySmall)
+            }
+        } else null,
         trailingIcon = if (trailingIcon == null) null else {
             {
                 IconButton(

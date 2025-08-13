@@ -64,10 +64,11 @@ fun DropdownComposable(
             trailingIcon = {
                 Icon(Icons.Default.ArrowDropDown, contentDescription = null)
             },
-            supportingText = {
-                if (isError)
+            supportingText = if (isError) {
+                {
                     Text(errorText)
-            },
+                }
+            } else null,
             isError = isError
         )
 
