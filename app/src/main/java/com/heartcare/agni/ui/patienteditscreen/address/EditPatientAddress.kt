@@ -1,32 +1,24 @@
 package com.heartcare.agni.ui.patienteditscreen.address
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material3.Button
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -38,12 +30,9 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -53,10 +42,10 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.heartcare.agni.R
-import com.heartcare.agni.data.server.model.levels.LevelResponse
 import com.heartcare.agni.data.server.model.patient.PatientAddressResponse
 import com.heartcare.agni.data.server.model.patient.PatientResponse
 import com.heartcare.agni.ui.common.CustomTextFieldWithLength
+import com.heartcare.agni.ui.patientregistration.step3.LevelDropDownComposable
 import com.heartcare.agni.utils.regex.OnlyNumberRegex.onlyNumbers
 import kotlinx.coroutines.launch
 
@@ -223,7 +212,7 @@ fun EditPatientAddress(
 
 @Composable
 private fun AddressHierarchy(viewModel: EditPatientAddressViewModel) {
-    DropDownComposable(
+    LevelDropDownComposable(
         value = viewModel.province?.name ?: "",
         updateValue = {
             viewModel.province = it
@@ -237,7 +226,7 @@ private fun AddressHierarchy(viewModel: EditPatientAddressViewModel) {
         isEnabled = true
     )
 
-    DropDownComposable(
+    LevelDropDownComposable(
         value = viewModel.areaCouncil?.name ?: "",
         updateValue = {
             viewModel.areaCouncil = it
@@ -251,7 +240,7 @@ private fun AddressHierarchy(viewModel: EditPatientAddressViewModel) {
         isEnabled = viewModel.province != null
     )
 
-    DropDownComposable(
+    LevelDropDownComposable(
         value = viewModel.island?.name ?: "",
         updateValue = {
             viewModel.island = it
@@ -265,11 +254,11 @@ private fun AddressHierarchy(viewModel: EditPatientAddressViewModel) {
         isEnabled = viewModel.areaCouncil != null
     )
 
-    DropDownComposable(
+    LevelDropDownComposable(
         value = viewModel.village?.name ?: "",
         updateValue = {
             viewModel.village = it
-            viewModel.isVillageOtherSelected = it.name == viewModel.otherName
+            viewModel.isVillageOtherSelected = it?.name == viewModel.otherName
             if (!viewModel.isVillageOtherSelected) {
                 viewModel.otherVillage = ""
             }
@@ -285,85 +274,6 @@ private fun AddressHierarchy(viewModel: EditPatientAddressViewModel) {
     }
 
     PostalCodeComposable(viewModel)
-}
-
-@Composable
-fun DropDownComposable(
-    value: String,
-    updateValue: (LevelResponse) -> Unit,
-    label: String,
-    dropdownList: List<LevelResponse>,
-    errorText: String,
-    isMandatory: Boolean,
-    isEnabled: Boolean
-) {
-    var expanded by remember { mutableStateOf(false) }
-    var isError by remember { mutableStateOf(false) }
-    Box {
-        OutlinedTextField(
-            value = value,
-            onValueChange = { },
-            label = {
-                Text(
-                    text = label,
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            },
-            singleLine = true,
-            readOnly = true,
-            enabled = isEnabled,
-            modifier = Modifier
-                .fillMaxWidth(),
-            interactionSource = remember {
-                MutableInteractionSource()
-            }.also { interactionSource ->
-                LaunchedEffect(interactionSource, isEnabled) {
-                    interactionSource.interactions.collect {
-                        if (isEnabled && it is PressInteraction.Release) {
-                            expanded = !expanded
-                        }
-                    }
-                }
-            },
-            trailingIcon = {
-                Icon(Icons.Default.ArrowDropDown, contentDescription = null)
-            },
-            supportingText = {
-                if (isError)
-                    Text(errorText)
-            },
-            isError = isError
-        )
-
-        DropdownMenu(
-            modifier = Modifier
-                .fillMaxWidth(0.91f)
-                .heightIn(0.dp, 300.dp),
-            expanded = expanded,
-            onDismissRequest = {
-                expanded = false
-                isError = value.isBlank() && isMandatory
-            },
-        ) {
-            dropdownList.forEach { label ->
-                DropdownMenuItem(
-                    onClick = {
-                        expanded = !expanded
-                        isError = false
-                        updateValue(label)
-                    },
-                    text = {
-                        Text(
-                            text = label.name,
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                    }
-                )
-            }
-        }
-    }
 }
 
 @Composable

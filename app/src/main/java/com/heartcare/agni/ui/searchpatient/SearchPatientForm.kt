@@ -45,7 +45,7 @@ import com.heartcare.agni.data.local.enums.LastVisit.Companion.getLastVisitList
 import com.heartcare.agni.data.local.enums.RiskCategoryEnum.Companion.getRiskCategoryList
 import com.heartcare.agni.ui.common.CustomFilterChip
 import com.heartcare.agni.ui.common.CustomTextField
-import com.heartcare.agni.ui.patientregistration.step3.DropDownComposable
+import com.heartcare.agni.ui.patientregistration.step3.LevelDropDownComposable
 import com.heartcare.agni.utils.regex.OnlyNumberRegex.onlyNumbers
 
 @Composable
@@ -97,10 +97,10 @@ fun SearchPatientForm(
                     viewModel.nationalId = it
                 }
             )
-            DropDownComposable(
+            LevelDropDownComposable(
                 value = viewModel.province.name,
                 updateValue = {
-                    viewModel.province = it
+                    viewModel.province = it ?: viewModel.select
                     viewModel.areaCouncil = viewModel.select
                     viewModel.getAreaCouncilList()
                 },
@@ -110,10 +110,10 @@ fun SearchPatientForm(
                 isMandatory = false,
                 isEnabled = true
             )
-            DropDownComposable(
+            LevelDropDownComposable(
                 value = viewModel.areaCouncil.name,
                 updateValue = {
-                    viewModel.areaCouncil = it
+                    viewModel.areaCouncil = it ?: viewModel.select
                 },
                 label = stringResource(id = R.string.area_council),
                 dropdownList = viewModel.areaCouncilList,
