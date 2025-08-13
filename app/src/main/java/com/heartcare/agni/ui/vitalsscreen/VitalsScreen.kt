@@ -448,7 +448,7 @@ private fun ShowTrendGraphCard(
             .fillMaxWidth()
             .wrapContentHeight()
             .background(
-                MaterialTheme.colorScheme.surfaceBright
+                color = if (isSystemInDarkTheme()) Black else White
             )
     ) {
         Text(
@@ -832,7 +832,7 @@ private fun VitalsCardLayout(
                     value = vital.eyeExamination
                 )
                 DisplayVitalFieldRow(
-                    label = stringResource(R.string.abnormal_circumference),
+                    label = stringResource(R.string.abdominal_circumference),
                     value = vital.abdominalCircumference?.let { "${it.value} ${it.unit}" }
                 )
                 DisplayVitalFieldRow(
@@ -989,17 +989,13 @@ private fun CVDRecordCardLayout(
                     )
                 )
                 DisplayField(
-                    label = stringResource(id = R.string.height), value = setCVDHeight(cvdResponse)
+                    label = stringResource(id = R.string.height),
+                    value = setCVDHeight(cvdResponse)
                 )
                 DisplayField(
-                    label = stringResource(id = R.string.weight),
-                    value = "${cvdResponse.weight} ${
-                        stringResource(
-                            id = R.string.kg
-                        ).lowercase()
-                    }"
+                    stringResource(R.string.weight),
+                    "${cvdResponse.weight} ${cvdResponse.weightUnit}"
                 )
-
                 DisplayField(
                     label = stringResource(R.string.bmi_label),
                     value = cvdResponse.bmi.toString()

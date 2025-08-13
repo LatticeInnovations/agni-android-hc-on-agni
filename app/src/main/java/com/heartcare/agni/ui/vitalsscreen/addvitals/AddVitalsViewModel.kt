@@ -62,10 +62,10 @@ class AddVitalsViewModel @Inject constructor(
     var footExamination by mutableStateOf("")
     var eyeExamination by mutableStateOf("")
 
-    var abnormalCircumference by mutableStateOf("")
-    var abnormalCircumferenceError by mutableStateOf(false)
-    val abnormalCircumferenceUnits = listOf("cm", "in")
-    var selectedAbnormalCircumferenceUnit by mutableIntStateOf(0)
+    var abdominalCircumference by mutableStateOf("")
+    var abdominalCircumferenceError by mutableStateOf(false)
+    val abdominalCircumferenceUnits = listOf("cm", "in")
+    var selectedAbdominalCircumferenceUnit by mutableIntStateOf(0)
 
     var hipCircumference by mutableStateOf("")
     var hipCircumferenceError by mutableStateOf(false)
@@ -91,7 +91,7 @@ class AddVitalsViewModel @Inject constructor(
 
     fun isValid(): Boolean {
         return !(bloodGlucoseError
-                || abnormalCircumferenceError
+                || abdominalCircumferenceError
                 || hipCircumferenceError
                 || hbA1cError
                 || serumCreatinineError
@@ -106,33 +106,35 @@ class AddVitalsViewModel @Inject constructor(
                 }
             todayVital?.let { vital ->
                 vital.bloodGlucose?.run {
-                    bloodGlucose = value.toString()
                     selectedBloodGlucoseUnit = bloodGlucoseUnits.indexOf(unit)
+                    bloodGlucose = if (selectedBloodGlucoseUnit == 0) value.toInt().toString()
+                    else value.toString()
                     bgRandomChipSelected = type == BGEnum.RANDOM.value
                     bgFastingChipSelected = type == BGEnum.FASTING.value
                 }
-                footExamination = vital.footExamination ?: ""
-                eyeExamination = vital.eyeExamination ?: ""
+                footExamination = vital.footExamination.orEmpty()
+                eyeExamination = vital.eyeExamination.orEmpty()
                 vital.abdominalCircumference?.run {
-                    abnormalCircumference = value.toString()
-                    selectedAbnormalCircumferenceUnit = abnormalCircumferenceUnits.indexOf(unit)
+                    abdominalCircumference = value.toString()
+                    selectedAbdominalCircumferenceUnit = abdominalCircumferenceUnits.indexOf(unit)
                 }
                 vital.hipCircumference?.run {
                     hipCircumference = value.toString()
                     selectedHipCircumferenceUnit = hipCircumferenceUnits.indexOf(unit)
                 }
-                hbA1c = vital.hbA1cPercentage?.toString() ?: ""
+                hbA1c = vital.hbA1cPercentage?.toString().orEmpty()
                 vital.serumCreatinine?.run {
-                    serumCreatinine = value.toString()
                     selectedSerumCreatinineUnit = serumCreatinineUnits.indexOf(unit)
+                    serumCreatinine = if (selectedSerumCreatinineUnit == 0) value.toString()
+                    else value.toInt().toString()
                 }
                 vital.serumPotassium?.run {
                     serumPotassium = value.toString()
                     selectedSerumPotassiumUnit = serumPotassiumUnits.indexOf(unit)
                 }
-                urineProtein = vital.urineProtein ?: ""
-                urineKetones = vital.urineKetones ?: ""
-                other = vital.others ?: ""
+                urineProtein = vital.urineProtein.orEmpty()
+                urineKetones = vital.urineKetones.orEmpty()
+                other = vital.others.orEmpty()
             }
         }
     }
@@ -169,10 +171,10 @@ class AddVitalsViewModel @Inject constructor(
                 ),
             footExamination = footExamination.ifBlank { null },
             eyeExamination = eyeExamination.ifBlank { null },
-            abdominalCircumference = if (abnormalCircumference.isBlank()) null else
+            abdominalCircumference = if (abdominalCircumference.isBlank()) null else
                 UnitValue(
-                    unit = abnormalCircumferenceUnits[selectedAbnormalCircumferenceUnit],
-                    value = abnormalCircumference.toDouble(),
+                    unit = abdominalCircumferenceUnits[selectedAbdominalCircumferenceUnit],
+                    value = abdominalCircumference.toDouble(),
                     type = null
                 ),
             hipCircumference = if (hipCircumference.isBlank()) null else

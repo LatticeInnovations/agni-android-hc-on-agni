@@ -92,7 +92,7 @@ private fun AddVitals(navController: NavController, viewModel: AddVitalsViewMode
         { BloodGlucoseCard(viewModel) },
         { FootExaminationField(viewModel) },
         { EyeExaminationField(viewModel) },
-        { AbnormalCircumferenceField(viewModel) },
+        { AbdominalCircumferenceField(viewModel) },
         { HipCircumferenceField(viewModel) },
         { HbA1cField(viewModel) },
         { SerumCreatinineField(viewModel) },
@@ -116,7 +116,7 @@ private fun AddVitals(navController: NavController, viewModel: AddVitalsViewMode
                 title = {
                     Text(
                         text = if (viewModel.todayVital == null) stringResource(R.string.add_vitals) else stringResource(
-                            R.string.edit_vital
+                            R.string.update_vital
                         ),
                         style = MaterialTheme.typography.titleLarge,
                         modifier = Modifier.testTag(stringResource(R.string.add_vital_title_text))
@@ -300,52 +300,52 @@ private fun EyeExaminationField(
 }
 
 @Composable
-private fun AbnormalCircumferenceField(
+private fun AbdominalCircumferenceField(
     viewModel: AddVitalsViewModel
 ) {
     SingleFieldWithSwapUnit(
         modifier = Modifier
             .padding(horizontal = 16.dp),
-        value = viewModel.abnormalCircumference,
+        value = viewModel.abdominalCircumference,
         onValueChange = { value ->
-            updateAbnormalCircumference(value, viewModel)
+            updateAbdominalCircumference(value, viewModel)
         },
-        isError = viewModel.abnormalCircumferenceError,
-        errorMessage = if (viewModel.abnormalCircumferenceError) {
-            if (viewModel.selectedAbnormalCircumferenceUnit == 0)
+        isError = viewModel.abdominalCircumferenceError,
+        errorMessage = if (viewModel.abdominalCircumferenceError) {
+            if (viewModel.selectedAbdominalCircumferenceUnit == 0)
                 stringResource(R.string.value_in_range_with_unit, "25.0", "250.0", "cm")
             else
                 stringResource(R.string.value_in_range_with_unit, "9.8", "98.5", "inch")
         } else null,
-        label = stringResource(R.string.abnormal_circumference),
-        selectedUnit = viewModel.abnormalCircumferenceUnits[viewModel.selectedAbnormalCircumferenceUnit],
+        label = stringResource(R.string.abdominal_circumference),
+        selectedUnit = viewModel.abdominalCircumferenceUnits[viewModel.selectedAbdominalCircumferenceUnit],
         onSwapUnit = {
-            viewModel.selectedAbnormalCircumferenceUnit =
-                1 - viewModel.selectedAbnormalCircumferenceUnit
-            viewModel.abnormalCircumferenceError = false
-            viewModel.abnormalCircumference = ""
+            viewModel.selectedAbdominalCircumferenceUnit =
+                1 - viewModel.selectedAbdominalCircumferenceUnit
+            viewModel.abdominalCircumferenceError = false
+            viewModel.abdominalCircumference = ""
         },
         weight = 9f
     )
 }
 
-private fun updateAbnormalCircumference(
+private fun updateAbdominalCircumference(
     value: String,
     viewModel: AddVitalsViewModel
 ) {
-    if (viewModel.selectedAbnormalCircumferenceUnit == 0) {
+    if (viewModel.selectedAbdominalCircumferenceUnit == 0) {
         if (value.isBlank() || (value.matches(onlyNumbersWithDecimal) && value.length < 6)) {
-            viewModel.abnormalCircumference = value
-            viewModel.abnormalCircumferenceError =
-                viewModel.abnormalCircumference.isNotBlank() &&
-                        viewModel.abnormalCircumference.toDouble() !in 25.0..250.0
+            viewModel.abdominalCircumference = value
+            viewModel.abdominalCircumferenceError =
+                viewModel.abdominalCircumference.isNotBlank() &&
+                        viewModel.abdominalCircumference.toDouble() !in 25.0..250.0
         }
     } else {
         if (value.isBlank() || (value.matches(onlyNumbersWithDecimal) && value.length < 5)) {
-            viewModel.abnormalCircumference = value
-            viewModel.abnormalCircumferenceError =
-                viewModel.abnormalCircumference.isNotBlank() &&
-                        viewModel.abnormalCircumference.toDouble() !in 9.8..98.5
+            viewModel.abdominalCircumference = value
+            viewModel.abdominalCircumferenceError =
+                viewModel.abdominalCircumference.isNotBlank() &&
+                        viewModel.abdominalCircumference.toDouble() !in 9.8..98.5
         }
     }
 }
