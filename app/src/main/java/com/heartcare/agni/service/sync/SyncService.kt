@@ -495,9 +495,6 @@ class SyncService(
                         getAndInsertDiagnosis()
                     }
                     CoroutineScope(Dispatchers.IO).launch {
-                        downloadSymDiag(logout)
-                    }
-                    CoroutineScope(Dispatchers.IO).launch {
                         downloadLabAndMedicalRecordPhoto(logout)
                     }
                     CoroutineScope(Dispatchers.IO).launch {

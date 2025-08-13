@@ -20,7 +20,6 @@ import com.heartcare.agni.navigation.Screen
 import com.heartcare.agni.ui.common.CardWithRightArrow
 import com.heartcare.agni.ui.historyandtests.HistoryTakingAndTestsViewModel
 import com.heartcare.agni.utils.constants.NavControllerConstants.TOBACCO_CESSATION
-import java.util.Date
 
 @Composable
 fun TobaccoCessationView(
@@ -52,7 +51,7 @@ fun TobaccoCessationView(
             ) {
                 viewModel.tobaccoCessationList.forEach { tobaccoCessation ->
                     CardWithRightArrow(
-                        date = Date(),
+                        date = tobaccoCessation.appUpdatedDate,
                         onClick = {
                             navController.currentBackStackEntry?.savedStateHandle?.set(
                                 TOBACCO_CESSATION,
