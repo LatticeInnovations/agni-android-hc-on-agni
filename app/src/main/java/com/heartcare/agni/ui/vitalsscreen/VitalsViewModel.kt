@@ -7,7 +7,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.heartcare.agni.data.local.enums.AppointmentStatusEnum
 import com.heartcare.agni.data.local.model.appointment.AppointmentResponseLocal
-import com.heartcare.agni.data.local.model.vital.VitalLocal
 import com.heartcare.agni.data.local.repository.appointment.AppointmentRepository
 import com.heartcare.agni.data.local.repository.cvd.records.CVDAssessmentRepository
 import com.heartcare.agni.data.local.repository.generic.GenericRepository
@@ -17,6 +16,7 @@ import com.heartcare.agni.data.local.repository.schedule.ScheduleRepository
 import com.heartcare.agni.data.local.repository.vital.VitalRepository
 import com.heartcare.agni.data.server.model.cvd.CVDResponse
 import com.heartcare.agni.data.server.model.patient.PatientResponse
+import com.heartcare.agni.data.server.model.vitals.VitalResponse
 import com.heartcare.agni.utils.common.Queries
 import com.heartcare.agni.utils.constants.VitalConstants.ALL
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.convertedDate
@@ -44,9 +44,9 @@ class VitalsViewModel @Inject constructor(
 
 ) : ViewModel() {
     var isVitalExist by mutableStateOf(false)
-    private var vitals = MutableStateFlow<List<VitalLocal>>(emptyList())
-    var _vitals: StateFlow<List<VitalLocal>> = vitals
-    var vital: VitalLocal? = null
+    private var vitals = MutableStateFlow<List<VitalResponse>>(emptyList())
+    var _vitals: StateFlow<List<VitalResponse>> = vitals
+    var vital: VitalResponse? = null
     var isLaunched by mutableStateOf(false)
     var patient by mutableStateOf<PatientResponse?>(null)
     var isAppointmentExist by mutableStateOf(false)
@@ -125,11 +125,11 @@ class VitalsViewModel @Inject constructor(
         viewModelScope.launch(ioDispatcher) {
             val list = vitalRepository.getLastVital(patient!!.id)
             vitals.value =
-                list.sortedByDescending { it.createdOn }
+                list.sortedByDescending { it.appUpdatedDate }
             if (vitals.value.isNotEmpty()) {
                 isVitalExist = true
                 val vitalList =
-                    vitals.value.filter { it.createdOn.convertedDate() == Date().convertedDate() }
+                    vitals.value.filter { it.appUpdatedDate.convertedDate() == Date().convertedDate() }
                 if (vitalList.isNotEmpty()) {
                     vital = vitalList[0]
                 }

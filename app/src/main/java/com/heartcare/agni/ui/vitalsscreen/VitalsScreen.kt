@@ -65,9 +65,9 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.github.mikephil.charting.data.Entry
 import com.heartcare.agni.R
-import com.heartcare.agni.data.local.model.vital.VitalLocal
 import com.heartcare.agni.data.server.model.cvd.CVDResponse
 import com.heartcare.agni.data.server.model.patient.PatientResponse
+import com.heartcare.agni.data.server.model.vitals.VitalResponse
 import com.heartcare.agni.navigation.Screen
 import com.heartcare.agni.ui.common.CustomDialog
 import com.heartcare.agni.ui.patientlandingscreen.AllSlotsBookedDialog
@@ -77,8 +77,6 @@ import com.heartcare.agni.ui.vitalsscreen.components.LineChartView
 import com.heartcare.agni.ui.vitalsscreen.components.LineChartViewGlucose
 import com.heartcare.agni.ui.vitalsscreen.components.SegmentedButtonForVital
 import com.heartcare.agni.ui.vitalsscreen.enums.BGEnum
-import com.heartcare.agni.ui.vitalsscreen.enums.TemperatureEnum
-import com.heartcare.agni.ui.vitalsscreen.enums.VitalsEyeEnum
 import com.heartcare.agni.ui.vitalsscreen.enums.VitalsTrendEnum
 import com.heartcare.agni.utils.constants.NavControllerConstants.PATIENT
 import com.heartcare.agni.utils.constants.VitalConstants.ALL
@@ -233,7 +231,7 @@ private fun ShowGraphAndList(
                 items(if (vitalsViewModel.selectedOption == CVD_RECORD) combinedList.filter { it.type == LIST_TYPE_CVD } else combinedList) { item ->
                     when (item.type) {
                         LIST_TYPE_VITAL -> VitalsCardLayout(
-                            vital = item.content as VitalLocal, context = context
+                            vital = item.content as VitalResponse, context = context
                         )
 
                         LIST_TYPE_CVD -> CVDRecordCardLayout(
@@ -261,11 +259,11 @@ private fun ShowGraphAndList(
 }
 
 private fun getCombinedList(
-    vitalsViewModel: VitalsViewModel, vitals: List<VitalLocal>
+    vitalsViewModel: VitalsViewModel, vitals: List<VitalResponse>
 ): List<CombineVitalAndCVDRecord> {
     return (vitals.map { vital ->
         CombineVitalAndCVDRecord(
-            LIST_TYPE_VITAL, vital.createdOn, vital
+            LIST_TYPE_VITAL, vital.appUpdatedDate, vital
         )
     } + vitalsViewModel.previousRecords.map {
         CombineVitalAndCVDRecord(
@@ -368,12 +366,9 @@ private fun ShowDialogs(
 private fun VitalsTrendGraph(vitalsViewModel: VitalsViewModel, modifier: Modifier = Modifier) {
     val list by vitalsViewModel._vitals.collectAsState()
 
-    if (list.filter { it.weight != null }
-            .groupBy { it.createdOn.formatDateToDayMonth() }.keys.size > 1 || list.filter { it.heartRate != null }
-            .groupBy { it.createdOn.formatDateToDayMonth() }.keys.size > 1 || list.filter { it.respRate != null }
-            .groupBy { it.createdOn.formatDateToDayMonth() }.keys.size > 1 || list.filter { it.spo2 != null }
-            .groupBy { it.createdOn.formatDateToDayMonth() }.keys.size > 1 || list.filter { it.bloodGlucose != null }
-            .groupBy { it.createdOn.formatDateToDayMonth() }.keys.size > 1 || getBPListSize(
+    if (list
+            .groupBy { it.appUpdatedDate.formatDateToDayMonth() }.keys.size > 1 || list.filter { it.bloodGlucose != null }
+            .groupBy { it.appUpdatedDate.formatDateToDayMonth() }.keys.size > 1 || getCVDAndVitalListSize(
             list,
             vitalsViewModel
         ) > 1
@@ -407,7 +402,7 @@ private fun VitalsTrendGraph(vitalsViewModel: VitalsViewModel, modifier: Modifie
 private fun ShowTrendGraphCard(
     modifier: Modifier,
     vitalsViewModel: VitalsViewModel,
-    list: List<VitalLocal>
+    list: List<VitalResponse>
 ) {
 
     Column(
@@ -444,8 +439,7 @@ private fun ShowTrendGraphCard(
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             AnimatedVisibility(
-                visible = list
-                    .groupBy { it.createdOn.formatDateToDayMonth() }.keys.size > 1
+                visible = getCVDAndVitalListSize(list, vitalsViewModel) > 1
             ) {
                 CustomChip(
                     idSelected = vitalsViewModel.isWeightSelected,
@@ -461,56 +455,8 @@ private fun ShowTrendGraphCard(
                     }
                 }
             }
-            AnimatedVisibility(visible = list.filter { it.heartRate != null }
-                .groupBy { it.createdOn.formatDateToDayMonth() }.keys.size > 1) {
-                CustomChip(
-                    idSelected = vitalsViewModel.isHRSelected, label = VitalsTrendEnum.HR.name
-                ) {
-                    vitalsViewModel.apply {
-                        isWeightSelected = false
-                        isHRSelected = true
-                        isRRSelected = false
-                        isSpO2Selected = false
-                        isGlucoseSelected = false
-                        isBPSelected = false
-                    }
-                }
-            }
-
-            AnimatedVisibility(visible = list.filter { it.respRate != null }
-                .groupBy { it.createdOn.formatDateToDayMonth() }.keys.size > 1) {
-                CustomChip(
-                    idSelected = vitalsViewModel.isRRSelected, label = VitalsTrendEnum.RR.name
-                ) {
-                    vitalsViewModel.apply {
-                        isWeightSelected = false
-                        isHRSelected = false
-                        isRRSelected = true
-                        isSpO2Selected = false
-                        isGlucoseSelected = false
-                        isBPSelected = false
-                    }
-                }
-            }
-            AnimatedVisibility(visible = list.filter { it.spo2 != null }
-                .groupBy { it.createdOn.formatDateToDayMonth() }.keys.size > 1) {
-
-                CustomChip(
-                    idSelected = vitalsViewModel.isSpO2Selected, label = VitalsTrendEnum.SpO2.name
-                ) {
-                    vitalsViewModel.apply {
-                        isWeightSelected = false
-                        isHRSelected = false
-                        isRRSelected = false
-                        isSpO2Selected = true
-                        isGlucoseSelected = false
-                        isBPSelected = false
-                    }
-                }
-
-            }
-            AnimatedVisibility(visible = list.filter { it.bloodGlucose != null && it.bloodGlucoseType == BGEnum.RANDOM.value || it.bloodGlucoseType == BGEnum.FASTING.value }
-                .groupBy { it.createdOn.formatDateToDayMonth() }.keys.size > 1) {
+            AnimatedVisibility(visible = list.filter { it.bloodGlucose != null && it.bloodGlucose.type == BGEnum.RANDOM.value || it.bloodGlucose?.type == BGEnum.FASTING.value }
+                .groupBy { it.appUpdatedDate.formatDateToDayMonth() }.keys.size > 1) {
 
                 CustomChip(
                     idSelected = vitalsViewModel.isGlucoseSelected,
@@ -526,8 +472,8 @@ private fun ShowTrendGraphCard(
                     }
                 }
             }
-            Timber.d("SIZE: ${getBPListSize(list, vitalsViewModel)}")
-            AnimatedVisibility(visible = getBPListSize(list, vitalsViewModel) > 1) {
+            Timber.d("SIZE: ${getCVDAndVitalListSize(list, vitalsViewModel)}")
+            AnimatedVisibility(visible = getCVDAndVitalListSize(list, vitalsViewModel) > 1) {
                 CustomChip(
                     idSelected = vitalsViewModel.isBPSelected, label = VitalsTrendEnum.BP.name
                 ) {
@@ -576,7 +522,7 @@ private fun ShowTrendGraphCard(
                 labels = getLabels(vitalsViewModel, list),
                 isBp = vitalsViewModel.isBPSelected
             )
-            Timber.d("List : ${list.map { it.createdOn.formatDateToDayMonth() }}")
+            Timber.d("List : ${list.map { it.appUpdatedDate.formatDateToDayMonth() }}")
         } else if (vitalsViewModel.isGlucoseSelected) {
             LineChartViewGlucose(
                 modifier = modifier
@@ -593,11 +539,12 @@ private fun ShowTrendGraphCard(
 
 }
 
-private fun getLabels(vitalsViewModel: VitalsViewModel, list: List<VitalLocal>): List<String> {
+private fun getLabels(vitalsViewModel: VitalsViewModel, list: List<VitalResponse>): List<String> {
     return if (!vitalsViewModel.isBPSelected) {
-        (list.map { it.createdOn }).distinct().sorted().map { it.formatDateToDayMonth() }.distinct()
+        (list.map { it.appUpdatedDate }).distinct().sorted().map { it.formatDateToDayMonth() }
+            .distinct()
     } else {
-        val vitalDates = list.map { it.createdOn }
+        val vitalDates = list.map { it.appUpdatedDate }
         val cvdDates = vitalsViewModel.previousRecords.map { it.createdOn }
 
         // Combine and sort the dates
@@ -605,9 +552,9 @@ private fun getLabels(vitalsViewModel: VitalsViewModel, list: List<VitalLocal>):
     }
 }
 
-private fun getBPListSize(list: List<VitalLocal>, vitalsViewModel: VitalsViewModel): Int {
-    return list.filter { it.bpSystolic != null }
-        .groupBy { it.createdOn.formatDateToDayMonth() }.keys.size + vitalsViewModel.previousRecords.groupBy { it.createdOn.formatDateToDayMonth() }.keys.size
+private fun getCVDAndVitalListSize(list: List<VitalResponse>, vitalsViewModel: VitalsViewModel): Int {
+    return list
+        .groupBy { it.appUpdatedDate.formatDateToDayMonth() }.keys.size + vitalsViewModel.previousRecords.groupBy { it.createdOn.formatDateToDayMonth() }.keys.size
 }
 
 @Composable
@@ -651,44 +598,28 @@ private fun String.capitalizeFirstLetter(): String {
 }
 
 private fun getChartEntries(
-    list: List<VitalLocal>,
+    list: List<VitalResponse>,
     vitalsViewModel: VitalsViewModel
 ): List<Entry>? {
 
     return when {
         vitalsViewModel.isWeightSelected -> {
-            getEntries(list) { it.weight?.toFloat() }
-        }
-
-        vitalsViewModel.isHRSelected -> {
-            getEntries(list) { it.heartRate?.toFloat() }
-        }
-
-        vitalsViewModel.isRRSelected -> {
-            getEntries(list) { it.respRate?.toFloat() }
-        }
-
-        vitalsViewModel.isSpO2Selected -> {
-            getEntries(list) { it.spo2?.toFloat() }
-
+            getEntriesFromCVD(vitalsViewModel.previousRecords) { it.weight.toFloat() }
         }
 
         vitalsViewModel.isGlucoseSelected -> {
             getEntries(
-                list.filter { it.bloodGlucoseType == BGEnum.FASTING.value }, list
+                list.filter { it.bloodGlucose?.type == BGEnum.FASTING.value },
+                list
             ) {
-                if (it.bloodGlucoseUnit?.equals(BGEnum.BG_MMO.value) == true) it.bloodGlucose?.toFloat()
-                    ?.times(18.018f)
-                else it.bloodGlucose?.toFloat()
+                if (it.bloodGlucose?.unit?.equals(BGEnum.BG_MMO.value) == true) it.bloodGlucose.value.toFloat()
+                    .times(18.018f)
+                else it.bloodGlucose?.value?.toFloat()
             }
         }
 
         vitalsViewModel.isBPSelected -> {
-            getCombinedEntries(
-                vitalList = list,
-                cvdList = vitalsViewModel.previousRecords,
-                vitalValueSelector = { it.bpSystolic?.toFloat() },
-                cvdValueSelector = { it.bpSystolic.toFloat() })
+            getEntriesFromCVD(vitalsViewModel.previousRecords) { it.bpSystolic.toFloat() }
         }
 
         else -> {
@@ -699,22 +630,20 @@ private fun getChartEntries(
 }
 
 
-fun getChartEntries2(list: List<VitalLocal>, vitalsViewModel: VitalsViewModel): List<Entry>? {
+fun getChartEntries2(list: List<VitalResponse>, vitalsViewModel: VitalsViewModel): List<Entry>? {
 
     return if (vitalsViewModel.isGlucoseSelected) {
         getEntries(
-            list.filter { it.bloodGlucoseType == BGEnum.RANDOM.value }, list
+            list.filter { it.bloodGlucose?.type == BGEnum.RANDOM.value }, list
         ) {
-            if (it.bloodGlucoseUnit?.equals(BGEnum.BG_MMO.value) == true) it.bloodGlucose?.toFloat()
+            if (it.bloodGlucose?.unit?.equals(BGEnum.BG_MMO.value) == true) it.bloodGlucose.value?.toFloat()
                 ?.times(18.018f)?.roundToInt()?.toFloat()
-            else it.bloodGlucose?.toFloat()
+            else it.bloodGlucose?.value?.toFloat()
         }
     } else if (vitalsViewModel.isBPSelected) {
-        getCombinedEntries(
-            vitalList = list,
-            cvdList = vitalsViewModel.previousRecords,
-            vitalValueSelector = { it.bpDiastolic?.toFloat() },
-            cvdValueSelector = { it.bpDiastolic.toFloat() })
+        getEntriesFromCVD(
+            vitalsViewModel.previousRecords
+        ) { it.bpDiastolic.toFloat() }
 
     } else {
         null
@@ -724,14 +653,16 @@ fun getChartEntries2(list: List<VitalLocal>, vitalsViewModel: VitalsViewModel): 
 
 
 private fun getEntries(
-    list: List<VitalLocal>, bgList: List<VitalLocal>? = null, valueSelector: (VitalLocal) -> Float?
+    list: List<VitalResponse>,
+    bgList: List<VitalResponse>? = null,
+    valueSelector: (VitalResponse) -> Float?
 ): MutableList<Entry> {
     val mutableList: MutableList<Entry> = mutableListOf()
 
     // Group the list by formatted dates
-    val filteredList = list.groupBy { it.createdOn.formatDateToDayMonth() }
-    val vitalGroupedByDate = bgList?.groupBy { it.createdOn.formatDateToDayMonth() }
-        ?: list.groupBy { it.createdOn.formatDateToDayMonth() }
+    val filteredList = list.groupBy { it.appUpdatedDate.formatDateToDayMonth() }
+    val vitalGroupedByDate = bgList?.groupBy { it.appUpdatedDate.formatDateToDayMonth() }
+        ?: list.groupBy { it.appUpdatedDate.formatDateToDayMonth() }
 
     // Get a union of all dates from both lists
     (vitalGroupedByDate.keys).distinct()
@@ -773,17 +704,65 @@ private fun getEntries(
     return mutableList
 }
 
+private fun getEntriesFromCVD(
+    list: List<CVDResponse>,
+    valueSelector: (CVDResponse) -> Float?
+): MutableList<Entry> {
+    val mutableList: MutableList<Entry> = mutableListOf()
+
+    // Group the list by formatted dates
+    val filteredList = list.groupBy { it.createdOn.formatDateToDayMonth() }
+
+    // Get a union of all dates from both lists
+    (filteredList.keys).distinct()
+        .sortedBy { SimpleDateFormat("dd MMM", Locale.getDefault()).parse(it) }.also { allDates ->
+            Timber.d("Date: $allDates")
+            for (date in allDates) {
+
+                // Find the index of the date in the labels list
+                val labelIndex = allDates.indexOf(date)
+                if (labelIndex != -1) {
+                    Timber.d(
+                        "Value: $labelIndex: $date :\n${
+                            filteredList[date]?.mapNotNull(
+                                valueSelector
+                            ).orEmpty()
+                        }"
+                    )
+                    // Calculate the average value for the grouped records
+
+                    val values: List<Float> = filteredList[date]?.mapNotNull(valueSelector)
+                        .orEmpty()
+                    if (values.isNotEmpty()) {
+                        // Calculate the average only if values are present
+                        val averageValue = values.average().toFloat()
+                        // Add the average value as an Entry for the graph
+                        mutableList.add(
+                            Entry(
+                                labelIndex.toFloat(),
+                                averageValue.roundToInt().toFloat()
+                            )
+                        )
+                    }
+                }
+            }
+
+        }
+
+    return mutableList
+}
+
 
 private fun getCombinedEntries(
-    vitalList: List<VitalLocal>,
+    vitalList: List<VitalResponse>,
     cvdList: List<CVDResponse>,
-    vitalValueSelector: (VitalLocal) -> Float?,
+    vitalValueSelector: (VitalResponse) -> Float?,
     cvdValueSelector: (CVDResponse) -> Float?
 ): MutableList<Entry> {
     val mutableList: MutableList<Entry> = mutableListOf()
 
     // Group both lists by formatted dates
-    val vitalGroupedByDate = vitalList.groupBy { it.createdOn.formatDateToDayMonth() }
+    val vitalGroupedByDate = vitalList.groupBy { it.appUpdatedDate.formatDateToDayMonth() }
     val cvdGroupedByDate = cvdList.groupBy { it.createdOn.formatDateToDayMonth() }
 
     // Get a union of all dates from both lists
@@ -794,7 +773,7 @@ private fun getCombinedEntries(
     for (date in allDates) {
         val labelIndex = allDates.indexOf(date)
         if (labelIndex != -1) {
-            // Collect all values from both VitalLocal and CVDResponse for this date
+            // Collect all values from both VitalResponse and CVDResponse for this date
             val vitalValues = vitalGroupedByDate[date]?.mapNotNull(vitalValueSelector).orEmpty()
             val cvdValues = cvdGroupedByDate[date]?.mapNotNull(cvdValueSelector).orEmpty()
 
@@ -815,7 +794,7 @@ private fun getCombinedEntries(
 
 @Composable
 fun VitalsCardLayout(
-    modifier: Modifier = Modifier, vital: VitalLocal, context: Context
+    modifier: Modifier = Modifier, vital: VitalResponse, context: Context
 ) {
     var isViewMore by remember {
         mutableStateOf(false)
@@ -830,7 +809,7 @@ fun VitalsCardLayout(
         Column(modifier = modifier.fillMaxWidth()) {
             Text(
                 modifier = Modifier.padding(start = 16.dp, top = 16.dp),
-                text = vital.createdOn.convertedDate().convertDateFormat(),
+                text = vital.appUpdatedDate.convertedDate().convertDateFormat(),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onPrimaryContainer
             )
@@ -844,31 +823,31 @@ fun VitalsCardLayout(
                     start = 16.dp, top = 8.dp, end = 16.dp, bottom = 8.dp
                 )
             )
-            VitalCardItem(
-                title = stringResource(id = R.string.height), value = setHeight(vital)
-            )
-            VitalCardItem(
-                title = stringResource(id = R.string.weight),
-                value = "${vital.weight} ${
-                    stringResource(
-                        id = R.string.kg
-                    ).lowercase()
-                }"
-            )
-            VitalCardItem(
-                title = stringResource(R.string.hear_rate_min),
-                value = vital.heartRate ?: stringResource(id = R.string.dashes)
-            )
-            VitalCardItem(
-                title = stringResource(R.string.respiratory_rate_min),
-                value = vital.respRate ?: stringResource(id = R.string.dashes)
-            )
-            VitalCardItem(
-                title = stringResource(id = R.string.temperature),
-                value = if (vital.temp != null) "${vital.temp} ${if (vital.tempUnit == TemperatureEnum.CELSIUS.value) "°C" else "F"}" else stringResource(
-                    id = R.string.dashes
-                )
-            )
+//            VitalCardItem(
+//                title = stringResource(id = R.string.height), value = setHeight(vital)
+//            )
+//            VitalCardItem(
+//                title = stringResource(id = R.string.weight),
+//                value = "${vital.weight} ${
+//                    stringResource(
+//                        id = R.string.kg
+//                    ).lowercase()
+//                }"
+//            )
+//            VitalCardItem(
+//                title = stringResource(R.string.hear_rate_min),
+//                value = vital.heartRate ?: stringResource(id = R.string.dashes)
+//            )
+//            VitalCardItem(
+//                title = stringResource(R.string.respiratory_rate_min),
+//                value = vital.respRate ?: stringResource(id = R.string.dashes)
+//            )
+//            VitalCardItem(
+//                title = stringResource(id = R.string.temperature),
+//                value = if (vital.temp != null) "${vital.temp} ${if (vital.tempUnit == TemperatureEnum.CELSIUS.value) "°C" else "F"}" else stringResource(
+//                    id = R.string.dashes
+//                )
+//            )
             AnimatedVisibility(visible = isViewMore) {
                 ViewMoreItems(vital, context)
                 Spacer(modifier = Modifier.height(16.dp))
@@ -984,30 +963,6 @@ private fun CVDRecordCardLayout(
 }
 
 @Composable
-fun setHeight(vital: VitalLocal): String {
-    return when {
-        vital.heightCm != null -> {
-            "${vital.heightCm} ${stringResource(id = R.string.cm)}"
-        }
-
-        vital.heightFt != null || vital.heightInch != null -> {
-            "${vital.heightFt ?: ""}.${vital.heightInch ?: "0"} ${
-                stringResource(
-                    id = R.string.ft_in
-                )
-            }"
-        }
-
-        else -> {
-            stringResource(
-                id = R.string.dashes
-            )
-        }
-    }
-
-}
-
-@Composable
 fun setCVDHeight(cvdResponse: CVDResponse): String {
     return when {
         cvdResponse.heightCm != null -> {
@@ -1032,45 +987,12 @@ fun setCVDHeight(cvdResponse: CVDResponse): String {
 }
 
 @Composable
-private fun ViewMoreItems(vital: VitalLocal, context: Context) {
+private fun ViewMoreItems(vital: VitalResponse, context: Context) {
     Column {
-        VitalCardItem(
-            title = stringResource(R.string.eye_test_result_left),
-            value = if (vital.leftEye != null) vital.leftEye
-                .getEyeTypeName(context) else stringResource(
-                id = R.string.dashes
-            )
-        )
-        VitalCardItem(
-            title = stringResource(R.string.eye_test_result_right),
-            value = if (vital.rightEye != null) vital.rightEye
-                .getEyeTypeName(context) else stringResource(
-                id = R.string.dashes
-            )
-        )
-        VitalCardItem(
-            title = stringResource(R.string.spo2_title), value = vital.spo2 ?: stringResource(
-                id = R.string.dashes
-            )
-        )
-        VitalCardItem(
-            title = stringResource(id = R.string.blood_pressure),
-            value = if (vital.bpDiastolic != null && vital.bpSystolic != null) "${vital.bpSystolic}/${vital.bpDiastolic} ${
-                stringResource(
-                    id = R.string.mmhg
-                )
-            }" else stringResource(id = R.string.dashes)
-        )
-        VitalCardItem(
-            title = stringResource(id = R.string.total_cholestrol),
-            value = if (vital.cholesterol != null) "${vital.cholesterol} ${vital.cholesterolUnit}" else stringResource(
-                id = R.string.dashes
-            )
-        )
         VitalCardItem(
             title = "${
                 stringResource(
-                    id = if (vital.bloodGlucoseType == stringResource(
+                    id = if (vital.bloodGlucose?.type == stringResource(
                             id = R.string.fasting
                         ).lowercase()
                     ) R.string.fasting else R.string.random
@@ -1080,7 +1002,7 @@ private fun ViewMoreItems(vital: VitalLocal, context: Context) {
                     id = R.string.blood_glucose
                 ).lowercase()
             }",
-            value = if (vital.bloodGlucose != null) "${vital.bloodGlucose} ${vital.bloodGlucoseUnit}"
+            value = if (vital.bloodGlucose != null) "${vital.bloodGlucose} ${vital.bloodGlucose.unit}"
             else stringResource(R.string.dashes)
         )
 
@@ -1114,60 +1036,15 @@ private fun VitalCardItem(modifier: Modifier = Modifier, title: String, value: S
     }
 }
 
-private fun Int.getEyeTypeName(context: Context): String {
-    return when (this) {
-        VitalsEyeEnum.NORMAL_VISION.number -> VitalsEyeEnum.NORMAL_VISION.value.extractStringInBrackets()
-        VitalsEyeEnum.MILD_IMPAIRMENT.number -> VitalsEyeEnum.MILD_IMPAIRMENT.value.extractStringInBrackets()
-        VitalsEyeEnum.MODERATE_IMPAIRMENT.number -> VitalsEyeEnum.MODERATE_IMPAIRMENT.value.extractStringInBrackets()
-        VitalsEyeEnum.SIGNIFICANT_IMPAIRMENT.number -> VitalsEyeEnum.SIGNIFICANT_IMPAIRMENT.value.extractStringInBrackets()
-        VitalsEyeEnum.SEVERE_IMPAIRMENT.number -> VitalsEyeEnum.SEVERE_IMPAIRMENT.value.extractStringInBrackets()
-        VitalsEyeEnum.VERY_SEVERE_IMPAIRMENT.number -> VitalsEyeEnum.VERY_SEVERE_IMPAIRMENT.value.extractStringInBrackets()
-        VitalsEyeEnum.LEGAL_BLINDNESS.number -> VitalsEyeEnum.LEGAL_BLINDNESS.value.extractStringInBrackets()
-        else -> {
-            context.getString(R.string.dashes)
-        }
-    }
-}
-
-fun String.extractStringInBrackets(): String {
-    val regex = "\\(([^)]+)\\)".toRegex()
-    val matchResult = regex.find(this)
-    return matchResult?.groups?.get(1)?.value ?: ""
-}
-
-private fun showChipSelection(vitalsViewModel: VitalsViewModel, list: List<VitalLocal>) {
+private fun showChipSelection(vitalsViewModel: VitalsViewModel, list: List<VitalResponse>) {
     when {
-        list.filter { it.weight != null }
-            .groupBy { it.createdOn.formatDateToDayMonth() }.keys.size > 1 -> {
+        getCVDAndVitalListSize(list, vitalsViewModel) > 1 -> {
             vitalsViewModel.isWeightSelected = true
         }
 
-        list.filter { it.heartRate != null }
-            .groupBy { it.createdOn.formatDateToDayMonth() }.keys.size > 1 -> {
-            vitalsViewModel.isHRSelected = true
-            vitalsViewModel.isWeightSelected = false
-        }
-
-        list.filter { it.respRate != null }
-            .groupBy { it.createdOn.formatDateToDayMonth() }.keys.size > 1 -> {
-            vitalsViewModel.isRRSelected = true
-            vitalsViewModel.isWeightSelected = false
-        }
-
-        list.filter { it.spo2 != null }
-            .groupBy { it.createdOn.formatDateToDayMonth() }.keys.size > 1 -> {
-            vitalsViewModel.isSpO2Selected = true
-            vitalsViewModel.isWeightSelected = false
-        }
-
-        list.filter { it.bloodGlucose != null && it.bloodGlucoseType == BGEnum.RANDOM.value || it.bloodGlucoseType == BGEnum.FASTING.value }
-            .groupBy { it.createdOn.formatDateToDayMonth() }.keys.size > 1 -> {
+        list.filter { it.bloodGlucose != null && it.bloodGlucose.type == BGEnum.RANDOM.value || it.bloodGlucose?.type == BGEnum.FASTING.value }
+            .groupBy { it.appUpdatedDate.formatDateToDayMonth() }.keys.size > 1 -> {
             vitalsViewModel.isGlucoseSelected = true
-            vitalsViewModel.isWeightSelected = false
-        }
-
-        getBPListSize(list, vitalsViewModel) > 1 -> {
-            vitalsViewModel.isBPSelected = true
             vitalsViewModel.isWeightSelected = false
         }
     }

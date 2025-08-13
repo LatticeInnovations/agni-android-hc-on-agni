@@ -45,7 +45,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.heartcare.agni.R
 import com.heartcare.agni.data.local.enums.SymbolEnum.Companion.getSymbolList
-import com.heartcare.agni.data.local.model.vital.VitalLocal
 import com.heartcare.agni.data.server.model.patient.PatientResponse
 import com.heartcare.agni.ui.common.CustomTextField
 import com.heartcare.agni.ui.common.CustomTextFieldWithLength
@@ -55,39 +54,27 @@ import com.heartcare.agni.ui.theme.Black
 import com.heartcare.agni.ui.theme.White
 import com.heartcare.agni.ui.vitalsscreen.components.CustomChip
 import com.heartcare.agni.utils.constants.NavControllerConstants.PATIENT
-import com.heartcare.agni.utils.constants.VitalConstants
 import com.heartcare.agni.utils.constants.VitalConstants.VITAL_UPDATE_OR_ADD
-import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toEndOfDay
-import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toTodayStartDate
 import com.heartcare.agni.utils.regex.OnlyNumberRegex.onlyNumbers
 import com.heartcare.agni.utils.regex.OnlyNumberRegex.onlyNumbersWithDecimal
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import java.util.Date
 
 @Composable
-fun AddVitalsScreen(navController: NavController, viewModel: AddVitalsViewModel = hiltViewModel()) {
+fun AddVitalsScreen(
+    navController: NavController,
+    viewModel: AddVitalsViewModel = hiltViewModel()
+) {
     LaunchedEffect(key1 = viewModel.isLaunched) {
-        viewModel.apply {
-            if (isLaunched) {
-                patient =
-                    navController.previousBackStackEntry?.savedStateHandle?.get<PatientResponse>(
-                        PATIENT
-                    )
-                vitalLocal =
-                    navController.previousBackStackEntry?.savedStateHandle?.get<VitalLocal>(
-                        VitalConstants.VITAL
-                    )
-                setVitalDetails()
-                patient?.let {
-                    getStudentTodayAppointment(
-                        Date(Date().toTodayStartDate()), Date(Date().toEndOfDay()), patient!!.id
-                    )
+        if (!viewModel.isLaunched) {
+            navController.previousBackStackEntry?.savedStateHandle
+                ?.get<PatientResponse>(PATIENT)
+                ?.let {
+                    viewModel.patient = it
+                    viewModel.getTodayVital(it.id)
                 }
-            }
-            isLaunched = true
+            viewModel.isLaunched = true
         }
-
     }
     AddVitals(navController, viewModel)
 
@@ -128,7 +115,7 @@ private fun AddVitals(navController: NavController, viewModel: AddVitalsViewMode
                 ),
                 title = {
                     Text(
-                        text = if (viewModel.vitalLocal == null) stringResource(R.string.add_vitals) else stringResource(
+                        text = if (viewModel.todayVital == null) stringResource(R.string.add_vitals) else stringResource(
                             R.string.edit_vital
                         ),
                         style = MaterialTheme.typography.titleLarge,
@@ -631,18 +618,7 @@ private fun handleNavigate(
     navController: NavController,
     context: Context
 ) {
-    if (viewModel.vitalLocal != null) {
-        viewModel.updateVital {
-            coroutineScope.launch {
-                navController.previousBackStackEntry?.savedStateHandle?.set(
-                    VITAL_UPDATE_OR_ADD,
-                    context.getString(R.string.vitals_update_successfully)
-                )
-                navController.navigateUp()
-            }
-        }
-    } else {
-        viewModel.insertVital {
+    viewModel.insertVital {
             coroutineScope.launch {
                 navController.previousBackStackEntry?.savedStateHandle?.set(
                     VITAL_UPDATE_OR_ADD,
@@ -651,6 +627,4 @@ private fun handleNavigate(
                 navController.navigateUp()
             }
         }
-    }
-
 }

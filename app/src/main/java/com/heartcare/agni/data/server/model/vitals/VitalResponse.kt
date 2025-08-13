@@ -1,32 +1,25 @@
 package com.heartcare.agni.data.server.model.vitals
 
 import androidx.annotation.Keep
+import java.util.Date
 
 @Keep
 data class VitalResponse(
-    val vitalUuid: String,
+    val uuid: String,
+    val fhirId: String?,
+    val patientId: String,
     val appointmentId: String,
-    val bloodGlucose: String?,
-    val bloodGlucoseType: String?,
-    val bloodGlucoseUnit: String?,
-    val bpDiastolic: String?,
-    val bpSystolic: String?,
-    val createdOn: String,
-    val eyeTestType: String?,
-    val heartRate: String?,
-    val heightCm: String?,
-    val heightFt: String?,
-    val heightInch: String?,
-    val leftEye: String?,
-    val patientId: String?,
-    val respRate: String?,
-    val rightEye: String?,
-    val spo2: String?,
-    val temp: String?,
-    val tempUnit: String?,
-    val weight: String?,
+    val appUpdatedDate: Date,
     val practitionerName: String?,
-    val vitalFhirId: String?,
-    val cholesterol: Double?,
-    val cholesterolUnit: String?
+    val bloodGlucose: UnitValue?,
+    val footExamination: String?,
+    val eyeExamination: String?,
+    val abdominalCircumference: UnitValue?,
+    val hipCircumference: UnitValue?,
+    val hbA1cPercentage: Int?,
+    val serumCreatinine: UnitValue?,
+    val serumPotassium: UnitValue?,
+    val urineProtein: String?,
+    val urineKetones: String?,
+    val others: String?
 )

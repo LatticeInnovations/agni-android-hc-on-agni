@@ -16,20 +16,20 @@ interface VitalDao {
     suspend fun insertVital(vararg vitalEntity: VitalEntity): List<Long>
 
     @Transaction
-    @Query("SELECT * FROM VitalEntity vital WHERE patientId = :patientId ORDER BY vital.createdOn DESC LIMIT :limit")
+    @Query("SELECT * FROM VitalEntity vital WHERE patientId = :patientId ORDER BY vital.appUpdatedDate DESC LIMIT :limit")
     suspend fun getPastVitals(
         patientId: String,
         limit: Int = 5
     ): List<VitalEntity>
 
     @Transaction
-    @Query("SELECT * FROM VitalEntity WHERE patientId=:patientId")
+    @Query("SELECT * FROM VitalEntity WHERE patientId=:patientId ORDER BY appUpdatedDate DESC")
     suspend fun getPastVitals(
         patientId: String
     ): List<VitalEntity>
 
     @Transaction
-    @Query("UPDATE VitalEntity SET fhirId = :fhirId WHERE vitalUuid = :vitalUUid")
+    @Query("UPDATE VitalEntity SET fhirId = :fhirId WHERE uuid = :vitalUUid")
     suspend fun updateVitalFhirId(vitalUUid: String, fhirId: String)
 
     @Transaction

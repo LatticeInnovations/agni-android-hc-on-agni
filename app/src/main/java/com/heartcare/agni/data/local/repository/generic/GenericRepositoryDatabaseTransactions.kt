@@ -31,6 +31,7 @@ import com.heartcare.agni.data.server.model.scheduleandappointment.appointment.A
 import com.heartcare.agni.data.server.model.scheduleandappointment.schedule.ScheduleResponse
 import com.heartcare.agni.data.server.model.tobacco.TobaccoCessationResponse
 import com.heartcare.agni.data.server.model.vaccination.ImmunizationResponse
+import com.heartcare.agni.data.server.model.vitals.VitalResponse
 import com.heartcare.agni.utils.builders.GenericEntityPatchBuilder.processPatch
 import com.heartcare.agni.utils.constants.Id
 import com.heartcare.agni.utils.constants.Id.APPOINTMENT_ID
@@ -234,19 +235,19 @@ open class GenericRepositoryDatabaseTransactions(
     }
 
     protected suspend fun insertVitalGenericEntity(
-        vitalLocal: VitalLocal,
+        vitalResponse: VitalResponse,
         genericEntity: GenericEntity?,
         uuid: String
     ): Long {
         return if (genericEntity != null) {
             genericDao.insertGenericEntity(
-                genericEntity.copy(payload = vitalLocal.toJson())
+                genericEntity.copy(payload = vitalResponse.toJson())
             )[0]
         } else {
             genericDao.insertGenericEntity(
                 GenericEntity(
-                    id = uuid, patientId = vitalLocal.vitalUuid,
-                    payload = vitalLocal.toJson(),
+                    id = uuid, patientId = vitalResponse.uuid,
+                    payload = vitalResponse.toJson(),
                     type = GenericTypeEnum.VITAL,
                     syncType = SyncType.POST
                 )
