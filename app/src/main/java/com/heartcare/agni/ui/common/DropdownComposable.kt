@@ -20,7 +20,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.heartcare.agni.R
 
 @Composable
 fun DropdownComposable(
@@ -31,6 +33,7 @@ fun DropdownComposable(
     errorText: String,
     isMandatory: Boolean,
 ) {
+    val defaultOption = stringResource(R.string.select)
     var expanded by remember { mutableStateOf(false) }
     var isError by remember { mutableStateOf(false) }
     Box {
@@ -78,12 +81,14 @@ fun DropdownComposable(
                 isError = value.isBlank() && isMandatory
             },
         ) {
-            dropdownList.forEach { label ->
+            (if (!isMandatory)
+                listOf(defaultOption) + dropdownList
+            else dropdownList).forEach { label ->
                 DropdownMenuItem(
                     onClick = {
                         expanded = !expanded
                         isError = false
-                        updateValue(label)
+                        updateValue(if (label == defaultOption && !isMandatory) "" else label)
                     },
                     text = {
                         Text(

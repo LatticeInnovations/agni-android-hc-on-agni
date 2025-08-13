@@ -143,7 +143,7 @@ private fun HeaderSection(viewModel: PatientRegistrationViewModel) {
 
 @Composable
 private fun AddressHierarchy(viewModel: PatientRegistrationStepThreeViewModel) {
-    DropDownComposable(
+    LevelDropDownComposable(
         value = viewModel.province?.name ?: "",
         updateValue = {
             viewModel.province = it
@@ -157,7 +157,7 @@ private fun AddressHierarchy(viewModel: PatientRegistrationStepThreeViewModel) {
         isEnabled = true
     )
 
-    DropDownComposable(
+    LevelDropDownComposable(
         value = viewModel.areaCouncil?.name ?: "",
         updateValue = {
             viewModel.areaCouncil = it
@@ -171,7 +171,7 @@ private fun AddressHierarchy(viewModel: PatientRegistrationStepThreeViewModel) {
         isEnabled = viewModel.province != null
     )
 
-    DropDownComposable(
+    LevelDropDownComposable(
         value = viewModel.island?.name ?: "",
         updateValue = {
             viewModel.island = it
@@ -185,11 +185,11 @@ private fun AddressHierarchy(viewModel: PatientRegistrationStepThreeViewModel) {
         isEnabled = viewModel.areaCouncil != null
     )
 
-    DropDownComposable(
+    LevelDropDownComposable(
         value = viewModel.village?.name ?: "",
         updateValue = {
             viewModel.village = it
-            viewModel.isVillageOtherSelected = it.name == viewModel.otherName
+            viewModel.isVillageOtherSelected = it?.name == viewModel.otherName
             if (!viewModel.isVillageOtherSelected) {
                 viewModel.otherVillage = ""
             }
@@ -208,15 +208,26 @@ private fun AddressHierarchy(viewModel: PatientRegistrationStepThreeViewModel) {
 }
 
 @Composable
-fun DropDownComposable(
+fun LevelDropDownComposable(
     value: String,
-    updateValue: (LevelResponse) -> Unit,
+    updateValue: (LevelResponse?) -> Unit,
     label: String,
     dropdownList: List<LevelResponse>,
     errorText: String,
     isMandatory: Boolean,
     isEnabled: Boolean
 ) {
+    val defaultOption = LevelResponse(
+        fhirId = "",
+        code = "",
+        levelType = "",
+        name = "Select",
+        population = null,
+        precedingLevelId = null,
+        secondaryName = null,
+        status = ""
+    )
+    val finalList = if (!isMandatory) listOf(defaultOption) + dropdownList else dropdownList
     var expanded by remember { mutableStateOf(false) }
     var isError by remember { mutableStateOf(false) }
     Box {
@@ -266,12 +277,12 @@ fun DropDownComposable(
                 isError = value.isBlank() && isMandatory
             },
         ) {
-            dropdownList.forEach { label ->
+            finalList.forEach { label ->
                 DropdownMenuItem(
                     onClick = {
                         expanded = !expanded
                         isError = false
-                        updateValue(label)
+                        updateValue(if (label == defaultOption && !isMandatory) null else label)
                     },
                     text = {
                         Text(

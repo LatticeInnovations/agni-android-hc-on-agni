@@ -23,7 +23,6 @@ class SearchPatientViewModel @Inject constructor(
 ) : BaseViewModel() {
     var isLaunched by mutableStateOf(false)
 
-    val maxHeartcareIdLength = 8
     val maxHospitalIdLength = 6
     val maxNationalIdLength = 6
     val maxNameLength = 100
@@ -64,14 +63,14 @@ class SearchPatientViewModel @Inject constructor(
 
     init {
         viewModelScope.launch(ioDispatcher) {
-            provinceList = listOf(select) + levelRepository.getLevels(levelType = LevelsEnum.PROVINCE.levelType)
+            provinceList = levelRepository.getLevels(levelType = LevelsEnum.PROVINCE.levelType)
             getAreaCouncilList()
         }
     }
 
     fun getAreaCouncilList() {
         viewModelScope.launch(ioDispatcher) {
-            areaCouncilList = listOf(select) + levelRepository.getLevels(
+            areaCouncilList = levelRepository.getLevels(
                 levelType = LevelsEnum.AREA_COUNCIL.levelType,
                 precedingId = province.fhirId.ifBlank { null }
             )
