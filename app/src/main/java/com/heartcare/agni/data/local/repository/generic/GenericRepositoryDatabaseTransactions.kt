@@ -5,7 +5,6 @@ import com.heartcare.agni.data.local.enums.SyncType
 import com.heartcare.agni.data.local.model.patch.AppointmentPatchRequest
 import com.heartcare.agni.data.local.model.patch.ChangeRequest
 import com.heartcare.agni.data.local.model.symdiag.SymptomsAndDiagnosisData
-import com.heartcare.agni.data.local.model.vital.VitalLocal
 import com.heartcare.agni.data.local.roomdb.dao.AppointmentDao
 import com.heartcare.agni.data.local.roomdb.dao.GenericDao
 import com.heartcare.agni.data.local.roomdb.dao.PatientDao
@@ -548,12 +547,12 @@ open class GenericRepositoryDatabaseTransactions(
     protected suspend fun updateVitalFhirIdInGenericEntity(genericEntity: GenericEntity) {
         val existingMap =
             genericEntity.payload.fromJson<MutableMap<String, Any>>()
-                .mapToObject(VitalLocal::class.java)
+                .mapToObject(VitalResponse::class.java)
         if (existingMap != null) {
             genericDao.insertGenericEntity(
                 genericEntity.copy(
                     payload = existingMap.copy(
-                        patientId = if (!existingMap.patientId!!.isFhirId()) getPatientFhirIdById(
+                        patientId = if (!existingMap.patientId.isFhirId()) getPatientFhirIdById(
                             existingMap.patientId
                         )!! else existingMap.patientId,
                         appointmentId = if (!existingMap.appointmentId.isFhirId()) getAppointmentFhirIdById(

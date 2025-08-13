@@ -118,7 +118,8 @@ fun VitalsScreen(navController: NavController, vitalsViewModel: VitalsViewModel 
     }
 
     Scaffold(
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier
+            .fillMaxSize()
             .imePadding()
             .navigationBarsPadding(),
         snackbarHost = { SnackbarHost(snackBarHostState) },
@@ -213,7 +214,7 @@ fun VitalsScreen(navController: NavController, vitalsViewModel: VitalsViewModel 
                         )
                         Spacer(Modifier.size(ButtonDefaults.IconSpacing))
                         Text(
-                            if (vitalsViewModel.todayVital == null)
+                            if (vitalsViewModel.todayVital == null || vitalsViewModel.existsInOtherHospital)
                                 stringResource(id = R.string.add_vitals)
                             else stringResource(id = R.string.update_vitals)
                         )
@@ -231,9 +232,10 @@ private fun ShowGraphAndList(
     paddingValues: PaddingValues
 ) {
     val vitals by vitalsViewModel._vitals.collectAsState()
-    val combinedList = remember(vitals, vitalsViewModel.previousRecords, vitalsViewModel.selectedOption) {
-        getFilteredCombinedList(vitalsViewModel, vitals)
-    }
+    val combinedList =
+        remember(vitals, vitalsViewModel.previousRecords, vitalsViewModel.selectedOption) {
+            getFilteredCombinedList(vitalsViewModel, vitals)
+        }
 
     Column(
         modifier = Modifier
@@ -330,6 +332,7 @@ fun HandleLaunchedEffect(vitalsViewModel: VitalsViewModel, navController: NavCon
                         PATIENT
                     )
                 patient?.let {
+                    getAppointmentInfo {}
                     getVitalsAndCVDRecords()
                 }
             }

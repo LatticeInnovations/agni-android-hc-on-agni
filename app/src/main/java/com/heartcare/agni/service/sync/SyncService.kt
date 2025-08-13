@@ -79,8 +79,6 @@ class SyncService(
                     }, async {
                         patchSymDiag(logout)
                     }, async {
-                        downloadMedication(logout)
-                    }, async {
                         downloadLevelsRecord(logout)
                     }
                 )
@@ -489,10 +487,7 @@ class SyncService(
                         downloadCVD(logout)
                     }
                     CoroutineScope(Dispatchers.IO).launch {
-                        getAndInsertSymptoms()
-                    }
-                    CoroutineScope(Dispatchers.IO).launch {
-                        getAndInsertDiagnosis()
+                        downloadVitals(logout)
                     }
                     CoroutineScope(Dispatchers.IO).launch {
                         downloadLabAndMedicalRecordPhoto(logout)

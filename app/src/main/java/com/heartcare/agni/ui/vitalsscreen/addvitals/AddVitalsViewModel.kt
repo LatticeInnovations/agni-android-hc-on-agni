@@ -56,7 +56,7 @@ class AddVitalsViewModel @Inject constructor(
 
     var bloodGlucose by mutableStateOf("")
     var bloodGlucoseError by mutableStateOf(false)
-    val bloodGlucoseUnits = listOf("mg/dl", "mmol/L")
+    val bloodGlucoseUnits = listOf("mg/dL", "mmol/L")
     var selectedBloodGlucoseUnit by mutableIntStateOf(0)
 
     var footExamination by mutableStateOf("")

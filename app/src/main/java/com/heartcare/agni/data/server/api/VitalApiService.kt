@@ -1,7 +1,6 @@
 package com.heartcare.agni.data.server.api
 
 import com.heartcare.agni.base.server.BaseResponse
-import com.heartcare.agni.data.local.model.vital.VitalLocal
 import com.heartcare.agni.data.server.model.create.CreateResponse
 import com.heartcare.agni.data.server.model.vitals.VitalResponse
 import retrofit2.Response
@@ -21,7 +20,7 @@ interface VitalApiService {
 
     @POST("{endPoint}")
     suspend fun createData(
-        @Path("endPoint") endPoint: String, @Body vitals: List<VitalLocal>
+        @Path("endPoint") endPoint: String, @Body vitals: List<VitalResponse>
     ): Response<BaseResponse<List<CreateResponse>>>
 
     @PATCH("{endPoint}")
