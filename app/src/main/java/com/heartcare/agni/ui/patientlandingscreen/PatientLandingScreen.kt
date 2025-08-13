@@ -269,27 +269,27 @@ private fun CardComposableList(
             ),
             onClick = {
                 navController.currentBackStackEntry?.savedStateHandle?.set(
-                    "patient",
+                    PATIENT,
                     viewModel.patient
                 )
                 navController.navigate(Screen.Appointments.route)
             }
         )
-        /**
         CardComposable(
-        viewModel,
-        stringResource(id = R.string.vital),
-        R.drawable.vital_signs,
-        null,
-        onClick = {
-        navController.currentBackStackEntry?.savedStateHandle?.set(
-        PATIENT,
-        viewModel.patient
-        )
-        navController.navigate(Screen.VitalsScreen.route)
-        }
+            viewModel,
+            stringResource(id = R.string.vital),
+            R.drawable.vital_signs,
+            null,
+            onClick = {
+                navController.currentBackStackEntry?.savedStateHandle?.set(
+                    PATIENT,
+                    viewModel.patient
+                )
+                navController.navigate(Screen.VitalsScreen.route)
+            }
         )
 
+        /**
         CardComposable(
         viewModel,
         stringResource(id = R.string.symptoms_and_diagnosis),
