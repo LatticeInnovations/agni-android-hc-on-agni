@@ -109,102 +109,104 @@ fun VitalsScreen(navController: NavController, vitalsViewModel: VitalsViewModel 
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val snackBarHostState = remember { SnackbarHostState() }
-    Scaffold(
-        modifier = Modifier.fillMaxSize(),
-        snackbarHost = { SnackbarHost(snackBarHostState) },
-        topBar = {
-        TopAppBar(modifier = Modifier.fillMaxWidth(),
-            colors = TopAppBarDefaults.largeTopAppBarColors(
-                containerColor = MaterialTheme.colorScheme.surface
-            ),
-            navigationIcon = {
-                IconButton(onClick = {
-                    navController.navigateUp()
-                }) {
-                    Icon(
-                        Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "BACK_ICON"
-                    )
-                }
-            },
-            title = {
-                Text(
-                    text = stringResource(R.string.vitals),
-                    style = MaterialTheme.typography.titleLarge,
-                    modifier = Modifier.testTag("VITAL_TITLE_TEXT")
-                )
-            })
-    }, content = { paddingValues ->
-            ShowGraphAndList(vitalsViewModel, paddingValues, context)
-    }, bottomBar = {
-        Box(
-            modifier = Modifier
-                .padding()
-                .navigationBarsPadding(),
-            contentAlignment = Alignment.BottomCenter
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(MaterialTheme.colorScheme.surface),
-                verticalArrangement = Arrangement.Bottom,
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Button(
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary,
-                        contentColor = MaterialTheme.colorScheme.onPrimary
-                    ),
-                    modifier = Modifier
-                        .padding(12.dp)
-                        .fillMaxWidth(), onClick = {
-                        vitalsViewModel.getAppointmentInfo {
-                            if (vitalsViewModel.canAddAssessment) {
-                                scope.launch {
-                                    navController.currentBackStackEntry?.savedStateHandle?.set(
-                                        key = PATIENT, vitalsViewModel.patient
-                                    )
-                                    navController.navigate(Screen.AddVitalsScreen.route)
-                                }
-
-                            } else if (vitalsViewModel.isAppointmentCompleted) {
-                                vitalsViewModel.showAppointmentCompletedDialog = true
-                            } else {
-                                vitalsViewModel.showAddToQueueDialog = true
-                            }
-                        }
-
-                    },
-                    contentPadding = ButtonDefaults.ButtonWithIconContentPadding
-                ) {
-                    Icon(
-                        Icons.Filled.Add,
-                        contentDescription = stringResource(R.string.add_icon),
-                        modifier = Modifier.size(ButtonDefaults.IconSize)
-                    )
-                    Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-                    Text(
-                        stringResource(id = R.string.add_vitals)
-                    )
-                }
-            }
-
-
-        }
-
-    })
 
     LaunchedEffect(key1 = vitalsViewModel.msg) {
         if (vitalsViewModel.msg.isNotBlank()) {
             snackBarHostState.showSnackbar(vitalsViewModel.msg)
             vitalsViewModel.msg = ""
         }
-
     }
+
+    Scaffold(
+        modifier = Modifier.fillMaxSize(),
+        snackbarHost = { SnackbarHost(snackBarHostState) },
+        topBar = {
+            TopAppBar(
+                modifier = Modifier.fillMaxWidth(),
+                colors = TopAppBarDefaults.largeTopAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                ),
+                navigationIcon = {
+                    IconButton(onClick = {
+                        navController.navigateUp()
+                    }) {
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "BACK_ICON"
+                        )
+                    }
+                },
+                title = {
+                    Text(
+                        text = stringResource(R.string.vitals),
+                        style = MaterialTheme.typography.titleLarge,
+                        modifier = Modifier.testTag("VITAL_TITLE_TEXT")
+                    )
+                }
+            )
+        },
+        content = { paddingValues ->
+            ShowGraphAndList(vitalsViewModel, paddingValues, context)
+        },
+        bottomBar = {
+            Box(
+                modifier = Modifier
+                    .padding()
+                    .navigationBarsPadding(),
+                contentAlignment = Alignment.BottomCenter
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(MaterialTheme.colorScheme.surface),
+                    verticalArrangement = Arrangement.Bottom,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Button(
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            contentColor = MaterialTheme.colorScheme.onPrimary
+                        ),
+                        modifier = Modifier
+                            .padding(12.dp)
+                            .fillMaxWidth(), onClick = {
+                            vitalsViewModel.getAppointmentInfo {
+                                if (vitalsViewModel.canAddAssessment) {
+                                    scope.launch {
+                                        navController.currentBackStackEntry?.savedStateHandle?.set(
+                                            key = PATIENT, vitalsViewModel.patient
+                                        )
+                                        navController.navigate(Screen.AddVitalsScreen.route)
+                                    }
+
+                                } else if (vitalsViewModel.isAppointmentCompleted) {
+                                    vitalsViewModel.showAppointmentCompletedDialog = true
+                                } else {
+                                    vitalsViewModel.showAddToQueueDialog = true
+                                }
+                            }
+
+                        },
+                        contentPadding = ButtonDefaults.ButtonWithIconContentPadding
+                    ) {
+                        Icon(
+                            Icons.Filled.Add,
+                            contentDescription = stringResource(R.string.add_icon),
+                            modifier = Modifier.size(ButtonDefaults.IconSize)
+                        )
+                        Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+                        Text(
+                            stringResource(id = R.string.add_vitals)
+                        )
+                    }
+                }
+            }
+        }
+    )
     ShowDialogs(vitalsViewModel, navController, scope)
 }
 
 @Composable
-fun ShowGraphAndList(
+private fun ShowGraphAndList(
     vitalsViewModel: VitalsViewModel, paddingValues: PaddingValues, context: Context
 ) {
     Column(
@@ -222,7 +224,8 @@ fun ShowGraphAndList(
                     VitalsTrendGraph(vitalsViewModel)
                 }
                 item {
-                    SegmentedButtonForVital(options = listOf(ALL, CVD_RECORD),
+                    SegmentedButtonForVital(
+                        options = listOf(ALL, CVD_RECORD),
                         isCVDListEmpty = vitalsViewModel.previousRecords.isEmpty(),
                         selectedOption = vitalsViewModel.selectedOption,
                         onOptionSelected = { vitalsViewModel.selectedOption = it })
@@ -248,18 +251,16 @@ fun ShowGraphAndList(
             ) {
                 Text(
                     text = stringResource(R.string.no_record_found),
-                    style = MaterialTheme.typography.titleSmall,
-                    modifier = Modifier.padding(16.dp),
+                    style = MaterialTheme.typography.titleLarge,
                     textAlign = TextAlign.Center
                 )
-
             }
         }
     }
 
 }
 
-fun getCombinedList(
+private fun getCombinedList(
     vitalsViewModel: VitalsViewModel, vitals: List<VitalLocal>
 ): List<CombineVitalAndCVDRecord> {
     return (vitals.map { vital ->
@@ -304,7 +305,6 @@ fun HandleLaunchedEffect(vitalsViewModel: VitalsViewModel, navController: NavCon
         }
 
     }
-
 }
 
 @Composable
@@ -312,9 +312,10 @@ private fun ShowDialogs(
     vitalsViewModel: VitalsViewModel, navController: NavController, scope: CoroutineScope
 ) {
     if (vitalsViewModel.showAddToQueueDialog) {
-        CustomDialog(title = if (vitalsViewModel.appointment != null) stringResource(id = R.string.patient_arrived_question) else stringResource(
-            id = R.string.add_to_queue_question
-        ),
+        CustomDialog(
+            title = if (vitalsViewModel.appointment != null) stringResource(id = R.string.patient_arrived_question) else stringResource(
+                id = R.string.add_to_queue_question
+            ),
             text = stringResource(id = R.string.add_to_queue_vital_dialog_description),
             dismissBtnText = stringResource(id = R.string.dismiss),
             confirmBtnText = if (vitalsViewModel.appointment != null) stringResource(id = R.string.mark_arrived) else stringResource(
@@ -364,7 +365,7 @@ private fun ShowDialogs(
 
 
 @Composable
-fun VitalsTrendGraph(vitalsViewModel: VitalsViewModel, modifier: Modifier = Modifier) {
+private fun VitalsTrendGraph(vitalsViewModel: VitalsViewModel, modifier: Modifier = Modifier) {
     val list by vitalsViewModel._vitals.collectAsState()
 
     if (list.filter { it.weight != null }
@@ -403,7 +404,7 @@ fun VitalsTrendGraph(vitalsViewModel: VitalsViewModel, modifier: Modifier = Modi
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun ShowTrendGraphCard(
+private fun ShowTrendGraphCard(
     modifier: Modifier,
     vitalsViewModel: VitalsViewModel,
     list: List<VitalLocal>
@@ -442,8 +443,10 @@ fun ShowTrendGraphCard(
                 .padding(start = 16.dp, end = 10.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            AnimatedVisibility(visible = list.filter { it.weight != null }
-                .groupBy { it.createdOn.formatDateToDayMonth() }.keys.size > 1) {
+            AnimatedVisibility(
+                visible = list
+                    .groupBy { it.createdOn.formatDateToDayMonth() }.keys.size > 1
+            ) {
                 CustomChip(
                     idSelected = vitalsViewModel.isWeightSelected,
                     label = VitalsTrendEnum.Weight.name
@@ -536,13 +539,9 @@ fun ShowTrendGraphCard(
                         isGlucoseSelected = false
                         isBPSelected = true
                     }
-
                 }
             }
-
         }
-
-
         AnimatedVisibility(vitalsViewModel.isGlucoseSelected) {
             GraphLegendGroup(
                 legendList = listOf(
@@ -567,10 +566,11 @@ fun ShowTrendGraphCard(
         }
 
         if (!vitalsViewModel.isGlucoseSelected && (vitalsViewModel.isWeightSelected || vitalsViewModel.isHRSelected || vitalsViewModel.isRRSelected || vitalsViewModel.isSpO2Selected || vitalsViewModel.isBPSelected)) {
-            LineChartView(modifier = modifier
-                .fillMaxWidth()
-                .padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 16.dp)
-                .height(200.dp),
+            LineChartView(
+                modifier = modifier
+                    .fillMaxWidth()
+                    .padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 16.dp)
+                    .height(200.dp),
                 entries1 = getChartEntries(list, vitalsViewModel),
                 entries2 = getChartEntries2(list, vitalsViewModel),
                 labels = getLabels(vitalsViewModel, list),
@@ -578,10 +578,11 @@ fun ShowTrendGraphCard(
             )
             Timber.d("List : ${list.map { it.createdOn.formatDateToDayMonth() }}")
         } else if (vitalsViewModel.isGlucoseSelected) {
-            LineChartViewGlucose(modifier = modifier
-                .fillMaxWidth()
-                .padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 16.dp)
-                .height(200.dp),
+            LineChartViewGlucose(
+                modifier = modifier
+                    .fillMaxWidth()
+                    .padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 16.dp)
+                    .height(200.dp),
                 entriesRandom = getChartEntries2(list, vitalsViewModel),
                 entriesFasting = getChartEntries(list, vitalsViewModel),
                 labels = getLabels(vitalsViewModel, list)
@@ -592,7 +593,7 @@ fun ShowTrendGraphCard(
 
 }
 
-fun getLabels(vitalsViewModel: VitalsViewModel, list: List<VitalLocal>): List<String> {
+private fun getLabels(vitalsViewModel: VitalsViewModel, list: List<VitalLocal>): List<String> {
     return if (!vitalsViewModel.isBPSelected) {
         (list.map { it.createdOn }).distinct().sorted().map { it.formatDateToDayMonth() }.distinct()
     } else {
@@ -604,13 +605,13 @@ fun getLabels(vitalsViewModel: VitalsViewModel, list: List<VitalLocal>): List<St
     }
 }
 
-fun getBPListSize(list: List<VitalLocal>, vitalsViewModel: VitalsViewModel): Int {
+private fun getBPListSize(list: List<VitalLocal>, vitalsViewModel: VitalsViewModel): Int {
     return list.filter { it.bpSystolic != null }
         .groupBy { it.createdOn.formatDateToDayMonth() }.keys.size + vitalsViewModel.previousRecords.groupBy { it.createdOn.formatDateToDayMonth() }.keys.size
 }
 
 @Composable
-fun GraphLegendGroup(legendList: List<Pair<String, Color>>) {
+private fun GraphLegendGroup(legendList: List<Pair<String, Color>>) {
     Column(modifier = Modifier.padding(start = 16.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             // Iterate through each legend item (text and color pair)
@@ -624,7 +625,7 @@ fun GraphLegendGroup(legendList: List<Pair<String, Color>>) {
 }
 
 @Composable
-fun IndicatorWithText(color: Color, text: String) {
+private fun IndicatorWithText(color: Color, text: String) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         // Circle indicator
         Box(
@@ -649,12 +650,16 @@ private fun String.capitalizeFirstLetter(): String {
     return this.lowercase().replaceFirstChar { it.uppercaseChar() }
 }
 
-fun getChartEntries(list: List<VitalLocal>, vitalsViewModel: VitalsViewModel): List<Entry>? {
+private fun getChartEntries(
+    list: List<VitalLocal>,
+    vitalsViewModel: VitalsViewModel
+): List<Entry>? {
 
     return when {
         vitalsViewModel.isWeightSelected -> {
             getEntries(list) { it.weight?.toFloat() }
         }
+
         vitalsViewModel.isHRSelected -> {
             getEntries(list) { it.heartRate?.toFloat() }
         }
@@ -679,7 +684,8 @@ fun getChartEntries(list: List<VitalLocal>, vitalsViewModel: VitalsViewModel): L
         }
 
         vitalsViewModel.isBPSelected -> {
-            getCombinedEntries(vitalList = list,
+            getCombinedEntries(
+                vitalList = list,
                 cvdList = vitalsViewModel.previousRecords,
                 vitalValueSelector = { it.bpSystolic?.toFloat() },
                 cvdValueSelector = { it.bpSystolic.toFloat() })
@@ -693,7 +699,6 @@ fun getChartEntries(list: List<VitalLocal>, vitalsViewModel: VitalsViewModel): L
 }
 
 
-
 fun getChartEntries2(list: List<VitalLocal>, vitalsViewModel: VitalsViewModel): List<Entry>? {
 
     return if (vitalsViewModel.isGlucoseSelected) {
@@ -705,7 +710,8 @@ fun getChartEntries2(list: List<VitalLocal>, vitalsViewModel: VitalsViewModel): 
             else it.bloodGlucose?.toFloat()
         }
     } else if (vitalsViewModel.isBPSelected) {
-        getCombinedEntries(vitalList = list,
+        getCombinedEntries(
+            vitalList = list,
             cvdList = vitalsViewModel.previousRecords,
             vitalValueSelector = { it.bpDiastolic?.toFloat() },
             cvdValueSelector = { it.bpDiastolic.toFloat() })
@@ -807,9 +813,6 @@ private fun getCombinedEntries(
 }
 
 
-
-
-
 @Composable
 fun VitalsCardLayout(
     modifier: Modifier = Modifier, vital: VitalLocal, context: Context
@@ -846,11 +849,11 @@ fun VitalsCardLayout(
             )
             VitalCardItem(
                 title = stringResource(id = R.string.weight),
-                value = if (vital.weight != null) "${vital.weight} ${
+                value = "${vital.weight} ${
                     stringResource(
                         id = R.string.kg
                     ).lowercase()
-                }" else stringResource(id = R.string.dashes)
+                }"
             )
             VitalCardItem(
                 title = stringResource(R.string.hear_rate_min),
@@ -888,7 +891,7 @@ fun VitalsCardLayout(
 }
 
 @Composable
-fun CVDRecordCardLayout(
+private fun CVDRecordCardLayout(
     modifier: Modifier = Modifier, cvdResponse: CVDResponse
 ) {
 
@@ -930,7 +933,11 @@ fun CVDRecordCardLayout(
                         .height(16.dp)
                         .width(8.dp)
                 )
-                CustomChip(idSelected = false, label = "CVD record", color = MaterialTheme.colorScheme.onSurfaceVariant) {
+                CustomChip(
+                    idSelected = false,
+                    label = "CVD record",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                ) {
 
                 }
             }
@@ -959,21 +966,20 @@ fun CVDRecordCardLayout(
             )
             VitalCardItem(
                 title = stringResource(id = R.string.weight),
-                value = if (cvdResponse.weight != null) "${cvdResponse.weight} ${
+                value = "${cvdResponse.weight} ${
                     stringResource(
                         id = R.string.kg
                     ).lowercase()
-                }" else stringResource(id = R.string.dashes)
+                }"
             )
 
             VitalCardItem(
                 title = stringResource(R.string.bmi_label),
-                value = cvdResponse.bmi?.toInt()?.toString() ?: stringResource(id = R.string.dashes)
+                value = cvdResponse.bmi.toString()
             )
             Spacer(modifier = Modifier.height(16.dp))
 
         }
-
     }
 }
 
@@ -1026,18 +1032,18 @@ fun setCVDHeight(cvdResponse: CVDResponse): String {
 }
 
 @Composable
-fun ViewMoreItems(vital: VitalLocal, context: Context) {
+private fun ViewMoreItems(vital: VitalLocal, context: Context) {
     Column {
         VitalCardItem(
             title = stringResource(R.string.eye_test_result_left),
-            value = if (vital.leftEye != null) vital.leftEye.toInt()
+            value = if (vital.leftEye != null) vital.leftEye
                 .getEyeTypeName(context) else stringResource(
                 id = R.string.dashes
             )
         )
         VitalCardItem(
             title = stringResource(R.string.eye_test_result_right),
-            value = if (vital.rightEye != null) vital.rightEye.toInt()
+            value = if (vital.rightEye != null) vital.rightEye
                 .getEyeTypeName(context) else stringResource(
                 id = R.string.dashes
             )
@@ -1084,7 +1090,7 @@ fun ViewMoreItems(vital: VitalLocal, context: Context) {
 }
 
 @Composable
-fun VitalCardItem(modifier: Modifier = Modifier, title: String, value: String) {
+private fun VitalCardItem(modifier: Modifier = Modifier, title: String, value: String) {
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -1107,6 +1113,7 @@ fun VitalCardItem(modifier: Modifier = Modifier, title: String, value: String) {
         )
     }
 }
+
 private fun Int.getEyeTypeName(context: Context): String {
     return when (this) {
         VitalsEyeEnum.NORMAL_VISION.number -> VitalsEyeEnum.NORMAL_VISION.value.extractStringInBrackets()
@@ -1170,5 +1177,4 @@ private fun showChipSelection(vitalsViewModel: VitalsViewModel, list: List<Vital
 @Composable
 private fun VitalScreenPreview() {
     VitalsScreen(rememberNavController())
-
 }
