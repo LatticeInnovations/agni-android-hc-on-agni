@@ -409,12 +409,9 @@ private fun VitalsTrendGraph(
 ) {
     val list by vitalsViewModel._vitals.collectAsState()
 
-    if (list
-            .groupBy { it.appUpdatedDate.formatDateToDayMonth() }.keys.size > 1 || list.filter { it.bloodGlucose != null }
-            .groupBy { it.appUpdatedDate.formatDateToDayMonth() }.keys.size > 1 || getCVDAndVitalListSize(
-            list,
-            vitalsViewModel
-        ) > 1
+    if (
+        list.filter { it.bloodGlucose != null }.groupBy { it.appUpdatedDate.formatDateToDayMonth() }.keys.size > 1
+        || vitalsViewModel.previousRecords.groupBy { it.createdOn.formatDateToDayMonth() }.keys.size > 1
     ) {
         ShowTrendGraphCard(modifier, vitalsViewModel, list.reversed())
     } else {
@@ -479,7 +476,8 @@ private fun ShowTrendGraphCard(
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             AnimatedVisibility(
-                visible = getCVDAndVitalListSize(list, vitalsViewModel) > 1
+                visible = vitalsViewModel.previousRecords
+                    .groupBy { it.createdOn.formatDateToDayMonth() }.keys.size > 1
             ) {
                 CustomChip(
                     idSelected = vitalsViewModel.isWeightSelected,
@@ -506,8 +504,10 @@ private fun ShowTrendGraphCard(
                     }
                 }
             }
-            Timber.d("SIZE: ${getCVDAndVitalListSize(list, vitalsViewModel)}")
-            AnimatedVisibility(visible = getCVDAndVitalListSize(list, vitalsViewModel) > 1) {
+            AnimatedVisibility(
+                visible = vitalsViewModel.previousRecords
+                    .groupBy { it.createdOn.formatDateToDayMonth() }.keys.size > 1
+            ) {
                 CustomChip(
                     idSelected = vitalsViewModel.isBPSelected, label = VitalsTrendEnum.BP.name
                 ) {
@@ -579,14 +579,6 @@ private fun getLabels(vitalsViewModel: VitalsViewModel, list: List<VitalResponse
     }
 }
 
-private fun getCVDAndVitalListSize(
-    list: List<VitalResponse>,
-    vitalsViewModel: VitalsViewModel
-): Int {
-    return list
-        .groupBy { it.appUpdatedDate.formatDateToDayMonth() }.keys.size + vitalsViewModel.previousRecords.groupBy { it.createdOn.formatDateToDayMonth() }.keys.size
-}
-
 @Composable
 private fun GraphLegendGroup(legendList: List<Pair<String, Color>>) {
     Column(modifier = Modifier.padding(start = 16.dp)) {
@@ -629,7 +621,10 @@ private fun getChartEntries(
 
     return when {
         vitalsViewModel.isWeightSelected -> {
-            getEntriesFromCVD(vitalsViewModel.previousRecords) { it.weight.toFloat() }
+            getEntriesFromCVD(vitalsViewModel.previousRecords) {
+                if (it.weightUnit == vitalsViewModel.kg) it.weight.toFloat()
+                else it.weight.toFloat().times(0.45359236f)
+            }
         }
 
         vitalsViewModel.isGlucoseSelected -> {
@@ -670,7 +665,6 @@ private fun getChartEntries2(
         getEntriesFromCVD(
             vitalsViewModel.previousRecords
         ) { it.bpDiastolic.toFloat() }
-
     } else {
         null
     }
@@ -1067,11 +1061,11 @@ private fun setCVDHeight(cvdResponse: CVDResponse): String {
 
 private fun showChipSelection(vitalsViewModel: VitalsViewModel, list: List<VitalResponse>) {
     when {
-        getCVDAndVitalListSize(list, vitalsViewModel) > 1 -> {
+        vitalsViewModel.previousRecords.groupBy { it.createdOn.formatDateToDayMonth() }.keys.size > 1 -> {
             vitalsViewModel.isWeightSelected = true
         }
 
-        list.filter { it.bloodGlucose != null && it.bloodGlucose.type == BGEnum.RANDOM.value || it.bloodGlucose?.type == BGEnum.FASTING.value }
+        list.filter { it.bloodGlucose != null }
             .groupBy { it.appUpdatedDate.formatDateToDayMonth() }.keys.size > 1 -> {
             vitalsViewModel.isGlucoseSelected = true
             vitalsViewModel.isWeightSelected = false

@@ -71,6 +71,7 @@ class VitalsViewModel @Inject constructor(
     var selectedOption by mutableStateOf(ALL)
 
     var previousRecords by mutableStateOf(listOf<CVDResponse>())
+    val kg = "kg"
 
     internal fun getAppointmentInfo(
         callback: () -> Unit
