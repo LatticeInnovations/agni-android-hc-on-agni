@@ -1,5 +1,6 @@
 package com.heartcare.agni.data.server.api
 
+import androidx.annotation.Keep
 import com.heartcare.agni.base.server.BaseResponse
 import com.heartcare.agni.data.server.model.file.request.FilesRequest
 import com.heartcare.agni.data.server.model.file.response.FilesResponse
@@ -12,7 +13,7 @@ import retrofit2.http.POST
 import retrofit2.http.Part
 import retrofit2.http.Streaming
 
-
+@Keep
 interface FileUploadApiService {
 
     @Streaming
