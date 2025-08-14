@@ -183,8 +183,8 @@ private fun TobaccoCessationQuestions(viewModel: AddTobaccoCessationViewModel) {
                 options = tobaccoUsageList(),
                 selected = viewModel.tobaccoUse
             ) { selected ->
-                viewModel.tobaccoUse = if (selected == viewModel.tobaccoUse) "" else selected
-                if (viewModel.tobaccoUse.isBlank() || viewModel.tobaccoUse == TobaccoUsage.NO_I_DO_NOT_USE_TOBACCO.display) {
+                viewModel.tobaccoUse = selected
+                if (viewModel.tobaccoUse == TobaccoUsage.NO_I_DO_NOT_USE_TOBACCO.display) {
                     viewModel.resetBriefAdviceQuestions()
                 }
             }
@@ -208,8 +208,7 @@ private fun BriefAdviceQuestion(viewModel: AddTobaccoCessationViewModel) {
             options = YesNoEnum.listOfDisplay(),
             selected = viewModel.briefAdvice
         ) { selected ->
-            viewModel.briefAdvice = if (selected == viewModel.briefAdvice) "" else selected
-            if (viewModel.briefAdvice.isBlank()) viewModel.resetAssessedStatusQuestions()
+            viewModel.briefAdvice = selected
         }
 
         AnimatedVisibility(viewModel.briefAdvice.isNotBlank()) {
@@ -230,8 +229,8 @@ private fun AssessedStatusQuestion(viewModel: AddTobaccoCessationViewModel) {
             options = YesNoEnum.listOfDisplay(),
             selected = viewModel.assessedStatus
         ) { selected ->
-            viewModel.assessedStatus = if (selected == viewModel.assessedStatus) "" else selected
-            if (viewModel.assessedStatus.isBlank() || viewModel.assessedStatus == YesNoEnum.NO.display) {
+            viewModel.assessedStatus = selected
+            if (viewModel.assessedStatus == YesNoEnum.NO.display) {
                 viewModel.resetAssistToQuitQuestions()
             }
         }
@@ -254,8 +253,8 @@ private fun AssistToQuitQuestion(viewModel: AddTobaccoCessationViewModel) {
             options = quitPlanList(),
             selected = viewModel.assistQuit
         ) { selected ->
-            viewModel.assistQuit = if (selected == viewModel.assistQuit) "" else selected
-            if (viewModel.assistQuit.isBlank() ||
+            viewModel.assistQuit = selected
+            if (
                 viewModel.assistQuit == QuitPlan.NO.display ||
                 viewModel.assistQuit == QuitPlan.NO_REFER_TO_INTENSIVE_COUNSELLING.display
             ) {
@@ -300,7 +299,7 @@ private fun PharmacotherapyQuestion(viewModel: AddTobaccoCessationViewModel) {
         options = pharmacotherapyList(),
         selected = viewModel.pharmacotherapy
     ) { selected ->
-        viewModel.pharmacotherapy = if (selected == viewModel.pharmacotherapy) "" else selected
+        viewModel.pharmacotherapy = selected
     }
 }
 

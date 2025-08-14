@@ -82,7 +82,7 @@ class AddVitalsViewModel @Inject constructor(
 
     var serumPotassium by mutableStateOf("")
     var serumPotassiumError by mutableStateOf(false)
-    val serumPotassiumUnits = listOf("mEq/L", "mmol/L")
+    val serumPotassiumUnits = listOf("mEq/L", "µmol/L")
     var selectedSerumPotassiumUnit by mutableIntStateOf(0)
 
     var urineProtein by mutableStateOf("")
