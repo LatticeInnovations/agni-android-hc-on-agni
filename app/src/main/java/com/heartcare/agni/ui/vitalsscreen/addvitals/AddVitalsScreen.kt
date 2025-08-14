@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
@@ -23,6 +24,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -405,24 +407,34 @@ private fun updateHipCircumference(
 private fun HbA1cField(
     viewModel: AddVitalsViewModel
 ) {
-    CustomTextField(
+    OutlinedTextField(
         value = viewModel.hbA1c,
-        label = stringResource(R.string.HbA1c),
-        weight = 1f,
-        maxLength = 5,
-        isError = viewModel.hbA1cError,
-        error = stringResource(R.string.value_in_range_with_unit, "2.0", "20.0", "%"),
-        keyboardType = KeyboardType.Number,
-        keyboardCapitalization = KeyboardCapitalization.None,
-        updateValue = { value ->
-            if (value.isBlank() || value.matches(onlyNumbersWithDecimal)) {
+        onValueChange = { value ->
+            if (value.isBlank() || (value.matches(onlyNumbersWithDecimal) && value.length < 5)) {
                 viewModel.hbA1c = value
                 viewModel.hbA1cError =
                     viewModel.hbA1c.isNotBlank() &&
                             viewModel.hbA1c.toDouble() !in 2.0..20.0
             }
         },
-        modifier = Modifier.padding(horizontal = 16.dp)
+        label = {
+            Text(stringResource(R.string.HbA1c))
+        },
+        isError = viewModel.hbA1cError,
+        keyboardOptions = KeyboardOptions(
+            keyboardType = KeyboardType.Number
+        ),
+        supportingText = if (viewModel.hbA1cError){
+            {
+                Text(stringResource(R.string.value_in_range_with_unit, "2.0", "20.0", "%"))
+            }
+        } else null,
+        trailingIcon = {
+            Text("%")
+        },
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
     )
 }
 
