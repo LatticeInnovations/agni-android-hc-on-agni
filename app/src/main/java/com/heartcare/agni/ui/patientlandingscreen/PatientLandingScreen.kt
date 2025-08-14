@@ -51,7 +51,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.heartcare.agni.R
 import com.heartcare.agni.data.local.enums.NationalIdUse
-import com.heartcare.agni.data.local.enums.PhotoUploadTypeEnum
 import com.heartcare.agni.data.local.enums.UserRoleEnum
 import com.heartcare.agni.data.server.model.patient.PatientResponse
 import com.heartcare.agni.navigation.Screen
@@ -62,13 +61,11 @@ import com.heartcare.agni.utils.constants.IdentificationConstants.NATIONAL_ID
 import com.heartcare.agni.utils.constants.NavControllerConstants.PATIENT
 import com.heartcare.agni.utils.constants.NavControllerConstants.PATIENT_SAVED
 import com.heartcare.agni.utils.constants.NavControllerConstants.SELECTED_INDEX
-import com.heartcare.agni.utils.constants.PhotoUploadViewType.PHOTO_VIEW_TYPE
 import com.heartcare.agni.utils.converters.responseconverter.NameConverter
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toAge
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toTimeInMilli
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import timber.log.Timber
 
 @Composable
 fun PatientLandingScreen(
@@ -90,11 +87,7 @@ fun PatientLandingScreen(
                 navController.previousBackStackEntry?.savedStateHandle?.get<Int>(
                     SELECTED_INDEX
                 )!!
-            viewModel.patient?.fhirId?.let { patientFhirId ->
-                viewModel.downloadPrescriptions(
-                    patientFhirId
-                )
-            }
+            viewModel.syncData()
             if (navController.previousBackStackEntry?.savedStateHandle?.get<Boolean>(PATIENT_SAVED) == true) {
                 navController.previousBackStackEntry?.savedStateHandle?.remove<Boolean>(
                     PATIENT_SAVED
