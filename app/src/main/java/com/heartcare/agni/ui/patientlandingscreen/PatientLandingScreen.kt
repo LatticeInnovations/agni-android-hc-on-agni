@@ -268,19 +268,21 @@ private fun CardComposableList(
                 navController.navigate(Screen.Appointments.route)
             }
         )
-        CardComposable(
-            viewModel,
-            stringResource(id = R.string.vital),
-            R.drawable.vital_signs,
-            null,
-            onClick = {
-                navController.currentBackStackEntry?.savedStateHandle?.set(
-                    PATIENT,
-                    viewModel.patient
-                )
-                navController.navigate(Screen.VitalsScreen.route)
-            }
-        )
+        if (viewModel.user.accountGroupId != UserRoleEnum.PHARMACIST.code) {
+            CardComposable(
+                viewModel,
+                stringResource(id = R.string.vital),
+                R.drawable.vital_signs,
+                null,
+                onClick = {
+                    navController.currentBackStackEntry?.savedStateHandle?.set(
+                        PATIENT,
+                        viewModel.patient
+                    )
+                    navController.navigate(Screen.VitalsScreen.route)
+                }
+            )
+        }
 
         /**
         CardComposable(
