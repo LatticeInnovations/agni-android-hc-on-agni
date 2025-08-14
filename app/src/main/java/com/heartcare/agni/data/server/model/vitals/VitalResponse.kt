@@ -16,7 +16,7 @@ data class VitalResponse(
     val eyeExamination: String?,
     val abdominalCircumference: UnitValue?,
     val hipCircumference: UnitValue?,
-    val hbA1cPercentage: Int?,
+    val hbA1cPercentage: Double?,
     val serumCreatinine: UnitValue?,
     val serumPotassium: UnitValue?,
     val urineProtein: String?,

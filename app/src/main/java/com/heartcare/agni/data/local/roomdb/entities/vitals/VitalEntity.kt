@@ -39,7 +39,7 @@ data class VitalEntity(
 
     @Embedded(prefix = "hipCircumference_")
     val hipCircumference: Measurement?,
-    val hbA1cPercentage: Int?,
+    val hbA1cPercentage: Double?,
 
     @Embedded(prefix = "serumCreatinine_")
     val serumCreatinine: Measurement?,

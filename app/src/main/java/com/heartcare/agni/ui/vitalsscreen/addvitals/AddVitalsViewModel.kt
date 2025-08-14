@@ -183,7 +183,7 @@ class AddVitalsViewModel @Inject constructor(
                     value = hipCircumference.toDouble(),
                     type = null
                 ),
-            hbA1cPercentage = hbA1c.ifBlank { null }?.toInt(),
+            hbA1cPercentage = hbA1c.ifBlank { null }?.toDouble(),
             serumCreatinine = if (serumCreatinine.isBlank()) null else
                 UnitValue(
                     unit = serumCreatinineUnits[selectedSerumCreatinineUnit],

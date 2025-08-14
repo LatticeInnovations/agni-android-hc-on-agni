@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "240bab21e83829813e97b24f23b1f173",
+    "identityHash": "eeb94dfd5c31866e8bbe20fbe1b649a0",
     "entities": [
       {
         "tableName": "PatientEntity",
@@ -1343,7 +1343,7 @@
       },
       {
         "tableName": "VitalEntity",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`uuid` TEXT NOT NULL, `fhirId` TEXT, `patientId` TEXT NOT NULL, `appointmentId` TEXT NOT NULL, `appUpdatedDate` INTEGER NOT NULL, `practitionerName` TEXT, `footExamination` TEXT, `eyeExamination` TEXT, `hbA1cPercentage` INTEGER, `urineProtein` TEXT, `urineKetones` TEXT, `others` TEXT, `bloodGlucose_value` REAL, `bloodGlucose_unit` TEXT, `bloodGlucose_type` TEXT, `abdominalCircumference_value` REAL, `abdominalCircumference_unit` TEXT, `hipCircumference_value` REAL, `hipCircumference_unit` TEXT, `serumCreatinine_value` REAL, `serumCreatinine_unit` TEXT, `serumPotassium_value` REAL, `serumPotassium_unit` TEXT, PRIMARY KEY(`uuid`), FOREIGN KEY(`patientId`) REFERENCES `PatientEntity`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`uuid` TEXT NOT NULL, `fhirId` TEXT, `patientId` TEXT NOT NULL, `appointmentId` TEXT NOT NULL, `appUpdatedDate` INTEGER NOT NULL, `practitionerName` TEXT, `footExamination` TEXT, `eyeExamination` TEXT, `hbA1cPercentage` REAL, `urineProtein` TEXT, `urineKetones` TEXT, `others` TEXT, `bloodGlucose_value` REAL, `bloodGlucose_unit` TEXT, `bloodGlucose_type` TEXT, `abdominalCircumference_value` REAL, `abdominalCircumference_unit` TEXT, `hipCircumference_value` REAL, `hipCircumference_unit` TEXT, `serumCreatinine_value` REAL, `serumCreatinine_unit` TEXT, `serumPotassium_value` REAL, `serumPotassium_unit` TEXT, PRIMARY KEY(`uuid`), FOREIGN KEY(`patientId`) REFERENCES `PatientEntity`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION )",
         "fields": [
           {
             "fieldPath": "uuid",
@@ -1392,7 +1392,7 @@
           {
             "fieldPath": "hbA1cPercentage",
             "columnName": "hbA1cPercentage",
-            "affinity": "INTEGER"
+            "affinity": "REAL"
           },
           {
             "fieldPath": "urineProtein",
@@ -3566,7 +3566,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '240bab21e83829813e97b24f23b1f173')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'eeb94dfd5c31866e8bbe20fbe1b649a0')"
     ]
   }
 }
