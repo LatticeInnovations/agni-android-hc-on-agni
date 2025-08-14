@@ -131,7 +131,7 @@ fun PatientRegistrationStepOne(
                 keyboardType = KeyboardType.Text,
                 keyboardCapitalization = KeyboardCapitalization.Words
             ) {
-                if (it.trim().matches(nameRegex) || it.isEmpty()) viewModel.lastName = it.trim()
+                if (it.matches(nameRegex) || it.isEmpty()) viewModel.lastName = it
                 viewModel.isLastNameValid = viewModel.lastName.isBlank()
             }
             CustomTextFieldWithLength(
@@ -145,7 +145,7 @@ fun PatientRegistrationStepOne(
                 keyboardType = KeyboardType.Text,
                 keyboardCapitalization = KeyboardCapitalization.Words
             ) {
-                if (it.trim().matches(nameRegex) || it.isEmpty()) viewModel.firstName = it.trim()
+                if (it.matches(nameRegex) || it.isEmpty()) viewModel.firstName = it
                 viewModel.isFirstNameValid = viewModel.firstName.isBlank()
             }
             Column(
@@ -203,7 +203,7 @@ fun PatientRegistrationStepOne(
                 keyboardType = KeyboardType.Text,
                 keyboardCapitalization = KeyboardCapitalization.Words
             ) {
-                if (it.trim().matches(nameRegex) || it.isEmpty()) viewModel.motherName = it.trim()
+                if (it.matches(nameRegex) || it.isEmpty()) viewModel.motherName = it
                 viewModel.isMotherNameValid = viewModel.motherName.isBlank()
             }
 
@@ -218,7 +218,7 @@ fun PatientRegistrationStepOne(
                 keyboardType = KeyboardType.Text,
                 keyboardCapitalization = KeyboardCapitalization.Words
             ) {
-                if (it.trim().matches(nameRegex) || it.isEmpty()) viewModel.fatherName = it.trim()
+                if (it.matches(nameRegex) || it.isEmpty()) viewModel.fatherName = it
             }
 
             CustomTextFieldWithLength(
@@ -232,14 +232,14 @@ fun PatientRegistrationStepOne(
                 keyboardType = KeyboardType.Text,
                 keyboardCapitalization = KeyboardCapitalization.Words
             ) {
-                if (it.trim().matches(nameRegex) || it.isEmpty()) viewModel.spouseName = it.trim()
+                if (it.matches(nameRegex) || it.isEmpty()) viewModel.spouseName = it
             }
         }
         Button(
             onClick = {
                 patientRegister.run {
-                    firstName = viewModel.firstName.capitalizeFirst()
-                    lastName = viewModel.lastName.capitalizeFirst()
+                    firstName = viewModel.firstName.capitalizeFirst().trim()
+                    lastName = viewModel.lastName.capitalizeFirst().trim()
                     dobAgeSelector = viewModel.dobAgeSelector
                     dobDay = viewModel.dobDay
                     dobMonth = viewModel.dobMonth
@@ -251,9 +251,9 @@ fun PatientRegistrationStepOne(
                     gender = viewModel.gender
                     isPersonDeceased = viewModel.isPersonDeceased
                     personDeceasedReason = viewModel.selectedDeceasedReason
-                    motherName = viewModel.motherName.capitalizeFirst()
-                    fatherName = viewModel.fatherName.capitalizeFirst()
-                    spouseName = viewModel.spouseName.capitalizeFirst()
+                    motherName = viewModel.motherName.capitalizeFirst().trim()
+                    fatherName = viewModel.fatherName.capitalizeFirst().trim()
+                    spouseName = viewModel.spouseName.capitalizeFirst().trim()
                 }
                 patientRegistrationViewModel.currentStep = 2
             },
