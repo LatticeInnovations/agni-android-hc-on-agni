@@ -510,7 +510,7 @@ private fun SerumPotassiumField(
             if (viewModel.selectedSerumPotassiumUnit == 0)
                 stringResource(R.string.value_in_range_with_unit, "0.0", "50.0", "mEq/L")
             else
-                stringResource(R.string.value_in_range_with_unit, "0.0", "50.0", "mmol/LL")
+                stringResource(R.string.value_in_range_with_unit, "0.0", "50.0", "µmol/L")
         } else null,
         label = stringResource(R.string.serum_potassium),
         selectedUnit = viewModel.serumPotassiumUnits[viewModel.selectedSerumPotassiumUnit],
