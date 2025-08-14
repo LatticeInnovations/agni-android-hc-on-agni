@@ -3,7 +3,6 @@ package com.heartcare.agni.data.local.repository.generic
 import com.heartcare.agni.data.local.enums.GenericTypeEnum
 import com.heartcare.agni.data.local.enums.SyncType
 import com.heartcare.agni.data.local.model.symdiag.SymptomsAndDiagnosisData
-import com.heartcare.agni.data.local.model.vital.VitalLocal
 import com.heartcare.agni.data.server.model.allergy.AllergyResponse
 import com.heartcare.agni.data.server.model.cvd.CVDResponse
 import com.heartcare.agni.data.server.model.dispense.request.MedicineDispenseRequest
@@ -21,6 +20,7 @@ import com.heartcare.agni.data.server.model.scheduleandappointment.appointment.A
 import com.heartcare.agni.data.server.model.scheduleandappointment.schedule.ScheduleResponse
 import com.heartcare.agni.data.server.model.tobacco.TobaccoCessationResponse
 import com.heartcare.agni.data.server.model.vaccination.ImmunizationResponse
+import com.heartcare.agni.data.server.model.vitals.VitalResponse
 import com.heartcare.agni.utils.builders.UUIDBuilder
 
 /**
@@ -158,7 +158,8 @@ interface GenericRepository {
     ): Long
 
     suspend fun insertVital(
-        vitalLocal: VitalLocal, uuid: String = UUIDBuilder.generateUUID()
+        vitalResponse: VitalResponse,
+        uuid: String = UUIDBuilder.generateUUID()
     ): Long
 
     suspend fun insertOrUpdateVitalPatchEntity(

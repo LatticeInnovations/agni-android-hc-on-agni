@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "3aa83d8106c8263e4188ed7a87689f1e",
+    "identityHash": "eeb94dfd5c31866e8bbe20fbe1b649a0",
     "entities": [
       {
         "tableName": "PatientEntity",
@@ -1343,11 +1343,11 @@
       },
       {
         "tableName": "VitalEntity",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`vitalUuid` TEXT NOT NULL, `fhirId` TEXT, `patientId` TEXT, `appointmentId` TEXT NOT NULL, `bloodGlucose` TEXT, `bloodGlucoseType` TEXT, `bloodGlucoseUnit` TEXT, `bpDiastolic` TEXT, `bpSystolic` TEXT, `createdOn` INTEGER NOT NULL, `eyeTestType` TEXT, `heartRate` TEXT, `heightCm` TEXT, `heightFt` TEXT, `heightInch` TEXT, `leftEye` INTEGER, `respRate` TEXT, `rightEye` INTEGER, `spo2` TEXT, `temp` TEXT, `tempUnit` TEXT, `weight` TEXT, `practitionerName` TEXT, `cholesterol` REAL, `cholesterolUnit` TEXT, PRIMARY KEY(`vitalUuid`), FOREIGN KEY(`patientId`) REFERENCES `PatientEntity`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`uuid` TEXT NOT NULL, `fhirId` TEXT, `patientId` TEXT NOT NULL, `appointmentId` TEXT NOT NULL, `appUpdatedDate` INTEGER NOT NULL, `practitionerName` TEXT, `footExamination` TEXT, `eyeExamination` TEXT, `hbA1cPercentage` REAL, `urineProtein` TEXT, `urineKetones` TEXT, `others` TEXT, `bloodGlucose_value` REAL, `bloodGlucose_unit` TEXT, `bloodGlucose_type` TEXT, `abdominalCircumference_value` REAL, `abdominalCircumference_unit` TEXT, `hipCircumference_value` REAL, `hipCircumference_unit` TEXT, `serumCreatinine_value` REAL, `serumCreatinine_unit` TEXT, `serumPotassium_value` REAL, `serumPotassium_unit` TEXT, PRIMARY KEY(`uuid`), FOREIGN KEY(`patientId`) REFERENCES `PatientEntity`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION )",
         "fields": [
           {
-            "fieldPath": "vitalUuid",
-            "columnName": "vitalUuid",
+            "fieldPath": "uuid",
+            "columnName": "uuid",
             "affinity": "TEXT",
             "notNull": true
           },
@@ -1359,7 +1359,8 @@
           {
             "fieldPath": "patientId",
             "columnName": "patientId",
-            "affinity": "TEXT"
+            "affinity": "TEXT",
+            "notNull": true
           },
           {
             "fieldPath": "appointmentId",
@@ -1368,95 +1369,10 @@
             "notNull": true
           },
           {
-            "fieldPath": "bloodGlucose",
-            "columnName": "bloodGlucose",
-            "affinity": "TEXT"
-          },
-          {
-            "fieldPath": "bloodGlucoseType",
-            "columnName": "bloodGlucoseType",
-            "affinity": "TEXT"
-          },
-          {
-            "fieldPath": "bloodGlucoseUnit",
-            "columnName": "bloodGlucoseUnit",
-            "affinity": "TEXT"
-          },
-          {
-            "fieldPath": "bpDiastolic",
-            "columnName": "bpDiastolic",
-            "affinity": "TEXT"
-          },
-          {
-            "fieldPath": "bpSystolic",
-            "columnName": "bpSystolic",
-            "affinity": "TEXT"
-          },
-          {
-            "fieldPath": "createdOn",
-            "columnName": "createdOn",
+            "fieldPath": "appUpdatedDate",
+            "columnName": "appUpdatedDate",
             "affinity": "INTEGER",
             "notNull": true
-          },
-          {
-            "fieldPath": "eyeTestType",
-            "columnName": "eyeTestType",
-            "affinity": "TEXT"
-          },
-          {
-            "fieldPath": "heartRate",
-            "columnName": "heartRate",
-            "affinity": "TEXT"
-          },
-          {
-            "fieldPath": "heightCm",
-            "columnName": "heightCm",
-            "affinity": "TEXT"
-          },
-          {
-            "fieldPath": "heightFt",
-            "columnName": "heightFt",
-            "affinity": "TEXT"
-          },
-          {
-            "fieldPath": "heightInch",
-            "columnName": "heightInch",
-            "affinity": "TEXT"
-          },
-          {
-            "fieldPath": "leftEye",
-            "columnName": "leftEye",
-            "affinity": "INTEGER"
-          },
-          {
-            "fieldPath": "respRate",
-            "columnName": "respRate",
-            "affinity": "TEXT"
-          },
-          {
-            "fieldPath": "rightEye",
-            "columnName": "rightEye",
-            "affinity": "INTEGER"
-          },
-          {
-            "fieldPath": "spo2",
-            "columnName": "spo2",
-            "affinity": "TEXT"
-          },
-          {
-            "fieldPath": "temp",
-            "columnName": "temp",
-            "affinity": "TEXT"
-          },
-          {
-            "fieldPath": "tempUnit",
-            "columnName": "tempUnit",
-            "affinity": "TEXT"
-          },
-          {
-            "fieldPath": "weight",
-            "columnName": "weight",
-            "affinity": "TEXT"
           },
           {
             "fieldPath": "practitionerName",
@@ -1464,20 +1380,95 @@
             "affinity": "TEXT"
           },
           {
-            "fieldPath": "cholesterol",
-            "columnName": "cholesterol",
+            "fieldPath": "footExamination",
+            "columnName": "footExamination",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "eyeExamination",
+            "columnName": "eyeExamination",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "hbA1cPercentage",
+            "columnName": "hbA1cPercentage",
             "affinity": "REAL"
           },
           {
-            "fieldPath": "cholesterolUnit",
-            "columnName": "cholesterolUnit",
+            "fieldPath": "urineProtein",
+            "columnName": "urineProtein",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "urineKetones",
+            "columnName": "urineKetones",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "others",
+            "columnName": "others",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "bloodGlucose.value",
+            "columnName": "bloodGlucose_value",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "bloodGlucose.unit",
+            "columnName": "bloodGlucose_unit",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "bloodGlucose.type",
+            "columnName": "bloodGlucose_type",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "abdominalCircumference.value",
+            "columnName": "abdominalCircumference_value",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "abdominalCircumference.unit",
+            "columnName": "abdominalCircumference_unit",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "hipCircumference.value",
+            "columnName": "hipCircumference_value",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "hipCircumference.unit",
+            "columnName": "hipCircumference_unit",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "serumCreatinine.value",
+            "columnName": "serumCreatinine_value",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "serumCreatinine.unit",
+            "columnName": "serumCreatinine_unit",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "serumPotassium.value",
+            "columnName": "serumPotassium_value",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "serumPotassium.unit",
+            "columnName": "serumPotassium_unit",
             "affinity": "TEXT"
           }
         ],
         "primaryKey": {
           "autoGenerate": false,
           "columnNames": [
-            "vitalUuid"
+            "uuid"
           ]
         },
         "indices": [
@@ -3575,7 +3566,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '3aa83d8106c8263e4188ed7a87689f1e')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'eeb94dfd5c31866e8bbe20fbe1b649a0')"
     ]
   }
 }

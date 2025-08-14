@@ -12,7 +12,6 @@ import com.heartcare.agni.data.local.model.prescription.PrescriptionPhotoRespons
 import com.heartcare.agni.data.local.model.prescription.PrescriptionResponseLocal
 import com.heartcare.agni.data.local.model.relation.Relation
 import com.heartcare.agni.data.local.model.symdiag.SymptomsAndDiagnosisData
-import com.heartcare.agni.data.local.model.vital.VitalLocal
 import com.heartcare.agni.data.local.roomdb.dao.AppointmentDao
 import com.heartcare.agni.data.local.roomdb.dao.MedicationDao
 import com.heartcare.agni.data.local.roomdb.dao.PatientDao
@@ -63,6 +62,8 @@ import com.heartcare.agni.data.local.roomdb.entities.symptomsanddiagnosis.Sympto
 import com.heartcare.agni.data.local.roomdb.entities.symptomsanddiagnosis.SymptomsAndDiagnosisLocal
 import com.heartcare.agni.data.local.roomdb.entities.symptomsanddiagnosis.SymptomsEntity
 import com.heartcare.agni.data.local.roomdb.entities.tobacco.TobaccoCessationEntity
+import com.heartcare.agni.data.local.roomdb.entities.vitals.BloodGlucoseMeasurement
+import com.heartcare.agni.data.local.roomdb.entities.vitals.Measurement
 import com.heartcare.agni.data.local.roomdb.entities.vitals.VitalEntity
 import com.heartcare.agni.data.local.roomdb.views.PrescriptionDirectionAndMedicineView
 import com.heartcare.agni.data.server.api.PatientApiService
@@ -109,6 +110,7 @@ import com.heartcare.agni.data.server.model.symptomsanddiagnosis.SymptomsAndDiag
 import com.heartcare.agni.data.server.model.symptomsanddiagnosis.SymptomsAndDiagnosisResponse
 import com.heartcare.agni.data.server.model.symptomsanddiagnosis.SymptomsItem
 import com.heartcare.agni.data.server.model.tobacco.TobaccoCessationResponse
+import com.heartcare.agni.data.server.model.vitals.UnitValue
 import com.heartcare.agni.data.server.model.vitals.VitalResponse
 import com.heartcare.agni.utils.builders.UUIDBuilder
 import com.heartcare.agni.utils.converters.responseconverter.RelationConverter.getInverseRelation
@@ -773,63 +775,103 @@ internal fun CVDEntity.toCVDResponse(): CVDResponse {
     )
 }
 
-internal fun VitalEntity.toVitalLocal(): VitalLocal {
-    return VitalLocal(
-        vitalUuid = vitalUuid,
+internal fun VitalEntity.toVitalResponse(): VitalResponse {
+    return VitalResponse(
+        uuid = uuid,
         fhirId = fhirId,
         patientId = patientId,
         appointmentId = appointmentId,
-        bloodGlucose = bloodGlucose,
-        bloodGlucoseType = bloodGlucoseType,
-        bloodGlucoseUnit = bloodGlucoseUnit,
-        bpDiastolic = bpDiastolic,
-        bpSystolic = bpSystolic,
-        createdOn = createdOn,
-        eyeTestType = eyeTestType,
-        heartRate = heartRate,
-        heightCm = heightCm,
-        heightFt = heightFt,
-        heightInch = heightInch,
-        leftEye = leftEye,
-        respRate = respRate,
-        rightEye = rightEye,
-        spo2 = spo2,
-        temp = temp,
-        tempUnit = tempUnit,
-        weight = weight,
+        bloodGlucose = bloodGlucose?.run {
+            UnitValue(
+                unit = unit!!,
+                value = value!!,
+                type = type
+            )
+        },
+        appUpdatedDate = appUpdatedDate,
         practitionerName = practitionerName,
-        cholesterol = cholesterol,
-        cholesterolUnit = cholesterolUnit
+        footExamination = footExamination,
+        eyeExamination = eyeExamination,
+        abdominalCircumference = abdominalCircumference?.run {
+            UnitValue(
+                unit = unit!!,
+                value = value!!,
+                type = null,
+            )
+        },
+        hipCircumference = hipCircumference?.run {
+            UnitValue(
+                unit = unit!!,
+                value = value!!,
+                type = null,
+            )
+        },
+        hbA1cPercentage = hbA1cPercentage,
+        serumCreatinine = serumCreatinine?.run {
+            UnitValue(
+                unit = unit!!,
+                value = value!!,
+                type = null,
+            )
+        },
+        serumPotassium = serumPotassium?.run {
+            UnitValue(
+                unit = unit!!,
+                value = value!!,
+                type = null,
+            )
+        },
+        urineProtein = urineProtein,
+        urineKetones = urineKetones,
+        others = others
     )
 }
 
-internal fun VitalLocal.toVitalEntity(): VitalEntity {
+internal fun VitalResponse.toVitalEntity(): VitalEntity {
     return VitalEntity(
-        vitalUuid = vitalUuid,
+        uuid = uuid,
         fhirId = fhirId,
         patientId = patientId,
         appointmentId = appointmentId,
-        bloodGlucose = bloodGlucose,
-        bloodGlucoseType = bloodGlucoseType,
-        bloodGlucoseUnit = bloodGlucoseUnit,
-        bpDiastolic = bpDiastolic,
-        bpSystolic = bpSystolic,
-        createdOn = createdOn,
-        eyeTestType = eyeTestType,
-        heartRate = heartRate,
-        heightCm = heightCm,
-        heightFt = heightFt,
-        heightInch = heightInch,
-        leftEye = leftEye,
-        respRate = respRate,
-        rightEye = rightEye,
-        spo2 = spo2,
-        temp = temp,
-        tempUnit = tempUnit,
-        weight = weight,
+        appUpdatedDate = appUpdatedDate,
         practitionerName = practitionerName,
-        cholesterol = cholesterol,
-        cholesterolUnit = cholesterolUnit
+        bloodGlucose = bloodGlucose?.run {
+            BloodGlucoseMeasurement(
+                value = value,
+                unit = unit,
+                type = type,
+            )
+        },
+        footExamination = footExamination,
+        eyeExamination = eyeExamination,
+        abdominalCircumference = abdominalCircumference?.run {
+            Measurement(
+                value = value,
+                unit = unit
+            )
+        },
+        hipCircumference = hipCircumference?.run {
+            Measurement(
+                value = value,
+                unit = unit
+            )
+        },
+        hbA1cPercentage = hbA1cPercentage,
+        serumCreatinine = serumCreatinine?.run {
+            Measurement(
+                value = value,
+                unit = unit
+            )
+        },
+        serumPotassium = serumPotassium?.run {
+            Measurement(
+                value = value,
+                unit = unit
+            )
+        },
+        urineProtein = urineProtein,
+        urineKetones = urineKetones,
+        others = others,
     )
 }
 
@@ -837,35 +879,11 @@ internal suspend fun VitalResponse.toVitalEntity(
     patientDao: PatientDao,
     appointmentDao: AppointmentDao
 ): VitalEntity {
-    return VitalEntity(
-        vitalUuid = vitalUuid,
-        fhirId = vitalFhirId,
-        patientId = patientDao.getPatientIdByFhirId(patientId!!),
-        appointmentId = appointmentDao.getAppointmentIdByFhirId(appointmentId),
-        bloodGlucose = bloodGlucose,
-        bloodGlucoseType = bloodGlucoseType,
-        bloodGlucoseUnit = bloodGlucoseUnit,
-        bpDiastolic = bpDiastolic,
-        bpSystolic = bpSystolic,
-        createdOn = createdOn.convertStringToDate(),
-        eyeTestType = eyeTestType,
-        heartRate = heartRate,
-        heightCm = heightCm,
-        heightFt = heightFt,
-        heightInch = heightInch,
-        leftEye = leftEye?.trim()?.toInt(),
-        respRate = respRate,
-        rightEye = rightEye?.trim()?.toInt(),
-        spo2 = spo2,
-        temp = temp,
-        tempUnit = tempUnit,
-        weight = weight,
-        practitionerName = practitionerName,
-        cholesterol = cholesterol,
-        cholesterolUnit = cholesterolUnit
+    return this.toVitalEntity().copy(
+        patientId = patientDao.getPatientIdByFhirId(patientId)!!,
+        appointmentId = appointmentDao.getAppointmentIdByFhirId(appointmentId)
     )
 }
-
 
 internal fun SymptomsItem.toSymptomsEntity(): SymptomsEntity {
     return SymptomsEntity(

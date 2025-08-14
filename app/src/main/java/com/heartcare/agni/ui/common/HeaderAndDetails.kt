@@ -35,4 +35,4 @@ fun Detail(label: String, value: String?) {
 }
 
 @Composable
-private fun String?.displayOrDash(): String = this?.takeIf { it.isNotBlank() } ?: stringResource(R.string.dash)
+fun String?.displayOrDash(): String = this?.takeIf { it.isNotBlank() } ?: stringResource(R.string.dash)

@@ -2,7 +2,6 @@ package com.heartcare.agni.data.local.repository.generic
 
 import com.heartcare.agni.data.local.enums.GenericTypeEnum
 import com.heartcare.agni.data.local.enums.SyncType
-import com.heartcare.agni.data.local.model.vital.VitalLocal
 import com.heartcare.agni.data.local.model.symdiag.SymptomsAndDiagnosisData
 import com.heartcare.agni.data.local.roomdb.dao.AppointmentDao
 import com.heartcare.agni.data.local.roomdb.dao.GenericDao
@@ -27,6 +26,7 @@ import com.heartcare.agni.data.server.model.scheduleandappointment.appointment.A
 import com.heartcare.agni.data.server.model.scheduleandappointment.schedule.ScheduleResponse
 import com.heartcare.agni.data.server.model.tobacco.TobaccoCessationResponse
 import com.heartcare.agni.data.server.model.vaccination.ImmunizationResponse
+import com.heartcare.agni.data.server.model.vitals.VitalResponse
 import com.heartcare.agni.utils.builders.UUIDBuilder
 import com.heartcare.agni.utils.converters.responseconverter.GsonConverters.toJson
 import timber.log.Timber
@@ -362,13 +362,16 @@ class GenericRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun insertVital(vitalLocal: VitalLocal, uuid: String): Long {
+    override suspend fun insertVital(
+        vitalResponse: VitalResponse,
+        uuid: String
+    ): Long {
         return genericDao.getGenericEntityById(
-            patientId = vitalLocal.vitalUuid,
+            patientId = vitalResponse.uuid,
             genericTypeEnum = GenericTypeEnum.VITAL,
             syncType = SyncType.POST
         ).let {
-            insertVitalGenericEntity(vitalLocal, it, uuid)
+            insertVitalGenericEntity(vitalResponse, it, uuid)
         }
     }
 

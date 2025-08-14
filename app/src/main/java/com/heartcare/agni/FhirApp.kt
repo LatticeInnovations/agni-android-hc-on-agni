@@ -204,7 +204,16 @@ class FhirApp : Application() {
                         // if the list is empty, then all the api calls were successful.
                         listOfErrors.add(errorMessage)
                     }.also {
-                        checkPhotoWorkerStatus(listOfErrors)
+                        preferenceStorage.lastSyncTime = Date().time
+                        if (listOfErrors.isEmpty()) {
+                            preferenceStorage.syncStatus =
+                                SyncStatusMessageEnum.SYNCING_COMPLETED.display
+                            syncWorkerStatus.postValue(WorkerStatus.SUCCESS)
+                        } else {
+                            preferenceStorage.syncStatus =
+                                SyncStatusMessageEnum.SYNCING_FAILED.display
+                            syncWorkerStatus.postValue(WorkerStatus.FAILED)
+                        }
                     }
                 }
             } finally {

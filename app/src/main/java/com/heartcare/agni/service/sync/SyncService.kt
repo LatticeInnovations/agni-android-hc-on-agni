@@ -54,33 +54,9 @@ class SyncService(
                         patchPatient(logout)
                     },
                     async {
-                        patchRelation(logout)
-                    },
-                    async {
-                        patchPrescription(logout)
-                    },
-                    async {
-                        downloadMedicationTiming(logout)
-                    },
-                    async {
                         uploadPatientLastUpdatedData(logout)
                     },
                     async {
-                        uploadPrescriptionPhoto(logout)
-                    },
-                    async {
-                        patchCVD(logout)
-                    }, async {
-                        patchLabTest(logout)
-                    }, async {
-                        patchMedRecord(logout)
-                    }, async {
-                        uploadLabAndMedPhoto(logout)
-                    }, async {
-                        patchSymDiag(logout)
-                    }, async {
-                        downloadMedication(logout)
-                    }, async {
                         downloadLevelsRecord(logout)
                     }
                 )
@@ -426,13 +402,7 @@ class SyncService(
         return checkAuthenticationStatus(
             syncRepository.getAndInsertListPatientData(0),
             logout
-        )?.apply {
-            if (this is ApiEndResponse) {
-                CoroutineScope(Dispatchers.IO).launch {
-                    downloadRelation(logout)
-                }
-            }
-        }
+        )
     }
 
     /** Download Relation */
@@ -463,39 +433,17 @@ class SyncService(
             awaitAll(
                 async {
                     checkAuthenticationStatus(syncRepository.getAndInsertAppointment(0), logout)
-                },
-               prescriptionPatchJob
+                }
             ).all { responseMapper ->
                 responseMapper is ApiEmptyResponse || responseMapper is ApiEndResponse
             }.apply {
                 if (this) {
                     downloadPatientLastUpdated(logout)
                     CoroutineScope(Dispatchers.IO).launch {
-                        deletePhotoPrescription(logout)
-                    }
-                    CoroutineScope(Dispatchers.IO).launch {
-                        deletePhotoLabTest(logout)
-                    }
-                    CoroutineScope(Dispatchers.IO).launch {
-                        deletePhotoMedicalRecord(logout)
-                    }
-                    CoroutineScope(Dispatchers.IO).launch {
-                        downloadFormPrescription(null, logout)
-                    }
-                    CoroutineScope(Dispatchers.IO).launch {
-                        downloadPhotoPrescription(null, logout)
-                    }
-                    CoroutineScope(Dispatchers.IO).launch {
                         downloadCVD(logout)
                     }
                     CoroutineScope(Dispatchers.IO).launch {
-                        getAndInsertSymptoms()
-                    }
-                    CoroutineScope(Dispatchers.IO).launch {
-                        getAndInsertDiagnosis()
-                    }
-                    CoroutineScope(Dispatchers.IO).launch {
-                        downloadLabAndMedicalRecordPhoto(logout)
+                        downloadVitals(logout)
                     }
                     CoroutineScope(Dispatchers.IO).launch {
                         downloadPriorDx(logout)
@@ -551,7 +499,6 @@ class SyncService(
         )
             ?.apply {
             if (this is ApiEmptyResponse || this is ApiEndResponse) {
-                downloadPrescriptionPhoto(logout)
                 // TODO: Remove immunization syncing for heart care
                 // downloadImmunizationAndRecommendation(patientId, logout)
             }

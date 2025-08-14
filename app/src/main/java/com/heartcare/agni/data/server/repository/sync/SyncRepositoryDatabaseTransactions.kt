@@ -148,57 +148,13 @@ open class SyncRepositoryDatabaseTransactions(
         //Insert Patient Data
         patientDao.insertPatientData(*body.map { it.toPatientEntity() }.toTypedArray())
 
-        val listOfGenericEntity = mutableListOf<GenericEntity>()
         val identifierList = mutableListOf<IdentifierEntity>()
 
         body.map { patientResponse ->
-            listOfGenericEntity.addAll(
-                listOf(
-                    GenericEntity(
-                        id = UUID.randomUUID().toString(),
-                        patientId = patientResponse.id,
-                        payload = patientResponse.fhirId!!,
-                        type = GenericTypeEnum.FHIR_IDS,
-                        syncType = SyncType.POST
-                    ),
-                    GenericEntity(
-                        id = UUID.randomUUID().toString(),
-                        patientId = patientResponse.id,
-                        payload = patientResponse.fhirId,
-                        type = GenericTypeEnum.FHIR_IDS_PRESCRIPTION,
-                        syncType = SyncType.POST
-                    ),
-                    GenericEntity(
-                        id = UUID.randomUUID().toString(),
-                        patientId = patientResponse.id,
-                        payload = patientResponse.fhirId,
-                        type = GenericTypeEnum.FHIR_IDS_PRESCRIPTION_PHOTO,
-                        syncType = SyncType.POST
-                    ),
-                    GenericEntity(
-                        id = UUID.randomUUID().toString(),
-                        patientId = patientResponse.id,
-                        payload = patientResponse.fhirId,
-                        type = GenericTypeEnum.FHIR_IDS_DISPENSE,
-                        syncType = SyncType.POST
-                    ),
-                    GenericEntity(
-                        id = UUID.randomUUID().toString(),
-                        patientId = patientResponse.id,
-                        payload = patientResponse.fhirId,
-                        type = GenericTypeEnum.FHIR_IDS_OTC,
-                        syncType = SyncType.POST
-                    )
-                )
-            )
             patientResponse.toListOfIdentifierEntity().let { listOfIdentifiers ->
                 identifierList.addAll(listOfIdentifiers)
             }
         }
-
-        genericDao.insertGenericEntity(
-            *listOfGenericEntity.toTypedArray()
-        )
 
         //Insert Identifier Data
         patientDao.insertIdentifiers(*identifierList.toTypedArray())

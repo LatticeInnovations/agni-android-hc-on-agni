@@ -22,7 +22,6 @@ import com.heartcare.agni.service.workmanager.utils.Sync
 import com.heartcare.agni.service.workmanager.workers.trigger.TriggerWorkerPeriodicImpl
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toEndOfDay
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toTodayStartDate
-import com.heartcare.agni.utils.network.CheckNetwork
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.collectLatest
@@ -46,9 +45,6 @@ class PatientLandingScreenViewModel @Inject constructor(
     val user = preferenceRepository.getUserDetails()!!
     var patient by mutableStateOf<PatientResponse?>(null)
 
-    private var logoutUser by mutableStateOf(false)
-    private var logoutReason by mutableStateOf("")
-
     var appointmentsCount by mutableIntStateOf(0)
     var pastAppointmentsCount by mutableIntStateOf(0)
     var uploadsCount by mutableIntStateOf(0)
@@ -66,43 +62,13 @@ class PatientLandingScreenViewModel @Inject constructor(
     var missedVaccine by mutableIntStateOf(0)
     var takenVaccine by mutableIntStateOf(0)
 
-    private val syncService by lazy { getApplication<FhirApp>().syncService }
-
-    private suspend fun syncData() {
+    suspend fun syncData() {
         Sync.getWorkerInfo<TriggerWorkerPeriodicImpl>(getApplication<FhirApp>().applicationContext)
             .collectLatest { workInfo ->
                 if (workInfo != null && workInfo.state == WorkInfo.State.ENQUEUED) {
                     getApplication<FhirApp>().launchSyncing()
                 }
             }
-    }
-
-    internal fun downloadPrescriptions(patientFhirId: String) {
-        if (CheckNetwork.isInternetAvailable(getApplication<FhirApp>().applicationContext)) {
-            viewModelScope.launch(ioDispatcher) {
-                syncService.patchPrescription { isErrorReceived, errorMsg ->
-                    if (isErrorReceived) {
-                        logoutUser = true
-                        logoutReason = errorMsg
-                    }
-                }
-                syncService.downloadFormPrescription(patientFhirId) { isErrorReceived, errorMsg ->
-                    if (isErrorReceived) {
-                        logoutUser = true
-                        logoutReason = errorMsg
-                    }
-                }
-                syncService.downloadPhotoPrescription(patientFhirId) { isErrorReceived, errorMsg ->
-                    if (isErrorReceived) {
-                        logoutUser = true
-                        logoutReason = errorMsg
-                    }
-                }
-                getUploadsCount(patient!!.id)
-                getImmunizationRecommendationList(patient!!.id)
-                syncData()
-            }
-        }
     }
 
     internal suspend fun getPatientData(id: String): PatientResponse {

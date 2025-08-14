@@ -5,7 +5,6 @@ import com.heartcare.agni.data.local.enums.GenericTypeEnum
 import com.heartcare.agni.data.local.enums.PhotoUploadTypeEnum
 import com.heartcare.agni.data.local.enums.SyncType
 import com.heartcare.agni.data.local.model.symdiag.SymptomsAndDiagnosisData
-import com.heartcare.agni.data.local.model.vital.VitalLocal
 import com.heartcare.agni.data.local.repository.preference.PreferenceRepository
 import com.heartcare.agni.data.local.roomdb.dao.AllergyDao
 import com.heartcare.agni.data.local.roomdb.dao.AppointmentDao
@@ -34,11 +33,11 @@ import com.heartcare.agni.data.local.roomdb.dao.vaccincation.ImmunizationRecomme
 import com.heartcare.agni.data.local.roomdb.dao.vaccincation.ManufacturerDao
 import com.heartcare.agni.data.server.api.CVDApiService
 import com.heartcare.agni.data.server.api.DispenseApiService
+import com.heartcare.agni.data.server.api.HistoryAndTestsApiService
 import com.heartcare.agni.data.server.api.LabTestAndMedRecordService
 import com.heartcare.agni.data.server.api.LevelsApiService
 import com.heartcare.agni.data.server.api.PatientApiService
 import com.heartcare.agni.data.server.api.PrescriptionApiService
-import com.heartcare.agni.data.server.api.HistoryAndTestsApiService
 import com.heartcare.agni.data.server.api.ScheduleAndAppointmentApiService
 import com.heartcare.agni.data.server.api.SymptomsAndDiagnosisService
 import com.heartcare.agni.data.server.api.VaccinationApiService
@@ -1058,7 +1057,7 @@ class SyncRepositoryImpl @Inject constructor(
             if (listOfGenericEntity.isEmpty()) ApiEmptyResponse()
             else ApiResponseConverter.convert(
                 vitalApiService.createData(VITAL, listOfGenericEntity.map {
-                    it.payload.fromJson<LinkedTreeMap<*, *>>().mapToObject(VitalLocal::class.java)!!
+                    it.payload.fromJson<LinkedTreeMap<*, *>>().mapToObject(VitalResponse::class.java)!!
                 })
             ).run {
                 when (this) {
