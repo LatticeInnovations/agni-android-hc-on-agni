@@ -568,15 +568,13 @@ private fun ShowTrendGraphCard(
 }
 
 private fun getLabels(vitalsViewModel: VitalsViewModel, list: List<VitalResponse>): List<String> {
-    return if (!vitalsViewModel.isBPSelected) {
+    return if (vitalsViewModel.isGlucoseSelected) {
+        // labels from vitals
         (list.map { it.appUpdatedDate }).distinct().sorted().map { it.formatDateToDayMonth() }
             .distinct()
     } else {
-        val vitalDates = list.map { it.appUpdatedDate }
-        val cvdDates = vitalsViewModel.previousRecords.map { it.createdOn }
-
-        // Combine and sort the dates
-        (vitalDates + cvdDates).distinct().sorted().map { it.formatDateToDayMonth() }.distinct()
+        // labels from CVD
+        vitalsViewModel.previousRecords.map { it.createdOn }.distinct().sorted().map { it.formatDateToDayMonth() }.distinct()
     }
 }
 
