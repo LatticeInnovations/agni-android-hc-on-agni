@@ -128,8 +128,8 @@ class EditBasicInformationViewModel @Inject constructor(
     }
 
     fun checkIsEdit(): Boolean {
-        return firstName != firstNameTemp ||
-                lastName != lastNameTemp ||
+        return firstName.trim() != firstNameTemp ||
+                lastName.trim() != lastNameTemp ||
                 phoneNumber != phoneNumberTemp ||
                 email != emailTemp ||
                 dobAgeSelector != dobAgeSelectorTemp ||
@@ -137,9 +137,9 @@ class EditBasicInformationViewModel @Inject constructor(
                 dobMonth != dobMonthTemp ||
                 dobYear != dobYearTemp ||
                 gender != genderTemp ||
-                motherName != motherNameTemp ||
-                fatherName != fatherNameTemp ||
-                spouseName != spouseNameTemp ||
+                motherName.trim() != motherNameTemp ||
+                fatherName.trim() != fatherNameTemp ||
+                spouseName.trim() != spouseNameTemp ||
                 isPersonDeceased != isPersonDeceasedTemp ||
                 selectedDeceasedReason != selectedDeceasedReasonTemp
     }
