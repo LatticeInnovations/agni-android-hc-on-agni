@@ -65,6 +65,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.github.mikephil.charting.data.Entry
 import com.heartcare.agni.R
+import com.heartcare.agni.data.local.enums.YesNoEnum
 import com.heartcare.agni.data.server.model.cvd.CVDResponse
 import com.heartcare.agni.data.server.model.patient.PatientResponse
 import com.heartcare.agni.data.server.model.vitals.VitalResponse
@@ -962,7 +963,7 @@ private fun CVDRecordCardLayout(
                     color = Color.Transparent
                 ) {
                     Text(
-                        text = stringResource(R.string.cvd_record),
+                        text = stringResource(R.string.cvd_percentage, cvdResponse.risk),
                         style = MaterialTheme.typography.labelLarge,
                         modifier = Modifier.padding(vertical = 8.dp, horizontal = 10.dp)
                     )
@@ -974,6 +975,22 @@ private fun CVDRecordCardLayout(
             Column(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
+                DisplayField(
+                    label = stringResource(R.string.bmi_label),
+                    value = cvdResponse.bmi.toString()
+                )
+                DisplayField(
+                    stringResource(R.string.diabetic_colon),
+                    YesNoEnum.displayFromCode(cvdResponse.diabetic)
+                )
+                DisplayField(
+                    stringResource(R.string.current_smoker),
+                    YesNoEnum.displayFromCode(cvdResponse.smoker)
+                )
+                DisplayField(
+                    stringResource(R.string.previous_heart_attack_or_stroke),
+                    YesNoEnum.displayFromCode(cvdResponse.heartAttackHistory)
+                )
                 DisplayField(
                     label = stringResource(id = R.string.blood_pressure),
                     value = if (cvdResponse.bpDiastolic != 0 && cvdResponse.bpSystolic != 0) "${cvdResponse.bpSystolic}/${cvdResponse.bpDiastolic} ${
@@ -990,17 +1007,40 @@ private fun CVDRecordCardLayout(
                     )
                 )
                 DisplayField(
-                    label = stringResource(id = R.string.height),
-                    value = setCVDHeight(cvdResponse)
-                )
-                DisplayField(
                     stringResource(R.string.weight),
                     "${cvdResponse.weight} ${cvdResponse.weightUnit}"
                 )
                 DisplayField(
-                    label = stringResource(R.string.bmi_label),
-                    value = cvdResponse.bmi.toString()
+                    label = stringResource(id = R.string.height),
+                    value = setCVDHeight(cvdResponse)
                 )
+                if (!cvdResponse.chiefComplaint.isNullOrBlank()) {
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(8.dp),
+                        color = MaterialTheme.colorScheme.primaryContainer,
+                        border = BorderStroke(
+                            width = 1.dp,
+                            color = MaterialTheme.colorScheme.outlineVariant
+                        )
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(12.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Text(
+                                text = stringResource(R.string.chief_complaint),
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Text(
+                                text = cvdResponse.chiefComplaint,
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
             }
         }
     }
@@ -1014,11 +1054,7 @@ private fun setCVDHeight(cvdResponse: CVDResponse): String {
         }
 
         cvdResponse.heightFt != null || cvdResponse.heightInch != null -> {
-            "${cvdResponse.heightFt ?: ""}.${cvdResponse.heightInch ?: "0"} ${
-                stringResource(
-                    id = R.string.ft_in
-                )
-            }"
+            "${cvdResponse.heightFt ?: ""} ft ${cvdResponse.heightInch ?: "0"} in"
         }
 
         else -> {
