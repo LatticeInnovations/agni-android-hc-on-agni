@@ -424,7 +424,7 @@ private fun HbA1cField(
         keyboardOptions = KeyboardOptions(
             keyboardType = KeyboardType.Number
         ),
-        supportingText = if (viewModel.hbA1cError){
+        supportingText = if (viewModel.hbA1cError) {
             {
                 Text(stringResource(R.string.value_in_range_with_unit, "2.0", "20.0", "%"))
             }
@@ -631,12 +631,13 @@ private fun handleNavigate(
     context: Context
 ) {
     viewModel.insertVital {
-            coroutineScope.launch {
-                navController.previousBackStackEntry?.savedStateHandle?.set(
-                    VITAL_UPDATE_OR_ADD,
-                    context.getString(R.string.vitals_added_successfully)
-                )
-                navController.navigateUp()
-            }
+        coroutineScope.launch {
+            navController.previousBackStackEntry?.savedStateHandle?.set(
+                VITAL_UPDATE_OR_ADD,
+                if (viewModel.todayVital == null) context.getString(R.string.vitals_added_successfully)
+                else context.getString(R.string.vitals_update_successfully)
+            )
+            navController.navigateUp()
         }
+    }
 }
