@@ -62,6 +62,7 @@ import com.heartcare.agni.ui.common.CustomTextField
 import com.heartcare.agni.ui.common.CustomTextFieldWithLength
 import com.heartcare.agni.ui.patientregistration.step1.DeceasedReasonComposable
 import com.heartcare.agni.utils.converters.responseconverter.MonthsList.getMonthsList
+import com.heartcare.agni.utils.converters.responseconverter.StringUtils.capitalizeFirst
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.ageToPatientDate
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.isDOBValid
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toMonthInteger
@@ -162,8 +163,8 @@ fun EditBasicInformation(
                         keyboardType = KeyboardType.Text,
                         keyboardCapitalization = KeyboardCapitalization.Words
                     ) {
-                        if (it.trim().matches(nameRegex) || it.isEmpty()) viewModel.lastName =
-                            it.trim()
+                        if (it.matches(nameRegex) || it.isEmpty()) viewModel.lastName =
+                            it
                         viewModel.isLastNameValid = viewModel.lastName.isBlank()
                     }
                     CustomTextFieldWithLength(
@@ -177,8 +178,8 @@ fun EditBasicInformation(
                         keyboardType = KeyboardType.Text,
                         keyboardCapitalization = KeyboardCapitalization.Words
                     ) {
-                        if (it.trim().matches(nameRegex) || it.isEmpty()) viewModel.firstName =
-                            it.trim()
+                        if (it.matches(nameRegex) || it.isEmpty()) viewModel.firstName =
+                            it
                         viewModel.isFirstNameValid = viewModel.firstName.isBlank()
                     }
                     Column(
@@ -236,8 +237,8 @@ fun EditBasicInformation(
                         keyboardType = KeyboardType.Text,
                         keyboardCapitalization = KeyboardCapitalization.Words
                     ) {
-                        if (it.trim().matches(nameRegex) || it.isEmpty()) viewModel.motherName =
-                            it.trim()
+                        if (it.matches(nameRegex) || it.isEmpty()) viewModel.motherName =
+                            it
                         viewModel.isMotherNameValid = viewModel.motherName.isBlank()
                     }
 
@@ -252,8 +253,8 @@ fun EditBasicInformation(
                         keyboardType = KeyboardType.Text,
                         keyboardCapitalization = KeyboardCapitalization.Words
                     ) {
-                        if (it.trim().matches(nameRegex) || it.isEmpty()) viewModel.fatherName =
-                            it.trim()
+                        if (it.matches(nameRegex) || it.isEmpty()) viewModel.fatherName =
+                            it
                     }
 
                     CustomTextFieldWithLength(
@@ -267,8 +268,8 @@ fun EditBasicInformation(
                         keyboardType = KeyboardType.Text,
                         keyboardCapitalization = KeyboardCapitalization.Words
                     ) {
-                        if (it.trim().matches(nameRegex) || it.isEmpty()) viewModel.spouseName =
-                            it.trim()
+                        if (it.matches(nameRegex) || it.isEmpty()) viewModel.spouseName =
+                            it
                     }
                     Spacer(Modifier.height(64.dp))
                 }
@@ -347,8 +348,8 @@ private fun handleBasicInfoNavigation(
 ) {
     viewModel.updateBasicInfo(
         patientResponse!!.copy(
-            firstName = viewModel.firstName,
-            lastName = viewModel.lastName,
+            firstName = viewModel.firstName.capitalizeFirst().trim(),
+            lastName = viewModel.lastName.capitalizeFirst().trim(),
             mobileNumber = viewModel.phoneNumber.ifBlank { null },
             birthDate = if (viewModel.dobAgeSelector == "dob") "${viewModel.dobDay}-${viewModel.dobMonth}-${viewModel.dobYear}".toPatientDate()
             else ageToPatientDate(
@@ -357,9 +358,9 @@ private fun handleBasicInfoNavigation(
                 viewModel.days.toIntOrNull() ?: 0
             ).toPatientDate(),
             gender = viewModel.gender,
-            mothersName = viewModel.motherName,
-            fathersName = viewModel.fatherName.ifBlank { null },
-            spouseName = viewModel.spouseName.ifBlank { null },
+            mothersName = viewModel.motherName.capitalizeFirst().trim(),
+            fathersName = viewModel.fatherName.ifBlank { null }?.capitalizeFirst()?.trim(),
+            spouseName = viewModel.spouseName.ifBlank { null }?.capitalizeFirst()?.trim(),
             patientDeceasedReason = viewModel.selectedDeceasedReason.ifBlank { null }
         )
     )
