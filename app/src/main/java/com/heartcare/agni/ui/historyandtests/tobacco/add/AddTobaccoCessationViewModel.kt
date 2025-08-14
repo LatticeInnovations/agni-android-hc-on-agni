@@ -13,6 +13,7 @@ import com.heartcare.agni.data.local.enums.QuitPlan.Companion.quitPlanCodeFromDi
 import com.heartcare.agni.data.local.enums.QuitPlan.Companion.quitPlanDisplayFromCode
 import com.heartcare.agni.data.local.enums.StatusOfPlan.Companion.statusOfPlanCodeFromDisplay
 import com.heartcare.agni.data.local.enums.StatusOfPlan.Companion.statusOfPlanDisplayFromCode
+import com.heartcare.agni.data.local.enums.TobaccoUsage
 import com.heartcare.agni.data.local.enums.TobaccoUsage.Companion.tobaccoUsageCodeFromDisplay
 import com.heartcare.agni.data.local.enums.TobaccoUsage.Companion.tobaccoUsageDisplayFromCode
 import com.heartcare.agni.data.local.enums.YesNoEnum
@@ -88,8 +89,35 @@ class AddTobaccoCessationViewModel @Inject constructor(
     }
 
     fun isValid(): Boolean {
-        return !((assistQuit == QuitPlan.YES_BRIEF_QUIT_PLAN.display
-                || assistQuit == QuitPlan.YES_INTENSIVE_QUIT_PLAN.display) && planStatus.isBlank())
+        return when (tobaccoUse) {
+            TobaccoUsage.NO_I_DO_NOT_USE_TOBACCO.display -> true
+            else -> {
+                if (tobaccoUse.isBlank()) false
+                else {
+                    briefAdvice.isNotBlank() && (
+                            when (assessedStatus) {
+                                YesNoEnum.YES.display -> {
+                                    when (assistQuit) {
+                                        QuitPlan.NO.display, QuitPlan.NO_REFER_TO_INTENSIVE_COUNSELLING.display -> true
+
+                                        QuitPlan.YES_BRIEF_QUIT_PLAN.display -> {
+                                            planStatus.isNotBlank()
+                                        }
+
+                                        QuitPlan.YES_INTENSIVE_QUIT_PLAN.display -> {
+                                            planStatus.isNotBlank() && pharmacotherapy.isNotBlank()
+                                        }
+
+                                        else -> false
+                                    }
+                                }
+
+                                else -> assessedStatus.isNotBlank()
+                            }
+                            )
+                }
+            }
+        }
     }
 
     fun getTodayTobaccoCessation(patientId: String) {
