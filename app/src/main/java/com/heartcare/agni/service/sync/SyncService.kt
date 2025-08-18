@@ -58,6 +58,9 @@ class SyncService(
                     },
                     async {
                         downloadLevelsRecord(logout)
+                    },
+                    async {
+                        getAndInsertDiagnosis()
                     }
                 )
             }

@@ -46,7 +46,7 @@ interface SearchDao {
     suspend fun getSymptoms(): List<SymptomsEntity>
 
     @Transaction
-    @Query("SELECT * FROM diagnosis")
+    @Query("SELECT * FROM DiagnosisEntity")
     suspend fun getDiagnosis(): List<DiagnosisEntity>
 
     // Insert a new search entry or update the existing one

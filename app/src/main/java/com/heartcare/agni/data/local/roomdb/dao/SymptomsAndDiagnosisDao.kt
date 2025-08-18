@@ -24,7 +24,7 @@ interface SymptomsAndDiagnosisDao {
     suspend fun getSymptomsEntity(): List<SymptomsEntity>
 
     @Transaction
-    @Query("SELECT * FROM diagnosis")
+    @Query("SELECT * FROM DiagnosisEntity")
     suspend fun getDiagnosisEntity(): List<DiagnosisEntity>
 
     // insert, get, update symptoms and Diagnosis

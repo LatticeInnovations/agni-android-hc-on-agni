@@ -16,7 +16,8 @@ import com.heartcare.agni.utils.converters.server.responsemapper.ResponseMapper
 import javax.inject.Inject
 
 class SymptomsAndDiagnosisRepositoryImpl @Inject constructor(
-    private val apiService: SymptomsAndDiagnosisService, private val dao: SymptomsAndDiagnosisDao
+    private val apiService: SymptomsAndDiagnosisService,
+    private val dao: SymptomsAndDiagnosisDao
 ) : SymptomsAndDiagnosisRepository {
 
     override suspend fun insertSymptoms(): ResponseMapper<List<Symptoms>> {
@@ -43,16 +44,15 @@ class SymptomsAndDiagnosisRepositoryImpl @Inject constructor(
     override suspend fun insertDiagnosis(): ResponseMapper<List<Diagnosis>> {
         return ApiResponseConverter.convert(
             apiService.getDiagnosis(),
-            true
-        ).apply {
-            if (this is ApiEndResponse) {
-                this.body.apply {
-                    if (this.isNotEmpty() && this[0].diagnosis.isNotEmpty()) {
-                        this[0].diagnosis.map {
-                            dao.insertDiagnosisEntity(it.toDiagnosisEntity())
-                        }
-                    }
+            false
+        ).run {
+            when (this) {
+                is ApiEndResponse -> {
+                    dao.insertDiagnosisEntity(*body.map { it.toDiagnosisEntity() }.toTypedArray())
+                    this
                 }
+
+                else -> this
             }
         }
     }

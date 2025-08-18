@@ -5,7 +5,9 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 
 @Keep
-@Entity(tableName = "diagnosis")
+@Entity
 data class DiagnosisEntity(
-    val id: String, @PrimaryKey val code: String, val display: String
+    @PrimaryKey val id: Int,
+    val code: String,
+    val display: String
 )

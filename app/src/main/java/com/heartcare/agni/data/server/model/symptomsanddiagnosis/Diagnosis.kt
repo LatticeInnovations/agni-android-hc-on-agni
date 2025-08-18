@@ -4,5 +4,7 @@ import androidx.annotation.Keep
 
 @Keep
 data class Diagnosis(
-    val diagnosis: List<SymptomsAndDiagnosisItem>
+    val diagnosisId: Int,
+    val code: String,
+    val display: String
 )

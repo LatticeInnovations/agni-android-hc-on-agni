@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "eeb94dfd5c31866e8bbe20fbe1b649a0",
+    "identityHash": "7cd3f465d8e45d9160fb4fe73ba4594a",
     "entities": [
       {
         "tableName": "PatientEntity",
@@ -1555,13 +1555,13 @@
         }
       },
       {
-        "tableName": "diagnosis",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `code` TEXT NOT NULL, `display` TEXT NOT NULL, PRIMARY KEY(`code`))",
+        "tableName": "DiagnosisEntity",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `code` TEXT NOT NULL, `display` TEXT NOT NULL, PRIMARY KEY(`id`))",
         "fields": [
           {
             "fieldPath": "id",
             "columnName": "id",
-            "affinity": "TEXT",
+            "affinity": "INTEGER",
             "notNull": true
           },
           {
@@ -1580,7 +1580,7 @@
         "primaryKey": {
           "autoGenerate": false,
           "columnNames": [
-            "code"
+            "id"
           ]
         }
       },
@@ -3566,7 +3566,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'eeb94dfd5c31866e8bbe20fbe1b649a0')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '7cd3f465d8e45d9160fb4fe73ba4594a')"
     ]
   }
 }

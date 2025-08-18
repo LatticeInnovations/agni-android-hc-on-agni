@@ -106,6 +106,7 @@ import com.heartcare.agni.data.server.model.risk.TobaccoResponse
 import com.heartcare.agni.data.server.model.scheduleandappointment.Slot
 import com.heartcare.agni.data.server.model.scheduleandappointment.appointment.AppointmentResponse
 import com.heartcare.agni.data.server.model.scheduleandappointment.schedule.ScheduleResponse
+import com.heartcare.agni.data.server.model.symptomsanddiagnosis.Diagnosis
 import com.heartcare.agni.data.server.model.symptomsanddiagnosis.SymptomsAndDiagnosisItem
 import com.heartcare.agni.data.server.model.symptomsanddiagnosis.SymptomsAndDiagnosisResponse
 import com.heartcare.agni.data.server.model.symptomsanddiagnosis.SymptomsItem
@@ -893,8 +894,12 @@ internal fun SymptomsItem.toSymptomsEntity(): SymptomsEntity {
     )
 }
 
-internal fun SymptomsAndDiagnosisItem.toDiagnosisEntity(): DiagnosisEntity {
-    return DiagnosisEntity(id = UUID.randomUUID().toString(), code = code, display = display)
+internal fun Diagnosis.toDiagnosisEntity(): DiagnosisEntity {
+    return DiagnosisEntity(
+        id = diagnosisId,
+        code = code,
+        display = display
+    )
 }
 
 internal fun SymptomsEntity.toSymptoms(): SymptomsItem {
