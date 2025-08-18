@@ -381,7 +381,6 @@ include them in the household</string>
     <string name="diagnosis_lable">"ICD-10 code, disease, symptoms"</string>
     <string name="symptoms_lable">Search, e.g., Headache, Fever</string>
     <string name="symptoms">Symptoms:</string>
-    <string name="diagnosis">Diagnosis:</string>
     <string name="symdiag_added_successfully">Symptoms &amp; diagnosis added successfully!</string>
     <string name="symdiag_update_successfully">Symptoms &amp; diagnosis updated successfully!</string>
     <string name="discard_diagnosis_dialog_title">Discard Diagnosis ?</string>
@@ -682,4 +681,13 @@ include them in the household</string>
     <string name="serum_potassium">Serum. potassium</string>
     <string name="cvd_percentage">CVD - %d\%%</string>
     <string name="update_vitals">Update vitals</string>
+
+    <string name="diagnosis">Diagnosis</string>
+    <string name="add_diagnosis">Add diagnosis</string>
+    <string name="recent_diagnosis">Recent diagnosis</string>
+    <string name="diagnosis_colon">"Diagnosis: "</string>
+    <string name="diagnosis_search_text">ICD-10 code, disease, symptoms</string>
+    <string name="frequently_diagnosed">"Frequently diagnosed "</string>
+    <string name="diagnosis_added_successfully">Diagnosis added successfully!</string>
+    <string name="retain_diagnosis">Retain diagnosis</string>
 </resources>

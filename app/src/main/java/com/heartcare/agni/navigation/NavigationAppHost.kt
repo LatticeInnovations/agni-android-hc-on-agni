@@ -11,6 +11,8 @@ import androidx.navigation.compose.composable
 import com.heartcare.agni.ui.appointments.AppointmentsScreen
 import com.heartcare.agni.ui.appointments.schedule.ScheduleAppointments
 import com.heartcare.agni.ui.cvd.CVDRiskAssessmentScreen
+import com.heartcare.agni.ui.diagnosis.DiagnosisScreen
+import com.heartcare.agni.ui.diagnosis.add.AddDiagnosisScreen
 import com.heartcare.agni.ui.dispense.DrugDispenseScreen
 import com.heartcare.agni.ui.dispense.otc.OTCScreen
 import com.heartcare.agni.ui.dispense.prescription.dispenseprescription.DispensePrescriptionScreen
@@ -159,5 +161,7 @@ fun NavigationAppHost(navController: NavController, startDest: String) {
             }
         ) { TobaccoCessationViewScreen(navController = navController) }
         composable(Screen.AddTobaccoCessationScreen.route) { AddTobaccoCessationScreen(navController = navController) }
+        composable(Screen.DiagnosisScreen.route) { DiagnosisScreen(navController = navController) }
+        composable(Screen.AddDiagnosisScreen.route) { AddDiagnosisScreen(navController = navController) }
     }
 }
