@@ -5,22 +5,32 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewModelScope
 import com.heartcare.agni.base.viewmodel.BaseViewModel
+import com.heartcare.agni.data.local.repository.search.SearchRepository
 import com.heartcare.agni.data.server.model.patient.PatientResponse
-import kotlinx.coroutines.delay
+import com.heartcare.agni.di.dispatcher.IoDispatcher
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class AddDiagnosisViewModel: BaseViewModel() {
+@HiltViewModel
+class AddDiagnosisViewModel @Inject constructor(
+    private val searchRepository: SearchRepository,
+    @IoDispatcher private val ioDispatcher: CoroutineDispatcher
+) : BaseViewModel() {
     var isLaunched by mutableStateOf(false)
     var patient by mutableStateOf<PatientResponse?>(null)
 
     var searchQuery by mutableStateOf("")
-    var frequentlyDiagnosedList by mutableStateOf(listOf(
-        "A0109, Typhoid fever with other complications",
-        "A1810, Tuberculosis of genitourinary system, unspecified",
-        "Cholera due to Vibrio cholerae 01, biovar cholerae",
-        "A0221, Salmonella meningitis",
-        "A0102, Typhoid fever with heart involvement"
-    ))
+    var frequentlyDiagnosedList by mutableStateOf(
+        listOf(
+            "A0109, Typhoid fever with other complications",
+            "A1810, Tuberculosis of genitourinary system, unspecified",
+            "Cholera due to Vibrio cholerae 01, biovar cholerae",
+            "A0221, Salmonella meningitis",
+            "A0102, Typhoid fever with heart involvement"
+        )
+    )
 
     var selectedDiagnosis by mutableStateOf(listOf<String>())
     var isSearching by mutableStateOf(false)
@@ -34,18 +44,11 @@ class AddDiagnosisViewModel: BaseViewModel() {
     var lastDiagnosis by mutableStateOf<String?>(null)
 
     fun searchDiagnosis() {
-        viewModelScope.launch {
+        viewModelScope.launch(ioDispatcher) {
             isSearching = true
             isLoading = true
-            delay(2000)
-            searchResults = listOf(
-                "A0100, Typhoid fever, unspecified",
-                "A0101, Typhoid meningitis",
-                "A0102, Typhoid fever with heart involvement",
-                "A0103, Typhoid pneumonia",
-                "A0104, Typhoid arthritis",
-                "A0105, Typhoid osteomyelitis",
-                "A0109, Typhoid fever with other complications"
+            searchResults = searchRepository.searchDiagnosis(
+                searchQuery.trim()
             )
             isLoading = false
         }

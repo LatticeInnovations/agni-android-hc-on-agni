@@ -3,6 +3,7 @@ package com.heartcare.agni.utils.search
 import com.heartcare.agni.data.local.enums.RiskCategoryEnum.Companion.getRiskRange
 import com.heartcare.agni.data.local.model.search.SearchParameters
 import com.heartcare.agni.data.local.roomdb.entities.patient.PatientAndIdentifierEntity
+import com.heartcare.agni.data.local.roomdb.entities.symptomsanddiagnosis.DiagnosisEntity
 import com.heartcare.agni.utils.constants.IdentificationConstants.HOSPITAL_ID
 import com.heartcare.agni.utils.constants.IdentificationConstants.NATIONAL_ID
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toAge
@@ -128,12 +129,13 @@ object Search {
 
     internal fun getFuzzySearchDiagnosisList(
         searchQuery: String,
-        diagnosisList: List<String>,
+        diagnosisList: List<DiagnosisEntity>,
         matchingRatio: Int
     ): List<String> {
         return diagnosisList.filter { diagnosis ->
-            FuzzySearch.partialRatio(searchQuery, diagnosis) > matchingRatio
-        }
+            FuzzySearch.weightedRatio(searchQuery.lowercase(), diagnosis.display.lowercase()) > matchingRatio
+                    || FuzzySearch.weightedRatio(searchQuery.lowercase(), diagnosis.code.lowercase()) > matchingRatio
+        }.map { "${it.code}, ${it.display}" }
     }
 
     internal fun getFuzzySearchSymptomsList(

@@ -4,7 +4,6 @@ import com.heartcare.agni.data.local.roomdb.dao.SymptomsAndDiagnosisDao
 import com.heartcare.agni.data.server.api.SymptomsAndDiagnosisService
 import com.heartcare.agni.data.server.model.symptomsanddiagnosis.Diagnosis
 import com.heartcare.agni.data.server.model.symptomsanddiagnosis.Symptoms
-import com.heartcare.agni.data.server.model.symptomsanddiagnosis.SymptomsAndDiagnosisItem
 import com.heartcare.agni.data.server.model.symptomsanddiagnosis.SymptomsItem
 import com.heartcare.agni.utils.converters.responseconverter.toDiagnosis
 import com.heartcare.agni.utils.converters.responseconverter.toDiagnosisEntity
@@ -61,7 +60,7 @@ class SymptomsAndDiagnosisRepositoryImpl @Inject constructor(
         return dao.getSymptomsEntity().map { it.toSymptoms() }
     }
 
-    override suspend fun getDiagnosis(): List<SymptomsAndDiagnosisItem> {
+    override suspend fun getDiagnosis(): List<Diagnosis> {
         return dao.getDiagnosisEntity().map { it.toDiagnosis() }
 
     }

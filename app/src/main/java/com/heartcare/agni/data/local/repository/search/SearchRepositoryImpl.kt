@@ -302,8 +302,6 @@ class SearchRepositoryImpl @Inject constructor(
     }
 
     override suspend fun searchDiagnosis(searchQuery: String): List<String> {
-        val diagnosis = searchDao.getDiagnosis().map { "${it.code}, ${it.display}" }
-        return getFuzzySearchDiagnosisList(searchQuery, diagnosis, 60)
-
+        return getFuzzySearchDiagnosisList(searchQuery, searchDao.getDiagnosis(), 70)
     }
 }
