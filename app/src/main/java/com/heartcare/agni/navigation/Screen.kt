@@ -58,4 +58,6 @@ sealed class Screen(val route: String) {
     data object AddRiskFactorsScreen : Screen("add_risk_factors_screen")
     data object TobaccoCessationViewScreen : Screen("view_tobacco_cessation_screen")
     data object AddTobaccoCessationScreen : Screen("add_tobacco_cessation_screen")
+
+    data object DiagnosisScreen : Screen("diagnosis_screen")
 }
