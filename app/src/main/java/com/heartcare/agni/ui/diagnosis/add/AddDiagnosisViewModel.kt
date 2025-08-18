@@ -31,6 +31,8 @@ class AddDiagnosisViewModel: BaseViewModel() {
     var bottomNavExpanded by mutableStateOf(false)
     var clearAllConfirmDialog by mutableStateOf(false)
 
+    var lastDiagnosis by mutableStateOf<String?>(null)
+
     fun searchDiagnosis() {
         viewModelScope.launch {
             isSearching = true

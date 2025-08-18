@@ -1,13 +1,21 @@
 package com.heartcare.agni.ui.diagnosis.add
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
@@ -18,10 +26,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -46,10 +56,14 @@ import com.heartcare.agni.ui.common.CheckBoxRow
 import com.heartcare.agni.ui.common.CustomDialog
 import com.heartcare.agni.ui.common.ExpandableBottomNavLayout
 import com.heartcare.agni.ui.common.Loader
+import com.heartcare.agni.ui.theme.Black
+import com.heartcare.agni.ui.theme.White
 import com.heartcare.agni.utils.constants.NavControllerConstants.DIAGNOSIS_SAVED
 import com.heartcare.agni.utils.constants.NavControllerConstants.PATIENT
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun AddDiagnosisScreen(
     navController: NavController,
@@ -57,95 +71,162 @@ fun AddDiagnosisScreen(
 ) {
     val coroutineScope = rememberCoroutineScope()
     val focusManager = LocalFocusManager.current
-    LaunchedEffect(viewModel.isLaunched) {
-        if (!viewModel.isLaunched) {
-            navController.previousBackStackEntry?.savedStateHandle?.get<PatientResponse>(
-                PATIENT
-            )?.let {
-                viewModel.patient = it
-            }
-            viewModel.isLaunched = true
-        }
-    }
+
+    HandleLaunchedEffect(viewModel, navController)
+
     Scaffold(
         modifier = Modifier
             .fillMaxSize()
             .imePadding(),
-        topBar = {
-            SearchableTopAppBar(viewModel, navController, focusManager)
-        },
+        topBar = { SearchableTopAppBar(viewModel, navController, focusManager) },
         content = { paddingValues ->
-            Column(
-                modifier = Modifier
-                    .padding(paddingValues)
-                    .verticalScroll(rememberScrollState())
-            ) {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    if (viewModel.isSearching) {
-                        DiagnosisSearchList(viewModel)
-                    } else {
-                        FrequentDiagnosisList(viewModel)
-                    }
-                }
-            }
+            DiagnosisContent(
+                viewModel = viewModel,
+                paddingValues = paddingValues
+            )
         }
     )
+
+    DiagnosisBottomSection(
+        viewModel = viewModel,
+        navController = navController,
+        coroutineScope = coroutineScope,
+        focusManager = focusManager
+    )
+
+    if (viewModel.clearAllConfirmDialog) {
+        ClearAllConfirmDialog(viewModel)
+    }
+}
+
+@Composable
+private fun HandleLaunchedEffect(viewModel: AddDiagnosisViewModel, navController: NavController) {
+    LaunchedEffect(viewModel.isLaunched) {
+        if (!viewModel.isLaunched) {
+            navController.previousBackStackEntry?.savedStateHandle?.get<PatientResponse>(PATIENT)
+                ?.let { viewModel.patient = it }
+            viewModel.isLaunched = true
+        }
+    }
+}
+
+@Composable
+private fun DiagnosisContent(
+    viewModel: AddDiagnosisViewModel,
+    paddingValues: PaddingValues
+) {
+    Column(
+        modifier = Modifier
+            .padding(paddingValues)
+            .verticalScroll(rememberScrollState())
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            if (viewModel.isSearching) {
+                DiagnosisSearchList(viewModel)
+            } else {
+                FrequentDiagnosisList(viewModel)
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalAnimationApi::class)
+@Composable
+private fun DiagnosisBottomSection(
+    viewModel: AddDiagnosisViewModel,
+    navController: NavController,
+    coroutineScope: CoroutineScope,
+    focusManager: FocusManager
+) {
     Box(
-        modifier =
-            if (!viewModel.bottomNavExpanded) Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.outline.copy(alpha = 0f))
-            else Modifier
+        modifier = if (viewModel.bottomNavExpanded) {
+            Modifier
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.outline.copy(alpha = 0.5f))
-                .clickable(enabled = false) { },
+                .clickable(enabled = false) {}
+        } else {
+            Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.outline.copy(alpha = 0f))
+        },
         contentAlignment = Alignment.BottomCenter
     ) {
-        ExpandableBottomNavLayout(
-            selectedList = viewModel.selectedDiagnosis,
-            bottomNavExpanded = viewModel.bottomNavExpanded,
-            onExpandToggle = {
-                viewModel.bottomNavExpanded = !viewModel.bottomNavExpanded
-                focusManager.clearFocus()
-            },
-            onSave = {
-                coroutineScope.launch {
-                    navController.previousBackStackEntry?.savedStateHandle?.set(
-                        DIAGNOSIS_SAVED,
-                        true
-                    )
-                    navController.navigateUp()
-                }
-            },
-            onClearAll = { viewModel.clearAllConfirmDialog = true },
-            onRemoveItem = { diagnosis ->
-                viewModel.selectedDiagnosis -= diagnosis
-                if (viewModel.selectedDiagnosis.isEmpty()) {
-                    viewModel.bottomNavExpanded = false
-                }
-            },
-            saveBtnText = stringResource(R.string.save_diagnosis),
-            title = stringResource(R.string.diagnosis)
-        )
-    }
-    if (viewModel.clearAllConfirmDialog) {
-        CustomDialog(
-            canBeDismissed = false,
-            title = stringResource(R.string.discard_diagnosis_dialog_title),
-            text = stringResource(R.string.discard_diagnosis_dialog_description),
-            dismissBtnText = stringResource(R.string.no_go_back),
-            confirmBtnText = stringResource(R.string.yes_discard),
-            dismiss = { viewModel.clearAllConfirmDialog = false },
-            confirm = {
-                viewModel.selectedDiagnosis = emptyList()
-                viewModel.bottomNavExpanded = false
-                viewModel.clearAllConfirmDialog = false
+        AnimatedContent(
+            targetState = viewModel.lastDiagnosis != null && viewModel.selectedDiagnosis.isEmpty(),
+            transitionSpec = { fadeIn() togetherWith fadeOut() }
+        ) { showRetainButton ->
+            if (showRetainButton) {
+                RetainDiagnosisButton()
+            } else {
+                ExpandableBottomNavLayout(
+                    selectedList = viewModel.selectedDiagnosis,
+                    bottomNavExpanded = viewModel.bottomNavExpanded,
+                    onExpandToggle = {
+                        viewModel.bottomNavExpanded = !viewModel.bottomNavExpanded
+                        focusManager.clearFocus()
+                    },
+                    onSave = {
+                        coroutineScope.launch {
+                            navController.previousBackStackEntry?.savedStateHandle?.set(
+                                DIAGNOSIS_SAVED,
+                                true
+                            )
+                            navController.navigateUp()
+                        }
+                    },
+                    onClearAll = { viewModel.clearAllConfirmDialog = true },
+                    onRemoveItem = { diagnosis ->
+                        viewModel.selectedDiagnosis -= diagnosis
+                        if (viewModel.selectedDiagnosis.isEmpty()) {
+                            viewModel.bottomNavExpanded = false
+                        }
+                    },
+                    saveBtnText = stringResource(R.string.save_diagnosis),
+                    title = stringResource(R.string.diagnosis)
+                )
             }
-        )
+        }
     }
+}
+
+@Composable
+private fun RetainDiagnosisButton() {
+    Surface(
+        modifier = Modifier
+            .imePadding()
+            .fillMaxWidth(),
+        color = if (isSystemInDarkTheme()) Black else White
+    ) {
+        FilledTonalButton(
+            onClick = { /* retain diagnosis */ },
+            modifier = Modifier
+                .fillMaxWidth()
+                .navigationBarsPadding()
+                .padding(horizontal = 16.dp, vertical = 8.dp)
+        ) {
+            Text(stringResource(R.string.retain_diagnosis))
+        }
+    }
+}
+
+@Composable
+private fun ClearAllConfirmDialog(viewModel: AddDiagnosisViewModel) {
+    CustomDialog(
+        canBeDismissed = false,
+        title = stringResource(R.string.discard_diagnosis_dialog_title),
+        text = stringResource(R.string.discard_diagnosis_dialog_description),
+        dismissBtnText = stringResource(R.string.no_go_back),
+        confirmBtnText = stringResource(R.string.yes_discard),
+        dismiss = { viewModel.clearAllConfirmDialog = false },
+        confirm = {
+            viewModel.selectedDiagnosis = emptyList()
+            viewModel.bottomNavExpanded = false
+            viewModel.clearAllConfirmDialog = false
+        }
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

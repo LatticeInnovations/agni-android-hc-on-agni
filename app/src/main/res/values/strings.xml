@@ -689,4 +689,5 @@ include them in the household</string>
     <string name="diagnosis_search_text">ICD-10 code, disease, symptoms</string>
     <string name="frequently_diagnosed">"Frequently diagnosed "</string>
     <string name="diagnosis_added_successfully">Diagnosis added successfully!</string>
+    <string name="retain_diagnosis">Retain diagnosis</string>
 </resources>
