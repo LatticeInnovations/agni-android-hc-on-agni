@@ -686,4 +686,6 @@ include them in the household</string>
     <string name="add_diagnosis">Add diagnosis</string>
     <string name="recent_diagnosis">Recent diagnosis</string>
     <string name="diagnosis_colon">"Diagnosis: "</string>
+    <string name="diagnosis_search_text">ICD-10 code, disease, symptoms</string>
+    <string name="frequently_diagnosed">"Frequently diagnosed "</string>
 </resources>

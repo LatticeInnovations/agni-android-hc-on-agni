@@ -36,6 +36,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.heartcare.agni.R
 import com.heartcare.agni.data.server.model.patient.PatientResponse
+import com.heartcare.agni.navigation.Screen
 import com.heartcare.agni.ui.common.ExpandableCard
 import com.heartcare.agni.utils.constants.NavControllerConstants.PATIENT
 import java.util.Date
@@ -131,6 +132,11 @@ fun DiagnosisScreen(
                 Button(
                     onClick = {
                         // navigate to add diagnosis
+                        navController.currentBackStackEntry?.savedStateHandle?.set(
+                            PATIENT,
+                            viewModel.patient
+                        )
+                        navController.navigate(Screen.AddDiagnosisScreen.route)
                     },
                     modifier = Modifier.fillMaxWidth()
                 ) {

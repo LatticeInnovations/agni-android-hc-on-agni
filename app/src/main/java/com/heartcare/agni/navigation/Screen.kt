@@ -60,4 +60,5 @@ sealed class Screen(val route: String) {
     data object AddTobaccoCessationScreen : Screen("add_tobacco_cessation_screen")
 
     data object DiagnosisScreen : Screen("diagnosis_screen")
+    data object AddDiagnosisScreen : Screen("add_diagnosis_screen")
 }
