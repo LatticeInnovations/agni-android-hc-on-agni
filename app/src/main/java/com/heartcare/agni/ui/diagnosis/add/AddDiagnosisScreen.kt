@@ -109,7 +109,12 @@ fun AddDiagnosisScreen(
             },
             onSave = { /* add diagnosis */ },
             onClearAll = { viewModel.clearAllConfirmDialog = true },
-            onRemoveItem = { diagnosis -> viewModel.selectedDiagnosis -= diagnosis },
+            onRemoveItem = { diagnosis ->
+                viewModel.selectedDiagnosis -= diagnosis
+                if (viewModel.selectedDiagnosis.isEmpty()) {
+                    viewModel.bottomNavExpanded = false
+                }
+            },
             saveBtnText = stringResource(R.string.save_diagnosis),
             title = stringResource(R.string.diagnosis)
         )
