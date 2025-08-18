@@ -2,8 +2,6 @@ package com.heartcare.agni.ui.common
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -18,7 +16,6 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -68,39 +65,38 @@ fun ExpandableBottomNavLayout(
         label = "Rotation state of expand icon button",
     )
 
-    AnimatedVisibility(
-        visible = selectedList.isNotEmpty(),
-        enter = expandVertically(),
-        exit = shrinkVertically()
-    ) {
-        Column {
-            AnimatedVisibility(bottomNavExpanded) {
-                ExpandedBottomNavCard(
-                    title = title,
-                    selectedList = selectedList,
-                    onClose = onExpandToggle,
-                    onClearAll = onClearAll,
-                    onRemove = onRemoveItem
-                )
-            }
+    Column {
+        AnimatedVisibility(bottomNavExpanded) {
+            ExpandedBottomNavCard(
+                title = title,
+                selectedList = selectedList,
+                onClose = onExpandToggle,
+                onClearAll = onClearAll,
+                onRemove = onRemoveItem
+            )
+        }
 
-            Surface(
+        Surface(
+            modifier = Modifier
+                .imePadding()
+                .fillMaxWidth(),
+            color = MaterialTheme.colorScheme.secondaryContainer,
+            shadowElevation = 15.dp
+        ) {
+            Row(
                 modifier = Modifier
-                    .imePadding()
-                    .fillMaxWidth(),
-                color = MaterialTheme.colorScheme.secondaryContainer,
-                shadowElevation = 15.dp
+                    .fillMaxWidth()
+                    .padding(horizontal = 8.dp, vertical = 12.dp)
+                    .navigationBarsPadding(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 8.dp, vertical = 12.dp)
-                        .navigationBarsPadding(),
-                    verticalAlignment = Alignment.CenterVertically
+                AnimatedVisibility(
+                    visible = selectedList.isNotEmpty()
                 ) {
                     Row(
                         Modifier
-                            .weight(1f)
+                            .fillMaxWidth(0.5f)
                             .clickable(
                                 interactionSource = remember { MutableInteractionSource() },
                                 indication = null
@@ -121,15 +117,13 @@ fun ExpandableBottomNavLayout(
                             modifier = Modifier.rotate(rotationState)
                         )
                     }
+                }
 
-                    Spacer(modifier = Modifier.width(15.dp))
-
-                    Button(
-                        onClick = onSave,
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Text(text = saveBtnText)
-                    }
+                Button(
+                    onClick = onSave,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text(text = saveBtnText)
                 }
             }
         }

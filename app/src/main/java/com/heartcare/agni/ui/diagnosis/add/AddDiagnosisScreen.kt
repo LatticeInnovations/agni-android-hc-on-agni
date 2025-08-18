@@ -95,7 +95,7 @@ fun AddDiagnosisScreen(
     )
     Box(
         modifier =
-            if (!(viewModel.bottomNavExpanded && viewModel.selectedDiagnosis.isNotEmpty())) Modifier
+            if (!viewModel.bottomNavExpanded) Modifier
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.outline.copy(alpha = 0f))
             else Modifier
