@@ -28,6 +28,7 @@ import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusManager
@@ -45,13 +46,16 @@ import com.heartcare.agni.ui.common.CheckBoxRow
 import com.heartcare.agni.ui.common.CustomDialog
 import com.heartcare.agni.ui.common.ExpandableBottomNavLayout
 import com.heartcare.agni.ui.common.Loader
+import com.heartcare.agni.utils.constants.NavControllerConstants.DIAGNOSIS_SAVED
 import com.heartcare.agni.utils.constants.NavControllerConstants.PATIENT
+import kotlinx.coroutines.launch
 
 @Composable
 fun AddDiagnosisScreen(
     navController: NavController,
     viewModel: AddDiagnosisViewModel = viewModel()
 ) {
+    val coroutineScope = rememberCoroutineScope()
     val focusManager = LocalFocusManager.current
     LaunchedEffect(viewModel.isLaunched) {
         if (!viewModel.isLaunched) {
@@ -107,7 +111,15 @@ fun AddDiagnosisScreen(
                 viewModel.bottomNavExpanded = !viewModel.bottomNavExpanded
                 focusManager.clearFocus()
             },
-            onSave = { /* add diagnosis */ },
+            onSave = {
+                coroutineScope.launch {
+                    navController.previousBackStackEntry?.savedStateHandle?.set(
+                        DIAGNOSIS_SAVED,
+                        true
+                    )
+                    navController.navigateUp()
+                }
+            },
             onClearAll = { viewModel.clearAllConfirmDialog = true },
             onRemoveItem = { diagnosis ->
                 viewModel.selectedDiagnosis -= diagnosis

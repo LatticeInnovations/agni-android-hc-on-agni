@@ -20,14 +20,18 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -38,6 +42,7 @@ import com.heartcare.agni.R
 import com.heartcare.agni.data.server.model.patient.PatientResponse
 import com.heartcare.agni.navigation.Screen
 import com.heartcare.agni.ui.common.ExpandableCard
+import com.heartcare.agni.utils.constants.NavControllerConstants.DIAGNOSIS_SAVED
 import com.heartcare.agni.utils.constants.NavControllerConstants.PATIENT
 import java.util.Date
 
@@ -47,6 +52,8 @@ fun DiagnosisScreen(
     navController: NavController,
     viewModel: DiagnosisViewModel = viewModel()
 ) {
+    val snackBarHostState = remember { SnackbarHostState() }
+    val context = LocalContext.current
     LaunchedEffect(viewModel.isLaunched) {
         if (!viewModel.isLaunched) {
             navController.previousBackStackEntry?.savedStateHandle?.get<PatientResponse>(
@@ -56,10 +63,16 @@ fun DiagnosisScreen(
             }
             viewModel.isLaunched = true
         }
+        navController.currentBackStackEntry?.savedStateHandle?.let { handle ->
+            if (handle.remove<Boolean>(DIAGNOSIS_SAVED) == true) {
+                snackBarHostState.showSnackbar(context.getString(R.string.diagnosis_added_successfully))
+            }
+        }
     }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
+        snackbarHost = { SnackbarHost(snackBarHostState) },
         topBar = {
             TopAppBar(
                 modifier = Modifier.fillMaxWidth(),
