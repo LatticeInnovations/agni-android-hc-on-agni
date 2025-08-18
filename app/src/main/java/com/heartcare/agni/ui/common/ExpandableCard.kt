@@ -40,7 +40,8 @@ fun ExpandableCard(
     practitionerName: String,
     listOfItems: List<String>,
     isBulleted: Boolean,
-    extraInfoComposable: (@Composable () -> Unit)? = null
+    extraInfoComposable: (@Composable () -> Unit)? = null,
+    listTitle: String? = null
 ) {
     var expanded by rememberSaveable { mutableStateOf(false) }
 
@@ -63,7 +64,8 @@ fun ExpandableCard(
                 ExpandedContent(
                     listOfItems = listOfItems,
                     isBulleted = isBulleted,
-                    extraInfoComposable = extraInfoComposable
+                    extraInfoComposable = extraInfoComposable,
+                    listTitle = listTitle
                 )
             }
         }
@@ -99,7 +101,8 @@ private fun Header(
 private fun ExpandedContent(
     listOfItems: List<String>,
     isBulleted: Boolean,
-    extraInfoComposable: (@Composable () -> Unit)?
+    extraInfoComposable: (@Composable () -> Unit)?,
+    listTitle: String? = null
 ) {
     Column(
         modifier = Modifier.padding(top = 18.dp),
@@ -118,6 +121,15 @@ private fun ExpandedContent(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             } else {
+
+                listTitle?.let {
+                    Text(
+                        text = it,
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+
                 listOfItems.forEach { item ->
                     ItemRow(item = item, isBulleted = isBulleted)
                 }

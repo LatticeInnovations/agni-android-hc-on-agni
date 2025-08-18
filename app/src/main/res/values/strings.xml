@@ -683,4 +683,7 @@ include them in the household</string>
     <string name="update_vitals">Update vitals</string>
 
     <string name="diagnosis">Diagnosis</string>
+    <string name="add_diagnosis">Add diagnosis</string>
+    <string name="recent_diagnosis">Recent diagnosis</string>
+    <string name="diagnosis_colon">"Diagnosis: "</string>
 </resources>
