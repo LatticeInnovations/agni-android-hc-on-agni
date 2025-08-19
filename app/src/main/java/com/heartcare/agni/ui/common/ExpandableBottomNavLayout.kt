@@ -1,11 +1,7 @@
 package com.heartcare.agni.ui.common
 
-import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -91,53 +87,48 @@ fun ExpandableBottomNavLayout(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 8.dp, vertical = 12.dp)
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
                     .navigationBarsPadding(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                AnimatedContent(
-                    targetState = selectedList.isNotEmpty(),
-                    transitionSpec = {
-                        fadeIn().togetherWith(fadeOut())
+                AnimatedVisibility(
+                    visible = retainBtnComposable != null
+                ) {
+                    retainBtnComposable?.let {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth(0.5f)
+                        ) {
+                            it.invoke()
+                        }
                     }
-                ) { showCount ->
-                    when(showCount) {
-                        true -> {
-                            Row(
-                                Modifier
-                                    .fillMaxWidth(0.5f)
-                                    .clickable(
-                                        interactionSource = remember { MutableInteractionSource() },
-                                        indication = null
-                                    ) {
-                                        onExpandToggle()
-                                    },
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.SpaceEvenly
+                }
+
+                AnimatedVisibility(
+                    visible = selectedList.isNotEmpty(),
+                ) {
+                    Row(
+                        Modifier
+                            .fillMaxWidth(0.5f)
+                            .clickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = null
                             ) {
-                                Text(
-                                    text = "${selectedList.size} selected",
-                                    style = MaterialTheme.typography.labelLarge,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                                Icon(
-                                    Icons.Default.KeyboardArrowUp,
-                                    contentDescription = "ARROW_UP",
-                                    modifier = Modifier.rotate(rotationState)
-                                )
-                            }
-                        }
-                        false -> {
-                            retainBtnComposable?.let{
-                                Row (
-                                    modifier = Modifier
-                                        .fillMaxWidth(0.5f)
-                                ){
-                                    it.invoke()
-                                }
-                            }
-                        }
+                                onExpandToggle()
+                            },
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceEvenly
+                    ) {
+                        Text(
+                            text = "${selectedList.size} selected",
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Icon(
+                            Icons.Default.KeyboardArrowUp,
+                            contentDescription = "ARROW_UP",
+                            modifier = Modifier.rotate(rotationState)
+                        )
                     }
                 }
                 Button(

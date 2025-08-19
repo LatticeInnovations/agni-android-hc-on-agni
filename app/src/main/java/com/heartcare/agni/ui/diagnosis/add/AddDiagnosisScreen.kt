@@ -112,6 +112,7 @@ private fun DiagnosisContent(
     Column(
         modifier = Modifier
             .padding(paddingValues)
+            .padding(bottom = 64.dp)
             .verticalScroll(rememberScrollState())
     ) {
         Column(
@@ -175,7 +176,7 @@ private fun DiagnosisBottomSection(
             },
             saveBtnText = stringResource(R.string.save_diagnosis),
             title = stringResource(R.string.diagnosis),
-            retainBtnComposable = if (viewModel.lastDiagnosis != null && !viewModel.isTodayDiagnosis) {
+            retainBtnComposable = if (viewModel.lastDiagnosis != null && !viewModel.isTodayDiagnosis && viewModel.lastDiagnosis?.diagnosis?.isNotEmpty() == true && viewModel.selectedDiagnosis.isEmpty()) {
                 @Composable {
                     RetainDiagnosisButton(viewModel)
                 }
