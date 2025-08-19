@@ -127,7 +127,8 @@ class AddDiagnosisViewModel @Inject constructor(
                 user.firstName,
                 user.lastName
             ),
-            patientId = patient!!.id
+            patientId = patient!!.id,
+            progressNote = null
         )
     }
 

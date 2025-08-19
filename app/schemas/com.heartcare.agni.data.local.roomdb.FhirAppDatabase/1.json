@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "7cd3f465d8e45d9160fb4fe73ba4594a",
+    "identityHash": "d4d84d54d0e0f4b2a62ffbe3421d543d",
     "entities": [
       {
         "tableName": "PatientEntity",
@@ -1586,7 +1586,7 @@
       },
       {
         "tableName": "SymptomAndDiagnosisEntity",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`symDiagUuid` TEXT NOT NULL, `appointmentId` TEXT NOT NULL, `fhirId` TEXT, `createdOn` INTEGER NOT NULL, `diagnosis` TEXT NOT NULL, `symptoms` TEXT NOT NULL, `practitionerName` TEXT NOT NULL, `patientId` TEXT NOT NULL, PRIMARY KEY(`symDiagUuid`), FOREIGN KEY(`patientId`) REFERENCES `PatientEntity`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`symDiagUuid` TEXT NOT NULL, `appointmentId` TEXT NOT NULL, `fhirId` TEXT, `createdOn` INTEGER NOT NULL, `diagnosis` TEXT NOT NULL, `symptoms` TEXT NOT NULL, `practitionerName` TEXT NOT NULL, `patientId` TEXT NOT NULL, `progressNote` TEXT, PRIMARY KEY(`symDiagUuid`), FOREIGN KEY(`patientId`) REFERENCES `PatientEntity`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION )",
         "fields": [
           {
             "fieldPath": "symDiagUuid",
@@ -1634,6 +1634,11 @@
             "columnName": "patientId",
             "affinity": "TEXT",
             "notNull": true
+          },
+          {
+            "fieldPath": "progressNote",
+            "columnName": "progressNote",
+            "affinity": "TEXT"
           }
         ],
         "primaryKey": {
@@ -3566,7 +3571,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '7cd3f465d8e45d9160fb4fe73ba4594a')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'd4d84d54d0e0f4b2a62ffbe3421d543d')"
     ]
   }
 }

@@ -307,7 +307,9 @@ class AddSymptomsAndDiagnosisViewModel @Inject constructor(
             },
             symptoms = if (isNoSymptomChecked) listOf() else selectedActiveSymptomsList,
             practitionerName = practitionerName ?: "",
-            patientId = patientId ?: "")
+            patientId = patientId ?: "",
+            progressNote = null
+        )
     }
 
     private suspend fun insertSymDiagLocal(

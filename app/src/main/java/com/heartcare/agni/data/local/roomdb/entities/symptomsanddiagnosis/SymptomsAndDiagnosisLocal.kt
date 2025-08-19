@@ -16,5 +16,6 @@ data class SymptomsAndDiagnosisLocal(
     val diagnosis: List<SymptomsAndDiagnosisItem>,
     val symptoms: List<SymptomsAndDiagnosisItem>,
     val practitionerName: String,
-    val patientId: String
+    val patientId: String,
+    val progressNote: String?
 ) : Parcelable

@@ -15,5 +15,6 @@ data class SymptomsAndDiagnosisResponse(
     val symDiagFhirId: String,
     @SerializedName("uuid")
     val symDiagUuid: String,
-    val symptoms: List<SymptomsAndDiagnosisItem>
+    val symptoms: List<SymptomsAndDiagnosisItem>,
+    val progressNote: String?
 )

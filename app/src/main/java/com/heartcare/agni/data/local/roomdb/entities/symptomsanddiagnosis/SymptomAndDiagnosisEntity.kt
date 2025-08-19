@@ -28,4 +28,5 @@ data class SymptomAndDiagnosisEntity(
     val symptoms: List<SymptomsAndDiagnosisItem>,
     val practitionerName: String,
     val patientId: String,
+    val progressNote: String?
 )

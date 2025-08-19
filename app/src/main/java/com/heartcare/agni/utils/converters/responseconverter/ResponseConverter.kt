@@ -920,8 +920,9 @@ internal fun SymptomsAndDiagnosisLocal.toSymptomsAndDiagnosisEntity(): SymptomAn
         createdOn = createdOn,
         diagnosis = diagnosis,
         symptoms = symptoms,
-        practitionerName = practitionerName!!,
-        patientId = patientId!!
+        practitionerName = practitionerName,
+        patientId = patientId,
+        progressNote = progressNote
     )
 }
 
@@ -933,7 +934,8 @@ internal fun SymptomAndDiagnosisEntity.toSymptomsAndDiagnosisLocal(): SymptomsAn
         diagnosis = diagnosis,
         symptoms = symptoms,
         practitionerName = practitionerName,
-        patientId = patientId
+        patientId = patientId,
+        progressNote = progressNote
     )
 }
 
@@ -950,7 +952,8 @@ internal suspend fun SymptomsAndDiagnosisResponse.toSymptomsAndDiagnosisEntity(
         diagnosis = diagnosis,
         symptoms = symptoms,
         practitionerName = practitionerName,
-        patientId = studentDao.getPatientIdByFhirId(patientId)!!
+        patientId = studentDao.getPatientIdByFhirId(patientId)!!,
+        progressNote = progressNote
     )
 }
 
