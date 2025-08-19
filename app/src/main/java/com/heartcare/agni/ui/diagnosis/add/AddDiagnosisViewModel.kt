@@ -5,6 +5,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewModelScope
 import com.heartcare.agni.base.viewmodel.BaseViewModel
+import com.heartcare.agni.data.local.enums.SearchTypeEnum
 import com.heartcare.agni.data.local.repository.search.SearchRepository
 import com.heartcare.agni.data.server.model.patient.PatientResponse
 import com.heartcare.agni.di.dispatcher.IoDispatcher
@@ -22,15 +23,7 @@ class AddDiagnosisViewModel @Inject constructor(
     var patient by mutableStateOf<PatientResponse?>(null)
 
     var searchQuery by mutableStateOf("")
-    var frequentlyDiagnosedList by mutableStateOf(
-        listOf(
-            "A0109, Typhoid fever with other complications",
-            "A1810, Tuberculosis of genitourinary system, unspecified",
-            "Cholera due to Vibrio cholerae 01, biovar cholerae",
-            "A0221, Salmonella meningitis",
-            "A0102, Typhoid fever with heart involvement"
-        )
-    )
+    var frequentlyDiagnosedList by mutableStateOf(listOf<String>())
 
     var selectedDiagnosis by mutableStateOf(listOf<String>())
     var isSearching by mutableStateOf(false)
@@ -43,6 +36,13 @@ class AddDiagnosisViewModel @Inject constructor(
 
     var lastDiagnosis by mutableStateOf<String?>(null)
 
+    init {
+        viewModelScope.launch(ioDispatcher) {
+            frequentlyDiagnosedList =
+                searchRepository.getRecentSymptomAndDiagnosisSearches(searchTypeEnum = SearchTypeEnum.DIAGNOSIS)
+        }
+    }
+
     fun searchDiagnosis() {
         viewModelScope.launch(ioDispatcher) {
             isSearching = true
@@ -51,6 +51,25 @@ class AddDiagnosisViewModel @Inject constructor(
                 searchQuery.trim()
             )
             isLoading = false
+        }
+    }
+
+    fun addDiagnosis(
+        added: () -> Unit
+    ) {
+        viewModelScope.launch(ioDispatcher) {
+            insertRecentSearch()
+            added()
+        }
+    }
+
+    private suspend fun insertRecentSearch() {
+        selectedDiagnosis.forEach { diagnosis ->
+            searchRepository.insertRecentSymptomAndDiagnosisSearch(
+                searchQuery = diagnosis,
+                searchTypeEnum = SearchTypeEnum.DIAGNOSIS,
+                size = 5
+            )
         }
     }
 }

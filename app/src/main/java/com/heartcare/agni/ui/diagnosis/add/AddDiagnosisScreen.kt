@@ -169,12 +169,14 @@ private fun DiagnosisBottomSection(
                         focusManager.clearFocus()
                     },
                     onSave = {
-                        coroutineScope.launch {
-                            navController.previousBackStackEntry?.savedStateHandle?.set(
-                                DIAGNOSIS_SAVED,
-                                true
-                            )
-                            navController.navigateUp()
+                        viewModel.addDiagnosis {
+                            coroutineScope.launch {
+                                navController.previousBackStackEntry?.savedStateHandle?.set(
+                                    DIAGNOSIS_SAVED,
+                                    true
+                                )
+                                navController.navigateUp()
+                            }
                         }
                     },
                     onClearAll = { viewModel.clearAllConfirmDialog = true },
@@ -313,7 +315,7 @@ private fun DiagnosisSearchList(
         if (viewModel.searchResults.isEmpty()) {
             Text(
                 text = stringResource(R.string.no_results_found),
-                style = MaterialTheme.typography.labelLarge,
+                style = MaterialTheme.typography.bodyLarge,
                 modifier = Modifier.fillMaxWidth(),
                 textAlign = TextAlign.Center
             )
