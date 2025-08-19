@@ -183,4 +183,8 @@ class AddDiagnosisViewModel @Inject constructor(
             )
         }
     }
+
+    fun retainDiagnosis() {
+        selectedDiagnosis = lastDiagnosis!!.diagnosis.map { "${it.code}, ${it.display}" }
+    }
 }

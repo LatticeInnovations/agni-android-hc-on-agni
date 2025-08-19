@@ -1,7 +1,11 @@
 package com.heartcare.agni.ui.common
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -58,7 +62,8 @@ fun ExpandableBottomNavLayout(
     onClearAll: () -> Unit,
     onRemoveItem: (String) -> Unit,
     saveBtnText: String,
-    title: String
+    title: String,
+    retainBtnComposable: (@Composable () -> Unit)? = null
 ) {
     val rotationState by animateFloatAsState(
         targetValue = if (bottomNavExpanded) 180f else 0f,
@@ -91,34 +96,50 @@ fun ExpandableBottomNavLayout(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                AnimatedVisibility(
-                    visible = selectedList.isNotEmpty()
-                ) {
-                    Row(
-                        Modifier
-                            .fillMaxWidth(0.5f)
-                            .clickable(
-                                interactionSource = remember { MutableInteractionSource() },
-                                indication = null
+                AnimatedContent(
+                    targetState = selectedList.isNotEmpty(),
+                    transitionSpec = {
+                        fadeIn().togetherWith(fadeOut())
+                    }
+                ) { showCount ->
+                    when(showCount) {
+                        true -> {
+                            Row(
+                                Modifier
+                                    .fillMaxWidth(0.5f)
+                                    .clickable(
+                                        interactionSource = remember { MutableInteractionSource() },
+                                        indication = null
+                                    ) {
+                                        onExpandToggle()
+                                    },
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceEvenly
                             ) {
-                                onExpandToggle()
-                            },
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceEvenly
-                    ) {
-                        Text(
-                            text = "${selectedList.size} selected",
-                            style = MaterialTheme.typography.labelLarge,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Icon(
-                            Icons.Default.KeyboardArrowUp,
-                            contentDescription = "ARROW_UP",
-                            modifier = Modifier.rotate(rotationState)
-                        )
+                                Text(
+                                    text = "${selectedList.size} selected",
+                                    style = MaterialTheme.typography.labelLarge,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                Icon(
+                                    Icons.Default.KeyboardArrowUp,
+                                    contentDescription = "ARROW_UP",
+                                    modifier = Modifier.rotate(rotationState)
+                                )
+                            }
+                        }
+                        false -> {
+                            retainBtnComposable?.let{
+                                Row (
+                                    modifier = Modifier
+                                        .fillMaxWidth(0.5f)
+                                ){
+                                    it.invoke()
+                                }
+                            }
+                        }
                     }
                 }
-
                 Button(
                     onClick = onSave,
                     modifier = Modifier.weight(1f)
