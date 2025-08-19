@@ -12,9 +12,12 @@ import com.heartcare.agni.data.local.repository.generic.GenericRepository
 import com.heartcare.agni.data.local.repository.patient.lastupdated.PatientLastUpdatedRepository
 import com.heartcare.agni.data.local.repository.preference.PreferenceRepository
 import com.heartcare.agni.data.local.repository.schedule.ScheduleRepository
+import com.heartcare.agni.data.local.repository.symptomsanddiagnosis.SymDiagRepository
+import com.heartcare.agni.data.local.roomdb.entities.symptomsanddiagnosis.SymptomsAndDiagnosisLocal
 import com.heartcare.agni.data.server.model.patient.PatientResponse
 import com.heartcare.agni.di.dispatcher.IoDispatcher
 import com.heartcare.agni.utils.common.Queries
+import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.isToday
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toEndOfDay
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toTodayStartDate
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -26,6 +29,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class DiagnosisViewModel @Inject constructor(
+    private val symDiagRepository: SymDiagRepository,
     private val appointmentRepository: AppointmentRepository,
     private val preferenceRepository: PreferenceRepository,
     private val genericRepository: GenericRepository,
@@ -37,7 +41,8 @@ class DiagnosisViewModel @Inject constructor(
     var patient by mutableStateOf<PatientResponse?>(null)
     val user = preferenceRepository.getUserDetails()!!
 
-    var diagnosisList by mutableStateOf(listOf<String>("", ""))
+    var diagnosisList by mutableStateOf(listOf<SymptomsAndDiagnosisLocal>())
+    var todayDiagnosis by mutableStateOf<SymptomsAndDiagnosisLocal?>(null)
 
     var appointment by mutableStateOf<AppointmentResponseLocal?>(null)
     var canAddAssessment by mutableStateOf(false)
@@ -48,6 +53,14 @@ class DiagnosisViewModel @Inject constructor(
     var showAppointmentCompletedDialog by mutableStateOf(false)
     var isAppointmentCompleted by mutableStateOf(false)
     var existsInOtherHospital by mutableStateOf(false)
+
+    fun getPreviousDiagnosis(patientId: String) {
+        viewModelScope.launch(ioDispatcher) {
+            diagnosisList = symDiagRepository.getPastSymptomsAndDiagnosis(patientId).also {
+                todayDiagnosis = it.firstOrNull { priorDx -> isToday(priorDx.createdOn) }
+            }
+        }
+    }
 
     fun getAppointmentInfo(
         callback: () -> Unit,

@@ -148,8 +148,6 @@ class AddDiagnosisViewModel @Inject constructor(
             )
             genericRepository.insertSymDiag(
                 diagnosisResponseLocal.copy(
-                    symDiagFhirId = null,
-                    practitionerName = null,
                     appointmentId = appointmentResponseLocal!!.appointmentId
                         ?: appointmentResponseLocal!!.uuid,
                     patientId = patient!!.fhirId ?: patient!!.id

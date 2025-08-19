@@ -188,6 +188,7 @@ class AddSymptomsAndDiagnosisViewModel @Inject constructor(
     fun clearSymptomsList() {
         symptoms.value = emptyList()
     }
+
     fun clearDiagnosisList() {
         diagnosis.value = emptyList()
     }
@@ -274,7 +275,8 @@ class AddSymptomsAndDiagnosisViewModel @Inject constructor(
         patientId: String?
 
     ): SymptomsAndDiagnosisLocal {
-        return SymptomsAndDiagnosisLocal(symDiagUuid = symDiagUuid,
+        return SymptomsAndDiagnosisLocal(
+            symDiagUuid = symDiagUuid,
             appointmentId = appointmentResponseLocal?.appointmentId
                 ?: appointmentResponseLocal!!.uuid,
             symDiagFhirId = fhirId,
@@ -304,8 +306,8 @@ class AddSymptomsAndDiagnosisViewModel @Inject constructor(
                 }
             },
             symptoms = if (isNoSymptomChecked) listOf() else selectedActiveSymptomsList,
-            practitionerName = practitionerName,
-            patientId = patientId)
+            practitionerName = practitionerName ?: "",
+            patientId = patientId ?: "")
     }
 
     private suspend fun insertSymDiagLocal(
@@ -387,7 +389,8 @@ class AddSymptomsAndDiagnosisViewModel @Inject constructor(
                 SymptomsAndDiagnosisItem(
                     it.splitString().first, it.splitString().second
                 )
-            }) map = mapOf(SYM_DIAG_FHIR_ID to vitalFhirId!!,
+            }) map = mapOf(
+            SYM_DIAG_FHIR_ID to vitalFhirId!!,
             CREATED_ON to local.createdOn.convertedDate(),
             SYMPTOMS to if (selectedActiveSymptomsList.isNotEmpty()) selectedActiveSymptomsList.map { it.code } else if (isNoSymptomChecked) listOf() else local.symptoms.map { it.code },
             DIAGNOSIS to if (selectedActiveDiagnosisList.isNotEmpty()) selectedActiveDiagnosisList.map { it.splitString().first } else if (local.diagnosis.isNotEmpty() && selectedActiveDiagnosisList.isEmpty()) listOf() else local.diagnosis.map { it.code })
