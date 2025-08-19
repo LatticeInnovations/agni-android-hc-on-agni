@@ -58,6 +58,9 @@ class SyncService(
                     },
                     async {
                         downloadLevelsRecord(logout)
+                    },
+                    async {
+                        getAndInsertDiagnosis()
                     }
                 )
             }
@@ -255,7 +258,6 @@ class SyncService(
     }
 
     /** Upload SymDiag */
-
     private suspend fun uploadSymDiag(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
         return checkAuthenticationStatus(syncRepository.sendSymptomsAndDiagnosisPostData(), logout)
     }
@@ -462,6 +464,9 @@ class SyncService(
                     }
                     CoroutineScope(Dispatchers.IO).launch {
                         downloadTobaccoCessation(logout)
+                    }
+                    CoroutineScope(Dispatchers.IO).launch {
+                        downloadSymDiag(logout)
                     }
                 }
             }
@@ -766,13 +771,6 @@ class SyncService(
         } else {
             responseMapper
         }
-    }
-
-    private suspend fun getAndInsertSymptoms() {
-        if (symptomsAndDiagnosisRepository.getSymptoms().isEmpty()) {
-            symptomsAndDiagnosisRepository.insertSymptoms()
-        }
-
     }
 
     private suspend fun getAndInsertDiagnosis() {

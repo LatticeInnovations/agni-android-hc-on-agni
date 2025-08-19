@@ -690,4 +690,6 @@ include them in the household</string>
     <string name="frequently_diagnosed">"Frequently diagnosed "</string>
     <string name="diagnosis_added_successfully">Diagnosis added successfully!</string>
     <string name="retain_diagnosis">Retain diagnosis</string>
+    <string name="update_diagnosis">Update diagnosis</string>
+    <string name="diagnosis_updated_successfully">Diagnosis updated successfully!</string>
 </resources>

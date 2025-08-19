@@ -46,7 +46,7 @@ interface SearchDao {
     suspend fun getSymptoms(): List<SymptomsEntity>
 
     @Transaction
-    @Query("SELECT * FROM diagnosis")
+    @Query("SELECT * FROM DiagnosisEntity")
     suspend fun getDiagnosis(): List<DiagnosisEntity>
 
     // Insert a new search entry or update the existing one
@@ -54,7 +54,7 @@ interface SearchDao {
     suspend fun insertOrUpdateSearch(symDiagSearchEntity: SymDiagSearchEntity): Long
 
     // Get the most frequent searches (limit to 5)
-    @Query("SELECT searchQuery FROM SymDiagSearchEntity where searchType=:searchTypeEnum ORDER BY searchCount DESC LIMIT 5")
+    @Query("SELECT searchQuery FROM SymDiagSearchEntity where searchType=:searchTypeEnum ORDER BY searchCount DESC, date DESC LIMIT 5")
     suspend fun getMostFrequentSearches(searchTypeEnum: SearchTypeEnum): List<String>
 
     // Check if a query already exists

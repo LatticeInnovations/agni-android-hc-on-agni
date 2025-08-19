@@ -106,7 +106,7 @@ import com.heartcare.agni.data.server.model.risk.TobaccoResponse
 import com.heartcare.agni.data.server.model.scheduleandappointment.Slot
 import com.heartcare.agni.data.server.model.scheduleandappointment.appointment.AppointmentResponse
 import com.heartcare.agni.data.server.model.scheduleandappointment.schedule.ScheduleResponse
-import com.heartcare.agni.data.server.model.symptomsanddiagnosis.SymptomsAndDiagnosisItem
+import com.heartcare.agni.data.server.model.symptomsanddiagnosis.Diagnosis
 import com.heartcare.agni.data.server.model.symptomsanddiagnosis.SymptomsAndDiagnosisResponse
 import com.heartcare.agni.data.server.model.symptomsanddiagnosis.SymptomsItem
 import com.heartcare.agni.data.server.model.tobacco.TobaccoCessationResponse
@@ -893,16 +893,24 @@ internal fun SymptomsItem.toSymptomsEntity(): SymptomsEntity {
     )
 }
 
-internal fun SymptomsAndDiagnosisItem.toDiagnosisEntity(): DiagnosisEntity {
-    return DiagnosisEntity(id = UUID.randomUUID().toString(), code = code, display = display)
+internal fun Diagnosis.toDiagnosisEntity(): DiagnosisEntity {
+    return DiagnosisEntity(
+        id = diagnosisId,
+        code = code,
+        display = display
+    )
 }
 
 internal fun SymptomsEntity.toSymptoms(): SymptomsItem {
     return SymptomsItem(code = code, display = display, type = type, gender = gender)
 }
 
-internal fun DiagnosisEntity.toDiagnosis(): SymptomsAndDiagnosisItem {
-    return SymptomsAndDiagnosisItem(code = code, display = display)
+internal fun DiagnosisEntity.toDiagnosis(): Diagnosis {
+    return Diagnosis(
+        diagnosisId = id,
+        code = code,
+        display = display
+    )
 }
 
 internal fun SymptomsAndDiagnosisLocal.toSymptomsAndDiagnosisEntity(): SymptomAndDiagnosisEntity {
@@ -912,8 +920,9 @@ internal fun SymptomsAndDiagnosisLocal.toSymptomsAndDiagnosisEntity(): SymptomAn
         createdOn = createdOn,
         diagnosis = diagnosis,
         symptoms = symptoms,
-        practitionerName = practitionerName!!,
-        patientId = patientId!!
+        practitionerName = practitionerName,
+        patientId = patientId,
+        progressNote = progressNote
     )
 }
 
@@ -925,7 +934,8 @@ internal fun SymptomAndDiagnosisEntity.toSymptomsAndDiagnosisLocal(): SymptomsAn
         diagnosis = diagnosis,
         symptoms = symptoms,
         practitionerName = practitionerName,
-        patientId = patientId
+        patientId = patientId,
+        progressNote = progressNote
     )
 }
 
@@ -938,11 +948,12 @@ internal suspend fun SymptomsAndDiagnosisResponse.toSymptomsAndDiagnosisEntity(
         symDiagUuid = symDiagUuid,
         appointmentId = appointmentDao.getAppointmentIdByFhirId(appointmentId),
         fhirId = symDiagFhirId,
-        createdOn = createdOn.convertStringToDate(),
+        createdOn = createdOn,
         diagnosis = diagnosis,
         symptoms = symptoms,
         practitionerName = practitionerName,
-        patientId = studentDao.getPatientIdByFhirId(patientId)!!
+        patientId = studentDao.getPatientIdByFhirId(patientId)!!,
+        progressNote = progressNote
     )
 }
 
@@ -952,7 +963,7 @@ internal fun SymptomsAndDiagnosisLocal.toSymDiagData(): SymptomsAndDiagnosisData
         appointmentId = appointmentId,
         createdOn = createdOn,
         diagnosis = diagnosis.map { it.code },
-        symptoms = symptoms.map { it.code },
+        symptoms = symptoms.map { it.code }.ifEmpty { null },
         patientId = patientId
     )
 }

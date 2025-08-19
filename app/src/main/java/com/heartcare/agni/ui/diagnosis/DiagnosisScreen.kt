@@ -1,5 +1,6 @@
 package com.heartcare.agni.ui.diagnosis
 
+import android.content.Context
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -29,6 +30,7 @@ import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -36,39 +38,31 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.heartcare.agni.R
 import com.heartcare.agni.data.server.model.patient.PatientResponse
 import com.heartcare.agni.navigation.Screen
+import com.heartcare.agni.ui.common.CustomDialog
 import com.heartcare.agni.ui.common.ExpandableCard
+import com.heartcare.agni.ui.patientlandingscreen.AllSlotsBookedDialog
+import com.heartcare.agni.ui.prescription.photo.view.AppointmentCompletedDialog
 import com.heartcare.agni.utils.constants.NavControllerConstants.DIAGNOSIS_SAVED
 import com.heartcare.agni.utils.constants.NavControllerConstants.PATIENT
-import java.util.Date
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DiagnosisScreen(
     navController: NavController,
-    viewModel: DiagnosisViewModel = viewModel()
+    viewModel: DiagnosisViewModel = hiltViewModel()
 ) {
+    val coroutineScope = rememberCoroutineScope()
     val snackBarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current
-    LaunchedEffect(viewModel.isLaunched) {
-        if (!viewModel.isLaunched) {
-            navController.previousBackStackEntry?.savedStateHandle?.get<PatientResponse>(
-                PATIENT
-            )?.let {
-                viewModel.patient = it
-            }
-            viewModel.isLaunched = true
-        }
-        navController.currentBackStackEntry?.savedStateHandle?.let { handle ->
-            if (handle.remove<Boolean>(DIAGNOSIS_SAVED) == true) {
-                snackBarHostState.showSnackbar(context.getString(R.string.diagnosis_added_successfully))
-            }
-        }
-    }
+
+    HandleLaunchedEffect(viewModel, navController, snackBarHostState, context)
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -97,69 +91,232 @@ fun DiagnosisScreen(
             Column(
                 modifier = Modifier
                     .padding(paddingValues)
-                    .verticalScroll(rememberScrollState())
             ) {
-                if (viewModel.diagnosisList.isEmpty()) {
-                    Column(
-                        modifier = Modifier.fillMaxSize(),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Spacer(Modifier.weight(1f))
-                        Text(
-                            text = stringResource(R.string.no_record_found),
-                            style = MaterialTheme.typography.titleLarge,
-                            color = MaterialTheme.colorScheme.onBackground
-                        )
-                        Spacer(Modifier.weight(2f))
-                    }
-                } else {
-                    Column(
-                        modifier = Modifier.padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        Text(
-                            text = stringResource(R.string.recent_diagnosis),
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        viewModel.diagnosisList.forEach { _ ->
-                            ExpandableCard(
-                                createdOn = Date(),
-                                practitionerName = "Dr. Anamika Sood",
-                                listOfItems = listOf("A0100, Typhoid fever, unspecified", "A1810, Tuberculosis of genitourinary system, unspecified"),
-                                isBulleted = true,
-                                listTitle = stringResource(R.string.diagnosis_colon)
-                            )
-                        }
-                    }
-                }
+                DiagnosisScreenContent(viewModel)
             }
         },
         bottomBar = {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp, horizontal = 16.dp)
-                    .navigationBarsPadding()
-            ) {
-                Button(
-                    onClick = {
-                        // navigate to add diagnosis
-                        navController.currentBackStackEntry?.savedStateHandle?.set(
-                            PATIENT,
-                            viewModel.patient
-                        )
-                        navController.navigate(Screen.AddDiagnosisScreen.route)
-                    },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Icon(
-                        painter = painterResource(R.drawable.add_icon),
-                        contentDescription = null,
-                        modifier = Modifier.size(20.dp)
+            DiagnosisBottomBar(viewModel, navController, coroutineScope, snackBarHostState, context)
+        }
+    )
+    Dialogs(viewModel, navController, coroutineScope)
+}
+
+@Composable
+private fun HandleLaunchedEffect(
+    viewModel: DiagnosisViewModel,
+    navController: NavController,
+    snackBarHostState: SnackbarHostState,
+    context: Context
+) {
+    LaunchedEffect(viewModel.isLaunched) {
+        if (!viewModel.isLaunched) {
+            navController.previousBackStackEntry?.savedStateHandle?.get<PatientResponse>(
+                PATIENT
+            )?.let {
+                viewModel.patient = it
+                viewModel.getPreviousDiagnosis(it.id)
+            }
+            viewModel.getAppointmentInfo(callback = {})
+            viewModel.isLaunched = true
+        }
+        navController.currentBackStackEntry?.savedStateHandle?.let { handle ->
+            if (handle.remove<Boolean>(DIAGNOSIS_SAVED) == true) {
+                viewModel.getPreviousDiagnosis(viewModel.patient!!.id)
+                snackBarHostState.showSnackbar(
+                    context.getString(
+                        if (viewModel.todayDiagnosis == null) R.string.diagnosis_added_successfully
+                        else R.string.diagnosis_updated_successfully
                     )
-                    Spacer(Modifier.width(8.dp))
-                    Text(text = stringResource(R.string.add_diagnosis))
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun DiagnosisScreenContent(
+    viewModel: DiagnosisViewModel
+) {
+    if (viewModel.diagnosisList.isEmpty()) {
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Spacer(Modifier.weight(1f))
+            Text(
+                text = stringResource(R.string.no_record_found),
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.onBackground
+            )
+            Spacer(Modifier.weight(2f))
+        }
+    } else {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Text(
+                    text = stringResource(R.string.recent_diagnosis),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                viewModel.diagnosisList.forEach { diagnosis ->
+                    ExpandableCard(
+                        createdOn = diagnosis.createdOn,
+                        practitionerName = diagnosis.practitionerName,
+                        listOfItems = diagnosis.diagnosis.map { "${it.code}, ${it.display}" },
+                        isBulleted = true,
+                        listTitle = stringResource(R.string.diagnosis_colon)
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun DiagnosisBottomBar(
+    viewModel: DiagnosisViewModel,
+    navController: NavController,
+    coroutineScope: CoroutineScope,
+    snackBarHostState: SnackbarHostState,
+    context: Context
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp, horizontal = 16.dp)
+            .navigationBarsPadding()
+    ) {
+        Button(
+            onClick = {
+                // navigate to add diagnosis
+                viewModel.getAppointmentInfo(
+                    callback = {
+                        when {
+                            viewModel.existsInOtherHospital -> {
+                                coroutineScope.launch {
+                                    snackBarHostState.showSnackbar(
+                                        message = context.getString(R.string.appointment_exists_in_other_hospital)
+                                    )
+                                }
+                            }
+
+                            viewModel.canAddAssessment -> {
+                                coroutineScope.launch {
+                                    navController.currentBackStackEntry?.savedStateHandle?.set(
+                                        PATIENT,
+                                        viewModel.patient
+                                    )
+                                    navController.navigate(Screen.AddDiagnosisScreen.route)
+                                }
+                            }
+
+                            viewModel.isAppointmentCompleted -> {
+                                viewModel.showAppointmentCompletedDialog = true
+                            }
+
+                            else -> {
+                                viewModel.showAddToQueueDialog = true
+                            }
+                        }
+                    }
+                )
+            },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.add_icon),
+                contentDescription = null,
+                modifier = Modifier.size(20.dp)
+            )
+            Spacer(Modifier.width(8.dp))
+            Text(
+                text = if (viewModel.todayDiagnosis == null || viewModel.existsInOtherHospital) stringResource(R.string.add_diagnosis)
+                else stringResource(R.string.update_diagnosis)
+            )
+        }
+    }
+}
+
+@Composable
+private fun Dialogs(
+    viewModel: DiagnosisViewModel,
+    navController: NavController,
+    coroutineScope: CoroutineScope
+) {
+    if (viewModel.showAddToQueueDialog) {
+        AddToQueueDialog(viewModel, navController, coroutineScope)
+    }
+
+    if (viewModel.ifAllSlotsBooked) {
+        AllSlotsBookedDialog {
+            viewModel.showAllSlotsBookedDialog = false
+        }
+    }
+
+    if (viewModel.showAppointmentCompletedDialog) {
+        AppointmentCompletedDialog {
+            viewModel.showAppointmentCompletedDialog = false
+        }
+    }
+}
+
+@Composable
+private fun AddToQueueDialog(
+    viewModel: DiagnosisViewModel,
+    navController: NavController,
+    coroutineScope: CoroutineScope
+) {
+    CustomDialog(
+        title = stringResource(
+            if (viewModel.appointment != null) R.string.patient_arrived_question else R.string.add_to_queue_question
+        ),
+        text = stringResource(R.string.add_to_queue_assessment_dialog_description),
+        dismissBtnText = stringResource(R.string.dismiss),
+        confirmBtnText = stringResource(
+            if (viewModel.appointment != null) R.string.mark_arrived else R.string.add_to_queue
+        ),
+        dismiss = { viewModel.showAddToQueueDialog = false },
+        confirm = {
+            if (viewModel.appointment != null) {
+                viewModel.updateStatusToArrived(
+                    patient = viewModel.patient!!,
+                    appointment = viewModel.appointment!!,
+                    updated = {
+                        viewModel.showAddToQueueDialog = false
+                        coroutineScope.launch {
+                            navController.currentBackStackEntry?.savedStateHandle?.set(
+                                PATIENT,
+                                viewModel.patient
+                            )
+                            navController.navigate(Screen.AddDiagnosisScreen.route)
+                        }
+                    }
+                )
+            } else {
+                if (viewModel.ifAllSlotsBooked) {
+                    viewModel.showAllSlotsBookedDialog = true
+                } else {
+                    viewModel.addPatientToQueue(
+                        viewModel.patient!!,
+                        addedToQueue = {
+                            viewModel.showAddToQueueDialog = false
+                            coroutineScope.launch {
+                                navController.currentBackStackEntry?.savedStateHandle?.set(
+                                    PATIENT,
+                                    viewModel.patient
+                                )
+                                navController.navigate(Screen.AddDiagnosisScreen.route)
+                            }
+                        }
+                    )
                 }
             }
         }

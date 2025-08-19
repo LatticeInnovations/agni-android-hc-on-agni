@@ -58,7 +58,8 @@ fun ExpandableBottomNavLayout(
     onClearAll: () -> Unit,
     onRemoveItem: (String) -> Unit,
     saveBtnText: String,
-    title: String
+    title: String,
+    retainBtnComposable: (@Composable () -> Unit)? = null
 ) {
     val rotationState by animateFloatAsState(
         targetValue = if (bottomNavExpanded) 180f else 0f,
@@ -86,13 +87,25 @@ fun ExpandableBottomNavLayout(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 8.dp, vertical = 12.dp)
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
                     .navigationBarsPadding(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 AnimatedVisibility(
-                    visible = selectedList.isNotEmpty()
+                    visible = retainBtnComposable != null
+                ) {
+                    retainBtnComposable?.let {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth(0.5f)
+                        ) {
+                            it.invoke()
+                        }
+                    }
+                }
+
+                AnimatedVisibility(
+                    visible = selectedList.isNotEmpty(),
                 ) {
                     Row(
                         Modifier
@@ -118,7 +131,6 @@ fun ExpandableBottomNavLayout(
                         )
                     }
                 }
-
                 Button(
                     onClick = onSave,
                     modifier = Modifier.weight(1f)

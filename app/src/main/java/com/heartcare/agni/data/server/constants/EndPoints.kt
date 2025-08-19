@@ -7,7 +7,7 @@ object EndPoints {
     const val MEDICATION_REQUEST = "Prescription"
     const val PRESCRIPTION_FILE = "PrescriptionFile"
     const val VITAL = "Vital"
-    const val SYMPTOMS_DIAGNOSIS = "SympDx"
+    const val SYMPTOMS_DIAGNOSIS = "diagnosis"
     const val LAB_TEST = "LabReport"
     const val MEDICAL_RECORD = "MedicalRecord"
     const val MEDICATION_DISPENSE = "MedicationDispense"

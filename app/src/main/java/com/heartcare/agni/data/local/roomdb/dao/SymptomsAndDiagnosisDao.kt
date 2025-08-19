@@ -24,7 +24,7 @@ interface SymptomsAndDiagnosisDao {
     suspend fun getSymptomsEntity(): List<SymptomsEntity>
 
     @Transaction
-    @Query("SELECT * FROM diagnosis")
+    @Query("SELECT * FROM DiagnosisEntity")
     suspend fun getDiagnosisEntity(): List<DiagnosisEntity>
 
     // insert, get, update symptoms and Diagnosis
@@ -34,7 +34,7 @@ interface SymptomsAndDiagnosisDao {
     suspend fun insertSymptomsAndDiagnosis(vararg symptomAndDiagnosisEntity: SymptomAndDiagnosisEntity): List<Long>
 
     @Transaction
-    @Query("SELECT * FROM SymptomAndDiagnosisEntity WHERE patientId=:patientId")
+    @Query("SELECT * FROM SymptomAndDiagnosisEntity WHERE patientId=:patientId ORDER BY createdOn DESC")
     suspend fun getPastSymptomsAndDiagnosis(
         patientId: String
     ): List<SymptomAndDiagnosisEntity>
