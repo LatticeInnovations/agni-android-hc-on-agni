@@ -117,6 +117,7 @@ private fun HandleLaunchedEffect(
                 viewModel.patient = it
                 viewModel.getPreviousDiagnosis(it.id)
             }
+            viewModel.getAppointmentInfo(callback = {})
             viewModel.isLaunched = true
         }
         navController.currentBackStackEntry?.savedStateHandle?.let { handle ->
@@ -237,7 +238,7 @@ private fun DiagnosisBottomBar(
             )
             Spacer(Modifier.width(8.dp))
             Text(
-                text = if (viewModel.todayDiagnosis == null) stringResource(R.string.add_diagnosis)
+                text = if (viewModel.todayDiagnosis == null || viewModel.existsInOtherHospital) stringResource(R.string.add_diagnosis)
                 else stringResource(R.string.update_diagnosis)
             )
         }
