@@ -946,7 +946,7 @@ internal suspend fun SymptomsAndDiagnosisResponse.toSymptomsAndDiagnosisEntity(
         symDiagUuid = symDiagUuid,
         appointmentId = appointmentDao.getAppointmentIdByFhirId(appointmentId),
         fhirId = symDiagFhirId,
-        createdOn = createdOn.convertStringToDate(),
+        createdOn = createdOn,
         diagnosis = diagnosis,
         symptoms = symptoms,
         practitionerName = practitionerName,
@@ -960,7 +960,7 @@ internal fun SymptomsAndDiagnosisLocal.toSymDiagData(): SymptomsAndDiagnosisData
         appointmentId = appointmentId,
         createdOn = createdOn,
         diagnosis = diagnosis.map { it.code },
-        symptoms = symptoms.map { it.code },
+        symptoms = symptoms.map { it.code }.ifEmpty { null },
         patientId = patientId
     )
 }

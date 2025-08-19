@@ -34,7 +34,7 @@ interface SymptomsAndDiagnosisDao {
     suspend fun insertSymptomsAndDiagnosis(vararg symptomAndDiagnosisEntity: SymptomAndDiagnosisEntity): List<Long>
 
     @Transaction
-    @Query("SELECT * FROM SymptomAndDiagnosisEntity WHERE patientId=:patientId")
+    @Query("SELECT * FROM SymptomAndDiagnosisEntity WHERE patientId=:patientId ORDER BY createdOn DESC")
     suspend fun getPastSymptomsAndDiagnosis(
         patientId: String
     ): List<SymptomAndDiagnosisEntity>

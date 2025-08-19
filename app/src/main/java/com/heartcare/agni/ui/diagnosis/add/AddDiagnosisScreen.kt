@@ -104,7 +104,10 @@ private fun HandleLaunchedEffect(viewModel: AddDiagnosisViewModel, navController
     LaunchedEffect(viewModel.isLaunched) {
         if (!viewModel.isLaunched) {
             navController.previousBackStackEntry?.savedStateHandle?.get<PatientResponse>(PATIENT)
-                ?.let { viewModel.patient = it }
+                ?.let {
+                    viewModel.patient = it
+                    viewModel.getLastDiagnosis(it.id)
+                }
             viewModel.isLaunched = true
         }
     }
