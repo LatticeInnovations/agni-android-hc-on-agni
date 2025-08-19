@@ -29,6 +29,7 @@ import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -36,22 +37,28 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.heartcare.agni.R
 import com.heartcare.agni.data.server.model.patient.PatientResponse
 import com.heartcare.agni.navigation.Screen
+import com.heartcare.agni.ui.common.CustomDialog
 import com.heartcare.agni.ui.common.ExpandableCard
+import com.heartcare.agni.ui.patientlandingscreen.AllSlotsBookedDialog
+import com.heartcare.agni.ui.prescription.photo.view.AppointmentCompletedDialog
 import com.heartcare.agni.utils.constants.NavControllerConstants.DIAGNOSIS_SAVED
 import com.heartcare.agni.utils.constants.NavControllerConstants.PATIENT
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import java.util.Date
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DiagnosisScreen(
     navController: NavController,
-    viewModel: DiagnosisViewModel = viewModel()
+    viewModel: DiagnosisViewModel = hiltViewModel()
 ) {
+    val coroutineScope = rememberCoroutineScope()
     val snackBarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current
     LaunchedEffect(viewModel.isLaunched) {
@@ -145,11 +152,37 @@ fun DiagnosisScreen(
                 Button(
                     onClick = {
                         // navigate to add diagnosis
-                        navController.currentBackStackEntry?.savedStateHandle?.set(
-                            PATIENT,
-                            viewModel.patient
+                        viewModel.getAppointmentInfo(
+                            callback = {
+                                when {
+                                    viewModel.existsInOtherHospital -> {
+                                        coroutineScope.launch {
+                                            snackBarHostState.showSnackbar(
+                                                message = context.getString(R.string.appointment_exists_in_other_hospital)
+                                            )
+                                        }
+                                    }
+
+                                    viewModel.canAddAssessment -> {
+                                        coroutineScope.launch {
+                                            navController.currentBackStackEntry?.savedStateHandle?.set(
+                                                PATIENT,
+                                                viewModel.patient
+                                            )
+                                            navController.navigate(Screen.AddDiagnosisScreen.route)
+                                        }
+                                    }
+
+                                    viewModel.isAppointmentCompleted -> {
+                                        viewModel.showAppointmentCompletedDialog = true
+                                    }
+
+                                    else -> {
+                                        viewModel.showAddToQueueDialog = true
+                                    }
+                                }
+                            }
                         )
-                        navController.navigate(Screen.AddDiagnosisScreen.route)
                     },
                     modifier = Modifier.fillMaxWidth()
                 ) {
@@ -160,6 +193,85 @@ fun DiagnosisScreen(
                     )
                     Spacer(Modifier.width(8.dp))
                     Text(text = stringResource(R.string.add_diagnosis))
+                }
+            }
+        }
+    )
+    Dialogs(viewModel, navController, coroutineScope)
+}
+
+@Composable
+private fun Dialogs(
+    viewModel: DiagnosisViewModel,
+    navController: NavController,
+    coroutineScope: CoroutineScope
+) {
+    if (viewModel.showAddToQueueDialog) {
+        AddToQueueDialog(viewModel, navController, coroutineScope)
+    }
+
+    if (viewModel.ifAllSlotsBooked) {
+        AllSlotsBookedDialog {
+            viewModel.showAllSlotsBookedDialog = false
+        }
+    }
+
+    if (viewModel.showAppointmentCompletedDialog) {
+        AppointmentCompletedDialog {
+            viewModel.showAppointmentCompletedDialog = false
+        }
+    }
+}
+
+@Composable
+private fun AddToQueueDialog(
+    viewModel: DiagnosisViewModel,
+    navController: NavController,
+    coroutineScope: CoroutineScope
+) {
+    CustomDialog(
+        title = stringResource(
+            if (viewModel.appointment != null) R.string.patient_arrived_question else R.string.add_to_queue_question
+        ),
+        text = stringResource(R.string.add_to_queue_assessment_dialog_description),
+        dismissBtnText = stringResource(R.string.dismiss),
+        confirmBtnText = stringResource(
+            if (viewModel.appointment != null) R.string.mark_arrived else R.string.add_to_queue
+        ),
+        dismiss = { viewModel.showAddToQueueDialog = false },
+        confirm = {
+            if (viewModel.appointment != null) {
+                viewModel.updateStatusToArrived(
+                    patient = viewModel.patient!!,
+                    appointment = viewModel.appointment!!,
+                    updated = {
+                        viewModel.showAddToQueueDialog = false
+                        coroutineScope.launch {
+                            navController.currentBackStackEntry?.savedStateHandle?.set(
+                                PATIENT,
+                                viewModel.patient
+                            )
+                            navController.navigate(Screen.AddDiagnosisScreen.route)
+                        }
+                    }
+                )
+            } else {
+                if (viewModel.ifAllSlotsBooked) {
+                    viewModel.showAllSlotsBookedDialog = true
+                } else {
+                    viewModel.addPatientToQueue(
+                        viewModel.patient!!,
+                        addedToQueue = {
+                            viewModel.showAddToQueueDialog = false
+                            coroutineScope.launch {
+                                navController.currentBackStackEntry?.savedStateHandle?.set(
+                                    PATIENT,
+                                    viewModel.patient
+                                )
+                                navController.navigate(Screen.AddDiagnosisScreen.route)
+                            }
+                        }
+                    )
                 }
             }
         }
