@@ -121,7 +121,13 @@ private fun HandleLaunchedEffect(
         }
         navController.currentBackStackEntry?.savedStateHandle?.let { handle ->
             if (handle.remove<Boolean>(DIAGNOSIS_SAVED) == true) {
-                snackBarHostState.showSnackbar(context.getString(R.string.diagnosis_added_successfully))
+                viewModel.getPreviousDiagnosis(viewModel.patient!!.id)
+                snackBarHostState.showSnackbar(
+                    context.getString(
+                        if (viewModel.todayDiagnosis == null) R.string.diagnosis_added_successfully
+                        else R.string.diagnosis_updated_successfully
+                    )
+                )
             }
         }
     }

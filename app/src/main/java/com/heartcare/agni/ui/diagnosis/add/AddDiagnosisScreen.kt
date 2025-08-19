@@ -158,7 +158,7 @@ private fun DiagnosisBottomSection(
         contentAlignment = Alignment.BottomCenter
     ) {
         AnimatedContent(
-            targetState = viewModel.lastDiagnosis != null && viewModel.selectedDiagnosis.isEmpty(),
+            targetState = viewModel.lastDiagnosis != null && !viewModel.isTodayDiagnosis && viewModel.selectedDiagnosis.isEmpty(),
             transitionSpec = { fadeIn() togetherWith fadeOut() }
         ) { showRetainButton ->
             if (showRetainButton) {

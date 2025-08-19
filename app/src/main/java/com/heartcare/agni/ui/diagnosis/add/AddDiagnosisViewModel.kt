@@ -63,6 +63,7 @@ class AddDiagnosisViewModel @Inject constructor(
     var clearAllConfirmDialog by mutableStateOf(false)
 
     var lastDiagnosis by mutableStateOf<SymptomsAndDiagnosisLocal?>(null)
+    var isTodayDiagnosis by mutableStateOf(false)
 
     init {
         viewModelScope.launch(ioDispatcher) {
@@ -76,6 +77,7 @@ class AddDiagnosisViewModel @Inject constructor(
             lastDiagnosis = symDiagRepository.getPastSymptomsAndDiagnosis(patientId).firstOrNull()
             lastDiagnosis?.let { dx ->
                 if (isToday(dx.createdOn)) {
+                    isTodayDiagnosis = true
                     selectedDiagnosis = dx.diagnosis.map { "${it.code}, ${it.display}" }
                 }
             }
