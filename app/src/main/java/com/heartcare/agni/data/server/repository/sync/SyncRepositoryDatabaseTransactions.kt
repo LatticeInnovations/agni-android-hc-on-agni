@@ -418,8 +418,12 @@ open class SyncRepositoryDatabaseTransactions(
 
     protected suspend fun insertPatientLastUpdated(body: List<PatientLastUpdatedResponse>) {
         //Insert Patient Last Updated Data
-        patientLastUpdatedDao.insertPatientLastUpdatedData(*body.map { it.toPatientLastUpdatedEntity() }
-            .toTypedArray())
+        patientLastUpdatedDao.insertPatientLastUpdatedData(
+            patientLastUpdatedEntity = body
+                .filter { patientDao.getPatientDataById(it.uuid).isNotEmpty() }
+                .map { it.toPatientLastUpdatedEntity() }
+                .toTypedArray()
+        )
     }
 
     protected suspend fun insertCVDFhirId(
