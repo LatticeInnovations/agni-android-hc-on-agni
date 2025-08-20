@@ -97,7 +97,24 @@ class PrescriptionViewModel @Inject constructor(
     internal fun getActiveIngredients(activeIngredientsList: (List<String>) -> Unit) {
         viewModelScope.launch(Dispatchers.IO) {
             activeIngredientsList(
-                medicationRepository.getActiveIngredients()
+                //medicationRepository.getActiveIngredients()
+                listOf(
+                    "Metformin 650",
+                    "Duotrol 250",
+                    "Valium 5",
+                    "Prednisolone 5",
+                    "Beclometasone 0.05",
+                    "Ventolin 4",
+                    "Furosemide inj. 20",
+                    "Aspirin 150",
+                    "Simvastatin 20",
+                    "Glibenclamide 5",
+                    "Metformin 500",
+                    "Aspirin 150",
+                    "Simvastatin 20",
+                    "Glibenclamide 5",
+                    "Metformin 500"
+                )
             )
         }
     }

@@ -1,6 +1,7 @@
 package com.heartcare.agni.ui.prescription.quickselect
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -47,13 +48,15 @@ fun CompoundRow(activeIngredient: String, viewModel: PrescriptionViewModel) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(10.dp)
-            .clickable {
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null
+            ) {
                 updateList(!checkedState.value, viewModel, activeIngredient)
             },
         verticalAlignment = Alignment.CenterVertically
     ) {
         Checkbox(
-            modifier = Modifier.testTag("ACTIVE_INGREDIENT_CHECK_BOX"),
             checked = checkedState.value,
             onCheckedChange = {
                 updateList(it, viewModel, activeIngredient)
@@ -65,8 +68,7 @@ fun CompoundRow(activeIngredient: String, viewModel: PrescriptionViewModel) {
             Text(
                 text = activeIngredient.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() },
                 style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.testTag("ACTIVE_INGREDIENT_NAME")
+                color = MaterialTheme.colorScheme.onSurface
             )
         }
     }
