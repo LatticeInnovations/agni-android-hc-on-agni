@@ -91,7 +91,7 @@ app/google-services.json
 app/google-services.json.gpg
 
 # Signing key
-/app/heartcare_agni.jks
 /app/release/baselineProfiles/0/app-release.dm
 /app/release/baselineProfiles/1/app-release.dm
 /app/release/output-metadata.json
+/heartcare_agni.jks
