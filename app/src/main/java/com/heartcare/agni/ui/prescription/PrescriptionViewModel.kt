@@ -52,6 +52,7 @@ class PrescriptionViewModel @Inject constructor(
     private val preferenceRepository: PreferenceRepository
 ) : BaseViewModel() {
     var isLaunched by mutableStateOf(false)
+    var tabs = listOf("Previous prescription", "Quick select")
 
     var isSearching by mutableStateOf(false)
     var isSearchResult by mutableStateOf(false)
@@ -73,7 +74,8 @@ class PrescriptionViewModel @Inject constructor(
     var previousSearchList by mutableStateOf(listOf<String>())
     var activeIngredientSearchList by mutableStateOf(listOf<String>())
 
-    var previousPrescriptionList by mutableStateOf(listOf<PrescriptionAndMedicineRelation?>(null))
+    //var previousPrescriptionList by mutableStateOf(listOf<PrescriptionAndMedicineRelation?>(null))
+    var previousPrescriptionList by mutableStateOf(listOf<String>("", "", ""))
 
     internal var appointmentResponseLocal: AppointmentResponseLocal? = null
 

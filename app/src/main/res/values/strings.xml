@@ -434,7 +434,7 @@ include them in the household</string>
     <string name="drugs_dispense">Drug Dispense</string>
     <string name="yesterday">Yesterday</string>
     <string name="no_records">No records.</string>
-    <string name="no_previous_prescription">No previous prescription</string>
+    <string name="no_previous_prescription">No previous prescription.</string>
     <string name="same_address_as_source_patient">Same address as source patient</string>
     <string name="vaccination">Vaccination</string>
     <string name="vaccination_info">%d upcoming, %d missed, %d taken</string>
@@ -692,4 +692,5 @@ include them in the household</string>
     <string name="retain_diagnosis">Retain diagnosis</string>
     <string name="update_diagnosis">Update diagnosis</string>
     <string name="diagnosis_updated_successfully">Diagnosis updated successfully!</string>
+    <string name="re_precribe">Re-Prescribe</string>
 </resources>

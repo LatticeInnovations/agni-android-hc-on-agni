@@ -25,8 +25,11 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Search
@@ -66,7 +69,9 @@ import androidx.navigation.NavController
 import com.heartcare.agni.R
 import com.heartcare.agni.data.local.model.prescription.medication.MedicationResponseWithMedication
 import com.heartcare.agni.data.server.model.patient.PatientResponse
+import com.heartcare.agni.ui.common.TabRowComposable
 import com.heartcare.agni.ui.prescription.filldetails.FillDetailsScreen
+import com.heartcare.agni.ui.prescription.previousprescription.PreviousPrescriptionsScreen
 import com.heartcare.agni.ui.prescription.quickselect.QuickSelectScreen
 import com.heartcare.agni.ui.prescription.search.PrescriptionSearchResult
 import com.heartcare.agni.ui.prescription.search.SearchPrescription
@@ -86,6 +91,13 @@ fun PrescriptionScreen(
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
+
+    val pagerState = rememberPagerState(
+        initialPage = 0,
+        initialPageOffsetFraction = 0f
+    ) {
+        viewModel.tabs.size
+    }
 
     SetBackHandler(viewModel, navController)
     LaunchedEffect(viewModel.isLaunched) {
@@ -126,9 +138,8 @@ fun PrescriptionScreen(
                     ),
                     title = {
                         Text(
-                            text = stringResource(id = R.string.fill_prescription),
-                            style = MaterialTheme.typography.titleLarge,
-                            modifier = Modifier.testTag("HEADING_TAG")
+                            text = stringResource(id = R.string.prescription),
+                            style = MaterialTheme.typography.titleLarge
                         )
                     },
                     navigationIcon = {
@@ -140,13 +151,15 @@ fun PrescriptionScreen(
                         }
                     },
                     actions = {
-                        IconButton(onClick = {
-                            viewModel.isSearching = true
-                            viewModel.getPreviousSearch {
-                                viewModel.previousSearchList = it
+                        if (pagerState.currentPage == 1) {
+                            IconButton(onClick = {
+                                viewModel.isSearching = true
+                                viewModel.getPreviousSearch {
+                                    viewModel.previousSearchList = it
+                                }
+                            }) {
+                                Icon(Icons.Default.Search, contentDescription = "SEARCH_ICON")
                             }
-                        }) {
-                            Icon(Icons.Default.Search, contentDescription = "SEARCH_ICON")
                         }
                     }
                 )
@@ -160,7 +173,24 @@ fun PrescriptionScreen(
                         modifier = Modifier
                             .fillMaxSize()
                     ) {
-                        QuickSelectScreen()
+                        TabRowComposable(
+                            viewModel.tabs,
+                            pagerState
+                        ) { index ->
+                            coroutineScope.launch {
+                                pagerState.animateScrollToPage(
+                                    index
+                                )
+                            }
+                        }
+                        HorizontalPager(
+                            state = pagerState
+                        ) { index ->
+                            when (index) {
+                                0 -> PreviousPrescriptionsScreen(snackbarHostState, coroutineScope)
+                                1 -> QuickSelectScreen()
+                            }
+                        }
                     }
                     if (viewModel.clearAllConfirmDialog) {
                         AlertDialog(
