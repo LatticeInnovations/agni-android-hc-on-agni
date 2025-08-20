@@ -31,6 +31,8 @@ class FillDetailsViewModel @Inject constructor(
     var medFhirId by mutableStateOf("")
     var isDurationInvalid by mutableStateOf(false)
 
+    var selectedBrand by mutableStateOf("")
+
     internal fun quantityPrescribed(): String {
         return if (duration.isBlank() || isDurationInvalid) ""
         else (quantityPerDose.toInt() * frequency.toInt() * duration.toInt()).toString()

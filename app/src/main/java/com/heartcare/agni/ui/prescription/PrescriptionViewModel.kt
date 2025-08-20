@@ -52,6 +52,7 @@ class PrescriptionViewModel @Inject constructor(
     private val preferenceRepository: PreferenceRepository
 ) : BaseViewModel() {
     var isLaunched by mutableStateOf(false)
+    var tabs = listOf("Previous prescription", "Quick select")
 
     var isSearching by mutableStateOf(false)
     var isSearchResult by mutableStateOf(false)
@@ -73,7 +74,8 @@ class PrescriptionViewModel @Inject constructor(
     var previousSearchList by mutableStateOf(listOf<String>())
     var activeIngredientSearchList by mutableStateOf(listOf<String>())
 
-    var previousPrescriptionList by mutableStateOf(listOf<PrescriptionAndMedicineRelation?>(null))
+    //var previousPrescriptionList by mutableStateOf(listOf<PrescriptionAndMedicineRelation?>(null))
+    var previousPrescriptionList by mutableStateOf(listOf<String>("", "", ""))
 
     internal var appointmentResponseLocal: AppointmentResponseLocal? = null
 
@@ -95,7 +97,24 @@ class PrescriptionViewModel @Inject constructor(
     internal fun getActiveIngredients(activeIngredientsList: (List<String>) -> Unit) {
         viewModelScope.launch(Dispatchers.IO) {
             activeIngredientsList(
-                medicationRepository.getActiveIngredients()
+                //medicationRepository.getActiveIngredients()
+                listOf(
+                    "Metformin 650",
+                    "Duotrol 250",
+                    "Valium 5",
+                    "Prednisolone 5",
+                    "Beclometasone 0.05",
+                    "Ventolin 4",
+                    "Furosemide inj. 20",
+                    "Aspirin 150",
+                    "Simvastatin 20",
+                    "Glibenclamide 5",
+                    "Metformin 500",
+                    "Aspirin 150",
+                    "Simvastatin 20",
+                    "Glibenclamide 5",
+                    "Metformin 500"
+                )
             )
         }
     }

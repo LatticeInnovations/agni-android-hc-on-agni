@@ -32,6 +32,7 @@ fun DropdownComposable(
     dropdownList: List<String>,
     errorText: String,
     isMandatory: Boolean,
+    dropdownWeight: Float = 0.85f
 ) {
     val defaultOption = stringResource(R.string.select)
     var expanded by remember { mutableStateOf(false) }
@@ -74,7 +75,7 @@ fun DropdownComposable(
 
         DropdownMenu(
             modifier = Modifier
-                .fillMaxWidth(0.85f)
+                .fillMaxWidth(dropdownWeight)
                 .heightIn(0.dp, 300.dp),
             expanded = expanded,
             onDismissRequest = {
