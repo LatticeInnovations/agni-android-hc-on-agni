@@ -251,7 +251,10 @@ private fun SearchableTopAppBar(
                     onSearch = {
                         // search function run
                         focusManager.clearFocus()
-                        viewModel.searchDiagnosis()
+                        if (viewModel.searchQuery.isBlank()) {
+                            viewModel.searchQuery = ""
+                            viewModel.isSearching = false
+                        } else viewModel.searchDiagnosis()
                     }
                 ),
                 singleLine = true,
