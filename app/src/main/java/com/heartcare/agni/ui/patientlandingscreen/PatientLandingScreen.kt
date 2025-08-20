@@ -295,22 +295,22 @@ private fun CardComposableList(
                     navController.navigate(Screen.DiagnosisScreen.route)
                 }
             )
+            CardComposable(
+                viewModel,
+                stringResource(id = R.string.prescription),
+                R.drawable.prescriptions_icon,
+                null,
+                onClick = {
+                    navController.currentBackStackEntry?.savedStateHandle?.set(
+                        PATIENT,
+                        viewModel.patient
+                    )
+                    navController.navigate(Screen.Prescription.route)
+                }
+            )
         }
 
         /**
-        CardComposable(
-        viewModel,
-        stringResource(id = R.string.prescription),
-        R.drawable.prescriptions_icon,
-        null,
-        onClick = {
-        navController.currentBackStackEntry?.savedStateHandle?.set(
-        "patient",
-        viewModel.patient
-        )
-        navController.navigate(Screen.PrescriptionPhotoViewScreen.route)
-        }
-        )
         CardComposable(
         viewModel,
         stringResource(id = R.string.drugs_dispense),
