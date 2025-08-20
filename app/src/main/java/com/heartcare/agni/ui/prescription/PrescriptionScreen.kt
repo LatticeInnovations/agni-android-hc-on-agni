@@ -331,16 +331,15 @@ fun BottomNavLayout(
         enter = expandVertically(),
         exit = shrinkVertically()
     ) {
-        Column(
-            modifier = Modifier.navigationBarsPadding()
-        ) {
+        Column {
             AnimatedVisibility(viewModel.bottomNavExpanded) {
                 Surface(
                     color = MaterialTheme.colorScheme.surface,
                     modifier = Modifier.testTag("BOTTOM_NAV_EXPANDED")
                 ) {
                     Column(
-                        modifier = Modifier.padding(bottom = 15.dp)
+                        modifier = Modifier
+                            .padding(bottom = 15.dp)
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically
@@ -390,6 +389,7 @@ fun BottomNavLayout(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .navigationBarsPadding()
                         .padding(10.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
