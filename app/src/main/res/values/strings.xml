@@ -693,4 +693,6 @@ include them in the household</string>
     <string name="update_diagnosis">Update diagnosis</string>
     <string name="diagnosis_updated_successfully">Diagnosis updated successfully!</string>
     <string name="re_precribe">Re-Prescribe</string>
+    <string name="medicine_name_label">Medication name</string>
+    <string name="brand">Brand</string>
 </resources>

@@ -1,8 +1,5 @@
 package com.heartcare.agni.ui.prescription.filldetails
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
@@ -10,16 +7,12 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -32,7 +25,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -55,6 +47,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.heartcare.agni.R
 import com.heartcare.agni.data.local.model.prescription.medication.MedicationResponseWithMedication
 import com.heartcare.agni.data.server.model.prescription.prescriptionresponse.Medication
+import com.heartcare.agni.ui.common.DropdownComposable
 import com.heartcare.agni.ui.prescription.PrescriptionViewModel
 import com.heartcare.agni.utils.builders.UUIDBuilder
 import com.heartcare.agni.utils.regex.OnlyNumberRegex
@@ -156,13 +149,14 @@ fun FillDetailsScreen(
                 }
             )
         },
-        content = {
-            Box(modifier = Modifier.padding(it)) {
+        content = { paddingValues ->
+            Box(modifier = Modifier.padding(paddingValues)) {
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(15.dp)
-                        .verticalScroll(rememberScrollState())
+                        .verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     Column {
                         var formulationExpanded by remember { mutableStateOf(false) }
@@ -176,7 +170,7 @@ fun FillDetailsScreen(
                             onValueChange = {
                             },
                             label = {
-                                Text(text = stringResource(id = R.string.active_ingredient))
+                                Text(text = stringResource(id = R.string.medicine_name_label))
                             },
                             trailingIcon = {
                                 Icon(
@@ -207,7 +201,9 @@ fun FillDetailsScreen(
                             onDismissRequest = { formulationExpanded = !formulationExpanded },
                         ) {
                             prescriptionViewModel.activeIngredientsList.filter { ingredient ->
-                                !prescriptionViewModel.selectedActiveIngredientsList.contains(ingredient)
+                                !prescriptionViewModel.selectedActiveIngredientsList.contains(
+                                    ingredient
+                                )
                             }.forEach { label ->
                                 DropdownMenuItem(
                                     onClick = {
@@ -217,7 +213,7 @@ fun FillDetailsScreen(
                                     },
                                     text = {
                                         Text(
-                                            text = label.replaceFirstChar {char ->
+                                            text = label.replaceFirstChar { char ->
                                                 char.titlecase(Locale.getDefault())
                                             },
                                             style = MaterialTheme.typography.bodyLarge,
@@ -229,20 +225,20 @@ fun FillDetailsScreen(
                         }
                     }
                     Text(
-                        text = stringResource(id = R.string.formulations),
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(vertical = 15.dp)
+                        text = "DFD1 · 18.5 Diabetes · Fixed-dose combination ",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                    FormulationRadioList(viewModel)
-                    Spacer(modifier = Modifier.height(10.dp))
-                    AnimatedVisibility(
-                        visible = viewModel.medSelected != "",
-                        enter = fadeIn(),
-                        exit = fadeOut()
-                    ) {
-                        FormulationsForm(prescriptionViewModel, viewModel)
-                    }
+                    DropdownComposable(
+                        value = viewModel.selectedBrand,
+                        updateValue = { viewModel.selectedBrand = it },
+                        label = stringResource(R.string.brand),
+                        dropdownList = listOf(),
+                        errorText = "",
+                        isMandatory = false,
+                        dropdownWeight = 0.9f
+                    )
+                    FormulationsForm(prescriptionViewModel, viewModel)
                 }
             }
         }
@@ -250,292 +246,165 @@ fun FillDetailsScreen(
 }
 
 @Composable
-fun FormulationRadioList(viewModel: FillDetailsViewModel) {
-    viewModel.formulationsList.forEach { formulation ->
-        Row(
-            Modifier
-                .fillMaxWidth()
-                .testTag("FORMULATION_LIST")
-                .selectable(
-                    selected = (formulation.medFhirId == viewModel.medFhirId),
-                    onClick = {
-                        viewModel.reset()
-                        viewModel.medSelected = formulation.medName
-                        viewModel.medUnit = formulation.medUnit
-                        viewModel.medDoseForm = formulation.doseForm
-                        viewModel.medFhirId = formulation.medFhirId
-                    }
-                )
-                .padding(bottom = 10.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            RadioButton(
-                selected = formulation.medFhirId == viewModel.medFhirId,
-                onClick = {
-                    viewModel.reset()
-                    viewModel.medSelected = formulation.medName
-                    viewModel.medUnit = formulation.medUnit
-                    viewModel.medDoseForm = formulation.doseForm
-                    viewModel.medFhirId = formulation.medFhirId
-                }
-            )
-            Text(
-                text = formulation.medName,
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-        }
-    }
-}
-
-@Composable
 fun FormulationsForm(
     prescriptionViewModel: PrescriptionViewModel,
     viewModel: FillDetailsViewModel
 ) {
+    // quantity per dose
+    QuantitySelectorDropdown(
+        label = stringResource(R.string.qty_per_dose),
+        unit = viewModel.medUnit,
+        value = viewModel.quantityPerDose,
+        qtyRange = viewModel.qtyRange,
+        updateValue = { viewModel.quantityPerDose = it }
+    )
+
+    // frequency
+    QuantitySelectorDropdown(
+        label = stringResource(id = R.string.frequency),
+        unit = stringResource(id = R.string.dose_per_day),
+        value = viewModel.frequency,
+        qtyRange = viewModel.qtyRange,
+        updateValue = { viewModel.frequency = it }
+    )
+
+    // timing
+    DropdownComposable(
+        value = viewModel.timing,
+        updateValue = { viewModel.timing = it },
+        label = stringResource(id = R.string.timing_optional),
+        dropdownList = prescriptionViewModel.medicationDirectionsList.map { it.medicalDosage },
+        errorText = "",
+        isMandatory = false,
+        dropdownWeight = 0.9f
+    )
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        // Duration
+        OutlinedTextField(
+            modifier = Modifier
+                .weight(1f),
+            value = viewModel.duration,
+            onValueChange = {
+                if (it.matches(OnlyNumberRegex.onlyNumbers) && it != "0" && it.length <= 3) viewModel.duration =
+                    it
+                else if (it.isEmpty()) viewModel.duration = it
+                viewModel.isDurationInvalid =
+                    viewModel.duration.isNotBlank() && viewModel.duration.toInt() > 180
+            },
+            label = {
+                Text(text = stringResource(id = R.string.duration_days))
+            },
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Number
+            ),
+            singleLine = true,
+            isError = viewModel.isDurationInvalid,
+            supportingText = if (viewModel.isDurationInvalid) {
+                {
+                    Text(text = stringResource(id = R.string.duration_error_msg))
+                }
+            } else null
+        )
+        // Quantity prescribed
+        OutlinedTextField(
+            modifier = Modifier
+                .weight(1f)
+                .clickable(enabled = false) { },
+            value = viewModel.quantityPrescribed(),
+            onValueChange = {},
+            label = {
+                Text(text = stringResource(id = R.string.quantity_prescribed))
+            },
+            readOnly = true,
+            singleLine = true
+        )
+    }
+    // notes
+    OutlinedTextField(
+        modifier = Modifier
+            .fillMaxWidth()
+            .testTag("NOTES"),
+        value = viewModel.notes,
+        onValueChange = {
+            if (it.length <= 100) viewModel.notes = it
+        },
+        label = {
+            Text(text = stringResource(id = R.string.notes_optional))
+        }
+    )
+}
+
+@Composable
+private fun QuantitySelectorDropdown(
+    label: String,
+    unit: String,
+    value: String,
+    qtyRange: IntRange,
+    updateValue: (String) -> Unit
+) {
     Column {
-        // quantity per dose
-        Column {
-            var quantityExpanded by remember {
-                mutableStateOf(false)
-            }
-            OutlinedTextField(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("QUANTITY_PER_DOSE"),
-                value = viewModel.medUnit,
-                onValueChange = {},
-                label = {
-                    Text(text = stringResource(id = R.string.qty_per_dose))
-                },
-                leadingIcon = {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(0.4f),
-                        horizontalArrangement = Arrangement.SpaceEvenly,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(text = viewModel.quantityPerDose)
-                        Icon(Icons.Default.KeyboardArrowDown, contentDescription = "DOWN_ARROW")
-                    }
-                },
-                readOnly = true,
-                textStyle = MaterialTheme.typography.bodyLarge,
-                interactionSource = remember {
-                    MutableInteractionSource()
-                }.also { interactionSource ->
-                    LaunchedEffect(interactionSource) {
-                        interactionSource.interactions.collect {
-                            if (it is PressInteraction.Release) {
-                                quantityExpanded = !quantityExpanded
-                            }
-                        }
-                    }
-                },
-                singleLine = true
-            )
-            DropdownMenu(
-                modifier = Modifier
-                    .fillMaxHeight(0.3f),
-                expanded = quantityExpanded,
-                onDismissRequest = { quantityExpanded = !quantityExpanded },
-            ) {
-                viewModel.qtyRange.forEach { label ->
-                    DropdownMenuItem(
-                        onClick = {
-                            quantityExpanded = !quantityExpanded
-                            viewModel.quantityPerDose = label.toString()
-                        },
-                        text = {
-                            Text(
-                                text = label.toString(),
-                                style = MaterialTheme.typography.bodyLarge,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                        }
-                    )
-                }
-            }
+        var quantityExpanded by remember {
+            mutableStateOf(false)
         }
-        Spacer(modifier = Modifier.height(10.dp))
-        // frequency
-        Column {
-            var freqExpanded by remember {
-                mutableStateOf(false)
-            }
-            OutlinedTextField(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("FREQUENCY"),
-                value = stringResource(id = R.string.dose_per_day),
-                onValueChange = {},
-                label = {
-                    Text(text = stringResource(id = R.string.frequency))
-                },
-                leadingIcon = {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(0.4f),
-                        horizontalArrangement = Arrangement.SpaceEvenly,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(text = viewModel.frequency)
-                        Icon(Icons.Default.KeyboardArrowDown, contentDescription = "DOWN_ARROW")
-                    }
-                },
-                readOnly = true,
-                textStyle = MaterialTheme.typography.bodyLarge,
-                interactionSource = remember {
-                    MutableInteractionSource()
-                }.also { interactionSource ->
-                    LaunchedEffect(interactionSource) {
-                        interactionSource.interactions.collect {
-                            if (it is PressInteraction.Release) {
-                                freqExpanded = !freqExpanded
-                            }
-                        }
-                    }
-                },
-                singleLine = true
-            )
-            DropdownMenu(
-                modifier = Modifier
-                    .fillMaxHeight(0.3f),
-                expanded = freqExpanded,
-                onDismissRequest = { freqExpanded = !freqExpanded },
-            ) {
-                viewModel.qtyRange.forEach { label ->
-                    DropdownMenuItem(
-                        onClick = {
-                            freqExpanded = !freqExpanded
-                            viewModel.frequency = label.toString()
-                        },
-                        text = {
-                            Text(
-                                text = label.toString(),
-                                style = MaterialTheme.typography.bodyLarge,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                        }
-                    )
-                }
-            }
-        }
-        Spacer(modifier = Modifier.height(10.dp))
-
-        // timing
-        Column {
-            var timingsExpanded by remember {
-                mutableStateOf(false)
-            }
-            OutlinedTextField(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("TIMING"),
-                value = viewModel.timing,
-                onValueChange = {},
-                label = {
-                    Text(text = stringResource(id = R.string.timing_optional))
-                },
-                trailingIcon = {
-                    Icon(Icons.Default.KeyboardArrowDown, contentDescription = "DOWN_ARROW")
-                },
-                readOnly = true,
-                textStyle = MaterialTheme.typography.bodyLarge,
-
-                interactionSource = remember {
-                    MutableInteractionSource()
-                }.also { interactionSource ->
-                    LaunchedEffect(interactionSource) {
-                        interactionSource.interactions.collect {
-                            if (it is PressInteraction.Release) {
-                                timingsExpanded = !timingsExpanded
-                            }
-                        }
-                    }
-                },
-                singleLine = true
-            )
-            DropdownMenu(
-                modifier = Modifier
-                    .fillMaxHeight(0.5f)
-                    .fillMaxWidth(0.9f),
-                expanded = timingsExpanded,
-                onDismissRequest = { timingsExpanded = !timingsExpanded },
-            ) {
-                prescriptionViewModel.medicationDirectionsList.forEach { timing ->
-                    DropdownMenuItem(
-                        onClick = {
-                            timingsExpanded = !timingsExpanded
-                            viewModel.timing = timing.medicalDosage
-                        },
-                        text = {
-                            Text(
-                                text = timing.medicalDosage,
-                                style = MaterialTheme.typography.bodyLarge,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                        }
-                    )
-                }
-            }
-        }
-        Spacer(modifier = Modifier.height(10.dp))
-
-        Row(modifier = Modifier.fillMaxWidth()) {
-            // Duration
-            OutlinedTextField(
-                modifier = Modifier
-                    .weight(1f)
-                    .testTag("DURATION"),
-                value = viewModel.duration,
-                onValueChange = {
-                    if (it.matches(OnlyNumberRegex.onlyNumbers) && it != "0" && it.length <= 3) viewModel.duration =
-                        it
-                    else if (it.isEmpty()) viewModel.duration = it
-                    viewModel.isDurationInvalid =
-                        viewModel.duration.isNotBlank() && viewModel.duration.toInt() > 180
-                },
-                label = {
-                    Text(text = stringResource(id = R.string.duration_days))
-                },
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Number
-                ),
-                singleLine = true,
-                isError = viewModel.isDurationInvalid,
-                supportingText = {
-                    if (viewModel.isDurationInvalid)
-                        Text(text = stringResource(id = R.string.duration_error_msg))
-                }
-            )
-            Spacer(modifier = Modifier.width(10.dp))
-            // Quantity prescribed
-            OutlinedTextField(
-                modifier = Modifier
-                    .weight(1f)
-                    .testTag("QUANTITY_PRESCRIBED")
-                    .clickable(enabled = false) { },
-                value = viewModel.quantityPrescribed(),
-                onValueChange = {},
-                label = {
-                    Text(text = stringResource(id = R.string.quantity_prescribed))
-                },
-                readOnly = true,
-                singleLine = true
-            )
-        }
-        Spacer(modifier = Modifier.height(10.dp))
-        // notes
         OutlinedTextField(
             modifier = Modifier
                 .fillMaxWidth()
-                .testTag("NOTES"),
-            value = viewModel.notes,
-            onValueChange = {
-                if (it.length <= 100) viewModel.notes = it
-            },
+                .testTag("QUANTITY_PER_DOSE"),
+            value = unit,
+            onValueChange = {},
             label = {
-                Text(text = stringResource(id = R.string.notes_optional))
-            }
+                Text(text = label)
+            },
+            leadingIcon = {
+                Row(
+                    modifier = Modifier.fillMaxWidth(0.4f),
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(text = value)
+                    Icon(Icons.Default.KeyboardArrowDown, contentDescription = "DOWN_ARROW")
+                }
+            },
+            readOnly = true,
+            textStyle = MaterialTheme.typography.bodyLarge,
+            interactionSource = remember {
+                MutableInteractionSource()
+            }.also { interactionSource ->
+                LaunchedEffect(interactionSource) {
+                    interactionSource.interactions.collect {
+                        if (it is PressInteraction.Release) {
+                            quantityExpanded = !quantityExpanded
+                        }
+                    }
+                }
+            },
+            singleLine = true
         )
+        DropdownMenu(
+            modifier = Modifier
+                .fillMaxHeight(0.3f),
+            expanded = quantityExpanded,
+            onDismissRequest = { quantityExpanded = !quantityExpanded },
+        ) {
+            qtyRange.forEach { label ->
+                DropdownMenuItem(
+                    onClick = {
+                        quantityExpanded = !quantityExpanded
+                        updateValue(label.toString())
+                    },
+                    text = {
+                        Text(
+                            text = label.toString(),
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                )
+            }
+        }
     }
 }
