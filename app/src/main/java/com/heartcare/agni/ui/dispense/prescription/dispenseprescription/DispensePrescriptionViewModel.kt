@@ -23,7 +23,7 @@ import com.heartcare.agni.data.local.roomdb.entities.dispense.DispenseDataEntity
 import com.heartcare.agni.data.local.roomdb.entities.dispense.DispensePrescriptionEntity
 import com.heartcare.agni.data.local.roomdb.entities.dispense.DispensedPrescriptionInfo
 import com.heartcare.agni.data.local.roomdb.entities.dispense.MedicineDispenseListEntity
-import com.heartcare.agni.data.local.roomdb.entities.medication.MedicationStrengthRelation
+import com.heartcare.agni.data.local.roomdb.entities.medication.MedicationEntity
 import com.heartcare.agni.data.server.model.dispense.request.MedicineDispenseRequest
 import com.heartcare.agni.data.server.model.dispense.request.MedicineDispensed
 import com.heartcare.agni.utils.builders.UUIDBuilder
@@ -59,7 +59,7 @@ class DispensePrescriptionViewModel @Inject constructor(
     var dispenseNotes by mutableStateOf("")
     var showAddNoteDialog by mutableStateOf(false)
     var medToEdit by mutableStateOf<DispenseModifiedInfo?>(null)
-    private var allMedications by mutableStateOf(listOf<MedicationStrengthRelation>())
+    private var allMedications by mutableStateOf(listOf<MedicationEntity>())
 
     internal fun getData(
         prescriptionId: String,
@@ -94,9 +94,9 @@ class DispensePrescriptionViewModel @Inject constructor(
         }
     }
 
-    internal fun getMedNameFromMedFhirId(medFhirId: String): MedicationStrengthRelation {
+    internal fun getMedNameFromMedFhirId(medFhirId: String): MedicationEntity {
         return allMedications.first {
-            it.medicationEntity.medFhirId == medFhirId
+            it.medFhirId == medFhirId
         }
     }
 

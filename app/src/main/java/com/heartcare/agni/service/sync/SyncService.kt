@@ -64,6 +64,9 @@ class SyncService(
                     },
                     async {
                         downloadMedicationTiming(logout)
+                    },
+                    async {
+                        downloadMedication(logout)
                     }
                 )
             }

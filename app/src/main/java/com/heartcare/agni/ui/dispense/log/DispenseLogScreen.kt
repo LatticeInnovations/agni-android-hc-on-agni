@@ -135,7 +135,7 @@ private fun DispenseLogCard(
                                     color = MaterialTheme.colorScheme.primary
                                 )
                                 Text(
-                                    text = viewModel.getMedNameFromMedFhirId(medicine.dispensedMedFhirId).medicationEntity.medName,
+                                    text = viewModel.getMedNameFromMedFhirId(medicine.dispensedMedFhirId).medName,
                                     style = MaterialTheme.typography.bodyLarge,
                                     color = MaterialTheme.colorScheme.onSurface
                                 )
@@ -143,7 +143,7 @@ private fun DispenseLogCard(
                                     text = "${medicine.qtyDispensed} ${
                                         viewModel.getMedNameFromMedFhirId(
                                             medicine.dispensedMedFhirId
-                                        ).medicationEntity.doseForm
+                                        ).doseForm
                                     }",
                                     style = MaterialTheme.typography.labelLarge,
                                     color = MaterialTheme.colorScheme.tertiary
@@ -168,7 +168,7 @@ private fun DispenseLogCard(
                                     color = MaterialTheme.colorScheme.primary
                                 )
                                 Text(
-                                    text = viewModel.getMedNameFromMedFhirId(medicine.prescribedMedFhirId).medicationEntity.medName,
+                                    text = viewModel.getMedNameFromMedFhirId(medicine.prescribedMedFhirId).medName,
                                     style = MaterialTheme.typography.bodyLarge,
                                     color = MaterialTheme.colorScheme.outline
                                 )
@@ -176,7 +176,7 @@ private fun DispenseLogCard(
                                     text = "${medicine.qtyPrescribed} ${
                                         viewModel.getMedNameFromMedFhirId(
                                             medicine.prescribedMedFhirId
-                                        ).medicationEntity.doseForm
+                                        ).doseForm
                                     }",
                                     style = MaterialTheme.typography.labelLarge,
                                     color = MaterialTheme.colorScheme.tertiary
@@ -188,7 +188,7 @@ private fun DispenseLogCard(
                             verticalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
                             Text(
-                                text = viewModel.getMedNameFromMedFhirId(medicine.dispensedMedFhirId).medicationEntity.medName,
+                                text = viewModel.getMedNameFromMedFhirId(medicine.dispensedMedFhirId).medName,
                                 style = MaterialTheme.typography.bodyLarge,
                                 color = MaterialTheme.colorScheme.onSurface
                             )
@@ -225,7 +225,7 @@ private fun DispenseLogCard(
                                     text = "${medicine.qtyDispensed} ${
                                         viewModel.getMedNameFromMedFhirId(
                                             medicine.dispensedMedFhirId
-                                        ).medicationEntity.doseForm
+                                        ).doseForm
                                     }",
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant

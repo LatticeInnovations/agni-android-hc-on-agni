@@ -16,7 +16,7 @@ import com.heartcare.agni.data.local.repository.preference.PreferenceRepository
 import com.heartcare.agni.data.local.repository.schedule.ScheduleRepository
 import com.heartcare.agni.data.local.roomdb.entities.dispense.DispenseAndPrescriptionRelation
 import com.heartcare.agni.data.local.roomdb.entities.dispense.DispensedPrescriptionInfo
-import com.heartcare.agni.data.local.roomdb.entities.medication.MedicationStrengthRelation
+import com.heartcare.agni.data.local.roomdb.entities.medication.MedicationEntity
 import com.heartcare.agni.data.server.model.patient.PatientResponse
 import com.heartcare.agni.utils.common.Queries
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toEndOfDay
@@ -45,7 +45,7 @@ class DrugDispenseViewModel @Inject constructor(
     var prescriptionToDispense by mutableStateOf<DispenseAndPrescriptionRelation?>(null)
     var previousPrescriptionList by mutableStateOf(listOf<DispenseAndPrescriptionRelation>())
     var previousDispensed by mutableStateOf(listOf<DispensedPrescriptionInfo>())
-    private var allMedications by mutableStateOf(listOf<MedicationStrengthRelation>())
+    private var allMedications by mutableStateOf(listOf<MedicationEntity>())
     var isOTCDispensed by mutableStateOf(false)
 
     var appointment by mutableStateOf<AppointmentResponseLocal?>(null)
@@ -100,9 +100,9 @@ class DrugDispenseViewModel @Inject constructor(
         }
     }
 
-    internal fun getMedNameFromMedFhirId(medFhirId: String): MedicationStrengthRelation {
+    internal fun getMedNameFromMedFhirId(medFhirId: String): MedicationEntity {
         return allMedications.first {
-            it.medicationEntity.medFhirId == medFhirId
+            it.medFhirId == medFhirId
         }
     }
 

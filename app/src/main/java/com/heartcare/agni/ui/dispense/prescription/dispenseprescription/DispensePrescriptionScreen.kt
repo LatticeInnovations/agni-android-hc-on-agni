@@ -269,7 +269,7 @@ private fun PreviousDispensedComposable(viewModel: DispensePrescriptionViewModel
                                 verticalArrangement = Arrangement.spacedBy(4.dp)
                             ) {
                                 Text(
-                                    text = viewModel.getMedNameFromMedFhirId(med.dispensedMedFhirId).medicationEntity.medName,
+                                    text = viewModel.getMedNameFromMedFhirId(med.dispensedMedFhirId).medName,
                                     style = MaterialTheme.typography.bodyLarge,
                                     color = MaterialTheme.colorScheme.onSurface
                                 )
@@ -277,7 +277,7 @@ private fun PreviousDispensedComposable(viewModel: DispensePrescriptionViewModel
                                     text = "${med.qtyDispensed} ${
                                         viewModel.getMedNameFromMedFhirId(
                                             med.dispensedMedFhirId
-                                        ).medicationEntity.doseForm
+                                        ).doseForm
                                     }",
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
