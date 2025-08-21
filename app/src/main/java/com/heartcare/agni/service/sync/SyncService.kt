@@ -61,6 +61,9 @@ class SyncService(
                     },
                     async {
                         getAndInsertDiagnosis()
+                    },
+                    async {
+                        downloadMedicationTiming(logout)
                     }
                 )
             }
