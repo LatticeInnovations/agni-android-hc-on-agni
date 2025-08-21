@@ -474,6 +474,9 @@ class SyncService(
                     CoroutineScope(Dispatchers.IO).launch {
                         downloadSymDiag(logout)
                     }
+                    CoroutineScope(Dispatchers.IO).launch {
+                        downloadFormPrescription(null, logout)
+                    }
                 }
             }
         }
@@ -487,16 +490,7 @@ class SyncService(
         return checkAuthenticationStatus(
             syncRepository.getAndInsertFormPrescription(patientId),
             logout
-        )?.apply {
-            if (this is ApiEmptyResponse || this is ApiEndResponse) {
-                CoroutineScope(Dispatchers.IO).launch {
-                    downloadDispense(patientId, logout)
-                }
-                CoroutineScope(Dispatchers.IO).launch {
-                    downloadOTC(patientId, logout)
-                }
-            }
-        }
+        )
     }
 
     /** Download Photo Prescription*/

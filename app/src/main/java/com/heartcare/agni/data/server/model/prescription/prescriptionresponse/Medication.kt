@@ -13,5 +13,7 @@ data class Medication(
     val note: String?,
     val qtyPerDose: Int,
     val qtyPrescribed: Int,
-    val timing: String?
+    val timing: String?,
+    val brandName: String?,
+    val doseFormCode: String?
 )

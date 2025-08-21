@@ -7,17 +7,21 @@ import androidx.lifecycle.viewModelScope
 import com.heartcare.agni.base.viewmodel.BaseViewModel
 import com.heartcare.agni.data.local.repository.medication.MedicationRepository
 import com.heartcare.agni.data.server.model.prescription.medication.MedicationResponse
+import com.heartcare.agni.di.dispatcher.IoDispatcher
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class FillDetailsViewModel @Inject constructor(
-    private val medicationRepository: MedicationRepository
+    private val medicationRepository: MedicationRepository,
+    @IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) : BaseViewModel() {
     var isLaunched by mutableStateOf(false)
-    var formulationsList by mutableStateOf(listOf<MedicationResponse>())
+
+    var medicationSelected by mutableStateOf<MedicationResponse?>(null)
+
     var medSelected by mutableStateOf("")
 
     var quantityPerDose by mutableStateOf("1")
@@ -49,13 +53,15 @@ class FillDetailsViewModel @Inject constructor(
         medDoseForm = ""
         medUnit = ""
         isDurationInvalid = false
+        medicationSelected = null
+        selectedBrand = ""
     }
 
     internal fun getMedicationByActiveIngredient(
         activeIngredientName: String,
         formulationsList: (List<MedicationResponse>) -> Unit
     ) {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(ioDispatcher) {
             formulationsList(
                 medicationRepository.getMedicationByActiveIngredient(activeIngredientName)
             )

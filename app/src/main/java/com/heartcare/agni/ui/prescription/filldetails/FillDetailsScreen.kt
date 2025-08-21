@@ -60,25 +60,20 @@ fun FillDetailsScreen(
     viewModel: FillDetailsViewModel = hiltViewModel()
 ) {
     LaunchedEffect(prescriptionViewModel.checkedActiveIngredient) {
-        viewModel.getMedicationByActiveIngredient(prescriptionViewModel.checkedActiveIngredient) {
-            viewModel.formulationsList = it
+        if (prescriptionViewModel.checkedActiveIngredient.isNotBlank()) {
+            viewModel.getMedicationByActiveIngredient(prescriptionViewModel.checkedActiveIngredient) {
+                viewModel.medicationSelected = it[0]
+                viewModel.medSelected = it[0].name
+                viewModel.medUnit = it[0].medUnit
+                viewModel.medDoseForm = it[0].doseForm
+                viewModel.medFhirId = it[0].medFhirId
+            }
+            viewModel.reset()
         }
-        viewModel.reset()
     }
     LaunchedEffect(viewModel.isLaunched) {
         if (prescriptionViewModel.medicationToEdit != null) {
-            viewModel.medSelected = prescriptionViewModel.medicationToEdit!!.medName
-            viewModel.medUnit = prescriptionViewModel.medicationToEdit!!.medUnit
-            viewModel.medDoseForm = prescriptionViewModel.medicationToEdit!!.medication.doseForm
-            viewModel.quantityPerDose =
-                prescriptionViewModel.medicationToEdit!!.medication.qtyPerDose.toString()
-            viewModel.frequency =
-                prescriptionViewModel.medicationToEdit!!.medication.frequency.toString()
-            viewModel.notes = prescriptionViewModel.medicationToEdit!!.medication.note ?: ""
-            viewModel.medFhirId = prescriptionViewModel.medicationToEdit!!.medication.medFhirId
-            viewModel.timing = prescriptionViewModel.medicationToEdit!!.medication.timing ?: ""
-            viewModel.duration =
-                prescriptionViewModel.medicationToEdit!!.medication.duration.toString()
+            setMedicationData(viewModel, prescriptionViewModel)
         }
     }
     Scaffold(
@@ -107,39 +102,7 @@ fun FillDetailsScreen(
                 actions = {
                     TextButton(
                         onClick = {
-                            if (prescriptionViewModel.medicationToEdit != null) {
-                                prescriptionViewModel.selectedActiveIngredientsList -= listOf(
-                                    prescriptionViewModel.medicationToEdit!!.activeIngredient
-                                ).toSet()
-                                prescriptionViewModel.medicationsResponseWithMedicationList -= listOf(
-                                    prescriptionViewModel.medicationToEdit!!
-                                ).toSet()
-                            }
-                            prescriptionViewModel.selectedActiveIngredientsList += listOf(
-                                prescriptionViewModel.checkedActiveIngredient
-                            )
-                            prescriptionViewModel.medicationsResponseWithMedicationList += listOf(
-                                MedicationResponseWithMedication(
-                                    medName = viewModel.medSelected,
-                                    medUnit = viewModel.medUnit,
-                                    activeIngredient = prescriptionViewModel.checkedActiveIngredient,
-                                    medication = Medication(
-                                        duration = viewModel.duration.toInt(),
-                                        frequency = viewModel.frequency.toInt(),
-                                        note = viewModel.notes.trim(),
-                                        qtyPerDose = viewModel.quantityPerDose.toInt(),
-                                        qtyPrescribed = viewModel.quantityPrescribed().toInt(),
-                                        timing = viewModel.timing,
-                                        doseForm = viewModel.medDoseForm,
-                                        medFhirId = viewModel.medFhirId,
-                                        medReqFhirId = null,
-                                        medReqUuid = UUIDBuilder.generateUUID()
-                                    )
-                                )
-                            )
-                            prescriptionViewModel.checkedActiveIngredient = ""
-                            prescriptionViewModel.medicationToEdit = null
-                            viewModel.reset()
+                            doneButtonClick(viewModel, prescriptionViewModel)
                         },
                         enabled = viewModel.quantityPrescribed().isNotBlank(),
                         modifier = Modifier.testTag("DONE_BTN")
@@ -225,7 +188,7 @@ fun FillDetailsScreen(
                         }
                     }
                     Text(
-                        text = "DFD1 · 18.5 Diabetes · Fixed-dose combination ",
+                        text = "${viewModel.medicationSelected?.code ?: ""} · ${viewModel.medicationSelected?.categoryName ?: ""} · ${viewModel.medicationSelected?.className ?: ""} ",
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -233,7 +196,7 @@ fun FillDetailsScreen(
                         value = viewModel.selectedBrand,
                         updateValue = { viewModel.selectedBrand = it },
                         label = stringResource(R.string.brand),
-                        dropdownList = listOf(),
+                        dropdownList = viewModel.medicationSelected?.brandList ?: listOf(),
                         errorText = "",
                         isMandatory = false,
                         dropdownWeight = 0.9f
@@ -407,4 +370,66 @@ private fun QuantitySelectorDropdown(
             }
         }
     }
+}
+
+private fun setMedicationData(
+    viewModel: FillDetailsViewModel,
+    prescriptionViewModel: PrescriptionViewModel
+) {
+    viewModel.getMedicationByActiveIngredient(prescriptionViewModel.medicationToEdit!!.activeIngredient) {
+        viewModel.medicationSelected = it[0]
+    }
+    viewModel.medSelected = prescriptionViewModel.medicationToEdit!!.medName
+    viewModel.medUnit = prescriptionViewModel.medicationToEdit!!.medUnit
+    viewModel.medDoseForm = prescriptionViewModel.medicationToEdit!!.medication.doseForm
+    viewModel.quantityPerDose =
+        prescriptionViewModel.medicationToEdit!!.medication.qtyPerDose.toString()
+    viewModel.frequency =
+        prescriptionViewModel.medicationToEdit!!.medication.frequency.toString()
+    viewModel.notes = prescriptionViewModel.medicationToEdit!!.medication.note ?: ""
+    viewModel.medFhirId = prescriptionViewModel.medicationToEdit!!.medication.medFhirId
+    viewModel.timing = prescriptionViewModel.medicationToEdit!!.medication.timing ?: ""
+    viewModel.duration =
+        prescriptionViewModel.medicationToEdit!!.medication.duration.toString()
+}
+
+private fun doneButtonClick(
+    viewModel: FillDetailsViewModel,
+    prescriptionViewModel: PrescriptionViewModel
+) {
+    if (prescriptionViewModel.medicationToEdit != null) {
+        prescriptionViewModel.selectedActiveIngredientsList -= listOf(
+            prescriptionViewModel.medicationToEdit!!.activeIngredient
+        ).toSet()
+        prescriptionViewModel.medicationsResponseWithMedicationList -= listOf(
+            prescriptionViewModel.medicationToEdit!!
+        ).toSet()
+    }
+    prescriptionViewModel.selectedActiveIngredientsList += listOf(
+        prescriptionViewModel.checkedActiveIngredient
+    )
+    prescriptionViewModel.medicationsResponseWithMedicationList += listOf(
+        MedicationResponseWithMedication(
+            medName = viewModel.medSelected,
+            medUnit = viewModel.medUnit,
+            activeIngredient = prescriptionViewModel.checkedActiveIngredient,
+            medication = Medication(
+                duration = viewModel.duration.toInt(),
+                frequency = viewModel.frequency.toInt(),
+                note = viewModel.notes.trim(),
+                qtyPerDose = viewModel.quantityPerDose.toInt(),
+                qtyPrescribed = viewModel.quantityPrescribed().toInt(),
+                timing = viewModel.timing,
+                doseForm = viewModel.medDoseForm,
+                medFhirId = viewModel.medFhirId,
+                medReqFhirId = null,
+                medReqUuid = UUIDBuilder.generateUUID(),
+                brandName = viewModel.selectedBrand.ifBlank { null },
+                doseFormCode = null
+            )
+        )
+    )
+    prescriptionViewModel.checkedActiveIngredient = ""
+    prescriptionViewModel.medicationToEdit = null
+    viewModel.reset()
 }

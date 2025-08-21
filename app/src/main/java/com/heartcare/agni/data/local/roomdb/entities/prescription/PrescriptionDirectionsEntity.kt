@@ -30,5 +30,10 @@ data class PrescriptionDirectionsEntity(
     val duration: Int,
     val qtyPrescribed: Int,
     val note: String?,
-    val prescriptionId: String
+    val prescriptionId: String,
+    val brandName: String?,
+    @ColumnInfo("dose_form_code")
+    val doseFormCode: String?,
+    @ColumnInfo("dose_form")
+    val doseForm: String
 )

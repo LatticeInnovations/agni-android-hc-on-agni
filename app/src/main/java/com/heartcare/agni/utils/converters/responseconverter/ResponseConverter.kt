@@ -374,7 +374,10 @@ internal suspend fun PrescriptionResponse.toListOfPrescriptionDirectionsEntity(m
             qtyPrescribed = medication.qtyPrescribed,
             note = medication.note,
             prescriptionId = prescriptionId,
-            medReqFhirId = medication.medReqFhirId
+            medReqFhirId = medication.medReqFhirId,
+            brandName = medication.brandName,
+            doseFormCode = medication.doseFormCode,
+            doseForm = medication.doseForm
         )
     }
 }
@@ -404,7 +407,10 @@ internal fun PrescriptionResponseLocal.toListOfPrescriptionDirectionsEntity(): L
             qtyPrescribed = medication.qtyPrescribed,
             note = medication.note,
             prescriptionId = prescriptionId,
-            medReqFhirId = medication.medReqFhirId
+            medReqFhirId = medication.medReqFhirId,
+            brandName = medication.brandName,
+            doseFormCode = medication.doseFormCode,
+            doseForm = medication.doseForm
         )
     }
 }
@@ -592,7 +598,9 @@ internal fun PrescriptionDirectionAndMedicineView.toMedicationLocal(): Medicatio
         medReqFhirId = prescriptionDirectionsEntity.medReqFhirId,
         medReqUuid = prescriptionDirectionsEntity.id,
         medName = medicationEntity.medName,
-        medUnit = medicationEntity.medUnit
+        medUnit = medicationEntity.medUnit,
+        brandName = prescriptionDirectionsEntity.brandName,
+        doseFormCode = prescriptionDirectionsEntity.doseFormCode
     )
 }
 

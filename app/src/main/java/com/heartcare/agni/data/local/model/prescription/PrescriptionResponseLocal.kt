@@ -26,5 +26,7 @@ data class MedicationLocal(
     val qtyPrescribed: Int,
     val timing: String?,
     val medName: String,
-    val medUnit: String
+    val medUnit: String,
+    val brandName: String?,
+    val doseFormCode: String?
 )
