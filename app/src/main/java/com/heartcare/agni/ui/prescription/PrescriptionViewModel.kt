@@ -31,6 +31,7 @@ import com.heartcare.agni.utils.builders.UUIDBuilder
 import com.heartcare.agni.utils.common.Queries
 import com.heartcare.agni.utils.common.Queries.checkAndUpdateAppointmentStatusToInProgress
 import com.heartcare.agni.utils.common.Queries.updatePatientLastUpdated
+import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.isToday
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toEndOfDay
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toTodayStartDate
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -80,7 +81,8 @@ class PrescriptionViewModel @Inject constructor(
     var previousSearchList by mutableStateOf(listOf<String>())
     var activeIngredientSearchList by mutableStateOf(listOf<String>())
 
-    var previousPrescriptionList by mutableStateOf(listOf<PrescriptionAndMedicineRelation?>(null))
+    var previousPrescriptionList by mutableStateOf(listOf<PrescriptionAndMedicineRelation>())
+    var todayPrescription by mutableStateOf<PrescriptionAndMedicineRelation?>(null)
 
     internal var appointmentResponseLocal: AppointmentResponseLocal? = null
 
@@ -102,6 +104,31 @@ class PrescriptionViewModel @Inject constructor(
     ) {
         viewModelScope.launch(ioDispatcher) {
             previousPrescriptionList = prescriptionRepository.getLastPrescriptionAndMedicine(patientId)
+            todayPrescription = previousPrescriptionList.firstOrNull { isToday(it.prescriptionEntity.prescriptionDate) }
+            todayPrescription?.let { prescription ->
+                selectedActiveIngredientsList = prescription.prescriptionDirectionAndMedicineView.map { it.medicationEntity.activeIngredient }
+                medicationsResponseWithMedicationList = prescription.prescriptionDirectionAndMedicineView.map {
+                    MedicationResponseWithMedication(
+                        activeIngredient = it.medicationEntity.activeIngredient,
+                        medName = it.medicationEntity.medName,
+                        medUnit = it.medicationEntity.medUnit,
+                        medication = Medication(
+                            medReqUuid = it.prescriptionDirectionsEntity.id,
+                            medReqFhirId = it.prescriptionDirectionsEntity.medReqFhirId,
+                            doseForm = it.prescriptionDirectionsEntity.doseForm,
+                            duration = it.prescriptionDirectionsEntity.duration,
+                            frequency = it.prescriptionDirectionsEntity.frequency,
+                            medFhirId = it.prescriptionDirectionsEntity.medFhirId,
+                            note = it.prescriptionDirectionsEntity.note,
+                            qtyPerDose = it.prescriptionDirectionsEntity.qtyPerDose,
+                            qtyPrescribed = it.prescriptionDirectionsEntity.qtyPrescribed,
+                            timing = it.prescriptionDirectionsEntity.timing,
+                            brandName = it.prescriptionDirectionsEntity.brandName,
+                            doseFormCode = it.prescriptionDirectionsEntity.doseFormCode
+                        )
+                    )
+                }
+            }
         }
     }
 
@@ -186,7 +213,6 @@ class PrescriptionViewModel @Inject constructor(
 
     internal fun insertPrescription(
         date: Date = Date(),
-        prescriptionId: String = UUIDBuilder.generateUUID(),
         inserted: (Long) -> Unit
     ) {
         val medicationsList = mutableListOf<Medication>()
@@ -195,15 +221,26 @@ class PrescriptionViewModel @Inject constructor(
                 medicationResponseWithMedication.medication
             )
         }
-        viewModelScope.launch {
+        viewModelScope.launch(ioDispatcher) {
             getAppointment()
+            var uuid = UUIDBuilder.generateUUID()
+            var fhirId: String? = null
+            todayPrescription?.let {
+                if (isToday(it.prescriptionEntity.prescriptionDate)) {
+                    uuid = it.prescriptionEntity.id
+                    fhirId = it.prescriptionEntity.prescriptionFhirId
+                }
+                it.prescriptionDirectionAndMedicineView.forEach { directionsView ->
+                    prescriptionRepository.deletePrescriptionDirectionEntity(directionsView.prescriptionDirectionsEntity)
+                }
+            }
             inserted(withContext(ioDispatcher) {
-                insertPrescriptionInDB(date, prescriptionId, medicationsList).also {
-                    insertGenericEntityInDB(date, prescriptionId, medicationsList)
+                insertPrescriptionInDB(date, uuid, fhirId, medicationsList).also {
+                    insertGenericEntityInDB(date, uuid, medicationsList)
                     dispenseRepository.insertPrescriptionDispenseData(
                         DispensePrescriptionEntity(
                             patientId = patient!!.id,
-                            prescriptionId = prescriptionId,
+                            prescriptionId = uuid,
                             status = DispenseStatusEnum.NOT_DISPENSED.code
                         )
                     )
@@ -255,7 +292,8 @@ class PrescriptionViewModel @Inject constructor(
 
     private suspend fun insertPrescriptionInDB(
         date: Date,
-        prescriptionId: String,
+        prescriptionUuid: String,
+        prescriptionFhirId: String? = null,
         medicationsList: List<Medication>
     ): Long {
         return prescriptionRepository.insertPrescription(
@@ -263,7 +301,8 @@ class PrescriptionViewModel @Inject constructor(
                 patientId = patient!!.id,
                 patientFhirId = patient?.fhirId,
                 generatedOn = date,
-                prescriptionId = prescriptionId,
+                prescriptionId = prescriptionUuid,
+                prescriptionFhirId = prescriptionFhirId,
                 prescription = medicationsList.map {
                     MedicationLocal(
                         medUnit = "",
@@ -289,14 +328,14 @@ class PrescriptionViewModel @Inject constructor(
 
     private suspend fun insertGenericEntityInDB(
         date: Date,
-        prescriptionId: String,
+        prescriptionUuid: String,
         medicationsList: List<Medication>
     ): Long {
         return genericRepository.insertPrescription(
             PrescriptionResponse(
                 patientFhirId = patient!!.fhirId ?: patient!!.id,
                 generatedOn = date,
-                prescriptionId = prescriptionId,
+                prescriptionId = prescriptionUuid,
                 prescription = medicationsList.map { medication ->
                     medication.copy(
                         timing = timingList.await()

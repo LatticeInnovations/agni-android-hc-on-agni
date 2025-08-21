@@ -378,7 +378,7 @@ fun BottomNavLayout(
         label = "Rotation state of expand icon button",
     )
     AnimatedVisibility(
-        visible = viewModel.medicationsResponseWithMedicationList.isNotEmpty(),
+        visible = viewModel.medicationsResponseWithMedicationList.isNotEmpty() && pagerState.currentPage == 1,
         enter = expandVertically(),
         exit = shrinkVertically()
     ) {
@@ -473,6 +473,7 @@ fun BottomNavLayout(
                         onClick = {
                             // add medications to prescriptions
                             viewModel.insertPrescription {
+                                viewModel.bottomNavExpanded = false
                                 viewModel.selectedActiveIngredientsList = listOf()
                                 viewModel.medicationsResponseWithMedicationList = emptyList()
                                 coroutineScope.launch { pagerState.animateScrollToPage(0) }

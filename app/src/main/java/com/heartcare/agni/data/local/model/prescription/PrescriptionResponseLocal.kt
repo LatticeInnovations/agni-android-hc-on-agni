@@ -10,7 +10,8 @@ data class PrescriptionResponseLocal(
     val appointmentId: String,
     val generatedOn: Date,
     val prescriptionId: String,
-    val prescription: List<MedicationLocal>
+    val prescription: List<MedicationLocal>,
+    val prescriptionFhirId: String?
 )
 
 @Keep

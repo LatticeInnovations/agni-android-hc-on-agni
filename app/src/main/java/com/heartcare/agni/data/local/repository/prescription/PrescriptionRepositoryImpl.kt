@@ -5,6 +5,7 @@ import com.heartcare.agni.data.local.model.prescription.PrescriptionResponseLoca
 import com.heartcare.agni.data.local.roomdb.dao.FileUploadDao
 import com.heartcare.agni.data.local.roomdb.dao.PrescriptionDao
 import com.heartcare.agni.data.local.roomdb.entities.prescription.PrescriptionAndMedicineRelation
+import com.heartcare.agni.data.local.roomdb.entities.prescription.PrescriptionDirectionsEntity
 import com.heartcare.agni.utils.converters.responseconverter.toListOfPrescriptionDirectionsEntity
 import com.heartcare.agni.utils.converters.responseconverter.toListOfPrescriptionPhotoEntity
 import com.heartcare.agni.utils.converters.responseconverter.toPrescriptionEntity
@@ -87,5 +88,9 @@ class PrescriptionRepositoryImpl @Inject constructor(
         return prescriptionDao.deletePrescriptionPhoto(prescriptionPhotoResponseLocal.toListOfPrescriptionPhotoEntity()[0]).also {
             prescriptionDao.deletePrescriptionEntity(prescriptionPhotoResponseLocal.toPrescriptionEntity())
         }
+    }
+
+    override suspend fun deletePrescriptionDirectionEntity(prescriptionDirectionsEntity: PrescriptionDirectionsEntity): Int {
+        return prescriptionDao.deletePrescriptionDirectionEntity(prescriptionDirectionsEntity)
     }
 }

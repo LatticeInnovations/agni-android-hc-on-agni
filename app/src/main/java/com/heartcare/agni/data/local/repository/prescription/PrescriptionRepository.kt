@@ -3,6 +3,7 @@ package com.heartcare.agni.data.local.repository.prescription
 import com.heartcare.agni.data.local.model.prescription.PrescriptionPhotoResponseLocal
 import com.heartcare.agni.data.local.model.prescription.PrescriptionResponseLocal
 import com.heartcare.agni.data.local.roomdb.entities.prescription.PrescriptionAndMedicineRelation
+import com.heartcare.agni.data.local.roomdb.entities.prescription.PrescriptionDirectionsEntity
 
 interface PrescriptionRepository {
 
@@ -22,4 +23,5 @@ interface PrescriptionRepository {
 
     suspend fun insertPrescriptionPhotos(prescriptionPhotoResponseLocal: PrescriptionPhotoResponseLocal): Long
     suspend fun deletePhotoPrescription(prescriptionPhotoResponseLocal: PrescriptionPhotoResponseLocal): Int
+    suspend fun deletePrescriptionDirectionEntity(prescriptionDirectionsEntity: PrescriptionDirectionsEntity): Int
 }
