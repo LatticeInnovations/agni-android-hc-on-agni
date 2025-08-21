@@ -129,7 +129,7 @@ fun PrescriptionScreen(
         Scaffold(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(bottom = if (viewModel.selectedActiveIngredientsList.isNotEmpty()) 60.dp else 0.dp),
+                .padding(bottom = if (viewModel.selectedActiveIngredientsList.isNotEmpty() && pagerState.pageCount == 1) 60.dp else 0.dp),
             snackbarHost = { SnackbarHost(snackbarHostState) },
             topBar = {
                 TopAppBar(
@@ -180,7 +180,7 @@ fun PrescriptionScreen(
                         ) { index ->
                             Timber.d("manseeyy index $index")
                             if (index == 1) {
-                                viewModel.getAppointmentInfo (
+                                viewModel.getAppointmentInfo(
                                     callback = {
                                         when {
                                             viewModel.existsInOtherHospital -> {
@@ -209,8 +209,7 @@ fun PrescriptionScreen(
                                         }
                                     }
                                 )
-                            }
-                            else coroutineScope.launch {
+                            } else coroutineScope.launch {
                                 pagerState.animateScrollToPage(
                                     index
                                 )
@@ -288,13 +287,13 @@ fun PrescriptionScreen(
         }
         Box(
             modifier =
-            if (!(viewModel.bottomNavExpanded && viewModel.selectedActiveIngredientsList.isNotEmpty())) Modifier
-                .matchParentSize()
-                .background(MaterialTheme.colorScheme.outline.copy(alpha = 0f))
-            else Modifier
-                .matchParentSize()
-                .background(MaterialTheme.colorScheme.outline.copy(alpha = 0.5f))
-                .clickable(enabled = false) { },
+                if (!(viewModel.bottomNavExpanded && viewModel.selectedActiveIngredientsList.isNotEmpty())) Modifier
+                    .matchParentSize()
+                    .background(MaterialTheme.colorScheme.outline.copy(alpha = 0f))
+                else Modifier
+                    .matchParentSize()
+                    .background(MaterialTheme.colorScheme.outline.copy(alpha = 0.5f))
+                    .clickable(enabled = false) { },
             contentAlignment = Alignment.BottomCenter
         ) {
             BottomNavLayout(viewModel, snackbarHostState, pagerState, coroutineScope, context)
@@ -595,7 +594,7 @@ private fun AddToQueueDialog(
                     appointment = viewModel.appointment!!,
                     updated = {
                         viewModel.showAddToQueueDialog = false
-                        if (viewModel.isReprescribing){
+                        if (viewModel.isReprescribing) {
                             saveRePrescription(
                                 context,
                                 viewModel,
@@ -603,8 +602,7 @@ private fun AddToQueueDialog(
                                 coroutineScope,
                                 snackBarHostState
                             )
-                        }
-                        else {
+                        } else {
                             viewModel.canAddAssessment = true
                             coroutineScope.launch {
                                 pagerState.animateScrollToPage(1)
@@ -621,7 +619,7 @@ private fun AddToQueueDialog(
                         addedToQueue = {
                             viewModel.showAddToQueueDialog = false
                             Timber.d("manseeyy added to queue")
-                            if (viewModel.isReprescribing){
+                            if (viewModel.isReprescribing) {
                                 Timber.d("manseeyy is represcribing")
                                 saveRePrescription(
                                     context,
@@ -630,8 +628,7 @@ private fun AddToQueueDialog(
                                     coroutineScope,
                                     snackBarHostState
                                 )
-                            }
-                            else {
+                            } else {
                                 viewModel.canAddAssessment = true
                                 Timber.d("manseeyy quick select ${pagerState.pageCount}")
                                 coroutineScope.launch {
