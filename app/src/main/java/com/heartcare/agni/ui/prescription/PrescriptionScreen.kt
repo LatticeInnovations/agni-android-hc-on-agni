@@ -103,7 +103,7 @@ fun PrescriptionScreen(
         viewModel.tabs.size
     }
 
-    SetBackHandler(viewModel, navController)
+    SetBackHandler(viewModel, navController, pagerState, coroutineScope)
     LaunchedEffect(viewModel.isLaunched) {
         if (!viewModel.isLaunched) {
             viewModel.getActiveIngredients {
@@ -144,7 +144,13 @@ fun PrescriptionScreen(
                         )
                     },
                     navigationIcon = {
-                        IconButton(onClick = { navController.popBackStack() }) {
+                        IconButton(
+                            onClick = {
+                                if (pagerState.currentPage == 1)
+                                    coroutineScope.launch { pagerState.animateScrollToPage(0) }
+                                else navController.navigateUp()
+                            }
+                        ) {
                             Icon(
                                 Icons.AutoMirrored.Filled.ArrowBack,
                                 contentDescription = "BACK_ICON"
@@ -348,7 +354,12 @@ fun PrescriptionScreen(
 }
 
 @Composable
-private fun SetBackHandler(viewModel: PrescriptionViewModel, navController: NavController) {
+private fun SetBackHandler(
+    viewModel: PrescriptionViewModel,
+    navController: NavController,
+    pagerState: PagerState,
+    coroutineScope: CoroutineScope
+) {
     BackHandler(enabled = true) {
         when {
             viewModel.isSearching -> viewModel.isSearching = false
@@ -359,6 +370,7 @@ private fun SetBackHandler(viewModel: PrescriptionViewModel, navController: NavC
 
             viewModel.bottomNavExpanded -> viewModel.bottomNavExpanded = false
             viewModel.isSearchResult -> viewModel.isSearchResult = false
+            pagerState.currentPage == 1 -> coroutineScope.launch { pagerState.animateScrollToPage(0) }
             else -> navController.popBackStack()
         }
     }
