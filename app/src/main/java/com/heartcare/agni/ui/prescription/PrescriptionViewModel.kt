@@ -339,13 +339,15 @@ class PrescriptionViewModel @Inject constructor(
                 prescription = medicationsList.map { medication ->
                     medication.copy(
                         timing = timingList.await()
-                            .find { timing -> timing.medicalDosage == medication.timing }?.medicalDosageId
+                            .find { timing -> timing.medicalDosage == medication.timing }?.medicalDosageId,
+                        medReqFhirId = null
                     )
                 },
                 prescriptionFhirId = null,
-                appointmentUuid = appointmentResponseLocal!!.uuid,
+                appointmentUuid = null,
                 appointmentId = appointmentResponseLocal!!.appointmentId
-                    ?: appointmentResponseLocal!!.uuid
+                    ?: appointmentResponseLocal!!.uuid,
+                appUpdatedOn = Date()
             )
         )
     }

@@ -311,7 +311,7 @@ internal suspend fun PrescriptionResponse.toPrescriptionEntity(
         id = prescriptionId,
         prescriptionDate = generatedOn,
         patientId = patientDao.getPatientIdByFhirId(patientFhirId)!!,
-        appointmentId = appointmentUuid,
+        appointmentId = appointmentUuid!!,
         patientFhirId = patientFhirId,
         prescriptionFhirId = prescriptionFhirId,
         prescriptionType = PrescriptionType.FORM.type

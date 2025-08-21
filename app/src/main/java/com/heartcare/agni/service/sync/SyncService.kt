@@ -232,20 +232,14 @@ class SyncService(
         }
     }
 
-    /** Upload Form Prescription*/
+    /** Upload Photo Prescription*/
     private suspend fun uploadPhotoPrescriptionData(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
         return checkAuthenticationStatus(syncRepository.sendPhotoPrescriptionPostData(), logout)
     }
 
-    /** Upload Photo Prescription*/
+    /** Upload Form Prescription*/
     private suspend fun uploadFormPrescriptionData(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
-        return checkAuthenticationStatus(syncRepository.sendFormPrescriptionPostData(), logout)?.apply {
-            if (this is ApiEmptyResponse) {
-                CoroutineScope(Dispatchers.IO).launch {
-                    updateFhirIdInDispense(logout)
-                }
-            }
-        }
+        return checkAuthenticationStatus(syncRepository.sendFormPrescriptionPostData(), logout)
     }
 
     /** Upload Patient Last Updated Data */
@@ -677,10 +671,7 @@ class SyncService(
     private suspend fun updateFhirIdInPrescription(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
         genericRepository.updatePrescriptionFhirId()
         /** Upload Prescription */
-        CoroutineScope(Dispatchers.IO).launch {
-            uploadFormPrescriptionData(logout)
-        }
-        return uploadPhotoPrescriptionData(logout)
+        return uploadFormPrescriptionData(logout)
     }
 
     /** Update Appointment FHIR ID in CVD */

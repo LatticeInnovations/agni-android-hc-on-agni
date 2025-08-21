@@ -79,14 +79,14 @@ open class GenericRepositoryDatabaseTransactions(
     ): Long {
         return if (prescriptionGenericEntity != null) {
             genericDao.insertGenericEntity(
-                prescriptionGenericEntity.copy(payload = prescriptionResponse.toJson())
+                prescriptionGenericEntity.copy(payload = prescriptionResponse.copy(appUpdatedOn = Date()).toJson())
             )[0]
         } else {
             genericDao.insertGenericEntity(
                 GenericEntity(
                     id = uuid,
                     patientId = prescriptionResponse.prescriptionId,
-                    payload = prescriptionResponse.toJson(),
+                    payload = prescriptionResponse.copy(appUpdatedOn = Date()).toJson(),
                     type = GenericTypeEnum.PRESCRIPTION,
                     syncType = SyncType.POST
                 )
