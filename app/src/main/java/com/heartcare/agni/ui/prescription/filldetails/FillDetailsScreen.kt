@@ -256,7 +256,7 @@ fun FormulationsForm(
                     it
                 else if (it.isEmpty()) viewModel.duration = it
                 viewModel.isDurationInvalid =
-                    viewModel.duration.isNotBlank() && viewModel.duration.toInt() > 180
+                    viewModel.duration.isNotBlank() && viewModel.duration.toInt() > 365
             },
             label = {
                 Text(text = stringResource(id = R.string.duration_days))
