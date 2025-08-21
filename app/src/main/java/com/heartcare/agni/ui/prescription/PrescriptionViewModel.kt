@@ -340,7 +340,8 @@ class PrescriptionViewModel @Inject constructor(
                     medication.copy(
                         timing = timingList.await()
                             .find { timing -> timing.medicalDosage == medication.timing }?.medicalDosageId,
-                        medReqFhirId = null
+                        medReqFhirId = null,
+                        doseFormCode = null
                     )
                 },
                 prescriptionFhirId = null,
