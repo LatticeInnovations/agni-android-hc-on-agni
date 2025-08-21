@@ -227,7 +227,7 @@ fun FormulationsForm(
         label = stringResource(id = R.string.frequency),
         unit = stringResource(id = R.string.dose_per_day),
         value = viewModel.frequency,
-        qtyRange = viewModel.qtyRange,
+        qtyRange = viewModel.frequencyRange,
         updateValue = { viewModel.frequency = it }
     )
 
@@ -306,7 +306,7 @@ private fun QuantitySelectorDropdown(
     label: String,
     unit: String,
     value: String,
-    qtyRange: IntRange,
+    qtyRange: List<String>,
     updateValue: (String) -> Unit
 ) {
     Column {
@@ -357,11 +357,11 @@ private fun QuantitySelectorDropdown(
                 DropdownMenuItem(
                     onClick = {
                         quantityExpanded = !quantityExpanded
-                        updateValue(label.toString())
+                        updateValue(label)
                     },
                     text = {
                         Text(
-                            text = label.toString(),
+                            text = label,
                             style = MaterialTheme.typography.bodyLarge,
                             color = MaterialTheme.colorScheme.onSurface
                         )
@@ -417,8 +417,8 @@ private fun doneButtonClick(
                 duration = viewModel.duration.toInt(),
                 frequency = viewModel.frequency.toInt(),
                 note = viewModel.notes.trim(),
-                qtyPerDose = viewModel.quantityPerDose.toInt(),
-                qtyPrescribed = viewModel.quantityPrescribed().toInt(),
+                qtyPerDose = viewModel.quantityPerDose.toDouble(),
+                qtyPrescribed = viewModel.quantityPrescribed().toDouble(),
                 timing = viewModel.timing,
                 doseForm = viewModel.medDoseForm,
                 medFhirId = viewModel.medFhirId,

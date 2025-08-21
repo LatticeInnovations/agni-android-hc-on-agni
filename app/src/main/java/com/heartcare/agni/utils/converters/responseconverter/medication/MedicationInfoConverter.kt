@@ -3,6 +3,7 @@ package com.heartcare.agni.utils.converters.responseconverter.medication
 import android.content.Context
 import com.heartcare.agni.R
 import com.heartcare.agni.data.local.enums.MedFrequencyEnum
+import java.util.Locale
 
 object MedicationInfoConverter {
     internal fun getMedInfo(
@@ -10,19 +11,19 @@ object MedicationInfoConverter {
         medUnit: String,
         timing: String?,
         note: String?,
-        qtyPerDose: Int,
+        qtyPerDose: Double,
         duration: Int,
-        qtyPrescribed: Int,
+        qtyPrescribed: Double,
         context: Context
     ): String {
         return context.getString(
             R.string.med_info,
-            qtyPerDose,
+            String.format(Locale.getDefault(), "%.1f", qtyPerDose),
             medUnit,
             getMedFreqValue(frequency, context),
             if (timing?.isNotEmpty() == true) context.getString(R.string.timing, timing) else "",
             duration,
-            qtyPrescribed,
+            String.format(Locale.getDefault(), "%.1f", qtyPrescribed),
             if (note?.isNotEmpty() == true) context.getString(R.string.notes, note) else ""
         )
     }

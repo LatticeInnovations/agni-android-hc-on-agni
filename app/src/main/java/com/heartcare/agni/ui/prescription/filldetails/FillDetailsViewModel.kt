@@ -24,9 +24,8 @@ class FillDetailsViewModel @Inject constructor(
 
     var medSelected by mutableStateOf("")
 
-    var quantityPerDose by mutableStateOf("1")
+    var quantityPerDose by mutableStateOf("1.0")
     var frequency by mutableStateOf("1")
-    val qtyRange = 1..10
     var timing by mutableStateOf("")
     var duration by mutableStateOf("")
     var notes by mutableStateOf("")
@@ -37,14 +36,37 @@ class FillDetailsViewModel @Inject constructor(
 
     var selectedBrand by mutableStateOf("")
 
+    val qtyRange = listOf(
+        "0.5",
+        "1.0",
+        "1.5",
+        "2.0",
+        "2.5",
+        "3.0",
+        "3.5",
+        "4.0",
+        "4.5",
+        "5.0"
+    )
+
+    val frequencyRange = listOf(
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7"
+    )
+
     internal fun quantityPrescribed(): String {
         return if (duration.isBlank() || isDurationInvalid) ""
-        else (quantityPerDose.toInt() * frequency.toInt() * duration.toInt()).toString()
+        else (quantityPerDose.toDouble() * frequency.toInt() * duration.toInt()).toString()
     }
 
     internal fun reset() {
         medSelected = ""
-        quantityPerDose = "1"
+        quantityPerDose = "1.0"
         frequency = "1"
         duration = ""
         notes = ""

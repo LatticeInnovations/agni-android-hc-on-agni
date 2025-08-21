@@ -87,7 +87,7 @@ class DispensePrescriptionViewModel @Inject constructor(
                     note = "",
                     medication = it,
                     isModified = false,
-                    qtyLeft = it.prescriptionDirectionsEntity.qtyPrescribed - (dispensedMedHashMap[it.medicationEntity.medFhirId]
+                    qtyLeft = it.prescriptionDirectionsEntity.qtyPrescribed.toInt() - (dispensedMedHashMap[it.medicationEntity.medFhirId]
                         ?: 0)
                 )
             }.toMutableList()
@@ -137,7 +137,7 @@ class DispensePrescriptionViewModel @Inject constructor(
             status = checkStatusOfPrescription(),
             medicineDispensedList = selectedMedicine.map {
                 val isModified =
-                    it.qtyToBeDispensed != it.medication.prescriptionDirectionsEntity.qtyPrescribed
+                    it.qtyToBeDispensed != it.medication.prescriptionDirectionsEntity.qtyPrescribed.toInt()
                 MedicineDispensed(
                     medDispenseUuid = UUIDBuilder.generateUUID(),
                     category = DispenseCategoryEnum.PRESCRIBED.value,
@@ -179,7 +179,7 @@ class DispensePrescriptionViewModel @Inject constructor(
                     qtyDispensed = it.qtyDispensed,
                     qtyPrescribed = prescription!!.prescriptionDirectionAndMedicineView.first { medicine ->
                         medicine.medicationEntity.medFhirId == it.medFhirId
-                    }.prescriptionDirectionsEntity.qtyPrescribed,
+                    }.prescriptionDirectionsEntity.qtyPrescribed.toInt(),
                     date = medDispenseRequest.generatedOn,
                     isModified = it.isModified,
                     modificationType = it.modificationType,

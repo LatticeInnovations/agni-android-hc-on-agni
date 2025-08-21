@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "f06f63986744ada494349855770272d1",
+    "identityHash": "3d49273d11a533d1b6a71ec7a513113d",
     "entities": [
       {
         "tableName": "PatientEntity",
@@ -577,7 +577,7 @@
       },
       {
         "tableName": "PrescriptionDirectionsEntity",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `medReqFhirId` TEXT, `med_fhir_id` TEXT NOT NULL, `qtyPerDose` INTEGER NOT NULL, `frequency` INTEGER NOT NULL, `timing` TEXT, `duration` INTEGER NOT NULL, `qtyPrescribed` INTEGER NOT NULL, `note` TEXT, `prescriptionId` TEXT NOT NULL, `brandName` TEXT, `dose_form_code` TEXT, `dose_form` TEXT NOT NULL, PRIMARY KEY(`id`), FOREIGN KEY(`prescriptionId`) REFERENCES `PrescriptionEntity`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `medReqFhirId` TEXT, `med_fhir_id` TEXT NOT NULL, `qtyPerDose` REAL NOT NULL, `frequency` INTEGER NOT NULL, `timing` TEXT, `duration` INTEGER NOT NULL, `qtyPrescribed` REAL NOT NULL, `note` TEXT, `prescriptionId` TEXT NOT NULL, `brandName` TEXT, `dose_form_code` TEXT, `dose_form` TEXT NOT NULL, PRIMARY KEY(`id`), FOREIGN KEY(`prescriptionId`) REFERENCES `PrescriptionEntity`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION )",
         "fields": [
           {
             "fieldPath": "id",
@@ -599,7 +599,7 @@
           {
             "fieldPath": "qtyPerDose",
             "columnName": "qtyPerDose",
-            "affinity": "INTEGER",
+            "affinity": "REAL",
             "notNull": true
           },
           {
@@ -622,7 +622,7 @@
           {
             "fieldPath": "qtyPrescribed",
             "columnName": "qtyPrescribed",
-            "affinity": "INTEGER",
+            "affinity": "REAL",
             "notNull": true
           },
           {
@@ -3547,7 +3547,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'f06f63986744ada494349855770272d1')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '3d49273d11a533d1b6a71ec7a513113d')"
     ]
   }
 }
