@@ -312,6 +312,19 @@ private fun CardComposableList(
                     navController.navigate(Screen.Prescription.route)
                 }
             )
+            CardComposable(
+                viewModel,
+                stringResource(id = R.string.intervention),
+                R.drawable.shield_with_heart,
+                null,
+                onClick = {
+                    navController.currentBackStackEntry?.savedStateHandle?.set(
+                        PATIENT,
+                        viewModel.patient
+                    )
+                    navController.navigate(Screen.InterventionScreen.route)
+                }
+            )
         }
 
         /**

@@ -695,4 +695,5 @@ include them in the household</string>
     <string name="re_precribe">Re-Prescribe</string>
     <string name="medicine_name_label">Medication name</string>
     <string name="brand">Brand</string>
+    <string name="intervention">Intervention</string>
 </resources>
