@@ -105,31 +105,35 @@ class PrescriptionViewModel @Inject constructor(
         patientId: String
     ) {
         viewModelScope.launch(ioDispatcher) {
-            previousPrescriptionList = prescriptionRepository.getLastPrescriptionAndMedicine(patientId)
-            todayPrescription = previousPrescriptionList.firstOrNull { isToday(it.prescriptionEntity.prescriptionDate) }
+            previousPrescriptionList =
+                prescriptionRepository.getLastPrescriptionAndMedicine(patientId)
+            todayPrescription =
+                previousPrescriptionList.firstOrNull { isToday(it.prescriptionEntity.prescriptionDate) }
             todayPrescription?.let { prescription ->
-                selectedMedicationsList = prescription.prescriptionDirectionAndMedicineView.map { it.medicationEntity.toMedicationResponse() }
-                medicationsResponseWithMedicationList = prescription.prescriptionDirectionAndMedicineView.map {
-                    MedicationResponseWithMedication(
-                        activeIngredient = it.medicationEntity.activeIngredient,
-                        medName = it.medicationEntity.medName,
-                        medUnit = it.medicationEntity.medUnit,
-                        medication = Medication(
-                            medReqUuid = it.prescriptionDirectionsEntity.id,
-                            medReqFhirId = it.prescriptionDirectionsEntity.medReqFhirId,
-                            doseForm = it.prescriptionDirectionsEntity.doseForm,
-                            duration = it.prescriptionDirectionsEntity.duration,
-                            frequency = it.prescriptionDirectionsEntity.frequency,
-                            medFhirId = it.prescriptionDirectionsEntity.medFhirId,
-                            note = it.prescriptionDirectionsEntity.note,
-                            qtyPerDose = it.prescriptionDirectionsEntity.qtyPerDose,
-                            qtyPrescribed = it.prescriptionDirectionsEntity.qtyPrescribed,
-                            timing = it.prescriptionDirectionsEntity.timing,
-                            brandName = it.prescriptionDirectionsEntity.brandName,
-                            doseFormCode = it.prescriptionDirectionsEntity.doseFormCode
+                selectedMedicationsList =
+                    prescription.prescriptionDirectionAndMedicineView.map { it.medicationEntity.toMedicationResponse() }
+                medicationsResponseWithMedicationList =
+                    prescription.prescriptionDirectionAndMedicineView.map {
+                        MedicationResponseWithMedication(
+                            activeIngredient = it.medicationEntity.activeIngredient,
+                            medName = it.medicationEntity.medName,
+                            medUnit = it.medicationEntity.medUnit,
+                            medication = Medication(
+                                medReqUuid = it.prescriptionDirectionsEntity.id,
+                                medReqFhirId = it.prescriptionDirectionsEntity.medReqFhirId,
+                                doseForm = it.prescriptionDirectionsEntity.doseForm,
+                                duration = it.prescriptionDirectionsEntity.duration,
+                                frequency = it.prescriptionDirectionsEntity.frequency,
+                                medFhirId = it.prescriptionDirectionsEntity.medFhirId,
+                                note = it.prescriptionDirectionsEntity.note ?: "",
+                                qtyPerDose = it.prescriptionDirectionsEntity.qtyPerDose,
+                                qtyPrescribed = it.prescriptionDirectionsEntity.qtyPrescribed,
+                                timing = it.prescriptionDirectionsEntity.timing,
+                                brandName = it.prescriptionDirectionsEntity.brandName ?: "",
+                                doseFormCode = it.prescriptionDirectionsEntity.doseFormCode
+                            )
                         )
-                    )
-                }
+                    }
             }
         }
     }

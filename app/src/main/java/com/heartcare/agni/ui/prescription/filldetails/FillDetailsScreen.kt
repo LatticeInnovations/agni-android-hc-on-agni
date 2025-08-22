@@ -410,7 +410,7 @@ private fun doneButtonClick(
             medication = Medication(
                 duration = viewModel.duration.toInt(),
                 frequency = viewModel.frequency.toInt(),
-                note = viewModel.notes.trim(),
+                note = viewModel.notes.trim().ifBlank { null },
                 qtyPerDose = viewModel.quantityPerDose.toDouble(),
                 qtyPrescribed = viewModel.quantityPrescribed().toDouble(),
                 timing = viewModel.timing,
