@@ -696,4 +696,6 @@ include them in the household</string>
     <string name="medicine_name_label">Medication name</string>
     <string name="brand">Brand</string>
     <string name="intervention">Intervention</string>
+    <string name="interventions">Interventions</string>
+    <string name="add_interventions">Add interventions</string>
 </resources>

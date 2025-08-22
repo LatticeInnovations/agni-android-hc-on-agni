@@ -9,4 +9,6 @@ import com.heartcare.agni.data.server.model.patient.PatientResponse
 class InterventionViewModel: BaseViewModel() {
     var isLaunched by mutableStateOf(false)
     var patient by mutableStateOf<PatientResponse?>(null)
+
+    var interventionLists by mutableStateOf(listOf<String>("", "", ""))
 }
