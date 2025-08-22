@@ -30,6 +30,7 @@ import com.heartcare.agni.ui.householdmember.addhouseholdmember.AddHouseholdMemb
 import com.heartcare.agni.ui.householdmember.connectpatient.ConnectPatient
 import com.heartcare.agni.ui.householdmember.searchresult.SearchResult
 import com.heartcare.agni.ui.intervention.InterventionScreen
+import com.heartcare.agni.ui.intervention.add.AddInterventionScreen
 import com.heartcare.agni.ui.labtestandmedicalrecord.photo.upload.PhotoUploadScreen
 import com.heartcare.agni.ui.labtestandmedicalrecord.photo.view.PhotoViewScreen
 import com.heartcare.agni.ui.landingscreen.LandingScreen
@@ -165,5 +166,6 @@ fun NavigationAppHost(navController: NavController, startDest: String) {
         composable(Screen.DiagnosisScreen.route) { DiagnosisScreen(navController = navController) }
         composable(Screen.AddDiagnosisScreen.route) { AddDiagnosisScreen(navController = navController) }
         composable(Screen.InterventionScreen.route) { InterventionScreen(navController = navController) }
+        composable(Screen.AddInterventionScreen.route) { AddInterventionScreen(navController = navController) }
     }
 }

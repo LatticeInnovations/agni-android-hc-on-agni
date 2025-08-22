@@ -1,5 +1,6 @@
 package com.heartcare.agni.ui.intervention
 
+import android.content.Context
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -20,21 +21,27 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.heartcare.agni.R
 import com.heartcare.agni.data.server.model.patient.PatientResponse
+import com.heartcare.agni.navigation.Screen
 import com.heartcare.agni.ui.common.ExpandableCard
+import com.heartcare.agni.utils.constants.NavControllerConstants.INTERVENTIONS_SAVED
 import com.heartcare.agni.utils.constants.NavControllerConstants.PATIENT
 import java.util.Date
 
@@ -44,17 +51,14 @@ fun InterventionScreen(
     navController: NavController,
     viewModel: InterventionViewModel = viewModel()
 ) {
-    LaunchedEffect(Unit) {
-        if (!viewModel.isLaunched) {
-            navController.previousBackStackEntry?.savedStateHandle
-                ?.get<PatientResponse>(PATIENT)?.let {
-                    viewModel.patient = it
-                }
-            viewModel.isLaunched = true
-        }
-    }
+    val snackBarHostState = remember { SnackbarHostState() }
+    val context = LocalContext.current
+
+    HandleLaunchedEffect(navController, viewModel, snackBarHostState, context)
+
     Scaffold(
         modifier = Modifier.fillMaxSize(),
+        snackbarHost = { SnackbarHost(snackBarHostState) },
         topBar = {
             TopAppBar(
                 title = {
@@ -133,6 +137,11 @@ fun InterventionScreen(
                         .fillMaxWidth(),
                     onClick = {
                         // add intervention
+                        navController.currentBackStackEntry?.savedStateHandle?.set(
+                            PATIENT,
+                            viewModel.patient
+                        )
+                        navController.navigate(Screen.AddInterventionScreen.route)
                     }
                 ) {
                     Icon(Icons.Filled.Add, Icons.Filled.Add.name)
@@ -142,4 +151,31 @@ fun InterventionScreen(
             }
         }
     )
+}
+
+@Composable
+private fun HandleLaunchedEffect(
+    navController: NavController,
+    viewModel: InterventionViewModel,
+    snackBarHostState: SnackbarHostState,
+    context: Context
+) {
+    LaunchedEffect(Unit) {
+        if (!viewModel.isLaunched) {
+            navController.previousBackStackEntry?.savedStateHandle
+                ?.get<PatientResponse>(PATIENT)?.let {
+                    viewModel.patient = it
+                }
+            viewModel.isLaunched = true
+        }
+        navController.currentBackStackEntry?.savedStateHandle?.let { handle ->
+            if (handle.remove<Boolean>(INTERVENTIONS_SAVED) == true) {
+                snackBarHostState.showSnackbar(
+                    context.getString(
+                        R.string.interventions_saved
+                    )
+                )
+            }
+        }
+    }
 }
