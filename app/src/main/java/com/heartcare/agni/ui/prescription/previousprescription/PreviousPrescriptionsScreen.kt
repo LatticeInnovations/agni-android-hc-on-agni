@@ -49,6 +49,7 @@ import com.heartcare.agni.utils.builders.UUIDBuilder
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.isToday
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toPrescriptionDate
 import com.heartcare.agni.utils.converters.responseconverter.medication.MedicationInfoConverter.getMedInfo
+import com.heartcare.agni.utils.converters.responseconverter.toMedicationResponse
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -77,15 +78,13 @@ fun PreviousPrescriptionsScreen(
                 verticalArrangement = Arrangement.spacedBy(20.dp)
             ) {
                 viewModel.previousPrescriptionList.forEachIndexed { index, previousPrescription ->
-                    previousPrescription?.let { prescription ->
-                        PrescriptionCard(
-                            viewModel,
-                            prescription,
-                            index == 0 && !(isToday(previousPrescription.prescriptionEntity.prescriptionDate)),
-                            snackBarHostState,
-                            coroutineScope
-                        )
-                    }
+                    PrescriptionCard(
+                        viewModel,
+                        previousPrescription,
+                        index == 0 && !(isToday(previousPrescription.prescriptionEntity.prescriptionDate)),
+                        snackBarHostState,
+                        coroutineScope
+                    )
                 }
             }
         }
@@ -172,7 +171,7 @@ fun PrescriptionCard(
                         TextButton(
                             onClick = {
                                 // re prescribe
-                                viewModel.getAppointmentInfo (
+                                viewModel.getAppointmentInfo(
                                     callback = {
                                         when {
                                             viewModel.existsInOtherHospital -> {
@@ -256,10 +255,10 @@ fun saveRePrescription(
     snackBarHostState: SnackbarHostState
 ) {
     viewModel.medicationsResponseWithMedicationList = emptyList()
-    viewModel.selectedActiveIngredientsList = emptyList()
+    viewModel.selectedMedicationsList = emptyList()
     prescription.prescriptionDirectionAndMedicineView.forEach { directionAndMedication ->
-        viewModel.selectedActiveIngredientsList += listOf(
-            directionAndMedication.medicationEntity.activeIngredient
+        viewModel.selectedMedicationsList += listOf(
+            directionAndMedication.medicationEntity.toMedicationResponse()
         )
         viewModel.medicationsResponseWithMedicationList += listOf(
             MedicationResponseWithMedication(

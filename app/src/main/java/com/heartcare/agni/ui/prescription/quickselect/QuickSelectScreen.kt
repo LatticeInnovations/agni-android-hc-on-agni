@@ -2,6 +2,7 @@ package com.heartcare.agni.ui.prescription.quickselect
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -16,60 +17,63 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.heartcare.agni.data.server.model.prescription.medication.MedicationResponse
 import com.heartcare.agni.ui.prescription.PrescriptionViewModel
-import java.util.Locale
 
 @Composable
 fun QuickSelectScreen(viewModel: PrescriptionViewModel = hiltViewModel()) {
-    key(viewModel.selectedActiveIngredientsList) {
+    key(viewModel.selectedMedicationsList) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .padding(bottom = if (viewModel.selectedActiveIngredientsList.isNotEmpty()) 60.dp else 0.dp)
-                .testTag("ACTIVE_INGREDIENT_LIST")
+                .padding(8.dp)
+                .padding(bottom = if (viewModel.selectedMedicationsList.isNotEmpty()) 60.dp else 0.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            viewModel.activeIngredientsList.forEach { drug ->
-                CompoundRow(activeIngredient = drug, viewModel = viewModel)
+            viewModel.medicationsList.forEach { medicationResponse ->
+                CompoundRow(medication = medicationResponse, viewModel = viewModel)
             }
         }
     }
 }
 
 @Composable
-fun CompoundRow(activeIngredient: String, viewModel: PrescriptionViewModel) {
+fun CompoundRow(medication: MedicationResponse, viewModel: PrescriptionViewModel) {
     val checkedState =
-        remember { mutableStateOf(viewModel.selectedActiveIngredientsList.contains(activeIngredient)) }
+        remember { mutableStateOf(viewModel.selectedMedicationsList.contains(medication)) }
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(10.dp)
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null
             ) {
-                updateList(!checkedState.value, viewModel, activeIngredient)
+                updateList(!checkedState.value, viewModel, medication)
             },
-        verticalAlignment = Alignment.CenterVertically
     ) {
         Checkbox(
             checked = checkedState.value,
             onCheckedChange = {
-                updateList(it, viewModel, activeIngredient)
+                updateList(it, viewModel, medication)
             },
         )
         Column(
-            modifier = Modifier.padding(10.dp)
+            modifier = Modifier.padding(10.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
             Text(
-                text = activeIngredient.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() },
+                text = medication.name,
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurface
+            )
+            Text(
+                text = "${medication.code} · ${medication.categoryName} · ${medication.className} ",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
@@ -78,16 +82,16 @@ fun CompoundRow(activeIngredient: String, viewModel: PrescriptionViewModel) {
 private fun updateList(
     condition: Boolean,
     viewModel: PrescriptionViewModel,
-    activeIngredient: String
+    activeIngredient: MedicationResponse
 ) {
     if (condition) {
-        if (viewModel.selectedActiveIngredientsList.size < 10) {
-            viewModel.checkedActiveIngredient = activeIngredient
+        if (viewModel.selectedMedicationsList.size < 10) {
+            viewModel.checkedMedication = activeIngredient
         }
     } else {
-        viewModel.selectedActiveIngredientsList -= listOf(activeIngredient).toSet()
+        viewModel.selectedMedicationsList -= listOf(activeIngredient).toSet()
         viewModel.medicationsResponseWithMedicationList.forEach { medication ->
-            if (medication.activeIngredient == activeIngredient) {
+            if (medication.medication.medFhirId == activeIngredient.medFhirId) {
                 viewModel.medicationsResponseWithMedicationList -= listOf(medication).toSet()
             }
         }

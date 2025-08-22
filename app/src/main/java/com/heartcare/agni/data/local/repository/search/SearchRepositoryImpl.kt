@@ -15,13 +15,15 @@ import com.heartcare.agni.data.local.roomdb.entities.search.SearchHistoryEntity
 import com.heartcare.agni.data.local.roomdb.entities.search.SymDiagSearchEntity
 import com.heartcare.agni.data.server.model.patient.PatientAddressResponse
 import com.heartcare.agni.data.server.model.patient.PatientResponse
+import com.heartcare.agni.data.server.model.prescription.medication.MedicationResponse
 import com.heartcare.agni.utils.constants.Paging.PAGE_SIZE
+import com.heartcare.agni.utils.converters.responseconverter.toMedicationResponse
 import com.heartcare.agni.utils.converters.responseconverter.toPatientResponse
 import com.heartcare.agni.utils.paging.SearchPagingSource
 import com.heartcare.agni.utils.search.Search.getFuzzySearchDiagnosisList
 import com.heartcare.agni.utils.search.Search.getFuzzySearchList
 import com.heartcare.agni.utils.search.Search.getFuzzySearchListByQuery
-import com.heartcare.agni.utils.search.Search.getFuzzySearchMedicationList
+import com.heartcare.agni.utils.search.Search.getFuzzySearchMedication
 import com.heartcare.agni.utils.search.Search.getFuzzySearchSymptomsList
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -135,8 +137,8 @@ class SearchRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun searchActiveIngredients(activeIngredient: String): List<String> {
-        return getFuzzySearchMedicationList(activeIngredient, searchDao.getActiveIngredients(), 60)
+    override suspend fun searchMedication(query: String): List<MedicationResponse> {
+        return getFuzzySearchMedication(query, searchDao.getAllMedication().map { it.toMedicationResponse() }, 60)
     }
 
     override suspend fun insertRecentPatientSearch(searchQuery: String, date: Date): Long {

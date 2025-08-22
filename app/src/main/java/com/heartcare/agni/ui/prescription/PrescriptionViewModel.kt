@@ -24,6 +24,7 @@ import com.heartcare.agni.data.local.roomdb.entities.dispense.DispensePrescripti
 import com.heartcare.agni.data.local.roomdb.entities.medication.MedicineTimingEntity
 import com.heartcare.agni.data.local.roomdb.entities.prescription.PrescriptionAndMedicineRelation
 import com.heartcare.agni.data.server.model.patient.PatientResponse
+import com.heartcare.agni.data.server.model.prescription.medication.MedicationResponse
 import com.heartcare.agni.data.server.model.prescription.prescriptionresponse.Medication
 import com.heartcare.agni.data.server.model.prescription.prescriptionresponse.PrescriptionResponse
 import com.heartcare.agni.di.dispatcher.IoDispatcher
@@ -34,6 +35,7 @@ import com.heartcare.agni.utils.common.Queries.updatePatientLastUpdated
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.isToday
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toEndOfDay
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toTodayStartDate
+import com.heartcare.agni.utils.converters.responseconverter.toMedicationResponse
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Deferred
@@ -69,9 +71,9 @@ class PrescriptionViewModel @Inject constructor(
 
     var patient by mutableStateOf<PatientResponse?>(null)
 
-    var activeIngredientsList by mutableStateOf(listOf<String>())
-    var selectedActiveIngredientsList by mutableStateOf(listOf<String>())
-    var checkedActiveIngredient by mutableStateOf("")
+    var medicationsList by mutableStateOf(listOf<MedicationResponse>())
+    var selectedMedicationsList by mutableStateOf(listOf<MedicationResponse>())
+    var checkedMedication by mutableStateOf<MedicationResponse?>(null)
 
     var medicationDirectionsList by mutableStateOf(listOf<MedicineTimingEntity>())
     var medicationsResponseWithMedicationList by mutableStateOf(listOf<MedicationResponseWithMedication>())
@@ -79,7 +81,7 @@ class PrescriptionViewModel @Inject constructor(
 
     var searchQuery by mutableStateOf("")
     var previousSearchList by mutableStateOf(listOf<String>())
-    var activeIngredientSearchList by mutableStateOf(listOf<String>())
+    var medicationsSearchList by mutableStateOf(listOf<MedicationResponse>())
 
     var previousPrescriptionList by mutableStateOf(listOf<PrescriptionAndMedicineRelation>())
     var todayPrescription by mutableStateOf<PrescriptionAndMedicineRelation?>(null)
@@ -106,7 +108,7 @@ class PrescriptionViewModel @Inject constructor(
             previousPrescriptionList = prescriptionRepository.getLastPrescriptionAndMedicine(patientId)
             todayPrescription = previousPrescriptionList.firstOrNull { isToday(it.prescriptionEntity.prescriptionDate) }
             todayPrescription?.let { prescription ->
-                selectedActiveIngredientsList = prescription.prescriptionDirectionAndMedicineView.map { it.medicationEntity.activeIngredient }
+                selectedMedicationsList = prescription.prescriptionDirectionAndMedicineView.map { it.medicationEntity.toMedicationResponse() }
                 medicationsResponseWithMedicationList = prescription.prescriptionDirectionAndMedicineView.map {
                     MedicationResponseWithMedication(
                         activeIngredient = it.medicationEntity.activeIngredient,
@@ -184,10 +186,10 @@ class PrescriptionViewModel @Inject constructor(
         }
     }
 
-    internal fun getActiveIngredients(activeIngredientsList: (List<String>) -> Unit) {
+    internal fun getMedications(medicationsList: (List<MedicationResponse>) -> Unit) {
         viewModelScope.launch(ioDispatcher) {
-            activeIngredientsList(
-                medicationRepository.getActiveIngredients()
+            medicationsList(
+                medicationRepository.getAllMedication().map { it.toMedicationResponse() }
             )
         }
     }
@@ -281,11 +283,11 @@ class PrescriptionViewModel @Inject constructor(
 
     internal fun getActiveIngredientSearchList(
         activeIngredient: String,
-        searchList: (List<String>) -> Unit
+        searchList: (List<MedicationResponse>) -> Unit
     ) {
         viewModelScope.launch(ioDispatcher) {
             searchList(
-                searchRepository.searchActiveIngredients(activeIngredient)
+                searchRepository.searchMedication(activeIngredient)
             )
         }
     }

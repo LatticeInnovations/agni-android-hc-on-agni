@@ -19,6 +19,12 @@ class MedicationRepositoryImpl @Inject constructor(private val medicationDao: Me
             .map { medicationStrengthRelation -> medicationStrengthRelation.toMedicationResponse() }
     }
 
+
+    override suspend fun getMedicationByMedFhirId(medFhirId: String): List<MedicationResponse> {
+        return medicationDao.getMedicationByMedFhirId(medFhirId)
+            .map { medicationStrengthRelation -> medicationStrengthRelation.toMedicationResponse() }
+    }
+
     override suspend fun getAllMedicationDirections(): List<MedicineTimingEntity> {
         return medicationDao.getAllMedicineDosageInstructions()
     }

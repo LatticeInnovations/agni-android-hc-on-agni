@@ -8,6 +8,7 @@ interface MedicationRepository {
 
     suspend fun getActiveIngredients(): List<String>
     suspend fun getMedicationByActiveIngredient(activeIngredient: String): List<MedicationResponse>
+    suspend fun getMedicationByMedFhirId(medFhirId: String): List<MedicationResponse>
     suspend fun getAllMedicationDirections(): List<MedicineTimingEntity>
     suspend fun getAllMedication(): List<MedicationEntity>
     suspend fun getOTCMedication(): List<MedicationEntity>

@@ -7,6 +7,7 @@ import com.heartcare.agni.data.local.model.search.SearchParameters
 import com.heartcare.agni.data.local.roomdb.entities.patient.PatientAndIdentifierEntity
 import com.heartcare.agni.data.server.model.patient.PatientAddressResponse
 import com.heartcare.agni.data.server.model.patient.PatientResponse
+import com.heartcare.agni.data.server.model.prescription.medication.MedicationResponse
 import kotlinx.coroutines.flow.Flow
 import java.util.Date
 import java.util.LinkedList
@@ -31,7 +32,7 @@ interface SearchRepository {
     ): Flow<PagingData<PaginationResponse<PatientResponse>>>
 
     /** Medication Search */
-    suspend fun searchActiveIngredients(activeIngredient: String): List<String>
+    suspend fun searchMedication(query: String): List<MedicationResponse>
 
     /** Recent Patient Search*/
     suspend fun insertRecentPatientSearch(searchQuery: String, date: Date = Date()): Long

@@ -15,7 +15,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -63,7 +63,7 @@ fun SearchPrescription(viewModel: PrescriptionViewModel) {
                     viewModel.searchQuery = ""
                     viewModel.isSearching = false
                 }) {
-                    Icon(Icons.Default.ArrowBack, contentDescription = "BACK_ICON")
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "BACK_ICON")
                 }
             },
             trailingIcon = {
@@ -97,7 +97,7 @@ fun SearchPrescription(viewModel: PrescriptionViewModel) {
                         viewModel.isSearchResult = true
                         viewModel.insertRecentSearch(viewModel.searchQuery.trim()) {}
                         viewModel.getActiveIngredientSearchList(viewModel.searchQuery.trim()) {
-                            viewModel.activeIngredientSearchList = it
+                            viewModel.medicationsSearchList = it
                         }
                         viewModel.searchQuery = ""
                     } else {
@@ -130,7 +130,7 @@ fun PreviousSearches(listItem: String, viewModel: PrescriptionViewModel) {
             ) {
                 viewModel.searchQuery = listItem
                 viewModel.getActiveIngredientSearchList(viewModel.searchQuery.trim()) {
-                    viewModel.activeIngredientSearchList = it
+                    viewModel.medicationsSearchList = it
                 }
                 viewModel.isSearching = false
                 viewModel.isSearchResult = true

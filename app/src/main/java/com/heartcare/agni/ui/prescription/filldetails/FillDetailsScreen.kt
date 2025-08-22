@@ -51,7 +51,6 @@ import com.heartcare.agni.ui.common.DropdownComposable
 import com.heartcare.agni.ui.prescription.PrescriptionViewModel
 import com.heartcare.agni.utils.builders.UUIDBuilder
 import com.heartcare.agni.utils.regex.OnlyNumberRegex
-import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -59,16 +58,14 @@ fun FillDetailsScreen(
     prescriptionViewModel: PrescriptionViewModel,
     viewModel: FillDetailsViewModel = hiltViewModel()
 ) {
-    LaunchedEffect(prescriptionViewModel.checkedActiveIngredient) {
-        if (prescriptionViewModel.checkedActiveIngredient.isNotBlank()) {
-            viewModel.getMedicationByActiveIngredient(prescriptionViewModel.checkedActiveIngredient) {
-                viewModel.medicationSelected = it[0]
-                viewModel.medSelected = it[0].name
-                viewModel.medUnit = it[0].medUnit
-                viewModel.medDoseForm = it[0].doseForm
-                viewModel.medFhirId = it[0].medFhirId
-            }
+    LaunchedEffect(prescriptionViewModel.checkedMedication) {
+        if (prescriptionViewModel.checkedMedication != null) {
             viewModel.reset()
+            viewModel.medicationSelected = prescriptionViewModel.checkedMedication
+            viewModel.medSelected = prescriptionViewModel.checkedMedication!!.name
+            viewModel.medUnit = prescriptionViewModel.checkedMedication!!.medUnit
+            viewModel.medDoseForm = prescriptionViewModel.checkedMedication!!.doseForm
+            viewModel.medFhirId = prescriptionViewModel.checkedMedication!!.medFhirId
         }
     }
     LaunchedEffect(viewModel.isLaunched) {
@@ -89,7 +86,7 @@ fun FillDetailsScreen(
                 },
                 navigationIcon = {
                     IconButton(onClick = {
-                        prescriptionViewModel.checkedActiveIngredient = ""
+                        prescriptionViewModel.checkedMedication = null
                         prescriptionViewModel.medicationToEdit = null
                         viewModel.reset()
                     }) {
@@ -127,9 +124,7 @@ fun FillDetailsScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .testTag("ACTIVE_INGREDIENT_FIELD"),
-                            value = prescriptionViewModel.checkedActiveIngredient.replaceFirstChar { char ->
-                                char.titlecase(Locale.getDefault())
-                            },
+                            value = prescriptionViewModel.checkedMedication?.name ?: "",
                             onValueChange = {
                             },
                             label = {
@@ -163,22 +158,20 @@ fun FillDetailsScreen(
                             expanded = formulationExpanded,
                             onDismissRequest = { formulationExpanded = !formulationExpanded },
                         ) {
-                            prescriptionViewModel.activeIngredientsList.filter { ingredient ->
-                                !prescriptionViewModel.selectedActiveIngredientsList.contains(
+                            prescriptionViewModel.medicationsList.filter { ingredient ->
+                                !prescriptionViewModel.selectedMedicationsList.contains(
                                     ingredient
                                 )
                             }.forEach { label ->
                                 DropdownMenuItem(
                                     onClick = {
                                         formulationExpanded = !formulationExpanded
-                                        prescriptionViewModel.checkedActiveIngredient = label
+                                        prescriptionViewModel.checkedMedication = label
                                         viewModel.reset()
                                     },
                                     text = {
                                         Text(
-                                            text = label.replaceFirstChar { char ->
-                                                char.titlecase(Locale.getDefault())
-                                            },
+                                            text = label.name,
                                             style = MaterialTheme.typography.bodyLarge,
                                             color = MaterialTheme.colorScheme.onSurface
                                         )
@@ -376,7 +369,7 @@ private fun setMedicationData(
     viewModel: FillDetailsViewModel,
     prescriptionViewModel: PrescriptionViewModel
 ) {
-    viewModel.getMedicationByActiveIngredient(prescriptionViewModel.medicationToEdit!!.activeIngredient) {
+    viewModel.getMedicationByMedFhirId(prescriptionViewModel.medicationToEdit!!.medication.medFhirId) {
         viewModel.medicationSelected = it[0]
     }
     viewModel.medSelected = prescriptionViewModel.medicationToEdit!!.medName
@@ -398,21 +391,22 @@ private fun doneButtonClick(
     prescriptionViewModel: PrescriptionViewModel
 ) {
     if (prescriptionViewModel.medicationToEdit != null) {
-        prescriptionViewModel.selectedActiveIngredientsList -= listOf(
-            prescriptionViewModel.medicationToEdit!!.activeIngredient
-        ).toSet()
+        prescriptionViewModel.selectedMedicationsList =
+            prescriptionViewModel.selectedMedicationsList.filter {
+                it.medFhirId != prescriptionViewModel.medicationToEdit!!.medication.medFhirId
+            }
         prescriptionViewModel.medicationsResponseWithMedicationList -= listOf(
             prescriptionViewModel.medicationToEdit!!
         ).toSet()
     }
-    prescriptionViewModel.selectedActiveIngredientsList += listOf(
-        prescriptionViewModel.checkedActiveIngredient
+    prescriptionViewModel.selectedMedicationsList += listOf(
+        prescriptionViewModel.checkedMedication!!
     )
     prescriptionViewModel.medicationsResponseWithMedicationList += listOf(
         MedicationResponseWithMedication(
             medName = viewModel.medSelected,
             medUnit = viewModel.medUnit,
-            activeIngredient = prescriptionViewModel.checkedActiveIngredient,
+            activeIngredient = prescriptionViewModel.checkedMedication!!.activeIngredient,
             medication = Medication(
                 duration = viewModel.duration.toInt(),
                 frequency = viewModel.frequency.toInt(),
@@ -429,7 +423,7 @@ private fun doneButtonClick(
             )
         )
     )
-    prescriptionViewModel.checkedActiveIngredient = ""
+    prescriptionViewModel.checkedMedication = null
     prescriptionViewModel.medicationToEdit = null
     viewModel.reset()
 }

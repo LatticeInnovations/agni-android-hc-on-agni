@@ -106,8 +106,8 @@ fun PrescriptionScreen(
     SetBackHandler(viewModel, navController, pagerState, coroutineScope)
     LaunchedEffect(viewModel.isLaunched) {
         if (!viewModel.isLaunched) {
-            viewModel.getActiveIngredients {
-                viewModel.activeIngredientsList = it
+            viewModel.getMedications {
+                viewModel.medicationsList = it
             }
             viewModel.patient =
                 navController.previousBackStackEntry?.savedStateHandle?.get<PatientResponse>(
@@ -129,7 +129,7 @@ fun PrescriptionScreen(
         Scaffold(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(bottom = if (viewModel.selectedActiveIngredientsList.isNotEmpty() && pagerState.pageCount == 1) 60.dp else 0.dp),
+                .padding(bottom = if (viewModel.selectedMedicationsList.isNotEmpty() && pagerState.pageCount == 1) 60.dp else 0.dp),
             snackbarHost = { SnackbarHost(snackbarHostState) },
             topBar = {
                 TopAppBar(
@@ -249,7 +249,7 @@ fun PrescriptionScreen(
                             confirmButton = {
                                 TextButton(
                                     onClick = {
-                                        viewModel.selectedActiveIngredientsList = listOf()
+                                        viewModel.selectedMedicationsList = listOf()
                                         viewModel.medicationsResponseWithMedicationList = listOf()
                                         viewModel.bottomNavExpanded = false
                                         viewModel.clearAllConfirmDialog = false
@@ -281,7 +281,7 @@ fun PrescriptionScreen(
         Box(
             modifier = Modifier
                 .matchParentSize()
-                .padding(bottom = if (viewModel.selectedActiveIngredientsList.isNotEmpty()) 60.dp else 0.dp),
+                .padding(bottom = if (viewModel.selectedMedicationsList.isNotEmpty()) 60.dp else 0.dp),
         ) {
             AnimatedVisibility(
                 visible = viewModel.isSearchResult,
@@ -293,7 +293,7 @@ fun PrescriptionScreen(
         }
         Box(
             modifier =
-                if (!(viewModel.bottomNavExpanded && viewModel.selectedActiveIngredientsList.isNotEmpty())) Modifier
+                if (!(viewModel.bottomNavExpanded && viewModel.selectedMedicationsList.isNotEmpty())) Modifier
                     .matchParentSize()
                     .background(MaterialTheme.colorScheme.outline.copy(alpha = 0f))
                 else Modifier
@@ -309,7 +309,7 @@ fun PrescriptionScreen(
                 .matchParentSize(),
         ) {
             AnimatedVisibility(
-                visible = viewModel.checkedActiveIngredient.isNotEmpty(),
+                visible = viewModel.checkedMedication != null,
                 enter = slideInVertically(initialOffsetY = { it }),
                 exit = slideOutVertically(targetOffsetY = { it })
             ) {
@@ -363,8 +363,8 @@ private fun SetBackHandler(
     BackHandler(enabled = true) {
         when {
             viewModel.isSearching -> viewModel.isSearching = false
-            viewModel.checkedActiveIngredient.isNotEmpty() -> {
-                viewModel.checkedActiveIngredient = ""
+            viewModel.checkedMedication != null -> {
+                viewModel.checkedMedication = null
                 viewModel.medicationToEdit = null
             }
 
@@ -468,7 +468,7 @@ fun BottomNavLayout(
                         horizontalArrangement = Arrangement.SpaceEvenly
                     ) {
                         Text(
-                            text = "${viewModel.selectedActiveIngredientsList.size} medication",
+                            text = "${viewModel.selectedMedicationsList.size} medication",
                             style = MaterialTheme.typography.labelLarge,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.testTag("MEDICATION_TEXT")
@@ -485,7 +485,7 @@ fun BottomNavLayout(
                             // add medications to prescriptions
                             viewModel.insertPrescription {
                                 viewModel.bottomNavExpanded = false
-                                viewModel.selectedActiveIngredientsList = listOf()
+                                viewModel.selectedMedicationsList = listOf()
                                 viewModel.medicationsResponseWithMedicationList = emptyList()
                                 coroutineScope.launch { pagerState.animateScrollToPage(0) }
                                 viewModel.isSearchResult = false
@@ -530,11 +530,14 @@ fun SelectedCompoundCard(
         ) {
             Checkbox(
                 checked = checkedState.value,
-                onCheckedChange = {
-                    if (!it) {
-                        viewModel.selectedActiveIngredientsList -= listOf(medication.activeIngredient).toSet()
+                onCheckedChange = { checked ->
+                    if (!checked) {
+                        viewModel.selectedMedicationsList =
+                            viewModel.selectedMedicationsList.filter {
+                                it.medFhirId != medication.medication.medFhirId
+                            }
                         viewModel.medicationsResponseWithMedicationList -= listOf(medication).toSet()
-                        if (viewModel.selectedActiveIngredientsList.isEmpty()) viewModel.bottomNavExpanded =
+                        if (viewModel.selectedMedicationsList.isEmpty()) viewModel.bottomNavExpanded =
                             false
                     }
                 },
@@ -566,7 +569,9 @@ fun SelectedCompoundCard(
                 )
             }
             IconButton(onClick = {
-                viewModel.checkedActiveIngredient = medication.activeIngredient
+                viewModel.checkedMedication = viewModel.selectedMedicationsList.first {
+                    it.medFhirId == medication.medication.medFhirId
+                }
                 viewModel.medicationToEdit = medication
             }) {
                 Icon(

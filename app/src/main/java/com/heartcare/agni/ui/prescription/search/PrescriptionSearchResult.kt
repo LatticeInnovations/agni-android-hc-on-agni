@@ -1,5 +1,6 @@
 package com.heartcare.agni.ui.prescription.search
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -38,7 +39,7 @@ fun PrescriptionSearchResult(viewModel: PrescriptionViewModel) {
                     Text(
                         text = stringResource(
                             id = R.string.match_found,
-                            viewModel.activeIngredientSearchList.size
+                            viewModel.medicationsSearchList.size
                         ), style = MaterialTheme.typography.titleLarge
                     )
                 },
@@ -64,7 +65,7 @@ fun PrescriptionSearchResult(viewModel: PrescriptionViewModel) {
         },
         content = {
             Box(modifier = Modifier.padding(it)) {
-                if (viewModel.activeIngredientSearchList.isEmpty()) {
+                if (viewModel.medicationsSearchList.isEmpty()) {
                     Box(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
@@ -72,13 +73,15 @@ fun PrescriptionSearchResult(viewModel: PrescriptionViewModel) {
                         Text(stringResource(R.string.no_results_found))
                     }
                 } else {
-                    key(viewModel.selectedActiveIngredientsList) {
+                    key(viewModel.selectedMedicationsList) {
                         Column(
                             modifier = Modifier.verticalScroll(rememberScrollState())
+                                .padding(8.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            viewModel.activeIngredientSearchList.forEach { activeIngredient ->
+                            viewModel.medicationsSearchList.forEach { medication ->
                                 CompoundRow(
-                                    activeIngredient = activeIngredient,
+                                    medication = medication,
                                     viewModel = viewModel
                                 )
                             }

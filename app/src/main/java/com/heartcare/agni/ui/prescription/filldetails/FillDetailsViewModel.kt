@@ -79,13 +79,13 @@ class FillDetailsViewModel @Inject constructor(
         selectedBrand = ""
     }
 
-    internal fun getMedicationByActiveIngredient(
-        activeIngredientName: String,
+    internal fun getMedicationByMedFhirId(
+        medFhirId: String,
         formulationsList: (List<MedicationResponse>) -> Unit
     ) {
         viewModelScope.launch(ioDispatcher) {
             formulationsList(
-                medicationRepository.getMedicationByActiveIngredient(activeIngredientName)
+                medicationRepository.getMedicationByMedFhirId(medFhirId)
             )
         }
     }
