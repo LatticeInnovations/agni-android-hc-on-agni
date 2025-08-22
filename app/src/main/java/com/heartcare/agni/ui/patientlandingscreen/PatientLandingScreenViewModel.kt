@@ -22,6 +22,7 @@ import com.heartcare.agni.service.workmanager.utils.Sync
 import com.heartcare.agni.service.workmanager.workers.trigger.TriggerWorkerPeriodicImpl
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toEndOfDay
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toTodayStartDate
+import com.heartcare.agni.utils.network.CheckNetwork
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.collectLatest
@@ -41,6 +42,9 @@ class PatientLandingScreenViewModel @Inject constructor(
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
     preferenceRepository: PreferenceRepository
 ) : BaseAndroidViewModel(application) {
+
+    private val syncService by lazy { getApplication<FhirApp>().syncService }
+
     var isLaunched by mutableStateOf(false)
     val user = preferenceRepository.getUserDetails()!!
     var patient by mutableStateOf<PatientResponse?>(null)
@@ -62,13 +66,22 @@ class PatientLandingScreenViewModel @Inject constructor(
     var missedVaccine by mutableIntStateOf(0)
     var takenVaccine by mutableIntStateOf(0)
 
-    suspend fun syncData() {
+    private suspend fun syncData() {
         Sync.getWorkerInfo<TriggerWorkerPeriodicImpl>(getApplication<FhirApp>().applicationContext)
             .collectLatest { workInfo ->
                 if (workInfo != null && workInfo.state == WorkInfo.State.ENQUEUED) {
                     getApplication<FhirApp>().launchSyncing()
                 }
             }
+    }
+
+    internal fun downloadPrescriptions(patientFhirId: String) {
+        if (CheckNetwork.isInternetAvailable(getApplication<FhirApp>().applicationContext)) {
+            viewModelScope.launch(ioDispatcher) {
+                syncService.downloadFormPrescription(patientFhirId) { _, _ -> }
+                syncData()
+            }
+        }
     }
 
     internal suspend fun getPatientData(id: String): PatientResponse {

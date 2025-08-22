@@ -24,11 +24,16 @@ data class PrescriptionDirectionsEntity(
     val medReqFhirId: String?,
     @ColumnInfo("med_fhir_id")
     val medFhirId: String,
-    val qtyPerDose: Int,
+    val qtyPerDose: Double,
     val frequency: Int,
     var timing: String?,
     val duration: Int,
-    val qtyPrescribed: Int,
+    val qtyPrescribed: Double,
     val note: String?,
-    val prescriptionId: String
+    val prescriptionId: String,
+    val brandName: String?,
+    @ColumnInfo("dose_form_code")
+    val doseFormCode: String?,
+    @ColumnInfo("dose_form")
+    val doseForm: String
 )

@@ -23,7 +23,7 @@ import com.heartcare.agni.data.local.roomdb.entities.dispense.DispenseDataEntity
 import com.heartcare.agni.data.local.roomdb.entities.dispense.DispensePrescriptionEntity
 import com.heartcare.agni.data.local.roomdb.entities.dispense.DispensedPrescriptionInfo
 import com.heartcare.agni.data.local.roomdb.entities.dispense.MedicineDispenseListEntity
-import com.heartcare.agni.data.local.roomdb.entities.medication.MedicationStrengthRelation
+import com.heartcare.agni.data.local.roomdb.entities.medication.MedicationEntity
 import com.heartcare.agni.data.server.model.dispense.request.MedicineDispenseRequest
 import com.heartcare.agni.data.server.model.dispense.request.MedicineDispensed
 import com.heartcare.agni.utils.builders.UUIDBuilder
@@ -59,7 +59,7 @@ class DispensePrescriptionViewModel @Inject constructor(
     var dispenseNotes by mutableStateOf("")
     var showAddNoteDialog by mutableStateOf(false)
     var medToEdit by mutableStateOf<DispenseModifiedInfo?>(null)
-    private var allMedications by mutableStateOf(listOf<MedicationStrengthRelation>())
+    private var allMedications by mutableStateOf(listOf<MedicationEntity>())
 
     internal fun getData(
         prescriptionId: String,
@@ -87,16 +87,16 @@ class DispensePrescriptionViewModel @Inject constructor(
                     note = "",
                     medication = it,
                     isModified = false,
-                    qtyLeft = it.prescriptionDirectionsEntity.qtyPrescribed - (dispensedMedHashMap[it.medicationEntity.medFhirId]
+                    qtyLeft = it.prescriptionDirectionsEntity.qtyPrescribed.toInt() - (dispensedMedHashMap[it.medicationEntity.medFhirId]
                         ?: 0)
                 )
             }.toMutableList()
         }
     }
 
-    internal fun getMedNameFromMedFhirId(medFhirId: String): MedicationStrengthRelation {
+    internal fun getMedNameFromMedFhirId(medFhirId: String): MedicationEntity {
         return allMedications.first {
-            it.medicationEntity.medFhirId == medFhirId
+            it.medFhirId == medFhirId
         }
     }
 
@@ -137,7 +137,7 @@ class DispensePrescriptionViewModel @Inject constructor(
             status = checkStatusOfPrescription(),
             medicineDispensedList = selectedMedicine.map {
                 val isModified =
-                    it.qtyToBeDispensed != it.medication.prescriptionDirectionsEntity.qtyPrescribed
+                    it.qtyToBeDispensed != it.medication.prescriptionDirectionsEntity.qtyPrescribed.toInt()
                 MedicineDispensed(
                     medDispenseUuid = UUIDBuilder.generateUUID(),
                     category = DispenseCategoryEnum.PRESCRIBED.value,
@@ -179,7 +179,7 @@ class DispensePrescriptionViewModel @Inject constructor(
                     qtyDispensed = it.qtyDispensed,
                     qtyPrescribed = prescription!!.prescriptionDirectionAndMedicineView.first { medicine ->
                         medicine.medicationEntity.medFhirId == it.medFhirId
-                    }.prescriptionDirectionsEntity.qtyPrescribed,
+                    }.prescriptionDirectionsEntity.qtyPrescribed.toInt(),
                     date = medDispenseRequest.generatedOn,
                     isModified = it.isModified,
                     modificationType = it.modificationType,

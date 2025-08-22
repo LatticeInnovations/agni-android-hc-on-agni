@@ -4,15 +4,20 @@ import androidx.annotation.Keep
 
 @Keep
 data class MedicationResponse(
-    val activeIngredient: String,
-    val activeIngredientCode: String,
+    val medFhirId: String,
+    val code: String,
+    val name: String,
+    val isOTC: Boolean,
     val doseForm: String,
     val doseFormCode: String,
-    val medCode: String,
-    val medFhirId: String,
-    val medName: String,
-    val medNumeratorVal: Double,
+    val status: String,
+    val activeIngredient: String,
+    val activeIngredientCode: String,
     val medUnit: String,
-    val isOTC: Boolean,
-    val strength: List<Strength>
+    val medNumeratorVal: Double,
+    val classId: String,
+    val className: String,
+    val categoryId: String,
+    val categoryName: String,
+    val brandList: List<String>
 )

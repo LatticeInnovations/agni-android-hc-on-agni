@@ -1,5 +1,6 @@
 package com.heartcare.agni.ui.prescription
 
+import android.content.Context
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
@@ -26,10 +27,10 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Search
@@ -69,19 +70,21 @@ import androidx.navigation.NavController
 import com.heartcare.agni.R
 import com.heartcare.agni.data.local.model.prescription.medication.MedicationResponseWithMedication
 import com.heartcare.agni.data.server.model.patient.PatientResponse
+import com.heartcare.agni.ui.common.CustomDialog
 import com.heartcare.agni.ui.common.TabRowComposable
+import com.heartcare.agni.ui.patientlandingscreen.AllSlotsBookedDialog
 import com.heartcare.agni.ui.prescription.filldetails.FillDetailsScreen
+import com.heartcare.agni.ui.prescription.photo.view.AppointmentCompletedDialog
 import com.heartcare.agni.ui.prescription.previousprescription.PreviousPrescriptionsScreen
+import com.heartcare.agni.ui.prescription.previousprescription.saveRePrescription
 import com.heartcare.agni.ui.prescription.quickselect.QuickSelectScreen
 import com.heartcare.agni.ui.prescription.search.PrescriptionSearchResult
 import com.heartcare.agni.ui.prescription.search.SearchPrescription
 import com.heartcare.agni.utils.constants.NavControllerConstants.PATIENT
-import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toEndOfDay
-import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toTodayStartDate
 import com.heartcare.agni.utils.converters.responseconverter.medication.MedicationInfoConverter.getMedInfo
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import java.util.Date
+import timber.log.Timber
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -91,6 +94,7 @@ fun PrescriptionScreen(
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
+    val context = LocalContext.current
 
     val pagerState = rememberPagerState(
         initialPage = 0,
@@ -99,21 +103,18 @@ fun PrescriptionScreen(
         viewModel.tabs.size
     }
 
-    SetBackHandler(viewModel, navController)
+    SetBackHandler(viewModel, navController, pagerState, coroutineScope)
     LaunchedEffect(viewModel.isLaunched) {
         if (!viewModel.isLaunched) {
-            viewModel.getActiveIngredients {
-                viewModel.activeIngredientsList = it
+            viewModel.getMedications {
+                viewModel.medicationsList = it
             }
             viewModel.patient =
                 navController.previousBackStackEntry?.savedStateHandle?.get<PatientResponse>(
                     PATIENT
                 )
-            viewModel.getPatientTodayAppointment(
-                Date(Date().toTodayStartDate()),
-                Date(Date().toEndOfDay()),
-                viewModel.patient!!.id
-            )
+            viewModel.getPreviousPrescription(viewModel.patient!!.id)
+            viewModel.getAppointmentInfo { }
         }
         viewModel.getAllMedicationDirections {
             viewModel.medicationDirectionsList = it
@@ -128,8 +129,7 @@ fun PrescriptionScreen(
         Scaffold(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(bottom = if (viewModel.selectedActiveIngredientsList.isNotEmpty()) 60.dp else 0.dp),
-            snackbarHost = { SnackbarHost(snackbarHostState) },
+                .padding(bottom = if (viewModel.selectedMedicationsList.isNotEmpty() && pagerState.pageCount == 1) 60.dp else 0.dp),
             topBar = {
                 TopAppBar(
                     modifier = Modifier.fillMaxWidth(),
@@ -143,7 +143,13 @@ fun PrescriptionScreen(
                         )
                     },
                     navigationIcon = {
-                        IconButton(onClick = { navController.popBackStack() }) {
+                        IconButton(
+                            onClick = {
+                                if (pagerState.currentPage == 1)
+                                    coroutineScope.launch { pagerState.animateScrollToPage(0) }
+                                else navController.navigateUp()
+                            }
+                        ) {
                             Icon(
                                 Icons.AutoMirrored.Filled.ArrowBack,
                                 contentDescription = "BACK_ICON"
@@ -177,17 +183,49 @@ fun PrescriptionScreen(
                             viewModel.tabs,
                             pagerState
                         ) { index ->
-                            coroutineScope.launch {
+                            Timber.d("manseeyy index $index")
+                            if (index == 1) {
+                                viewModel.getAppointmentInfo(
+                                    callback = {
+                                        when {
+                                            viewModel.existsInOtherHospital -> {
+                                                coroutineScope.launch {
+                                                    snackbarHostState.showSnackbar(
+                                                        message = context.getString(R.string.appointment_exists_in_other_hospital)
+                                                    )
+                                                }
+                                            }
+
+                                            viewModel.canAddAssessment -> {
+                                                coroutineScope.launch {
+                                                    pagerState.animateScrollToPage(
+                                                        index
+                                                    )
+                                                }
+                                            }
+
+                                            viewModel.isAppointmentCompleted -> {
+                                                viewModel.showAppointmentCompletedDialog = true
+                                            }
+
+                                            else -> {
+                                                viewModel.showAddToQueueDialog = true
+                                            }
+                                        }
+                                    }
+                                )
+                            } else coroutineScope.launch {
                                 pagerState.animateScrollToPage(
                                     index
                                 )
                             }
                         }
                         HorizontalPager(
-                            state = pagerState
+                            state = pagerState,
+                            userScrollEnabled = viewModel.canAddAssessment
                         ) { index ->
                             when (index) {
-                                0 -> PreviousPrescriptionsScreen(snackbarHostState, coroutineScope)
+                                0 -> PreviousPrescriptionsScreen(snackbarHostState, coroutineScope, pagerState)
                                 1 -> QuickSelectScreen()
                             }
                         }
@@ -210,7 +248,7 @@ fun PrescriptionScreen(
                             confirmButton = {
                                 TextButton(
                                     onClick = {
-                                        viewModel.selectedActiveIngredientsList = listOf()
+                                        viewModel.selectedMedicationsList = listOf()
                                         viewModel.medicationsResponseWithMedicationList = listOf()
                                         viewModel.bottomNavExpanded = false
                                         viewModel.clearAllConfirmDialog = false
@@ -240,9 +278,20 @@ fun PrescriptionScreen(
             }
         )
         Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.BottomCenter
+        ) {
+            SnackbarHost(
+                hostState = snackbarHostState,
+                modifier = Modifier
+                    .padding(bottom = if (viewModel.selectedMedicationsList.isNotEmpty() && pagerState.currentPage == 1) 70.dp else 6.dp)
+                    .navigationBarsPadding()
+            )
+        }
+        Box(
             modifier = Modifier
                 .matchParentSize()
-                .padding(bottom = if (viewModel.selectedActiveIngredientsList.isNotEmpty()) 60.dp else 0.dp),
+                .padding(bottom = if (viewModel.selectedMedicationsList.isNotEmpty()) 60.dp else 0.dp),
         ) {
             AnimatedVisibility(
                 visible = viewModel.isSearchResult,
@@ -254,23 +303,23 @@ fun PrescriptionScreen(
         }
         Box(
             modifier =
-            if (!(viewModel.bottomNavExpanded && viewModel.selectedActiveIngredientsList.isNotEmpty())) Modifier
-                .matchParentSize()
-                .background(MaterialTheme.colorScheme.outline.copy(alpha = 0f))
-            else Modifier
-                .matchParentSize()
-                .background(MaterialTheme.colorScheme.outline.copy(alpha = 0.5f))
-                .clickable(enabled = false) { },
+                if (!(viewModel.bottomNavExpanded && viewModel.selectedMedicationsList.isNotEmpty())) Modifier
+                    .matchParentSize()
+                    .background(MaterialTheme.colorScheme.outline.copy(alpha = 0f))
+                else Modifier
+                    .matchParentSize()
+                    .background(MaterialTheme.colorScheme.outline.copy(alpha = 0.5f))
+                    .clickable(enabled = false) { },
             contentAlignment = Alignment.BottomCenter
         ) {
-            BottomNavLayout(viewModel, navController, coroutineScope)
+            BottomNavLayout(viewModel, snackbarHostState, pagerState, coroutineScope, context)
         }
         Box(
             modifier = Modifier
                 .matchParentSize(),
         ) {
             AnimatedVisibility(
-                visible = viewModel.checkedActiveIngredient.isNotEmpty(),
+                visible = viewModel.checkedMedication != null,
                 enter = slideInVertically(initialOffsetY = { it }),
                 exit = slideOutVertically(targetOffsetY = { it })
             ) {
@@ -297,20 +346,41 @@ fun PrescriptionScreen(
             }
         }
     }
+    if (viewModel.showAddToQueueDialog) {
+        AddToQueueDialog(viewModel, pagerState, coroutineScope, context, snackbarHostState)
+    }
+
+    if (viewModel.ifAllSlotsBooked) {
+        AllSlotsBookedDialog {
+            viewModel.showAllSlotsBookedDialog = false
+        }
+    }
+
+    if (viewModel.showAppointmentCompletedDialog) {
+        AppointmentCompletedDialog {
+            viewModel.showAppointmentCompletedDialog = false
+        }
+    }
 }
 
 @Composable
-private fun SetBackHandler(viewModel: PrescriptionViewModel, navController: NavController) {
+private fun SetBackHandler(
+    viewModel: PrescriptionViewModel,
+    navController: NavController,
+    pagerState: PagerState,
+    coroutineScope: CoroutineScope
+) {
     BackHandler(enabled = true) {
         when {
             viewModel.isSearching -> viewModel.isSearching = false
-            viewModel.checkedActiveIngredient.isNotEmpty() -> {
-                viewModel.checkedActiveIngredient = ""
+            viewModel.checkedMedication != null -> {
+                viewModel.checkedMedication = null
                 viewModel.medicationToEdit = null
             }
 
             viewModel.bottomNavExpanded -> viewModel.bottomNavExpanded = false
             viewModel.isSearchResult -> viewModel.isSearchResult = false
+            pagerState.currentPage == 1 -> coroutineScope.launch { pagerState.animateScrollToPage(0) }
             else -> navController.popBackStack()
         }
     }
@@ -319,15 +389,17 @@ private fun SetBackHandler(viewModel: PrescriptionViewModel, navController: NavC
 @Composable
 fun BottomNavLayout(
     viewModel: PrescriptionViewModel,
-    navController: NavController,
-    coroutineScope: CoroutineScope
+    snackbarHostState: SnackbarHostState,
+    pagerState: PagerState,
+    coroutineScope: CoroutineScope,
+    context: Context
 ) {
     val rotationState by animateFloatAsState(
         targetValue = if (viewModel.bottomNavExpanded) 180f else 0f,
         label = "Rotation state of expand icon button",
     )
     AnimatedVisibility(
-        visible = viewModel.medicationsResponseWithMedicationList.isNotEmpty(),
+        visible = viewModel.medicationsResponseWithMedicationList.isNotEmpty() && pagerState.currentPage == 1,
         enter = expandVertically(),
         exit = shrinkVertically()
     ) {
@@ -406,7 +478,7 @@ fun BottomNavLayout(
                         horizontalArrangement = Arrangement.SpaceEvenly
                     ) {
                         Text(
-                            text = "${viewModel.selectedActiveIngredientsList.size} medication",
+                            text = "${viewModel.selectedMedicationsList.size} medication",
                             style = MaterialTheme.typography.labelLarge,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.testTag("MEDICATION_TEXT")
@@ -422,8 +494,19 @@ fun BottomNavLayout(
                         onClick = {
                             // add medications to prescriptions
                             viewModel.insertPrescription {
+                                viewModel.bottomNavExpanded = false
+                                viewModel.selectedMedicationsList = listOf()
+                                viewModel.medicationsResponseWithMedicationList = emptyList()
+                                coroutineScope.launch { pagerState.animateScrollToPage(0) }
+                                viewModel.isSearchResult = false
+                                viewModel.patient?.let {
+                                    viewModel.getPreviousPrescription(it.id)
+                                }
                                 coroutineScope.launch {
-                                    navController.navigateUp()
+                                    snackbarHostState.showSnackbar(
+                                        message = context.getString(R.string.prescribed_successfully),
+                                        withDismissAction = true
+                                    )
                                 }
                             }
                         },
@@ -457,11 +540,14 @@ fun SelectedCompoundCard(
         ) {
             Checkbox(
                 checked = checkedState.value,
-                onCheckedChange = {
-                    if (!it) {
-                        viewModel.selectedActiveIngredientsList -= listOf(medication.activeIngredient).toSet()
+                onCheckedChange = { checked ->
+                    if (!checked) {
+                        viewModel.selectedMedicationsList =
+                            viewModel.selectedMedicationsList.filter {
+                                it.medFhirId != medication.medication.medFhirId
+                            }
                         viewModel.medicationsResponseWithMedicationList -= listOf(medication).toSet()
-                        if (viewModel.selectedActiveIngredientsList.isEmpty()) viewModel.bottomNavExpanded =
+                        if (viewModel.selectedMedicationsList.isEmpty()) viewModel.bottomNavExpanded =
                             false
                     }
                 },
@@ -493,7 +579,9 @@ fun SelectedCompoundCard(
                 )
             }
             IconButton(onClick = {
-                viewModel.checkedActiveIngredient = medication.activeIngredient
+                viewModel.checkedMedication = viewModel.selectedMedicationsList.first {
+                    it.medFhirId == medication.medication.medFhirId
+                }
                 viewModel.medicationToEdit = medication
             }) {
                 Icon(
@@ -506,4 +594,77 @@ fun SelectedCompoundCard(
         }
         HorizontalDivider(thickness = 1.dp, color = MaterialTheme.colorScheme.outlineVariant)
     }
+}
+
+@Composable
+private fun AddToQueueDialog(
+    viewModel: PrescriptionViewModel,
+    pagerState: PagerState,
+    coroutineScope: CoroutineScope,
+    context: Context,
+    snackBarHostState: SnackbarHostState
+) {
+    CustomDialog(
+        title = stringResource(
+            if (viewModel.appointment != null) R.string.patient_arrived_question else R.string.add_to_queue_question
+        ),
+        text = stringResource(R.string.add_to_queue_assessment_dialog_description),
+        dismissBtnText = stringResource(R.string.dismiss),
+        confirmBtnText = stringResource(
+            if (viewModel.appointment != null) R.string.mark_arrived else R.string.add_to_queue
+        ),
+        dismiss = { viewModel.showAddToQueueDialog = false },
+        confirm = {
+            if (viewModel.appointment != null) {
+                viewModel.updateStatusToArrived(
+                    patient = viewModel.patient!!,
+                    appointment = viewModel.appointment!!,
+                    updated = {
+                        viewModel.showAddToQueueDialog = false
+                        viewModel.canAddAssessment = true
+                        if (viewModel.isReprescribing) {
+                            saveRePrescription(
+                                context,
+                                viewModel,
+                                viewModel.represcribingPrescription!!,
+                                coroutineScope,
+                                snackBarHostState,
+                                pagerState
+                            )
+                        } else {
+                            coroutineScope.launch {
+                                pagerState.animateScrollToPage(1)
+                            }
+                        }
+                    }
+                )
+            } else {
+                if (viewModel.ifAllSlotsBooked) {
+                    viewModel.showAllSlotsBookedDialog = true
+                } else {
+                    viewModel.addPatientToQueue(
+                        viewModel.patient!!,
+                        addedToQueue = {
+                            viewModel.showAddToQueueDialog = false
+                            viewModel.canAddAssessment = true
+                            if (viewModel.isReprescribing) {
+                                saveRePrescription(
+                                    context,
+                                    viewModel,
+                                    viewModel.represcribingPrescription!!,
+                                    coroutineScope,
+                                    snackBarHostState,
+                                    pagerState
+                                )
+                            } else {
+                                coroutineScope.launch {
+                                    pagerState.animateScrollToPage(1)
+                                }
+                            }
+                        }
+                    )
+                }
+            }
+        }
+    )
 }

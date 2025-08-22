@@ -87,7 +87,11 @@ fun PatientLandingScreen(
                 navController.previousBackStackEntry?.savedStateHandle?.get<Int>(
                     SELECTED_INDEX
                 )!!
-            viewModel.syncData()
+            viewModel.patient?.fhirId?.let { patientFhirId ->
+                viewModel.downloadPrescriptions(
+                    patientFhirId
+                )
+            }
             if (navController.previousBackStackEntry?.savedStateHandle?.get<Boolean>(PATIENT_SAVED) == true) {
                 navController.previousBackStackEntry?.savedStateHandle?.remove<Boolean>(
                     PATIENT_SAVED

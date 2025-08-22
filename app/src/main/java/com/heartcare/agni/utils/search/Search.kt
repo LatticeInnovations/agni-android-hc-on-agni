@@ -4,6 +4,7 @@ import com.heartcare.agni.data.local.enums.RiskCategoryEnum.Companion.getRiskRan
 import com.heartcare.agni.data.local.model.search.SearchParameters
 import com.heartcare.agni.data.local.roomdb.entities.patient.PatientAndIdentifierEntity
 import com.heartcare.agni.data.local.roomdb.entities.symptomsanddiagnosis.DiagnosisEntity
+import com.heartcare.agni.data.server.model.prescription.medication.MedicationResponse
 import com.heartcare.agni.utils.constants.IdentificationConstants.HOSPITAL_ID
 import com.heartcare.agni.utils.constants.IdentificationConstants.NATIONAL_ID
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toAge
@@ -117,13 +118,13 @@ object Search {
         return finalList
     }
 
-    internal fun getFuzzySearchMedicationList(
+    internal fun getFuzzySearchMedication(
         queryActiveIngredient: String,
-        activeIngredients: List<String>,
+        medicationList: List<MedicationResponse>,
         matchingRatio: Int
-    ): List<String> {
-        return activeIngredients.filter { activeIngredient ->
-            FuzzySearch.partialRatio(queryActiveIngredient, activeIngredient) > matchingRatio
+    ): List<MedicationResponse> {
+        return medicationList.filter { medication ->
+            FuzzySearch.partialRatio(queryActiveIngredient, medication.activeIngredient) > matchingRatio
         }
     }
 

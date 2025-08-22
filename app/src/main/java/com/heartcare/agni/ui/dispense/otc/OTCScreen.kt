@@ -132,7 +132,7 @@ private fun FormulationsForm(viewModel: OTCViewModel) {
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
         Text(
-            text = viewModel.selectedMedicine!!.medicationEntity.medName,
+            text = viewModel.selectedMedicine!!.medName,
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.padding(start = 16.dp)
@@ -181,7 +181,7 @@ private fun ActiveIngredientDropDown(viewModel: OTCViewModel) {
     Column {
         var expanded by remember { mutableStateOf(false) }
         OutlinedTextField(
-            value = viewModel.selectedMedicine?.medicationEntity?.medName ?: "",
+            value = viewModel.selectedMedicine?.medName ?: "",
             onValueChange = { },
             readOnly = true,
             modifier = Modifier.fillMaxWidth(),
@@ -222,7 +222,7 @@ private fun ActiveIngredientDropDown(viewModel: OTCViewModel) {
                     },
                     text = {
                         Text(
-                            text = medication.medicationEntity.medName,
+                            text = medication.medName,
                             style = MaterialTheme.typography.bodyLarge,
                             color = MaterialTheme.colorScheme.onSurface
                         )

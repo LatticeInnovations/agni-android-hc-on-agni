@@ -7,6 +7,7 @@ import androidx.room.Query
 import androidx.room.RewriteQueriesToDropUnusedColumns
 import androidx.room.Transaction
 import com.heartcare.agni.data.local.enums.SearchTypeEnum
+import com.heartcare.agni.data.local.roomdb.entities.medication.MedicationEntity
 import com.heartcare.agni.data.local.roomdb.entities.patient.PatientAndIdentifierEntity
 import com.heartcare.agni.data.local.roomdb.entities.search.SearchHistoryEntity
 import com.heartcare.agni.data.local.roomdb.entities.search.SymDiagSearchEntity
@@ -40,6 +41,10 @@ interface SearchDao {
     @Transaction
     @Query("SELECT DISTINCT activeIngredient FROM MedicationEntity")
     suspend fun getActiveIngredients(): List<String>
+
+    @Transaction
+    @Query("SELECT * FROM MedicationEntity")
+    suspend fun getAllMedication(): List<MedicationEntity>
 
     @Transaction
     @Query("SELECT * FROM symptoms")

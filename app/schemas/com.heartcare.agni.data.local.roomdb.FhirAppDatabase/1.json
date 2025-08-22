@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "d4d84d54d0e0f4b2a62ffbe3421d543d",
+    "identityHash": "3d49273d11a533d1b6a71ec7a513113d",
     "entities": [
       {
         "tableName": "PatientEntity",
@@ -373,7 +373,7 @@
       },
       {
         "tableName": "MedicationEntity",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`medFhirId` TEXT NOT NULL, `medCodeName` TEXT NOT NULL, `medName` TEXT NOT NULL, `doseForm` TEXT NOT NULL, `doseFormCode` TEXT NOT NULL, `activeIngredient` TEXT NOT NULL, `activeIngredientCode` TEXT NOT NULL, `medUnit` TEXT NOT NULL, `medNumeratorVal` REAL NOT NULL, `isOTC` INTEGER NOT NULL DEFAULT false, PRIMARY KEY(`medFhirId`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`medFhirId` TEXT NOT NULL, `medCodeName` TEXT NOT NULL, `medName` TEXT NOT NULL, `doseForm` TEXT NOT NULL, `doseFormCode` TEXT NOT NULL, `activeIngredient` TEXT NOT NULL, `activeIngredientCode` TEXT NOT NULL, `medUnit` TEXT NOT NULL, `medNumeratorVal` REAL NOT NULL, `isOTC` INTEGER NOT NULL, `status` TEXT NOT NULL, `classId` TEXT NOT NULL, `className` TEXT NOT NULL, `categoryId` TEXT NOT NULL, `categoryName` TEXT NOT NULL, `brandList` TEXT NOT NULL, PRIMARY KEY(`medFhirId`))",
         "fields": [
           {
             "fieldPath": "medFhirId",
@@ -433,8 +433,43 @@
             "fieldPath": "isOTC",
             "columnName": "isOTC",
             "affinity": "INTEGER",
-            "notNull": true,
-            "defaultValue": "false"
+            "notNull": true
+          },
+          {
+            "fieldPath": "status",
+            "columnName": "status",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "classId",
+            "columnName": "classId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "className",
+            "columnName": "className",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "categoryId",
+            "columnName": "categoryId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "categoryName",
+            "columnName": "categoryName",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "brandList",
+            "columnName": "brandList",
+            "affinity": "TEXT",
+            "notNull": true
           }
         ],
         "primaryKey": {
@@ -542,7 +577,7 @@
       },
       {
         "tableName": "PrescriptionDirectionsEntity",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `medReqFhirId` TEXT, `med_fhir_id` TEXT NOT NULL, `qtyPerDose` INTEGER NOT NULL, `frequency` INTEGER NOT NULL, `timing` TEXT, `duration` INTEGER NOT NULL, `qtyPrescribed` INTEGER NOT NULL, `note` TEXT, `prescriptionId` TEXT NOT NULL, PRIMARY KEY(`id`), FOREIGN KEY(`prescriptionId`) REFERENCES `PrescriptionEntity`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `medReqFhirId` TEXT, `med_fhir_id` TEXT NOT NULL, `qtyPerDose` REAL NOT NULL, `frequency` INTEGER NOT NULL, `timing` TEXT, `duration` INTEGER NOT NULL, `qtyPrescribed` REAL NOT NULL, `note` TEXT, `prescriptionId` TEXT NOT NULL, `brandName` TEXT, `dose_form_code` TEXT, `dose_form` TEXT NOT NULL, PRIMARY KEY(`id`), FOREIGN KEY(`prescriptionId`) REFERENCES `PrescriptionEntity`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION )",
         "fields": [
           {
             "fieldPath": "id",
@@ -564,7 +599,7 @@
           {
             "fieldPath": "qtyPerDose",
             "columnName": "qtyPerDose",
-            "affinity": "INTEGER",
+            "affinity": "REAL",
             "notNull": true
           },
           {
@@ -587,7 +622,7 @@
           {
             "fieldPath": "qtyPrescribed",
             "columnName": "qtyPrescribed",
-            "affinity": "INTEGER",
+            "affinity": "REAL",
             "notNull": true
           },
           {
@@ -598,6 +633,22 @@
           {
             "fieldPath": "prescriptionId",
             "columnName": "prescriptionId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "brandName",
+            "columnName": "brandName",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "doseFormCode",
+            "columnName": "dose_form_code",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "doseForm",
+            "columnName": "dose_form",
             "affinity": "TEXT",
             "notNull": true
           }
@@ -2219,81 +2270,6 @@
         ]
       },
       {
-        "tableName": "StrengthEntity",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `medFhirId` TEXT NOT NULL, `medName` TEXT NOT NULL, `unitMeasureValue` TEXT NOT NULL, `medMeasureCode` TEXT NOT NULL, PRIMARY KEY(`id`), FOREIGN KEY(`medFhirId`) REFERENCES `MedicationEntity`(`medFhirId`) ON UPDATE NO ACTION ON DELETE NO ACTION )",
-        "fields": [
-          {
-            "fieldPath": "id",
-            "columnName": "id",
-            "affinity": "TEXT",
-            "notNull": true
-          },
-          {
-            "fieldPath": "medFhirId",
-            "columnName": "medFhirId",
-            "affinity": "TEXT",
-            "notNull": true
-          },
-          {
-            "fieldPath": "medName",
-            "columnName": "medName",
-            "affinity": "TEXT",
-            "notNull": true
-          },
-          {
-            "fieldPath": "unitMeasureValue",
-            "columnName": "unitMeasureValue",
-            "affinity": "TEXT",
-            "notNull": true
-          },
-          {
-            "fieldPath": "medMeasureCode",
-            "columnName": "medMeasureCode",
-            "affinity": "TEXT",
-            "notNull": true
-          }
-        ],
-        "primaryKey": {
-          "autoGenerate": false,
-          "columnNames": [
-            "id"
-          ]
-        },
-        "indices": [
-          {
-            "name": "index_StrengthEntity_id",
-            "unique": false,
-            "columnNames": [
-              "id"
-            ],
-            "orders": [],
-            "createSql": "CREATE INDEX IF NOT EXISTS `index_StrengthEntity_id` ON `${TABLE_NAME}` (`id`)"
-          },
-          {
-            "name": "index_StrengthEntity_medFhirId",
-            "unique": false,
-            "columnNames": [
-              "medFhirId"
-            ],
-            "orders": [],
-            "createSql": "CREATE INDEX IF NOT EXISTS `index_StrengthEntity_medFhirId` ON `${TABLE_NAME}` (`medFhirId`)"
-          }
-        ],
-        "foreignKeys": [
-          {
-            "table": "MedicationEntity",
-            "onDelete": "NO ACTION",
-            "onUpdate": "NO ACTION",
-            "columns": [
-              "medFhirId"
-            ],
-            "referencedColumns": [
-              "medFhirId"
-            ]
-          }
-        ]
-      },
-      {
         "tableName": "ImmunizationRecommendationEntity",
         "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `patientId` TEXT NOT NULL, `vaccine` TEXT NOT NULL, `vaccineShortName` TEXT NOT NULL, `vaccineCode` TEXT NOT NULL, `seriesDoses` INTEGER NOT NULL, `doseNumber` INTEGER NOT NULL, `vaccineStartDate` INTEGER NOT NULL, `vaccineEndDate` INTEGER NOT NULL, `vaccineBufferDate` INTEGER NOT NULL, `vaccineDueDate` INTEGER NOT NULL, PRIMARY KEY(`id`))",
         "fields": [
@@ -3571,7 +3547,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'd4d84d54d0e0f4b2a62ffbe3421d543d')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '3d49273d11a533d1b6a71ec7a513113d')"
     ]
   }
 }

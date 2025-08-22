@@ -11,7 +11,9 @@ data class Medication(
     val frequency: Int,
     val medFhirId: String,
     val note: String?,
-    val qtyPerDose: Int,
-    val qtyPrescribed: Int,
-    val timing: String?
+    val qtyPerDose: Double,
+    val qtyPrescribed: Double,
+    val timing: String?,
+    val brandName: String?,
+    val doseFormCode: String?
 )

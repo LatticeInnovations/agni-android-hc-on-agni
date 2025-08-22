@@ -4,11 +4,14 @@ import com.heartcare.agni.data.local.model.prescription.PrescriptionPhotoRespons
 import com.heartcare.agni.data.local.model.prescription.PrescriptionResponseLocal
 import com.heartcare.agni.data.local.roomdb.dao.FileUploadDao
 import com.heartcare.agni.data.local.roomdb.dao.PrescriptionDao
+import com.heartcare.agni.data.local.roomdb.entities.prescription.PrescriptionAndMedicineRelation
+import com.heartcare.agni.data.local.roomdb.entities.prescription.PrescriptionDirectionsEntity
 import com.heartcare.agni.utils.converters.responseconverter.toListOfPrescriptionDirectionsEntity
 import com.heartcare.agni.utils.converters.responseconverter.toListOfPrescriptionPhotoEntity
 import com.heartcare.agni.utils.converters.responseconverter.toPrescriptionEntity
 import com.heartcare.agni.utils.converters.responseconverter.toPrescriptionPhotoResponseLocal
 import com.heartcare.agni.utils.converters.responseconverter.toPrescriptionResponseLocal
+import timber.log.Timber
 import javax.inject.Inject
 
 class PrescriptionRepositoryImpl @Inject constructor(
@@ -35,6 +38,11 @@ class PrescriptionRepositoryImpl @Inject constructor(
 
     override suspend fun getLastPrescription(patientId: String): List<PrescriptionResponseLocal> {
         return prescriptionDao.getPastPrescriptions(patientId).map { it.toPrescriptionResponseLocal() }
+    }
+
+    override suspend fun getLastPrescriptionAndMedicine(patientId: String): List<PrescriptionAndMedicineRelation> {
+        Timber.d("manseeyy db ${prescriptionDao.getPastPrescriptions(patientId)}")
+        return prescriptionDao.getPastPrescriptions(patientId)
     }
 
     override suspend fun getLastPhotoPrescription(patientId: String): List<PrescriptionPhotoResponseLocal> {
@@ -80,5 +88,9 @@ class PrescriptionRepositoryImpl @Inject constructor(
         return prescriptionDao.deletePrescriptionPhoto(prescriptionPhotoResponseLocal.toListOfPrescriptionPhotoEntity()[0]).also {
             prescriptionDao.deletePrescriptionEntity(prescriptionPhotoResponseLocal.toPrescriptionEntity())
         }
+    }
+
+    override suspend fun deletePrescriptionDirectionEntity(prescriptionDirectionsEntity: PrescriptionDirectionsEntity): Int {
+        return prescriptionDao.deletePrescriptionDirectionEntity(prescriptionDirectionsEntity)
     }
 }

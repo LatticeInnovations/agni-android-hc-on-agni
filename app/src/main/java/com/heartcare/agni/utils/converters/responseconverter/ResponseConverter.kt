@@ -32,9 +32,7 @@ import com.heartcare.agni.data.local.roomdb.entities.labtestandmedrecord.photo.L
 import com.heartcare.agni.data.local.roomdb.entities.labtestandmedrecord.photo.LabTestAndMedPhotoEntity
 import com.heartcare.agni.data.local.roomdb.entities.levels.LevelEntity
 import com.heartcare.agni.data.local.roomdb.entities.medication.MedicationEntity
-import com.heartcare.agni.data.local.roomdb.entities.medication.MedicationStrengthRelation
 import com.heartcare.agni.data.local.roomdb.entities.medication.MedicineTimingEntity
-import com.heartcare.agni.data.local.roomdb.entities.medication.StrengthEntity
 import com.heartcare.agni.data.local.roomdb.entities.patient.IdentifierEntity
 import com.heartcare.agni.data.local.roomdb.entities.patient.PatientAndIdentifierEntity
 import com.heartcare.agni.data.local.roomdb.entities.patient.PatientEntity
@@ -88,7 +86,6 @@ import com.heartcare.agni.data.server.model.patient.PatientLastUpdatedResponse
 import com.heartcare.agni.data.server.model.patient.PatientResponse
 import com.heartcare.agni.data.server.model.prescription.medication.MedicationResponse
 import com.heartcare.agni.data.server.model.prescription.medication.MedicineTimeResponse
-import com.heartcare.agni.data.server.model.prescription.medication.Strength
 import com.heartcare.agni.data.server.model.prescription.photo.File
 import com.heartcare.agni.data.server.model.prescription.photo.PrescriptionPhotoResponse
 import com.heartcare.agni.data.server.model.prescription.prescriptionresponse.PrescriptionResponse
@@ -314,7 +311,7 @@ internal suspend fun PrescriptionResponse.toPrescriptionEntity(
         id = prescriptionId,
         prescriptionDate = generatedOn,
         patientId = patientDao.getPatientIdByFhirId(patientFhirId)!!,
-        appointmentId = appointmentUuid,
+        appointmentId = appointmentUuid!!,
         patientFhirId = patientFhirId,
         prescriptionFhirId = prescriptionFhirId,
         prescriptionType = PrescriptionType.FORM.type
@@ -377,7 +374,10 @@ internal suspend fun PrescriptionResponse.toListOfPrescriptionDirectionsEntity(m
             qtyPrescribed = medication.qtyPrescribed,
             note = medication.note,
             prescriptionId = prescriptionId,
-            medReqFhirId = medication.medReqFhirId
+            medReqFhirId = medication.medReqFhirId,
+            brandName = medication.brandName,
+            doseFormCode = medication.doseFormCode,
+            doseForm = medication.doseForm
         )
     }
 }
@@ -407,7 +407,10 @@ internal fun PrescriptionResponseLocal.toListOfPrescriptionDirectionsEntity(): L
             qtyPrescribed = medication.qtyPrescribed,
             note = medication.note,
             prescriptionId = prescriptionId,
-            medReqFhirId = medication.medReqFhirId
+            medReqFhirId = medication.medReqFhirId,
+            brandName = medication.brandName,
+            doseFormCode = medication.doseFormCode,
+            doseForm = medication.doseForm
         )
     }
 }
@@ -578,7 +581,8 @@ internal fun PrescriptionAndMedicineRelation.toPrescriptionResponseLocal(): Pres
         appointmentId = prescriptionEntity.appointmentId,
         generatedOn = prescriptionEntity.prescriptionDate,
         prescriptionId = prescriptionEntity.id,
-        prescription = prescriptionDirectionAndMedicineView.map { prescriptionDirectionAndMedicineView -> prescriptionDirectionAndMedicineView.toMedicationLocal() }
+        prescription = prescriptionDirectionAndMedicineView.map { prescriptionDirectionAndMedicineView -> prescriptionDirectionAndMedicineView.toMedicationLocal() },
+        prescriptionFhirId = prescriptionEntity.prescriptionFhirId
     )
 }
 
@@ -595,7 +599,9 @@ internal fun PrescriptionDirectionAndMedicineView.toMedicationLocal(): Medicatio
         medReqFhirId = prescriptionDirectionsEntity.medReqFhirId,
         medReqUuid = prescriptionDirectionsEntity.id,
         medName = medicationEntity.medName,
-        medUnit = medicationEntity.medUnit
+        medUnit = medicationEntity.medUnit,
+        brandName = prescriptionDirectionsEntity.brandName,
+        doseFormCode = prescriptionDirectionsEntity.doseFormCode
     )
 }
 
@@ -1120,50 +1126,43 @@ internal fun List<MedicationResponse>.toListOfMedicationEntity(): List<Medicatio
     return this.map { medication ->
         MedicationEntity(
             medFhirId = medication.medFhirId,
-            medCodeName = medication.medCode,
-            medName = medication.medName,
+            medCodeName = medication.code,
+            medName = medication.name,
             doseForm = medication.doseForm,
             doseFormCode = medication.doseFormCode,
             activeIngredient = medication.activeIngredient,
             activeIngredientCode = medication.activeIngredientCode,
             medUnit = medication.medUnit,
             medNumeratorVal = medication.medNumeratorVal,
-            isOTC = medication.isOTC
+            isOTC = medication.isOTC,
+            status = medication.status,
+            classId = medication.classId,
+            className = medication.className,
+            categoryId = medication.categoryId,
+            categoryName = medication.categoryName,
+            brandList = medication.brandList,
         )
     }
 }
 
-internal fun MedicationResponse.toListOfStrengthEntity(): List<StrengthEntity> {
-    return this.strength.map { strength ->
-        StrengthEntity(
-            id = UUIDBuilder.generateUUID(),
-            medFhirId = this.medFhirId,
-            medName = strength.medName,
-            unitMeasureValue = strength.unitMeasureValue,
-            medMeasureCode = strength.medMeasureCode
-        )
-    }
-}
-
-internal fun MedicationStrengthRelation.toMedicationResponse(): MedicationResponse {
+internal fun MedicationEntity.toMedicationResponse(): MedicationResponse {
     return MedicationResponse(
-        medFhirId = this.medicationEntity.medFhirId,
-        medCode = this.medicationEntity.medCodeName,
-        medName = this.medicationEntity.medName,
-        doseForm = this.medicationEntity.doseForm,
-        doseFormCode = this.medicationEntity.doseFormCode,
-        activeIngredient = this.medicationEntity.activeIngredient,
-        activeIngredientCode = this.medicationEntity.activeIngredientCode,
-        medUnit = this.medicationEntity.medUnit,
-        medNumeratorVal = this.medicationEntity.medNumeratorVal,
-        isOTC = this.medicationEntity.isOTC,
-        strength = this.strength.map {
-            Strength(
-                medMeasureCode = it.medMeasureCode,
-                medName = it.medName,
-                unitMeasureValue = it.unitMeasureValue
-            )
-        }
+        medFhirId = medFhirId,
+        code = medCodeName,
+        name = medName,
+        isOTC = isOTC,
+        doseForm = doseForm,
+        doseFormCode = doseFormCode,
+        status = status,
+        activeIngredient = activeIngredient,
+        activeIngredientCode = activeIngredientCode,
+        medUnit = medUnit,
+        medNumeratorVal = medNumeratorVal,
+        classId = classId,
+        className = className,
+        categoryId = categoryId,
+        categoryName = categoryName,
+        brandList = brandList
     )
 }
 

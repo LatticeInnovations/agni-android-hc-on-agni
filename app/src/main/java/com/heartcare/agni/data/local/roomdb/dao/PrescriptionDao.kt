@@ -95,4 +95,7 @@ interface PrescriptionDao {
     @Transaction
     @Query("SELECT * FROM PrescriptionEntity where prescriptionType=\"form\"")
     suspend fun getAllFormPrescriptions() : List<PrescriptionEntity>
+
+    @Delete
+    suspend fun deletePrescriptionDirectionEntity(prescriptionDirectionsEntity: PrescriptionDirectionsEntity): Int
 }

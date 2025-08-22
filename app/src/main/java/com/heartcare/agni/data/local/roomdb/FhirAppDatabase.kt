@@ -51,7 +51,6 @@ import com.heartcare.agni.data.local.roomdb.entities.labtestandmedrecord.photo.L
 import com.heartcare.agni.data.local.roomdb.entities.levels.LevelEntity
 import com.heartcare.agni.data.local.roomdb.entities.medication.MedicationEntity
 import com.heartcare.agni.data.local.roomdb.entities.medication.MedicineTimingEntity
-import com.heartcare.agni.data.local.roomdb.entities.medication.StrengthEntity
 import com.heartcare.agni.data.local.roomdb.entities.patient.IdentifierEntity
 import com.heartcare.agni.data.local.roomdb.entities.patient.PatientEntity
 import com.heartcare.agni.data.local.roomdb.entities.patient.PatientLastUpdatedEntity
@@ -111,7 +110,6 @@ import java.util.UUID
         DispensePrescriptionEntity::class,
         DispenseDataEntity::class,
         MedicineDispenseListEntity::class,
-        StrengthEntity::class,
         ImmunizationRecommendationEntity::class,
         ImmunizationEntity::class,
         ImmunizationFileEntity::class,

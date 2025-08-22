@@ -72,6 +72,28 @@ open class GenericRepositoryDatabaseTransactions(
         }
     }
 
+    protected suspend fun insertPrescriptionGenericEntity(
+        prescriptionResponse: PrescriptionResponse,
+        prescriptionGenericEntity: GenericEntity?,
+        uuid: String
+    ): Long {
+        return if (prescriptionGenericEntity != null) {
+            genericDao.insertGenericEntity(
+                prescriptionGenericEntity.copy(payload = prescriptionResponse.copy(appUpdatedOn = Date()).toJson())
+            )[0]
+        } else {
+            genericDao.insertGenericEntity(
+                GenericEntity(
+                    id = uuid,
+                    patientId = prescriptionResponse.prescriptionId,
+                    payload = prescriptionResponse.copy(appUpdatedOn = Date()).toJson(),
+                    type = GenericTypeEnum.PRESCRIPTION,
+                    syncType = SyncType.POST
+                )
+            )[0]
+        }
+    }
+
     protected suspend fun insertRelationGenericEntity(
         relationGenericEntity: GenericEntity?,
         relatedPersonResponse: RelatedPersonResponse,

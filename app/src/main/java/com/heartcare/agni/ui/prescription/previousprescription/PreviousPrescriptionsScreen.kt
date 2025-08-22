@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -41,22 +42,23 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.heartcare.agni.R
-import com.heartcare.agni.data.local.enums.AppointmentStatusEnum
 import com.heartcare.agni.data.local.model.prescription.medication.MedicationResponseWithMedication
 import com.heartcare.agni.data.local.roomdb.entities.prescription.PrescriptionAndMedicineRelation
 import com.heartcare.agni.data.server.model.prescription.prescriptionresponse.Medication
 import com.heartcare.agni.ui.prescription.PrescriptionViewModel
 import com.heartcare.agni.utils.builders.UUIDBuilder
+import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.isToday
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toPrescriptionDate
 import com.heartcare.agni.utils.converters.responseconverter.medication.MedicationInfoConverter.getMedInfo
+import com.heartcare.agni.utils.converters.responseconverter.toMedicationResponse
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import java.util.Date
 
 @Composable
 fun PreviousPrescriptionsScreen(
-    snackbarHostState: SnackbarHostState,
+    snackBarHostState: SnackbarHostState,
     coroutineScope: CoroutineScope,
+    pagerState: PagerState,
     viewModel: PrescriptionViewModel = hiltViewModel()
 ) {
     Column(
@@ -78,15 +80,14 @@ fun PreviousPrescriptionsScreen(
                 verticalArrangement = Arrangement.spacedBy(20.dp)
             ) {
                 viewModel.previousPrescriptionList.forEachIndexed { index, previousPrescription ->
-                    previousPrescription?.let { prescription ->
-                        PrescriptionCard(
-                            viewModel,
-                            prescription,
-                            index == 0,
-                            snackbarHostState,
-                            coroutineScope
-                        )
-                    }
+                    PrescriptionCard(
+                        viewModel,
+                        previousPrescription,
+                        index == 0 && !(isToday(previousPrescription.prescriptionEntity.prescriptionDate)),
+                        snackBarHostState,
+                        coroutineScope,
+                        pagerState
+                    )
                 }
             }
         }
@@ -96,10 +97,11 @@ fun PreviousPrescriptionsScreen(
 @Composable
 fun PrescriptionCard(
     viewModel: PrescriptionViewModel,
-    prescription: String,
+    prescription: PrescriptionAndMedicineRelation,
     isLatest: Boolean,
-    snackbarHostState: SnackbarHostState,
-    coroutineScope: CoroutineScope
+    snackBarHostState: SnackbarHostState,
+    coroutineScope: CoroutineScope,
+    pagerState: PagerState
 ) {
     val context = LocalContext.current
     var expanded by rememberSaveable {
@@ -132,7 +134,7 @@ fun PrescriptionCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = Date().toPrescriptionDate(),
+                    text = prescription.prescriptionEntity.prescriptionDate.toPrescriptionDate(),
                     style = MaterialTheme.typography.bodyLarge
                 )
                 Spacer(modifier = Modifier.weight(1f))
@@ -153,48 +155,60 @@ fun PrescriptionCard(
                         thickness = 1.dp,
                         color = MaterialTheme.colorScheme.outlineVariant
                     )
-                    listOf(
-                        "", ""
-                    ).forEach { _ ->
+                    prescription.prescriptionDirectionAndMedicineView.forEach { directionAndMedication ->
                         MedicineDetails(
-                            medName = "Metformin 650",
-                            brandName = "Cipla",
-                            details = "1 ml OD, Before food\n" +
-                                    "Duration : 7 days , Qty : 7 \n" +
-                                    "Notes : Take rest "
+                            medName = directionAndMedication.medicationEntity.medName,
+                            brandName = directionAndMedication.prescriptionDirectionsEntity.brandName,
+                            details = getMedInfo(
+                                duration = directionAndMedication.prescriptionDirectionsEntity.duration,
+                                frequency = directionAndMedication.prescriptionDirectionsEntity.frequency,
+                                medUnit = directionAndMedication.medicationEntity.medUnit,
+                                timing = directionAndMedication.prescriptionDirectionsEntity.timing,
+                                note = directionAndMedication.prescriptionDirectionsEntity.note,
+                                qtyPerDose = directionAndMedication.prescriptionDirectionsEntity.qtyPerDose,
+                                qtyPrescribed = directionAndMedication.prescriptionDirectionsEntity.qtyPrescribed,
+                                context = context
+                            )
                         )
                     }
                     if (isLatest) {
                         TextButton(
                             onClick = {
                                 // re prescribe
-                                /*viewModel.appointmentResponseLocal.run {
-                                    when (this?.status) {
-                                        AppointmentStatusEnum.ARRIVED.value, AppointmentStatusEnum.WALK_IN.value -> {
-                                            saveRePrescription(
-                                                context,
-                                                viewModel,
-                                                prescription,
-                                                coroutineScope,
-                                                snackbarHostState
-                                            )
-                                        }
+                                viewModel.getAppointmentInfo(
+                                    callback = {
+                                        when {
+                                            viewModel.existsInOtherHospital -> {
+                                                coroutineScope.launch {
+                                                    snackBarHostState.showSnackbar(
+                                                        message = context.getString(R.string.appointment_exists_in_other_hospital)
+                                                    )
+                                                }
+                                            }
 
-                                        AppointmentStatusEnum.IN_PROGRESS.value, AppointmentStatusEnum.COMPLETED.value -> {
-                                            coroutineScope.launch {
-                                                snackbarHostState.showSnackbar(
-                                                    context.getString(R.string.prescription_already_exists_for_today)
+                                            viewModel.canAddAssessment -> {
+                                                saveRePrescription(
+                                                    context,
+                                                    viewModel,
+                                                    prescription,
+                                                    coroutineScope,
+                                                    snackBarHostState,
+                                                    pagerState
                                                 )
                                             }
-                                        }
 
-                                        else -> coroutineScope.launch {
-                                            snackbarHostState.showSnackbar(
-                                                context.getString(R.string.please_add_patient_to_queue)
-                                            )
+                                            viewModel.isAppointmentCompleted -> {
+                                                viewModel.showAppointmentCompletedDialog = true
+                                            }
+
+                                            else -> {
+                                                viewModel.isReprescribing = true
+                                                viewModel.represcribingPrescription = prescription
+                                                viewModel.showAddToQueueDialog = true
+                                            }
                                         }
                                     }
-                                }*/
+                                )
                             },
                             modifier = Modifier
                                 .align(Alignment.End)
@@ -243,13 +257,14 @@ fun saveRePrescription(
     viewModel: PrescriptionViewModel,
     prescription: PrescriptionAndMedicineRelation,
     coroutineScope: CoroutineScope,
-    snackbarHostState: SnackbarHostState
+    snackBarHostState: SnackbarHostState,
+    pagerState: PagerState
 ) {
     viewModel.medicationsResponseWithMedicationList = emptyList()
-    viewModel.selectedActiveIngredientsList = emptyList()
+    viewModel.selectedMedicationsList = emptyList()
     prescription.prescriptionDirectionAndMedicineView.forEach { directionAndMedication ->
-        viewModel.selectedActiveIngredientsList += listOf(
-            directionAndMedication.medicationEntity.activeIngredient
+        viewModel.selectedMedicationsList += listOf(
+            directionAndMedication.medicationEntity.toMedicationResponse()
         )
         viewModel.medicationsResponseWithMedicationList += listOf(
             MedicationResponseWithMedication(
@@ -266,14 +281,17 @@ fun saveRePrescription(
                     timing = directionAndMedication.prescriptionDirectionsEntity.timing,
                     qtyPrescribed = directionAndMedication.prescriptionDirectionsEntity.qtyPrescribed,
                     medReqUuid = UUIDBuilder.generateUUID(),
-                    medReqFhirId = null
+                    medReqFhirId = null,
+                    brandName = directionAndMedication.prescriptionDirectionsEntity.brandName,
+                    doseFormCode = directionAndMedication.prescriptionDirectionsEntity.doseFormCode
                 )
             )
         )
     }
     viewModel.bottomNavExpanded = false
     coroutineScope.launch {
-        snackbarHostState.showSnackbar(
+        pagerState.animateScrollToPage(1)
+        snackBarHostState.showSnackbar(
             message = context.getString(R.string.re_prescribed_successfully)
         )
     }

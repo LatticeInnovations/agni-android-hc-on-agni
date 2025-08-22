@@ -1,7 +1,7 @@
 package com.heartcare.agni.data.local.repository.medication
 
 import com.heartcare.agni.data.local.roomdb.dao.MedicationDao
-import com.heartcare.agni.data.local.roomdb.entities.medication.MedicationStrengthRelation
+import com.heartcare.agni.data.local.roomdb.entities.medication.MedicationEntity
 import com.heartcare.agni.data.local.roomdb.entities.medication.MedicineTimingEntity
 import com.heartcare.agni.data.server.model.prescription.medication.MedicationResponse
 import com.heartcare.agni.utils.converters.responseconverter.toMedicationResponse
@@ -19,14 +19,20 @@ class MedicationRepositoryImpl @Inject constructor(private val medicationDao: Me
             .map { medicationStrengthRelation -> medicationStrengthRelation.toMedicationResponse() }
     }
 
+
+    override suspend fun getMedicationByMedFhirId(medFhirId: String): List<MedicationResponse> {
+        return medicationDao.getMedicationByMedFhirId(medFhirId)
+            .map { medicationStrengthRelation -> medicationStrengthRelation.toMedicationResponse() }
+    }
+
     override suspend fun getAllMedicationDirections(): List<MedicineTimingEntity> {
         return medicationDao.getAllMedicineDosageInstructions()
     }
 
-    override suspend fun getAllMedication(): List<MedicationStrengthRelation> {
+    override suspend fun getAllMedication(): List<MedicationEntity> {
         return medicationDao.getAllMedication()
     }
-    override suspend fun getOTCMedication(): List<MedicationStrengthRelation> {
+    override suspend fun getOTCMedication(): List<MedicationEntity> {
         return medicationDao.getOTCMedication()
     }
 }

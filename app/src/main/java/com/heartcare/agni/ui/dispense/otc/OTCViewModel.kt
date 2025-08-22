@@ -17,7 +17,7 @@ import com.heartcare.agni.data.local.repository.preference.PreferenceRepository
 import com.heartcare.agni.data.local.repository.schedule.ScheduleRepository
 import com.heartcare.agni.data.local.roomdb.entities.dispense.DispenseDataEntity
 import com.heartcare.agni.data.local.roomdb.entities.dispense.MedicineDispenseListEntity
-import com.heartcare.agni.data.local.roomdb.entities.medication.MedicationStrengthRelation
+import com.heartcare.agni.data.local.roomdb.entities.medication.MedicationEntity
 import com.heartcare.agni.data.server.model.dispense.request.MedicineDispenseRequest
 import com.heartcare.agni.data.server.model.dispense.request.MedicineDispensed
 import com.heartcare.agni.data.server.model.patient.PatientResponse
@@ -44,10 +44,10 @@ class OTCViewModel @Inject constructor(
 ) : ViewModel() {
     var isLaunched by mutableStateOf(false)
     var patient by mutableStateOf<PatientResponse?>(null)
-    var selectedMedicine by mutableStateOf<MedicationStrengthRelation?>(null)
+    var selectedMedicine by mutableStateOf<MedicationEntity?>(null)
     var qtyPrescribed by mutableStateOf("")
     var notes by mutableStateOf("")
-    var allMedications by mutableStateOf(listOf<MedicationStrengthRelation>())
+    var allMedications by mutableStateOf(listOf<MedicationEntity>())
     var isError by mutableStateOf(false)
 
     internal fun getOTCMedications() {
@@ -89,7 +89,7 @@ class OTCViewModel @Inject constructor(
                 MedicineDispensed(
                     medDispenseUuid = UUIDBuilder.generateUUID(),
                     category = DispenseCategoryEnum.OTC.value,
-                    medFhirId = selectedMedicine!!.medicationEntity.medFhirId,
+                    medFhirId = selectedMedicine!!.medFhirId,
                     medNote = notes.ifBlank { null },
                     qtyDispensed = qtyPrescribed.toInt(),
                     medReqFhirId = null,
