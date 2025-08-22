@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -57,6 +58,7 @@ import kotlinx.coroutines.launch
 fun PreviousPrescriptionsScreen(
     snackBarHostState: SnackbarHostState,
     coroutineScope: CoroutineScope,
+    pagerState: PagerState,
     viewModel: PrescriptionViewModel = hiltViewModel()
 ) {
     Column(
@@ -83,7 +85,8 @@ fun PreviousPrescriptionsScreen(
                         previousPrescription,
                         index == 0 && !(isToday(previousPrescription.prescriptionEntity.prescriptionDate)),
                         snackBarHostState,
-                        coroutineScope
+                        coroutineScope,
+                        pagerState
                     )
                 }
             }
@@ -97,7 +100,8 @@ fun PrescriptionCard(
     prescription: PrescriptionAndMedicineRelation,
     isLatest: Boolean,
     snackBarHostState: SnackbarHostState,
-    coroutineScope: CoroutineScope
+    coroutineScope: CoroutineScope,
+    pagerState: PagerState
 ) {
     val context = LocalContext.current
     var expanded by rememberSaveable {
@@ -188,7 +192,8 @@ fun PrescriptionCard(
                                                     viewModel,
                                                     prescription,
                                                     coroutineScope,
-                                                    snackBarHostState
+                                                    snackBarHostState,
+                                                    pagerState
                                                 )
                                             }
 
@@ -252,7 +257,8 @@ fun saveRePrescription(
     viewModel: PrescriptionViewModel,
     prescription: PrescriptionAndMedicineRelation,
     coroutineScope: CoroutineScope,
-    snackBarHostState: SnackbarHostState
+    snackBarHostState: SnackbarHostState,
+    pagerState: PagerState
 ) {
     viewModel.medicationsResponseWithMedicationList = emptyList()
     viewModel.selectedMedicationsList = emptyList()
@@ -284,6 +290,7 @@ fun saveRePrescription(
     }
     viewModel.bottomNavExpanded = false
     coroutineScope.launch {
+        pagerState.animateScrollToPage(1)
         snackBarHostState.showSnackbar(
             message = context.getString(R.string.re_prescribed_successfully)
         )

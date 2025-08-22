@@ -130,7 +130,6 @@ fun PrescriptionScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(bottom = if (viewModel.selectedMedicationsList.isNotEmpty() && pagerState.pageCount == 1) 60.dp else 0.dp),
-            snackbarHost = { SnackbarHost(snackbarHostState) },
             topBar = {
                 TopAppBar(
                     modifier = Modifier.fillMaxWidth(),
@@ -226,7 +225,7 @@ fun PrescriptionScreen(
                             userScrollEnabled = viewModel.canAddAssessment
                         ) { index ->
                             when (index) {
-                                0 -> PreviousPrescriptionsScreen(snackbarHostState, coroutineScope)
+                                0 -> PreviousPrescriptionsScreen(snackbarHostState, coroutineScope, pagerState)
                                 1 -> QuickSelectScreen()
                             }
                         }
@@ -278,6 +277,17 @@ fun PrescriptionScreen(
                 }
             }
         )
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.BottomCenter
+        ) {
+            SnackbarHost(
+                hostState = snackbarHostState,
+                modifier = Modifier
+                    .padding(bottom = if (viewModel.selectedMedicationsList.isNotEmpty() && pagerState.currentPage == 1) 70.dp else 6.dp)
+                    .navigationBarsPadding()
+            )
+        }
         Box(
             modifier = Modifier
                 .matchParentSize()
@@ -611,16 +621,17 @@ private fun AddToQueueDialog(
                     appointment = viewModel.appointment!!,
                     updated = {
                         viewModel.showAddToQueueDialog = false
+                        viewModel.canAddAssessment = true
                         if (viewModel.isReprescribing) {
                             saveRePrescription(
                                 context,
                                 viewModel,
                                 viewModel.represcribingPrescription!!,
                                 coroutineScope,
-                                snackBarHostState
+                                snackBarHostState,
+                                pagerState
                             )
                         } else {
-                            viewModel.canAddAssessment = true
                             coroutineScope.launch {
                                 pagerState.animateScrollToPage(1)
                             }
@@ -635,19 +646,17 @@ private fun AddToQueueDialog(
                         viewModel.patient!!,
                         addedToQueue = {
                             viewModel.showAddToQueueDialog = false
-                            Timber.d("manseeyy added to queue")
+                            viewModel.canAddAssessment = true
                             if (viewModel.isReprescribing) {
-                                Timber.d("manseeyy is represcribing")
                                 saveRePrescription(
                                     context,
                                     viewModel,
                                     viewModel.represcribingPrescription!!,
                                     coroutineScope,
-                                    snackBarHostState
+                                    snackBarHostState,
+                                    pagerState
                                 )
                             } else {
-                                viewModel.canAddAssessment = true
-                                Timber.d("manseeyy quick select ${pagerState.pageCount}")
                                 coroutineScope.launch {
                                     pagerState.animateScrollToPage(1)
                                 }
