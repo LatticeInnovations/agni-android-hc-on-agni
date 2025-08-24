@@ -341,7 +341,7 @@ internal fun PrescriptionResponseLocal.toPrescriptionEntity(): PrescriptionEntit
         patientId = patientId,
         appointmentId = appointmentId,
         patientFhirId = patientFhirId,
-        prescriptionFhirId = null,
+        prescriptionFhirId = prescriptionFhirId,
         prescriptionType = PrescriptionType.FORM.type
     )
 }

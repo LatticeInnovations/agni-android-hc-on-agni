@@ -11,7 +11,6 @@ import com.heartcare.agni.utils.converters.responseconverter.toListOfPrescriptio
 import com.heartcare.agni.utils.converters.responseconverter.toPrescriptionEntity
 import com.heartcare.agni.utils.converters.responseconverter.toPrescriptionPhotoResponseLocal
 import com.heartcare.agni.utils.converters.responseconverter.toPrescriptionResponseLocal
-import timber.log.Timber
 import javax.inject.Inject
 
 class PrescriptionRepositoryImpl @Inject constructor(
@@ -41,7 +40,6 @@ class PrescriptionRepositoryImpl @Inject constructor(
     }
 
     override suspend fun getLastPrescriptionAndMedicine(patientId: String): List<PrescriptionAndMedicineRelation> {
-        Timber.d("manseeyy db ${prescriptionDao.getPastPrescriptions(patientId)}")
         return prescriptionDao.getPastPrescriptions(patientId)
     }
 

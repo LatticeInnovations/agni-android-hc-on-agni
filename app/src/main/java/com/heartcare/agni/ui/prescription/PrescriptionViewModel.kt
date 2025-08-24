@@ -43,6 +43,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import timber.log.Timber
 import java.util.Date
 import javax.inject.Inject
 
@@ -231,6 +232,7 @@ class PrescriptionViewModel @Inject constructor(
             getAppointment()
             var uuid = UUIDBuilder.generateUUID()
             var fhirId: String? = null
+            Timber.d("manseeyy today prescription $todayPrescription")
             todayPrescription?.let {
                 if (isToday(it.prescriptionEntity.prescriptionDate)) {
                     uuid = it.prescriptionEntity.id
@@ -241,8 +243,18 @@ class PrescriptionViewModel @Inject constructor(
                 }
             }
             inserted(withContext(ioDispatcher) {
-                insertPrescriptionInDB(date, uuid, fhirId, medicationsList).also {
-                    insertGenericEntityInDB(date, uuid, fhirId,  medicationsList)
+                insertPrescriptionInDB(
+                    date = date,
+                    prescriptionUuid = uuid,
+                    prescriptionFhirId = fhirId,
+                    medicationsList = medicationsList
+                ).also {
+                    insertGenericEntityInDB(
+                        date = date,
+                        prescriptionUuid = uuid,
+                        prescriptionFhirId = fhirId,
+                        medicationsList = medicationsList
+                    )
                     dispenseRepository.insertPrescriptionDispenseData(
                         DispensePrescriptionEntity(
                             patientId = patient!!.id,
@@ -299,7 +311,7 @@ class PrescriptionViewModel @Inject constructor(
     private suspend fun insertPrescriptionInDB(
         date: Date,
         prescriptionUuid: String,
-        prescriptionFhirId: String? = null,
+        prescriptionFhirId: String?,
         medicationsList: List<Medication>
     ): Long {
         return prescriptionRepository.insertPrescription(

@@ -390,6 +390,8 @@ private fun doneButtonClick(
     viewModel: FillDetailsViewModel,
     prescriptionViewModel: PrescriptionViewModel
 ) {
+    var medReqUuid = UUIDBuilder.generateUUID()
+    var medReqFhirId: String? = null
     if (prescriptionViewModel.medicationToEdit != null) {
         prescriptionViewModel.selectedMedicationsList =
             prescriptionViewModel.selectedMedicationsList.filter {
@@ -398,6 +400,8 @@ private fun doneButtonClick(
         prescriptionViewModel.medicationsResponseWithMedicationList -= listOf(
             prescriptionViewModel.medicationToEdit!!
         ).toSet()
+        medReqUuid = prescriptionViewModel.medicationToEdit!!.medication.medReqUuid
+        medReqFhirId = prescriptionViewModel.medicationToEdit!!.medication.medReqFhirId
     }
     prescriptionViewModel.selectedMedicationsList += listOf(
         prescriptionViewModel.checkedMedication!!
@@ -416,8 +420,8 @@ private fun doneButtonClick(
                 timing = viewModel.timing,
                 doseForm = viewModel.medDoseForm,
                 medFhirId = viewModel.medFhirId,
-                medReqFhirId = null,
-                medReqUuid = UUIDBuilder.generateUUID(),
+                medReqFhirId = medReqFhirId,
+                medReqUuid = medReqUuid,
                 brandName = viewModel.selectedBrand.ifBlank { null },
                 doseFormCode = null
             )
