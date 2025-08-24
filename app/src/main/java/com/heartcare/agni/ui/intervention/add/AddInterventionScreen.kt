@@ -30,13 +30,15 @@ import androidx.compose.ui.focus.FocusManager
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.heartcare.agni.R
 import com.heartcare.agni.data.server.model.patient.PatientResponse
 import com.heartcare.agni.ui.common.CheckBoxRow
 import com.heartcare.agni.ui.common.CustomDialog
 import com.heartcare.agni.ui.common.ExpandableBottomNavLayout
+import com.heartcare.agni.ui.common.SearchLayout
+import com.heartcare.agni.ui.common.SearchResults
 import com.heartcare.agni.utils.constants.NavControllerConstants.INTERVENTIONS_SAVED
 import com.heartcare.agni.utils.constants.NavControllerConstants.PATIENT
 import kotlinx.coroutines.CoroutineScope
@@ -46,12 +48,12 @@ import kotlinx.coroutines.launch
 @Composable
 fun AddInterventionScreen(
     navController: NavController,
-    viewModel: AddInterventionViewModel = viewModel()
+    viewModel: AddInterventionViewModel = hiltViewModel()
 ) {
     val focusManager = LocalFocusManager.current
     val coroutineScope = rememberCoroutineScope()
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(viewModel.isLaunched) {
         if (!viewModel.isLaunched) {
             navController.previousBackStackEntry?.savedStateHandle
                 ?.get<PatientResponse>(PATIENT)?.let {
@@ -79,6 +81,9 @@ fun AddInterventionScreen(
                     IconButton(
                         onClick = {
                             // search intervention
+                            viewModel.searchQuery = ""
+                            viewModel.isSearching = true
+                            viewModel.getPreviousSearch()
                         }
                     ) {
                         Icon(Icons.Default.Search, contentDescription = "Back")
@@ -115,7 +120,62 @@ fun AddInterventionScreen(
         }
     )
 
+    SearchResults(
+        visible = viewModel.isSearchResult,
+        resultCount = viewModel.interventionsSearchList.size,
+        query = viewModel.searchQuery,
+        onClearClick = {
+            viewModel.isSearchResult = false
+        },
+        onSearchClick = {
+            viewModel.tempSearchQuery = viewModel.searchQuery
+            viewModel.searchQuery = ""
+            viewModel.isSearching = true
+            viewModel.getPreviousSearch()
+        },
+        modifier = Modifier
+            .padding(bottom = 64.dp),
+        content = {
+            viewModel.interventionsSearchList.forEach { intervention ->
+                CheckBoxRow(
+                    isChecked = viewModel.selectedInterventionList.contains(intervention),
+                    onCheckedChange = { checked ->
+                        if (checked) viewModel.selectedInterventionList += listOf(
+                            intervention
+                        )
+                        else viewModel.selectedInterventionList -= listOf(intervention)
+                    },
+                    label = intervention
+                )
+            }
+        }
+    )
+
     InterventionsBottomBar(navController, viewModel, coroutineScope, focusManager)
+
+    SearchLayout(
+        isSearching = viewModel.isSearching,
+        searchQuery = viewModel.searchQuery,
+        previousSearchList = viewModel.previousSearchList,
+        onQueryChange = { viewModel.searchQuery = it },
+        onBack = {
+            viewModel.searchQuery = viewModel.tempSearchQuery
+            viewModel.isSearching = false
+        },
+        onClear = { viewModel.searchQuery = "" },
+        onSearch = { query ->
+            viewModel.isSearching = false
+            viewModel.isSearchResult = true
+            viewModel.insertRecentSearch(query)
+            viewModel.getInterventionsSearchList(query)
+        },
+        onPreviousSearchClick = { query ->
+            viewModel.getInterventionsSearchList(query)
+            viewModel.isSearching = false
+            viewModel.isSearchResult = true
+            viewModel.searchQuery = query
+        }
+    )
 
     if (viewModel.clearAllConfirmDialog) {
         ClearAllConfirmDialog(viewModel)
