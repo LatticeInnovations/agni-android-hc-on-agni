@@ -230,8 +230,8 @@ fun SearchResults(
                             Column(
                                 modifier = Modifier
                                     .verticalScroll(rememberScrollState())
-                                    .padding(8.dp),
-                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                                    .padding(vertical = 12.dp, horizontal = 8.dp),
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
                             ) {
                                 content()
                             }
