@@ -85,10 +85,34 @@ open class GenericRepositoryDatabaseTransactions(
             genericDao.insertGenericEntity(
                 GenericEntity(
                     id = uuid,
-                    patientId = prescriptionResponse.prescriptionId,
+                    patientId = prescriptionResponse.prescriptionId!!,
                     payload = prescriptionResponse.copy(appUpdatedOn = Date()).toJson(),
                     type = GenericTypeEnum.PRESCRIPTION,
                     syncType = SyncType.POST
+                )
+            )[0]
+        }
+    }
+
+    protected suspend fun insertPrescriptionPutGenericEntity(
+        prescriptionFhirId: String,
+        prescriptionResponse: PrescriptionResponse,
+        prescriptionGenericEntity: GenericEntity?,
+        uuid: String
+    ): Long {
+        return if (prescriptionGenericEntity != null) {
+            genericDao.insertGenericEntity(
+                prescriptionGenericEntity.copy(
+                    payload = prescriptionResponse.copy(appUpdatedOn = Date()).toJson()
+                ))[0]
+        } else {
+            genericDao.insertGenericEntity(
+                GenericEntity(
+                    id = uuid,
+                    patientId = prescriptionFhirId,
+                    payload = prescriptionResponse.copy(appUpdatedOn = Date()).toJson(),
+                    type = GenericTypeEnum.PRESCRIPTION,
+                    syncType = SyncType.PUT
                 )
             )[0]
         }

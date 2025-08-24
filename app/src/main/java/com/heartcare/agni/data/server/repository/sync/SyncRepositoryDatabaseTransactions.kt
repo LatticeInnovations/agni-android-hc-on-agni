@@ -389,6 +389,27 @@ open class SyncRepositoryDatabaseTransactions(
         return deleteGenericEntityByListOfIds(idsToDelete.toList())
     }
 
+    protected suspend fun insertMedicationRequestFhirId(
+        listOfGenericEntities: List<GenericEntity>,
+        body: List<CreateResponse>
+    ): Int {
+        val idsToDelete = mutableSetOf<String>()
+        idsToDelete.addAll(listOfGenericEntities.map { genericEntity -> genericEntity.id })
+        body.forEach { createResponse ->
+            if (createResponse.error == null) {
+                createResponse.prescription!!.forEach { prescriptionResponse ->
+                    prescriptionDao.updateMedReqFhirId(
+                        prescriptionResponse.medReqUuid,
+                        prescriptionResponse.medReqFhirId
+                    )
+                }
+            } else {
+                idsToDelete.remove(createResponse.id)
+            }
+        }
+        return deleteGenericEntityByListOfIds(idsToDelete.toList())
+    }
+
     protected suspend fun insertScheduleFhirId(
         listOfGenericEntities: List<GenericEntity>,
         body: List<CreateResponse>

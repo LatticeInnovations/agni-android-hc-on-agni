@@ -1583,6 +1583,37 @@ class SyncRepositoryImpl @Inject constructor(
 
     }
 
+    override suspend fun sendPrescriptionPutData(): ResponseMapper<List<CreateResponse>> {
+        return genericDao.getSameTypeGenericEntityPayload(
+            genericTypeEnum = GenericTypeEnum.PRESCRIPTION, syncType = SyncType.PUT
+        ).let { listOfGenericEntity ->
+            if (listOfGenericEntity.isEmpty()) ApiEmptyResponse()
+            else {
+                ApiResponseConverter.convert(
+                    prescriptionApiService.sendPrescriptionPut(
+                        listOfGenericEntity.map { prescriptionGenericEntity ->
+                            prescriptionGenericEntity.payload.fromJson<LinkedTreeMap<*, *>>()
+                                .mapToObject(PrescriptionResponse::class.java)!!
+                        }
+                    )
+                ).run {
+                    when (this) {
+                        is ApiEndResponse -> {
+                            insertMedicationRequestFhirId(
+                                listOfGenericEntity,
+                                body
+                            ).let {
+                                if (it > 0) sendPrescriptionPutData() else this
+                            }
+                        }
+
+                        else -> this
+                    }
+                }
+            }
+        }
+    }
+
     override suspend fun deletePrescriptionPhoto(): ResponseMapper<List<CreateResponse>> {
         return genericDao.getSameTypeGenericEntityPayload(
             genericTypeEnum = GenericTypeEnum.PRESCRIPTION_PHOTO_RESPONSE,

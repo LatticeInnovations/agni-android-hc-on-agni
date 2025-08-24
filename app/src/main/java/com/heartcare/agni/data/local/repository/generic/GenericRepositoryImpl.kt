@@ -88,7 +88,7 @@ class GenericRepositoryImpl @Inject constructor(
         uuid: String
     ): Long {
         return genericDao.getGenericEntityById(
-            patientId = prescriptionResponse.prescriptionId,
+            patientId = prescriptionResponse.prescriptionId!!,
             genericTypeEnum = GenericTypeEnum.PRESCRIPTION,
             syncType = SyncType.POST
         ).let { prescriptionGenericEntity ->
@@ -555,6 +555,20 @@ class GenericRepositoryImpl @Inject constructor(
             syncType = SyncType.POST
         ).let { immunizationGenericEntity ->
             insertImmunizationGenericEntity(immunizationResponse, immunizationGenericEntity, uuid)
+        }
+    }
+
+    override suspend fun insertOrUpdatePrescriptionPut(
+        prescriptionFhirId: String,
+        prescriptionResponse: PrescriptionResponse,
+        uuid: String
+    ): Long {
+        return genericDao.getGenericEntityById(
+            patientId = prescriptionFhirId,
+            genericTypeEnum = GenericTypeEnum.PRESCRIPTION,
+            syncType = SyncType.PUT
+        ).let { prescriptionGenericEntity ->
+            insertPrescriptionPutGenericEntity(prescriptionFhirId, prescriptionResponse, prescriptionGenericEntity, uuid)
         }
     }
 }

@@ -242,7 +242,7 @@ class PrescriptionViewModel @Inject constructor(
             }
             inserted(withContext(ioDispatcher) {
                 insertPrescriptionInDB(date, uuid, fhirId, medicationsList).also {
-                    insertGenericEntityInDB(date, uuid, medicationsList)
+                    insertGenericEntityInDB(date, uuid, fhirId,  medicationsList)
                     dispenseRepository.insertPrescriptionDispenseData(
                         DispensePrescriptionEntity(
                             patientId = patient!!.id,
@@ -335,28 +335,39 @@ class PrescriptionViewModel @Inject constructor(
     private suspend fun insertGenericEntityInDB(
         date: Date,
         prescriptionUuid: String,
+        prescriptionFhirId: String?,
         medicationsList: List<Medication>
     ): Long {
-        return genericRepository.insertPrescription(
-            PrescriptionResponse(
-                patientFhirId = patient!!.fhirId ?: patient!!.id,
-                generatedOn = date,
-                prescriptionId = prescriptionUuid,
-                prescription = medicationsList.map { medication ->
-                    medication.copy(
-                        timing = timingList.await()
-                            .find { timing -> timing.medicalDosage == medication.timing }?.medicalDosageId,
-                        medReqFhirId = null,
-                        doseFormCode = null
-                    )
-                },
-                prescriptionFhirId = null,
-                appointmentUuid = null,
-                appointmentId = appointmentResponseLocal!!.appointmentId
-                    ?: appointmentResponseLocal!!.uuid,
-                appUpdatedOn = Date()
-            )
+        val prescriptionResponse = PrescriptionResponse(
+            patientFhirId = patient!!.fhirId ?: patient!!.id,
+            generatedOn = date,
+            prescriptionId = prescriptionUuid,
+            prescription = medicationsList.map { medication ->
+                medication.copy(
+                    timing = timingList.await()
+                        .find { timing -> timing.medicalDosage == medication.timing }?.medicalDosageId,
+                    medReqFhirId = null,
+                    doseFormCode = null,
+                    brandName = medication.brandName?.ifBlank { null },
+                    note = medication.note?.ifBlank { null }
+                )
+            },
+            prescriptionFhirId = prescriptionFhirId,
+            appointmentUuid = null,
+            appointmentId = appointmentResponseLocal!!.appointmentId
+                ?: appointmentResponseLocal!!.uuid,
+            appUpdatedOn = Date()
         )
+        return if (prescriptionFhirId == null) {
+            genericRepository.insertPrescription(prescriptionResponse)
+        } else {
+            genericRepository.insertOrUpdatePrescriptionPut(
+                prescriptionFhirId = prescriptionFhirId,
+                prescriptionResponse = prescriptionResponse.copy(
+                    prescriptionId = null
+                )
+            )
+        }
     }
 
     internal fun addPatientToQueue(

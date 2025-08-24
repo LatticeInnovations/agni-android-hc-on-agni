@@ -54,6 +54,9 @@ class SyncService(
                         patchPatient(logout)
                     },
                     async {
+                        patchPrescription(logout)
+                    },
+                    async {
                         uploadPatientLastUpdatedData(logout)
                     },
                     async {
@@ -349,7 +352,7 @@ class SyncService(
     internal suspend fun patchPrescription(logout: (Boolean, String) -> Unit) {
         coroutineScope {
             prescriptionPatchJob = async {
-                checkAuthenticationStatus(syncRepository.sendPrescriptionPhotoPatchData(), logout)
+                checkAuthenticationStatus(syncRepository.sendPrescriptionPutData(), logout)
             }
         }
     }
@@ -435,7 +438,8 @@ class SyncService(
             awaitAll(
                 async {
                     checkAuthenticationStatus(syncRepository.getAndInsertAppointment(0), logout)
-                }
+                },
+                prescriptionPatchJob
             ).all { responseMapper ->
                 responseMapper is ApiEmptyResponse || responseMapper is ApiEndResponse
             }.apply {

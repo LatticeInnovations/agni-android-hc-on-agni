@@ -11,7 +11,7 @@ data class PrescriptionResponse(
     val generatedOn: Date,
     val appointmentUuid: String?,
     val appointmentId: String,
-    val prescriptionId: String,
+    val prescriptionId: String?,
     val prescriptionFhirId: String?,
     val prescription: List<Medication>,
     val appUpdatedOn: Date?
