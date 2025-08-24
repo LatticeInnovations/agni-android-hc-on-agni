@@ -225,7 +225,12 @@ fun PrescriptionScreen(
                             userScrollEnabled = viewModel.canAddAssessment
                         ) { index ->
                             when (index) {
-                                0 -> PreviousPrescriptionsScreen(snackbarHostState, coroutineScope, pagerState)
+                                0 -> PreviousPrescriptionsScreen(
+                                    snackbarHostState,
+                                    coroutineScope,
+                                    pagerState
+                                )
+
                                 1 -> QuickSelectScreen()
                             }
                         }
@@ -303,7 +308,7 @@ fun PrescriptionScreen(
         }
         Box(
             modifier =
-                if (!(viewModel.bottomNavExpanded && viewModel.selectedMedicationsList.isNotEmpty())) Modifier
+                if (!viewModel.bottomNavExpanded) Modifier
                     .matchParentSize()
                     .background(MaterialTheme.colorScheme.outline.copy(alpha = 0f))
                 else Modifier
@@ -399,7 +404,7 @@ fun BottomNavLayout(
         label = "Rotation state of expand icon button",
     )
     AnimatedVisibility(
-        visible = viewModel.medicationsResponseWithMedicationList.isNotEmpty() && pagerState.currentPage == 1,
+        visible = pagerState.currentPage == 1,
         enter = expandVertically(),
         exit = shrinkVertically()
     ) {
@@ -465,31 +470,33 @@ fun BottomNavLayout(
                         .padding(10.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Row(
-                        Modifier
-                            .weight(1f)
-                            .clickable(
-                                interactionSource = remember { MutableInteractionSource() },
-                                indication = null
-                            ) {
-                                viewModel.bottomNavExpanded = !viewModel.bottomNavExpanded
-                            },
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceEvenly
-                    ) {
-                        Text(
-                            text = "${viewModel.selectedMedicationsList.size} medication",
-                            style = MaterialTheme.typography.labelLarge,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.testTag("MEDICATION_TEXT")
-                        )
-                        Icon(
-                            Icons.Default.KeyboardArrowUp,
-                            contentDescription = "ARROW_UP",
-                            modifier = Modifier.rotate(rotationState)
-                        )
+                    AnimatedVisibility(visible = viewModel.selectedMedicationsList.isNotEmpty()) {
+                        Row(
+                            Modifier
+                                .fillMaxWidth(0.5f)
+                                .clickable(
+                                    interactionSource = remember { MutableInteractionSource() },
+                                    indication = null
+                                ) {
+                                    viewModel.bottomNavExpanded = !viewModel.bottomNavExpanded
+                                },
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceEvenly
+                        ) {
+                            Text(
+                                text = "${viewModel.selectedMedicationsList.size} medication",
+                                style = MaterialTheme.typography.labelLarge,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.testTag("MEDICATION_TEXT")
+                            )
+                            Icon(
+                                Icons.Default.KeyboardArrowUp,
+                                contentDescription = "ARROW_UP",
+                                modifier = Modifier.rotate(rotationState)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(15.dp))
                     }
-                    Spacer(modifier = Modifier.width(15.dp))
                     Button(
                         onClick = {
                             // add medications to prescriptions
