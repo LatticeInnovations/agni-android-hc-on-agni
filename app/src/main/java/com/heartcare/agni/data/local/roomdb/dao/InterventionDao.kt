@@ -29,4 +29,10 @@ interface InterventionDao {
     @Transaction
     @Query("SELECT * FROM InterventionEntity WHERE patientId=:patientId ORDER BY appUpdatedDate DESC")
     suspend fun getInterventions(patientId: String): List<InterventionEntity>
+
+    @Query("UPDATE InterventionEntity SET fhirId = :fhirId WHERE uuid = :id")
+    suspend fun updateFhirId(id: String, fhirId: String): Int
+
+    @Query("DELETE FROM InterventionEntity WHERE uuid=:id")
+    suspend fun deleteIntervention(id: String): Int
 }
