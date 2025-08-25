@@ -84,7 +84,6 @@ import com.heartcare.agni.utils.constants.NavControllerConstants.PATIENT
 import com.heartcare.agni.utils.converters.responseconverter.medication.MedicationInfoConverter.getMedInfo
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import timber.log.Timber
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -183,7 +182,6 @@ fun PrescriptionScreen(
                             viewModel.tabs,
                             pagerState
                         ) { index ->
-                            Timber.d("manseeyy index $index")
                             if (index == 1) {
                                 viewModel.getAppointmentInfo(
                                     callback = {
@@ -197,6 +195,7 @@ fun PrescriptionScreen(
                                             }
 
                                             viewModel.canAddAssessment -> {
+                                                viewModel.setTodayData()
                                                 coroutineScope.launch {
                                                     pagerState.animateScrollToPage(
                                                         index
