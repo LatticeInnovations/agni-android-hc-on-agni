@@ -1,6 +1,7 @@
 package com.heartcare.agni.data.server.api
 
 import com.heartcare.agni.base.server.BaseResponse
+import com.heartcare.agni.data.server.constants.EndPoints.MEDICATION_REQUEST
 import com.heartcare.agni.data.server.model.create.CreateResponse
 import com.heartcare.agni.data.server.model.prescription.medication.MedicationResponse
 import com.heartcare.agni.data.server.model.prescription.medication.MedicineTimeResponse
@@ -12,6 +13,7 @@ import retrofit2.http.GET
 import retrofit2.http.HTTP
 import retrofit2.http.PATCH
 import retrofit2.http.POST
+import retrofit2.http.PUT
 import retrofit2.http.Path
 import retrofit2.http.QueryMap
 
@@ -41,4 +43,7 @@ interface PrescriptionApiService {
 
     @HTTP(method = "DELETE", path = "PrescriptionFile", hasBody = true)
     suspend fun deletePrescriptionPhoto(@Body patchLogs: List<Any>): Response<BaseResponse<List<CreateResponse>>>
+
+    @PUT(MEDICATION_REQUEST)
+    suspend fun sendPrescriptionPut(@Body prescriptionResponses: List<PrescriptionResponse>): Response<BaseResponse<List<CreateResponse>>>
 }

@@ -89,6 +89,7 @@ interface SyncRepository {
     suspend fun sendSymptomsAndDiagnosisPatchData(): ResponseMapper<List<CreateResponse>>
     suspend fun sendLabTestPatchData(): ResponseMapper<List<CreateResponse>>
     suspend fun sendMedRecordPatchData(): ResponseMapper<List<CreateResponse>>
+    suspend fun sendPrescriptionPutData(): ResponseMapper<List<CreateResponse>>
 
     //DELETE
     suspend fun deletePrescriptionPhoto(): ResponseMapper<List<CreateResponse>>

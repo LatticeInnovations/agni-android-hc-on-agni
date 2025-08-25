@@ -155,66 +155,75 @@ fun PrescriptionCard(
                         thickness = 1.dp,
                         color = MaterialTheme.colorScheme.outlineVariant
                     )
-                    prescription.prescriptionDirectionAndMedicineView.forEach { directionAndMedication ->
-                        MedicineDetails(
-                            medName = directionAndMedication.medicationEntity.medName,
-                            brandName = directionAndMedication.prescriptionDirectionsEntity.brandName,
-                            details = getMedInfo(
-                                duration = directionAndMedication.prescriptionDirectionsEntity.duration,
-                                frequency = directionAndMedication.prescriptionDirectionsEntity.frequency,
-                                medUnit = directionAndMedication.medicationEntity.medUnit,
-                                timing = directionAndMedication.prescriptionDirectionsEntity.timing,
-                                note = directionAndMedication.prescriptionDirectionsEntity.note,
-                                qtyPerDose = directionAndMedication.prescriptionDirectionsEntity.qtyPerDose,
-                                qtyPrescribed = directionAndMedication.prescriptionDirectionsEntity.qtyPrescribed,
-                                context = context
-                            )
+                    if (prescription.prescriptionDirectionAndMedicineView.isEmpty()) {
+                        Text(
+                            text = stringResource(R.string.dash),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
-                    }
-                    if (isLatest) {
-                        TextButton(
-                            onClick = {
-                                // re prescribe
-                                viewModel.getAppointmentInfo(
-                                    callback = {
-                                        when {
-                                            viewModel.existsInOtherHospital -> {
-                                                coroutineScope.launch {
-                                                    snackBarHostState.showSnackbar(
-                                                        message = context.getString(R.string.appointment_exists_in_other_hospital)
+                    } else {
+                        prescription.prescriptionDirectionAndMedicineView.forEach { directionAndMedication ->
+                            MedicineDetails(
+                                medName = directionAndMedication.medicationEntity.medName,
+                                brandName = directionAndMedication.prescriptionDirectionsEntity.brandName,
+                                details = getMedInfo(
+                                    duration = directionAndMedication.prescriptionDirectionsEntity.duration,
+                                    frequency = directionAndMedication.prescriptionDirectionsEntity.frequency,
+                                    medUnit = directionAndMedication.medicationEntity.medUnit,
+                                    timing = directionAndMedication.prescriptionDirectionsEntity.timing,
+                                    note = directionAndMedication.prescriptionDirectionsEntity.note,
+                                    qtyPerDose = directionAndMedication.prescriptionDirectionsEntity.qtyPerDose,
+                                    qtyPrescribed = directionAndMedication.prescriptionDirectionsEntity.qtyPrescribed,
+                                    context = context
+                                )
+                            )
+                        }
+                        if (isLatest) {
+                            TextButton(
+                                onClick = {
+                                    // re prescribe
+                                    viewModel.getAppointmentInfo(
+                                        callback = {
+                                            when {
+                                                viewModel.existsInOtherHospital -> {
+                                                    coroutineScope.launch {
+                                                        snackBarHostState.showSnackbar(
+                                                            message = context.getString(R.string.appointment_exists_in_other_hospital)
+                                                        )
+                                                    }
+                                                }
+
+                                                viewModel.canAddAssessment -> {
+                                                    saveRePrescription(
+                                                        context,
+                                                        viewModel,
+                                                        prescription,
+                                                        coroutineScope,
+                                                        snackBarHostState,
+                                                        pagerState
                                                     )
                                                 }
-                                            }
 
-                                            viewModel.canAddAssessment -> {
-                                                saveRePrescription(
-                                                    context,
-                                                    viewModel,
-                                                    prescription,
-                                                    coroutineScope,
-                                                    snackBarHostState,
-                                                    pagerState
-                                                )
-                                            }
+                                                viewModel.isAppointmentCompleted -> {
+                                                    viewModel.showAppointmentCompletedDialog = true
+                                                }
 
-                                            viewModel.isAppointmentCompleted -> {
-                                                viewModel.showAppointmentCompletedDialog = true
-                                            }
-
-                                            else -> {
-                                                viewModel.isReprescribing = true
-                                                viewModel.represcribingPrescription = prescription
-                                                viewModel.showAddToQueueDialog = true
+                                                else -> {
+                                                    viewModel.isReprescribing = true
+                                                    viewModel.represcribingPrescription =
+                                                        prescription
+                                                    viewModel.showAddToQueueDialog = true
+                                                }
                                             }
                                         }
-                                    }
-                                )
-                            },
-                            modifier = Modifier
-                                .align(Alignment.End)
-                                .testTag("RE_PRESCRIBE_BTN")
-                        ) {
-                            Text(text = stringResource(R.string.re_precribe))
+                                    )
+                                },
+                                modifier = Modifier
+                                    .align(Alignment.End)
+                                    .testTag("RE_PRESCRIBE_BTN")
+                            ) {
+                                Text(text = stringResource(R.string.re_precribe))
+                            }
                         }
                     }
                 }

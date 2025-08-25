@@ -84,7 +84,6 @@ import com.heartcare.agni.utils.constants.NavControllerConstants.PATIENT
 import com.heartcare.agni.utils.converters.responseconverter.medication.MedicationInfoConverter.getMedInfo
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import timber.log.Timber
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -183,7 +182,6 @@ fun PrescriptionScreen(
                             viewModel.tabs,
                             pagerState
                         ) { index ->
-                            Timber.d("manseeyy index $index")
                             if (index == 1) {
                                 viewModel.getAppointmentInfo(
                                     callback = {
@@ -197,6 +195,7 @@ fun PrescriptionScreen(
                                             }
 
                                             viewModel.canAddAssessment -> {
+                                                viewModel.setTodayData()
                                                 coroutineScope.launch {
                                                     pagerState.animateScrollToPage(
                                                         index
@@ -225,7 +224,12 @@ fun PrescriptionScreen(
                             userScrollEnabled = viewModel.canAddAssessment
                         ) { index ->
                             when (index) {
-                                0 -> PreviousPrescriptionsScreen(snackbarHostState, coroutineScope, pagerState)
+                                0 -> PreviousPrescriptionsScreen(
+                                    snackbarHostState,
+                                    coroutineScope,
+                                    pagerState
+                                )
+
                                 1 -> QuickSelectScreen()
                             }
                         }
@@ -303,7 +307,7 @@ fun PrescriptionScreen(
         }
         Box(
             modifier =
-                if (!(viewModel.bottomNavExpanded && viewModel.selectedMedicationsList.isNotEmpty())) Modifier
+                if (!viewModel.bottomNavExpanded) Modifier
                     .matchParentSize()
                     .background(MaterialTheme.colorScheme.outline.copy(alpha = 0f))
                 else Modifier
@@ -399,7 +403,7 @@ fun BottomNavLayout(
         label = "Rotation state of expand icon button",
     )
     AnimatedVisibility(
-        visible = viewModel.medicationsResponseWithMedicationList.isNotEmpty() && pagerState.currentPage == 1,
+        visible = pagerState.currentPage == 1,
         enter = expandVertically(),
         exit = shrinkVertically()
     ) {
@@ -465,31 +469,33 @@ fun BottomNavLayout(
                         .padding(10.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Row(
-                        Modifier
-                            .weight(1f)
-                            .clickable(
-                                interactionSource = remember { MutableInteractionSource() },
-                                indication = null
-                            ) {
-                                viewModel.bottomNavExpanded = !viewModel.bottomNavExpanded
-                            },
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceEvenly
-                    ) {
-                        Text(
-                            text = "${viewModel.selectedMedicationsList.size} medication",
-                            style = MaterialTheme.typography.labelLarge,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.testTag("MEDICATION_TEXT")
-                        )
-                        Icon(
-                            Icons.Default.KeyboardArrowUp,
-                            contentDescription = "ARROW_UP",
-                            modifier = Modifier.rotate(rotationState)
-                        )
+                    AnimatedVisibility(visible = viewModel.selectedMedicationsList.isNotEmpty()) {
+                        Row(
+                            Modifier
+                                .fillMaxWidth(0.5f)
+                                .clickable(
+                                    interactionSource = remember { MutableInteractionSource() },
+                                    indication = null
+                                ) {
+                                    viewModel.bottomNavExpanded = !viewModel.bottomNavExpanded
+                                },
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceEvenly
+                        ) {
+                            Text(
+                                text = "${viewModel.selectedMedicationsList.size} medication",
+                                style = MaterialTheme.typography.labelLarge,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.testTag("MEDICATION_TEXT")
+                            )
+                            Icon(
+                                Icons.Default.KeyboardArrowUp,
+                                contentDescription = "ARROW_UP",
+                                modifier = Modifier.rotate(rotationState)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(15.dp))
                     }
-                    Spacer(modifier = Modifier.width(15.dp))
                     Button(
                         onClick = {
                             // add medications to prescriptions

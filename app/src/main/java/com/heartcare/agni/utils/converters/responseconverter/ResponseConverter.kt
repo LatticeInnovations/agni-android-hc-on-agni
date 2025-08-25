@@ -308,7 +308,7 @@ internal suspend fun PrescriptionResponse.toPrescriptionEntity(
     patientDao: PatientDao,
 ): PrescriptionEntity {
     return PrescriptionEntity(
-        id = prescriptionId,
+        id = prescriptionId!!,
         prescriptionDate = generatedOn,
         patientId = patientDao.getPatientIdByFhirId(patientFhirId)!!,
         appointmentId = appointmentUuid!!,
@@ -341,7 +341,7 @@ internal fun PrescriptionResponseLocal.toPrescriptionEntity(): PrescriptionEntit
         patientId = patientId,
         appointmentId = appointmentId,
         patientFhirId = patientFhirId,
-        prescriptionFhirId = null,
+        prescriptionFhirId = prescriptionFhirId,
         prescriptionType = PrescriptionType.FORM.type
     )
 }
@@ -373,7 +373,7 @@ internal suspend fun PrescriptionResponse.toListOfPrescriptionDirectionsEntity(m
             duration = medication.duration,
             qtyPrescribed = medication.qtyPrescribed,
             note = medication.note,
-            prescriptionId = prescriptionId,
+            prescriptionId = prescriptionId!!,
             medReqFhirId = medication.medReqFhirId,
             brandName = medication.brandName,
             doseFormCode = medication.doseFormCode,

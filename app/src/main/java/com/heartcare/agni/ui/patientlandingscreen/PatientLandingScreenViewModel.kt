@@ -78,6 +78,7 @@ class PatientLandingScreenViewModel @Inject constructor(
     internal fun downloadPrescriptions(patientFhirId: String) {
         if (CheckNetwork.isInternetAvailable(getApplication<FhirApp>().applicationContext)) {
             viewModelScope.launch(ioDispatcher) {
+                syncService.patchPrescription { _, _ -> }
                 syncService.downloadFormPrescription(patientFhirId) { _, _ -> }
                 syncData()
             }

@@ -43,6 +43,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import timber.log.Timber
 import java.util.Date
 import javax.inject.Inject
 
@@ -109,32 +110,36 @@ class PrescriptionViewModel @Inject constructor(
                 prescriptionRepository.getLastPrescriptionAndMedicine(patientId)
             todayPrescription =
                 previousPrescriptionList.firstOrNull { isToday(it.prescriptionEntity.prescriptionDate) }
-            todayPrescription?.let { prescription ->
-                selectedMedicationsList =
-                    prescription.prescriptionDirectionAndMedicineView.map { it.medicationEntity.toMedicationResponse() }
-                medicationsResponseWithMedicationList =
-                    prescription.prescriptionDirectionAndMedicineView.map {
-                        MedicationResponseWithMedication(
-                            activeIngredient = it.medicationEntity.activeIngredient,
-                            medName = it.medicationEntity.medName,
-                            medUnit = it.medicationEntity.medUnit,
-                            medication = Medication(
-                                medReqUuid = it.prescriptionDirectionsEntity.id,
-                                medReqFhirId = it.prescriptionDirectionsEntity.medReqFhirId,
-                                doseForm = it.prescriptionDirectionsEntity.doseForm,
-                                duration = it.prescriptionDirectionsEntity.duration,
-                                frequency = it.prescriptionDirectionsEntity.frequency,
-                                medFhirId = it.prescriptionDirectionsEntity.medFhirId,
-                                note = it.prescriptionDirectionsEntity.note ?: "",
-                                qtyPerDose = it.prescriptionDirectionsEntity.qtyPerDose,
-                                qtyPrescribed = it.prescriptionDirectionsEntity.qtyPrescribed,
-                                timing = it.prescriptionDirectionsEntity.timing,
-                                brandName = it.prescriptionDirectionsEntity.brandName ?: "",
-                                doseFormCode = it.prescriptionDirectionsEntity.doseFormCode
-                            )
+            setTodayData()
+        }
+    }
+
+    fun setTodayData() {
+        todayPrescription?.let { prescription ->
+            selectedMedicationsList =
+                prescription.prescriptionDirectionAndMedicineView.map { it.medicationEntity.toMedicationResponse() }
+            medicationsResponseWithMedicationList =
+                prescription.prescriptionDirectionAndMedicineView.map {
+                    MedicationResponseWithMedication(
+                        activeIngredient = it.medicationEntity.activeIngredient,
+                        medName = it.medicationEntity.medName,
+                        medUnit = it.medicationEntity.medUnit,
+                        medication = Medication(
+                            medReqUuid = it.prescriptionDirectionsEntity.id,
+                            medReqFhirId = it.prescriptionDirectionsEntity.medReqFhirId,
+                            doseForm = it.prescriptionDirectionsEntity.doseForm,
+                            duration = it.prescriptionDirectionsEntity.duration,
+                            frequency = it.prescriptionDirectionsEntity.frequency,
+                            medFhirId = it.prescriptionDirectionsEntity.medFhirId,
+                            note = it.prescriptionDirectionsEntity.note ?: "",
+                            qtyPerDose = it.prescriptionDirectionsEntity.qtyPerDose,
+                            qtyPrescribed = it.prescriptionDirectionsEntity.qtyPrescribed,
+                            timing = it.prescriptionDirectionsEntity.timing,
+                            brandName = it.prescriptionDirectionsEntity.brandName ?: "",
+                            doseFormCode = it.prescriptionDirectionsEntity.doseFormCode
                         )
-                    }
-            }
+                    )
+                }
         }
     }
 
@@ -231,6 +236,7 @@ class PrescriptionViewModel @Inject constructor(
             getAppointment()
             var uuid = UUIDBuilder.generateUUID()
             var fhirId: String? = null
+            Timber.d("manseeyy today prescription $todayPrescription")
             todayPrescription?.let {
                 if (isToday(it.prescriptionEntity.prescriptionDate)) {
                     uuid = it.prescriptionEntity.id
@@ -241,8 +247,18 @@ class PrescriptionViewModel @Inject constructor(
                 }
             }
             inserted(withContext(ioDispatcher) {
-                insertPrescriptionInDB(date, uuid, fhirId, medicationsList).also {
-                    insertGenericEntityInDB(date, uuid, medicationsList)
+                insertPrescriptionInDB(
+                    date = date,
+                    prescriptionUuid = uuid,
+                    prescriptionFhirId = fhirId,
+                    medicationsList = medicationsList
+                ).also {
+                    insertGenericEntityInDB(
+                        date = date,
+                        prescriptionUuid = uuid,
+                        prescriptionFhirId = fhirId,
+                        medicationsList = medicationsList
+                    )
                     dispenseRepository.insertPrescriptionDispenseData(
                         DispensePrescriptionEntity(
                             patientId = patient!!.id,
@@ -299,7 +315,7 @@ class PrescriptionViewModel @Inject constructor(
     private suspend fun insertPrescriptionInDB(
         date: Date,
         prescriptionUuid: String,
-        prescriptionFhirId: String? = null,
+        prescriptionFhirId: String?,
         medicationsList: List<Medication>
     ): Long {
         return prescriptionRepository.insertPrescription(
@@ -335,28 +351,39 @@ class PrescriptionViewModel @Inject constructor(
     private suspend fun insertGenericEntityInDB(
         date: Date,
         prescriptionUuid: String,
+        prescriptionFhirId: String?,
         medicationsList: List<Medication>
     ): Long {
-        return genericRepository.insertPrescription(
-            PrescriptionResponse(
-                patientFhirId = patient!!.fhirId ?: patient!!.id,
-                generatedOn = date,
-                prescriptionId = prescriptionUuid,
-                prescription = medicationsList.map { medication ->
-                    medication.copy(
-                        timing = timingList.await()
-                            .find { timing -> timing.medicalDosage == medication.timing }?.medicalDosageId,
-                        medReqFhirId = null,
-                        doseFormCode = null
-                    )
-                },
-                prescriptionFhirId = null,
-                appointmentUuid = null,
-                appointmentId = appointmentResponseLocal!!.appointmentId
-                    ?: appointmentResponseLocal!!.uuid,
-                appUpdatedOn = Date()
-            )
+        val prescriptionResponse = PrescriptionResponse(
+            patientFhirId = patient!!.fhirId ?: patient!!.id,
+            generatedOn = date,
+            prescriptionId = prescriptionUuid,
+            prescription = medicationsList.map { medication ->
+                medication.copy(
+                    timing = timingList.await()
+                        .find { timing -> timing.medicalDosage == medication.timing }?.medicalDosageId,
+                    medReqFhirId = null,
+                    doseFormCode = null,
+                    brandName = medication.brandName?.ifBlank { null },
+                    note = medication.note?.ifBlank { null }
+                )
+            },
+            prescriptionFhirId = prescriptionFhirId,
+            appointmentUuid = null,
+            appointmentId = appointmentResponseLocal!!.appointmentId
+                ?: appointmentResponseLocal!!.uuid,
+            appUpdatedOn = Date()
         )
+        return if (prescriptionFhirId == null) {
+            genericRepository.insertPrescription(prescriptionResponse)
+        } else {
+            genericRepository.insertOrUpdatePrescriptionPut(
+                prescriptionFhirId = prescriptionFhirId,
+                prescriptionResponse = prescriptionResponse.copy(
+                    prescriptionId = null
+                )
+            )
+        }
     }
 
     internal fun addPatientToQueue(

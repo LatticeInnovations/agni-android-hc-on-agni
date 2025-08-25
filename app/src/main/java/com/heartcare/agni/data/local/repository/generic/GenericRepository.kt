@@ -192,4 +192,10 @@ interface GenericRepository {
         immunizationResponse: ImmunizationResponse,
         uuid: String = UUIDBuilder.generateUUID()
     ): Long
+
+    suspend fun insertOrUpdatePrescriptionPut(
+        prescriptionFhirId: String,
+        prescriptionResponse: PrescriptionResponse,
+        uuid: String = UUIDBuilder.generateUUID()
+    ): Long
 }
