@@ -70,6 +70,9 @@ class SyncService(
                     },
                     async {
                         downloadMedication(logout)
+                    },
+                    async {
+                        downloadInterventionMasterList(logout)
                     }
                 )
             }
@@ -511,6 +514,11 @@ class SyncService(
     /** Download Medication */
     internal suspend fun downloadMedication(logout: (Boolean, String) -> Unit) {
         checkAuthenticationStatus(syncRepository.getAndInsertMedication(0), logout)
+    }
+
+    /** Download Intervention Master */
+    internal suspend fun downloadInterventionMasterList(logout: (Boolean, String) -> Unit) {
+        checkAuthenticationStatus(syncRepository.getAndInsertInterventionMaster(0), logout)
     }
 
     /** Download Medication Timing */

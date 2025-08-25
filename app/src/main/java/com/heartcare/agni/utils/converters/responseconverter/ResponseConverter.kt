@@ -27,6 +27,7 @@ import com.heartcare.agni.data.local.roomdb.entities.dispense.MedicineDispenseLi
 import com.heartcare.agni.data.local.roomdb.entities.family.FamilyHistoryEntity
 import com.heartcare.agni.data.local.roomdb.entities.generic.GenericEntity
 import com.heartcare.agni.data.local.roomdb.entities.historymedication.HistoryMedicationEntity
+import com.heartcare.agni.data.local.roomdb.entities.intervention.InterventionMasterEntity
 import com.heartcare.agni.data.local.roomdb.entities.labtestandmedrecord.LabTestAndMedEntity
 import com.heartcare.agni.data.local.roomdb.entities.labtestandmedrecord.photo.LabTestAndFileEntity
 import com.heartcare.agni.data.local.roomdb.entities.labtestandmedrecord.photo.LabTestAndMedPhotoEntity
@@ -73,6 +74,7 @@ import com.heartcare.agni.data.server.model.dispense.response.DispenseData
 import com.heartcare.agni.data.server.model.dispense.response.MedicineDispenseResponse
 import com.heartcare.agni.data.server.model.family.FamilyHistoryResponse
 import com.heartcare.agni.data.server.model.historymedication.HistoryMedicationResponse
+import com.heartcare.agni.data.server.model.intervention.InterventionMasterResponse
 import com.heartcare.agni.data.server.model.labormed.labtest.DiagnosticReport
 import com.heartcare.agni.data.server.model.labormed.labtest.LabTestResponse
 import com.heartcare.agni.data.server.model.labormed.medicalrecord.MedicalRecord
@@ -1685,5 +1687,25 @@ internal fun TobaccoCessationEntity.toTobaccoCessationResponse(): TobaccoCessati
         dateOfPlan = dateOfPlan,
         pharmacotherapy = pharmacotherapy,
         planStatus = planStatus
+    )
+}
+
+fun InterventionMasterResponse.toInterventionMasterEntity(): InterventionMasterEntity {
+    return InterventionMasterEntity(
+        fhirId = fhirId,
+        code = code,
+        name = name,
+        secondaryName = secondaryName,
+        status = status
+    )
+}
+
+fun InterventionMasterEntity.toInterventionMasterResponse(): InterventionMasterResponse {
+    return InterventionMasterResponse(
+        fhirId = fhirId,
+        code = code,
+        name = name,
+        secondaryName = secondaryName,
+        status = status
     )
 }

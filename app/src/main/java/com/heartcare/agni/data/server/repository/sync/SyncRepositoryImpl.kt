@@ -14,6 +14,7 @@ import com.heartcare.agni.data.local.roomdb.dao.FamilyHistoryDao
 import com.heartcare.agni.data.local.roomdb.dao.FileUploadDao
 import com.heartcare.agni.data.local.roomdb.dao.GenericDao
 import com.heartcare.agni.data.local.roomdb.dao.HistoryMedicationDao
+import com.heartcare.agni.data.local.roomdb.dao.InterventionDao
 import com.heartcare.agni.data.local.roomdb.dao.LabTestAndMedDao
 import com.heartcare.agni.data.local.roomdb.dao.LevelsDao
 import com.heartcare.agni.data.local.roomdb.dao.MedicationDao
@@ -34,6 +35,7 @@ import com.heartcare.agni.data.local.roomdb.dao.vaccincation.ManufacturerDao
 import com.heartcare.agni.data.server.api.CVDApiService
 import com.heartcare.agni.data.server.api.DispenseApiService
 import com.heartcare.agni.data.server.api.HistoryAndTestsApiService
+import com.heartcare.agni.data.server.api.InterventionApiService
 import com.heartcare.agni.data.server.api.LabTestAndMedRecordService
 import com.heartcare.agni.data.server.api.LevelsApiService
 import com.heartcare.agni.data.server.api.PatientApiService
@@ -68,6 +70,7 @@ import com.heartcare.agni.data.server.model.dispense.response.DispenseData
 import com.heartcare.agni.data.server.model.dispense.response.MedicineDispenseResponse
 import com.heartcare.agni.data.server.model.family.FamilyHistoryResponse
 import com.heartcare.agni.data.server.model.historymedication.HistoryMedicationResponse
+import com.heartcare.agni.data.server.model.intervention.InterventionMasterResponse
 import com.heartcare.agni.data.server.model.labormed.labtest.LabTestResponse
 import com.heartcare.agni.data.server.model.labormed.medicalrecord.MedicalRecordResponse
 import com.heartcare.agni.data.server.model.levels.LevelResponse
@@ -115,6 +118,7 @@ class SyncRepositoryImpl @Inject constructor(
     private val vaccinationApiService: VaccinationApiService,
     private val levelsApiService: LevelsApiService,
     private val historyAndTestsApiService: HistoryAndTestsApiService,
+    private val interventionApiService: InterventionApiService,
     patientDao: PatientDao,
     private val genericDao: GenericDao,
     private val preferenceRepository: PreferenceRepository,
@@ -141,7 +145,8 @@ class SyncRepositoryImpl @Inject constructor(
     familyHistoryDao: FamilyHistoryDao,
     allergyDao: AllergyDao,
     riskFactorDao: RiskFactorDao,
-    tobaccoCessationDao: TobaccoCessationDao
+    tobaccoCessationDao: TobaccoCessationDao,
+    interventionDao: InterventionDao
 ) : SyncRepository, SyncRepositoryDatabaseTransactions(
     patientApiService,
     patientDao,
@@ -169,7 +174,8 @@ class SyncRepositoryImpl @Inject constructor(
     familyHistoryDao,
     allergyDao,
     riskFactorDao,
-    tobaccoCessationDao
+    tobaccoCessationDao,
+    interventionDao
 ) {
 
     override suspend fun getAndInsertListPatientData(
@@ -374,6 +380,36 @@ class SyncRepositoryImpl @Inject constructor(
                 is ApiEndResponse -> {
                     preferenceRepository.setLastMedicationSyncDate(Date().time)
                     insertMedication(body)
+                    this
+                }
+
+                else -> this
+            }
+        }
+    }
+
+    override suspend fun getAndInsertInterventionMaster(offset: Int): ResponseMapper<List<InterventionMasterResponse>> {
+        val map = mutableMapOf<String, String>()
+        map[COUNT] = COUNT_VALUE.toString()
+        map[OFFSET] = offset.toString()
+        if (preferenceRepository.getLastInterventionMasterSyncDate() != 0L) map[LAST_UPDATED] =
+            String.format(
+                GREATER_THAN_BUILDER,
+                preferenceRepository.getLastInterventionMasterSyncDate().toTimeStampDate()
+            )
+
+        return ApiResponseConverter.convert(
+            interventionApiService.getInterventionMasterList(map), true
+        ).run {
+            when (this) {
+                is ApiContinueResponse -> {
+                    insertInterventionMasterList(body)
+                    getAndInsertInterventionMaster(offset + COUNT_VALUE)
+                }
+
+                is ApiEndResponse -> {
+                    preferenceRepository.setLastInterventionMasterSyncDate(Date().time)
+                    insertInterventionMasterList(body)
                     this
                 }
 
