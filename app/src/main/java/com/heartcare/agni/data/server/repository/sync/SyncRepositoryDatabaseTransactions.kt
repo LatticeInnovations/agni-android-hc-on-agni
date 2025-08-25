@@ -51,6 +51,7 @@ import com.heartcare.agni.data.server.model.dispense.response.MedicineDispenseRe
 import com.heartcare.agni.data.server.model.family.FamilyHistoryResponse
 import com.heartcare.agni.data.server.model.historymedication.HistoryMedicationResponse
 import com.heartcare.agni.data.server.model.intervention.InterventionMasterResponse
+import com.heartcare.agni.data.server.model.intervention.InterventionResponse
 import com.heartcare.agni.data.server.model.labormed.labtest.LabTestResponse
 import com.heartcare.agni.data.server.model.labormed.medicalrecord.MedicalRecordResponse
 import com.heartcare.agni.data.server.model.levels.LevelResponse
@@ -85,6 +86,7 @@ import com.heartcare.agni.utils.converters.responseconverter.toCVDEntity
 import com.heartcare.agni.utils.converters.responseconverter.toDispensePrescriptionEntity
 import com.heartcare.agni.utils.converters.responseconverter.toFamilyHistoryEntity
 import com.heartcare.agni.utils.converters.responseconverter.toHistoryMedicationEntity
+import com.heartcare.agni.utils.converters.responseconverter.toInterventionEntity
 import com.heartcare.agni.utils.converters.responseconverter.toInterventionMasterEntity
 import com.heartcare.agni.utils.converters.responseconverter.toLabTestEntity
 import com.heartcare.agni.utils.converters.responseconverter.toLabTestPhotoResponseLocal
@@ -1026,6 +1028,12 @@ open class SyncRepositoryDatabaseTransactions(
     protected suspend fun insertTobaccoCessation(body: List<TobaccoCessationResponse>) {
         tobaccoCessationDao.insertTobaccoCessationRecord(
             *body.map { it.toTobaccoCessationEntity(patientDao, appointmentDao) }.toTypedArray()
+        )
+    }
+
+    protected suspend fun insertIntervention(body: List<InterventionResponse>) {
+        interventionDao.insertIntervention(
+            *body.map { it.toInterventionEntity(patientDao, appointmentDao) }.toTypedArray()
         )
     }
 }

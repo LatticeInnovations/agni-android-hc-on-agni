@@ -20,11 +20,13 @@ import com.heartcare.agni.utils.common.Queries
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.isToday
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toEndOfDay
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toTodayStartDate
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.launch
 import java.util.Date
 import javax.inject.Inject
 
+@HiltViewModel
 class InterventionViewModel @Inject constructor(
     private val interventionRepository: InterventionRepository,
     private val appointmentRepository: AppointmentRepository,

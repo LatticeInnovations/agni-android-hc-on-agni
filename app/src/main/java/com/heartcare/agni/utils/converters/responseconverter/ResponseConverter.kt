@@ -1749,10 +1749,11 @@ suspend fun InterventionEntity.toInterventionResponseLocal(
         patientId = patientId,
         practitionerId = practitionerId,
         practitionerName = practitionerName,
-        interventions = interventions.map {  code ->
+        interventions = interventions.map { fhirId ->
+            val intervention = interventionDao.getInterventionByFhirId(fhirId)
             InterventionItem(
-                code = code,
-                display = interventionDao.getInterventionDisplayFromCode(code)
+                code = intervention.code,
+                display = intervention.name
             )
         }
     )

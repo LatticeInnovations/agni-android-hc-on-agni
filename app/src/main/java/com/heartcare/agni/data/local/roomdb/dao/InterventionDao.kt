@@ -19,8 +19,8 @@ interface InterventionDao {
     suspend fun getInterventionsMasterList(): List<InterventionMasterEntity>
 
     @Transaction
-    @Query("SELECT name FROM InterventionMasterEntity WHERE code=:code")
-    suspend fun getInterventionDisplayFromCode(code: String): String
+    @Query("SELECT * FROM InterventionMasterEntity WHERE fhirId=:fhirId")
+    suspend fun getInterventionByFhirId(fhirId: String): InterventionMasterEntity
 
     @Transaction
     @Insert(onConflict = OnConflictStrategy.REPLACE)

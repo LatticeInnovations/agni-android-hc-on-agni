@@ -34,6 +34,7 @@ class SyncService(
     private lateinit var scheduleDownloadJob: Deferred<ResponseMapper<Any>?>
     private lateinit var appointmentPatchJob: Deferred<ResponseMapper<Any>?>
     private lateinit var prescriptionPatchJob: Deferred<ResponseMapper<Any>?>
+    private lateinit var interventionMasterDownloadJob: Deferred<ResponseMapper<Any>?>
 
     /**
      *
@@ -476,7 +477,8 @@ class SyncService(
                         downloadSymDiag(logout)
                     }
                     CoroutineScope(Dispatchers.IO).launch {
-                        downloadFormPrescription(null, logout)
+                        interventionMasterDownloadJob.await()
+                        downloadIntervention(logout)
                     }
                 }
             }
@@ -518,7 +520,11 @@ class SyncService(
 
     /** Download Intervention Master */
     internal suspend fun downloadInterventionMasterList(logout: (Boolean, String) -> Unit) {
-        checkAuthenticationStatus(syncRepository.getAndInsertInterventionMaster(0), logout)
+        coroutineScope {
+            interventionMasterDownloadJob = async {
+                checkAuthenticationStatus(syncRepository.getAndInsertInterventionMaster(0), logout)
+            }
+        }
     }
 
     /** Download Medication Timing */
@@ -648,6 +654,11 @@ class SyncService(
     /** Download Tobacco Cessation Data */
     private suspend fun downloadTobaccoCessation(logout: (Boolean, String) -> Unit) {
         checkAuthenticationStatus(syncRepository.getAndInsertTobaccoCessationData(0), logout)
+    }
+
+    /** Download Intervention Data */
+    private suspend fun downloadIntervention(logout: (Boolean, String) -> Unit) {
+        checkAuthenticationStatus(syncRepository.getAndInsertInterventionsData(0), logout)
     }
 
     /**

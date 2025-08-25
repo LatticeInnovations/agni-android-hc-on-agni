@@ -71,6 +71,7 @@ import com.heartcare.agni.data.server.model.dispense.response.MedicineDispenseRe
 import com.heartcare.agni.data.server.model.family.FamilyHistoryResponse
 import com.heartcare.agni.data.server.model.historymedication.HistoryMedicationResponse
 import com.heartcare.agni.data.server.model.intervention.InterventionMasterResponse
+import com.heartcare.agni.data.server.model.intervention.InterventionResponse
 import com.heartcare.agni.data.server.model.labormed.labtest.LabTestResponse
 import com.heartcare.agni.data.server.model.labormed.medicalrecord.MedicalRecordResponse
 import com.heartcare.agni.data.server.model.levels.LevelResponse
@@ -1974,6 +1975,40 @@ class SyncRepositoryImpl @Inject constructor(
                 is ApiEndResponse -> {
                     preferenceRepository.setLastSyncTobaccoCessation(Date().time)
                     insertTobaccoCessation(body)
+                    this
+                }
+
+                else -> this
+            }
+        }
+    }
+
+    override suspend fun getAndInsertInterventionsData(
+        offset: Int
+    ): ResponseMapper<List<InterventionResponse>> {
+        val map = mutableMapOf<String, String>()
+        map[COUNT] = COUNT_VALUE.toString()
+        map[OFFSET] = offset.toString()
+        map[SORT] = "-$ID"
+        if (preferenceRepository.getLastSyncIntervention() != 0L) map[LAST_UPDATED] = String.format(
+            GREATER_THAN_BUILDER, preferenceRepository.getLastSyncIntervention().toTimeStampDate()
+        )
+
+        ApiResponseConverter.convert(
+            interventionApiService.getInterventions(
+                map
+            ), true
+        ).run {
+            return when (this) {
+                is ApiContinueResponse -> {
+                    insertIntervention(body)
+                    //Call for next batch data
+                    getAndInsertInterventionsData(offset + COUNT_VALUE)
+                }
+
+                is ApiEndResponse -> {
+                    preferenceRepository.setLastSyncIntervention(Date().time)
+                    insertIntervention(body)
                     this
                 }
 
