@@ -4,6 +4,8 @@ import com.heartcare.agni.data.local.enums.IdentifierIgnoreEnum
 import com.heartcare.agni.data.local.enums.PhotoDeleteEnum
 import com.heartcare.agni.data.local.enums.PrescriptionType
 import com.heartcare.agni.data.local.enums.RelationEnum
+import com.heartcare.agni.data.local.model.InterventionItem
+import com.heartcare.agni.data.local.model.InterventionResponseLocal
 import com.heartcare.agni.data.local.model.appointment.AppointmentResponseLocal
 import com.heartcare.agni.data.local.model.labtest.LabTestLocal
 import com.heartcare.agni.data.local.model.labtest.LabTestPhotoResponseLocal
@@ -13,6 +15,7 @@ import com.heartcare.agni.data.local.model.prescription.PrescriptionResponseLoca
 import com.heartcare.agni.data.local.model.relation.Relation
 import com.heartcare.agni.data.local.model.symdiag.SymptomsAndDiagnosisData
 import com.heartcare.agni.data.local.roomdb.dao.AppointmentDao
+import com.heartcare.agni.data.local.roomdb.dao.InterventionDao
 import com.heartcare.agni.data.local.roomdb.dao.MedicationDao
 import com.heartcare.agni.data.local.roomdb.dao.PatientDao
 import com.heartcare.agni.data.local.roomdb.dao.PrescriptionDao
@@ -1735,8 +1738,10 @@ suspend fun InterventionResponse.toInterventionEntity(
     )
 }
 
-fun InterventionEntity.toInterventionResponse(): InterventionResponse {
-    return InterventionResponse(
+suspend fun InterventionEntity.toInterventionResponseLocal(
+    interventionDao: InterventionDao
+): InterventionResponseLocal {
+    return InterventionResponseLocal(
         uuid = uuid,
         fhirId = fhirId,
         appUpdatedDate = appUpdatedDate,
@@ -1744,6 +1749,11 @@ fun InterventionEntity.toInterventionResponse(): InterventionResponse {
         patientId = patientId,
         practitionerId = practitionerId,
         practitionerName = practitionerName,
-        interventions = interventions
+        interventions = interventions.map {  code ->
+            InterventionItem(
+                code = code,
+                display = interventionDao.getInterventionDisplayFromCode(code)
+            )
+        }
     )
 }

@@ -30,29 +30,35 @@ import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.heartcare.agni.R
 import com.heartcare.agni.data.server.model.patient.PatientResponse
 import com.heartcare.agni.navigation.Screen
+import com.heartcare.agni.ui.common.CustomDialog
 import com.heartcare.agni.ui.common.ExpandableCard
+import com.heartcare.agni.ui.patientlandingscreen.AllSlotsBookedDialog
+import com.heartcare.agni.ui.prescription.photo.view.AppointmentCompletedDialog
 import com.heartcare.agni.utils.constants.NavControllerConstants.INTERVENTIONS_SAVED
 import com.heartcare.agni.utils.constants.NavControllerConstants.PATIENT
-import java.util.Date
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun InterventionScreen(
     navController: NavController,
-    viewModel: InterventionViewModel = viewModel()
+    viewModel: InterventionViewModel = hiltViewModel()
 ) {
     val snackBarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
 
     HandleLaunchedEffect(navController, viewModel, snackBarHostState, context)
 
@@ -83,74 +89,21 @@ fun InterventionScreen(
                     .padding(paddingValues)
                     .fillMaxSize()
             ) {
-                if (viewModel.interventionLists.isEmpty()) {
-                    Column(
-                        modifier = Modifier.fillMaxSize(),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Spacer(Modifier.weight(1f))
-                        Text(
-                            text = stringResource(R.string.no_record_found),
-                            style = MaterialTheme.typography.titleLarge,
-                            color = MaterialTheme.colorScheme.onBackground
-                        )
-                        Spacer(Modifier.weight(2f))
-                    }
-                } else {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .verticalScroll(rememberScrollState())
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(16.dp),
-                            verticalArrangement = Arrangement.spacedBy(16.dp)
-                        ) {
-                            viewModel.interventionLists.forEach { _ ->
-                                ExpandableCard(
-                                    createdOn = Date(),
-                                    practitionerName = "Dr. Anamika Sood",
-                                    listOfItems = listOf(
-                                        "ABC0022 Education - Hypertension",
-                                        "ABC001 Education- Hypertension control"
-                                    ),
-                                    isBulleted = true
-                                )
-                            }
-                        }
-                    }
-                }
+                InterventionContent(viewModel)
             }
         },
         bottomBar = {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .navigationBarsPadding(),
-                verticalArrangement = Arrangement.Bottom,
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                HorizontalDivider()
-                Button(
-                    modifier = Modifier
-                        .padding(horizontal = 16.dp, vertical = 12.dp)
-                        .fillMaxWidth(),
-                    onClick = {
-                        // add intervention
-                        navController.currentBackStackEntry?.savedStateHandle?.set(
-                            PATIENT,
-                            viewModel.patient
-                        )
-                        navController.navigate(Screen.AddInterventionScreen.route)
-                    }
-                ) {
-                    Icon(Icons.Filled.Add, Icons.Filled.Add.name)
-                    Spacer(Modifier.width(6.dp))
-                    Text(stringResource(id = R.string.add_interventions))
-                }
-            }
+            InterventionBottomBar(
+                navController,
+                viewModel,
+                coroutineScope,
+                context,
+                snackBarHostState
+            )
         }
     )
+
+    InterventionDialogs(navController, viewModel, coroutineScope)
 }
 
 @Composable
@@ -168,6 +121,7 @@ private fun HandleLaunchedEffect(
                 }
             viewModel.isLaunched = true
         }
+        viewModel.getInterventionRecords(viewModel.patient!!.id)
         navController.currentBackStackEntry?.savedStateHandle?.let { handle ->
             if (handle.remove<Boolean>(INTERVENTIONS_SAVED) == true) {
                 snackBarHostState.showSnackbar(
@@ -178,4 +132,189 @@ private fun HandleLaunchedEffect(
             }
         }
     }
+}
+
+@Composable
+private fun InterventionContent(
+    viewModel: InterventionViewModel
+) {
+    if (viewModel.interventionLists.isEmpty()) {
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Spacer(Modifier.weight(1f))
+            Text(
+                text = stringResource(R.string.no_record_found),
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.onBackground
+            )
+            Spacer(Modifier.weight(2f))
+        }
+    } else {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                viewModel.interventionLists.forEach { intervention ->
+                    ExpandableCard(
+                        createdOn = intervention.appUpdatedDate,
+                        practitionerName = intervention.practitionerName,
+                        listOfItems = intervention.interventions.map { "${it.code} ${it.display}" },
+                        isBulleted = true
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun InterventionBottomBar(
+    navController: NavController,
+    viewModel: InterventionViewModel,
+    coroutineScope: CoroutineScope,
+    context: Context,
+    snackBarHostState: SnackbarHostState
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .navigationBarsPadding(),
+        verticalArrangement = Arrangement.Bottom,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        HorizontalDivider()
+        Button(
+            modifier = Modifier
+                .padding(horizontal = 16.dp, vertical = 12.dp)
+                .fillMaxWidth(),
+            onClick = {
+                // add intervention
+                viewModel.getAppointmentInfo(
+                    callback = {
+                        when {
+                            viewModel.existsInOtherHospital -> {
+                                coroutineScope.launch {
+                                    snackBarHostState.showSnackbar(
+                                        message = context.getString(R.string.appointment_exists_in_other_hospital)
+                                    )
+                                }
+                            }
+
+                            viewModel.canAddAssessment -> {
+                                coroutineScope.launch {
+                                    navController.currentBackStackEntry?.savedStateHandle?.set(
+                                        PATIENT,
+                                        viewModel.patient
+                                    )
+                                    navController.navigate(Screen.AddInterventionScreen.route)
+                                }
+                            }
+
+                            viewModel.isAppointmentCompleted -> {
+                                viewModel.showAppointmentCompletedDialog = true
+                            }
+
+                            else -> {
+                                viewModel.showAddToQueueDialog = true
+                            }
+                        }
+                    }
+                )
+            }
+        ) {
+            Icon(Icons.Filled.Add, Icons.Filled.Add.name)
+            Spacer(Modifier.width(6.dp))
+            Text(
+                stringResource(
+                    id = if (viewModel.todayIntervention == null || viewModel.existsInOtherHospital) R.string.add_interventions
+                    else R.string.update_interventions
+                )
+            )
+        }
+    }
+}
+
+@Composable
+private fun InterventionDialogs(
+    navController: NavController,
+    viewModel: InterventionViewModel,
+    coroutineScope: CoroutineScope
+) {
+    if (viewModel.showAddToQueueDialog) {
+        AddToQueueDialog(viewModel, navController, coroutineScope)
+    }
+
+    if (viewModel.ifAllSlotsBooked) {
+        AllSlotsBookedDialog {
+            viewModel.showAllSlotsBookedDialog = false
+        }
+    }
+
+    if (viewModel.showAppointmentCompletedDialog) {
+        AppointmentCompletedDialog {
+            viewModel.showAppointmentCompletedDialog = false
+        }
+    }
+}
+
+@Composable
+private fun AddToQueueDialog(
+    viewModel: InterventionViewModel,
+    navController: NavController,
+    coroutineScope: CoroutineScope
+) {
+    CustomDialog(
+        title = stringResource(
+            if (viewModel.appointment != null) R.string.patient_arrived_question else R.string.add_to_queue_question
+        ),
+        text = stringResource(R.string.add_to_queue_assessment_dialog_description),
+        dismissBtnText = stringResource(R.string.dismiss),
+        confirmBtnText = stringResource(
+            if (viewModel.appointment != null) R.string.mark_arrived else R.string.add_to_queue
+        ),
+        dismiss = { viewModel.showAddToQueueDialog = false },
+        confirm = {
+            if (viewModel.appointment != null) {
+                viewModel.updateStatusToArrived(
+                    patient = viewModel.patient!!,
+                    appointment = viewModel.appointment!!,
+                    updated = {
+                        viewModel.showAddToQueueDialog = false
+                        coroutineScope.launch {
+                            navController.currentBackStackEntry?.savedStateHandle?.set(
+                                PATIENT,
+                                viewModel.patient
+                            )
+                            navController.navigate(Screen.AddInterventionScreen.route)
+                        }
+                    }
+                )
+            } else {
+                if (viewModel.ifAllSlotsBooked) {
+                    viewModel.showAllSlotsBookedDialog = true
+                } else {
+                    viewModel.addPatientToQueue(
+                        viewModel.patient!!,
+                        addedToQueue = {
+                            viewModel.showAddToQueueDialog = false
+                            coroutineScope.launch {
+                                navController.currentBackStackEntry?.savedStateHandle?.set(
+                                    PATIENT,
+                                    viewModel.patient
+                                )
+                                navController.navigate(Screen.AddInterventionScreen.route)
+                            }
+                        }
+                    )
+                }
+            }
+        }
+    )
 }

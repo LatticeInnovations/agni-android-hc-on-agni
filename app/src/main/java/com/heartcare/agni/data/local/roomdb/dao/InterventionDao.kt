@@ -19,10 +19,14 @@ interface InterventionDao {
     suspend fun getInterventionsMasterList(): List<InterventionMasterEntity>
 
     @Transaction
+    @Query("SELECT name FROM InterventionMasterEntity WHERE code=:code")
+    suspend fun getInterventionDisplayFromCode(code: String): String
+
+    @Transaction
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertIntervention(vararg interventionEntity: InterventionEntity): List<Long>
 
     @Transaction
-    @Query("SELECT * FROM InterventionEntity")
-    suspend fun getInterventions(): List<InterventionEntity>
+    @Query("SELECT * FROM InterventionEntity WHERE patientId=:patientId")
+    suspend fun getInterventions(patientId: String): List<InterventionEntity>
 }
