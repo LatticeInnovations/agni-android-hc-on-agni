@@ -58,6 +58,7 @@ fun AddInterventionScreen(
             navController.previousBackStackEntry?.savedStateHandle
                 ?.get<PatientResponse>(PATIENT)?.let {
                     viewModel.patient = it
+                    viewModel.getTodayIntervention(it.id)
                 }
             viewModel.isLaunched = true
         }
@@ -212,17 +213,23 @@ private fun InterventionsBottomBar(
             },
             onSave = {
                 // save intervention
-                coroutineScope.launch {
-                    navController.previousBackStackEntry?.savedStateHandle?.set(
-                        INTERVENTIONS_SAVED,
-                        true
-                    )
-                    navController.navigateUp()
+                viewModel.saveIntervention {
+                    coroutineScope.launch {
+                        navController.previousBackStackEntry?.savedStateHandle?.set(
+                            INTERVENTIONS_SAVED,
+                            true
+                        )
+                        navController.navigateUp()
+                    }
                 }
             },
             onClearAll = { viewModel.clearAllConfirmDialog = true },
             onRemoveItem = { intervention ->
-                viewModel.selectedInterventionList -= viewModel.interventionsMasterList.first { it.code == intervention.substringBefore(" ") }
+                viewModel.selectedInterventionList -= viewModel.interventionsMasterList.first {
+                    it.code == intervention.substringBefore(
+                        " "
+                    )
+                }
                 if (viewModel.selectedInterventionList.isEmpty()) {
                     viewModel.bottomNavExpanded = false
                 }

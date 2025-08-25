@@ -1752,6 +1752,7 @@ suspend fun InterventionEntity.toInterventionResponseLocal(
         interventions = interventions.map { fhirId ->
             val intervention = interventionDao.getInterventionByFhirId(fhirId)
             InterventionItem(
+                fhirId = fhirId,
                 code = intervention.code,
                 display = intervention.name
             )

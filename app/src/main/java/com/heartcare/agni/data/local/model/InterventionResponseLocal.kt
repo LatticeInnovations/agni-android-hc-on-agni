@@ -17,6 +17,7 @@ data class InterventionResponseLocal(
 
 @Keep
 data class InterventionItem(
+    val fhirId: String,
     val code: String,
     val display: String
 )

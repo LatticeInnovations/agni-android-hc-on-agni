@@ -702,4 +702,5 @@ include them in the household</string>
     <string name="discard_interventions_dialog_description">Are you sure you want to discard all interventions.</string>
     <string name="interventions_saved">Interventions saved!</string>
     <string name="update_interventions">Update interventions</string>
+    <string name="interventions_updated">Interventions updated!</string>
 </resources>

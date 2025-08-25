@@ -14,6 +14,7 @@ import com.heartcare.agni.data.server.model.cvd.CVDResponse
 import com.heartcare.agni.data.server.model.dispense.request.MedicineDispenseRequest
 import com.heartcare.agni.data.server.model.family.FamilyHistoryResponse
 import com.heartcare.agni.data.server.model.historymedication.HistoryMedicationResponse
+import com.heartcare.agni.data.server.model.intervention.InterventionResponse
 import com.heartcare.agni.data.server.model.patient.PatientLastUpdatedResponse
 import com.heartcare.agni.data.server.model.patient.PatientResponse
 import com.heartcare.agni.data.server.model.prescription.photo.PrescriptionPhotoPatch
@@ -360,6 +361,19 @@ class GenericRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun insertInterventionRecord(
+        interventionResponse: InterventionResponse,
+        uuid: String
+    ): Long {
+        return genericDao.getGenericEntityById(
+            patientId = interventionResponse.uuid!!,
+            genericTypeEnum = GenericTypeEnum.INTERVENTION,
+            syncType = SyncType.POST
+        ).let { interventionGenericEntity ->
+            insertInterventionGenericEntity(interventionGenericEntity, interventionResponse, uuid)
+        }
+    }
+
     override suspend fun insertVital(
         vitalResponse: VitalResponse,
         uuid: String
@@ -569,6 +583,20 @@ class GenericRepositoryImpl @Inject constructor(
             syncType = SyncType.PUT
         ).let { prescriptionGenericEntity ->
             insertPrescriptionPutGenericEntity(prescriptionFhirId, prescriptionResponse, prescriptionGenericEntity, uuid)
+        }
+    }
+
+    override suspend fun insertOrUpdateInterventionPut(
+        interventionFhirId: String,
+        interventionResponse: InterventionResponse,
+        uuid: String
+    ): Long {
+        return genericDao.getGenericEntityById(
+            patientId = interventionFhirId,
+            genericTypeEnum = GenericTypeEnum.INTERVENTION,
+            syncType = SyncType.PUT
+        ).let { interventionGenericEntity ->
+            insertInterventionPutGenericEntity(interventionFhirId, interventionResponse, interventionGenericEntity, uuid)
         }
     }
 }

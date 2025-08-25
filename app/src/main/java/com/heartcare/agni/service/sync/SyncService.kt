@@ -477,6 +477,9 @@ class SyncService(
                         downloadSymDiag(logout)
                     }
                     CoroutineScope(Dispatchers.IO).launch {
+                        downloadFormPrescription(null, logout)
+                    }
+                    CoroutineScope(Dispatchers.IO).launch {
                         interventionMasterDownloadJob.await()
                         downloadIntervention(logout)
                     }

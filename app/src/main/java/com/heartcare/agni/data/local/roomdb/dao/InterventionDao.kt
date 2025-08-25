@@ -27,6 +27,6 @@ interface InterventionDao {
     suspend fun insertIntervention(vararg interventionEntity: InterventionEntity): List<Long>
 
     @Transaction
-    @Query("SELECT * FROM InterventionEntity WHERE patientId=:patientId")
+    @Query("SELECT * FROM InterventionEntity WHERE patientId=:patientId ORDER BY appUpdatedDate DESC")
     suspend fun getInterventions(patientId: String): List<InterventionEntity>
 }

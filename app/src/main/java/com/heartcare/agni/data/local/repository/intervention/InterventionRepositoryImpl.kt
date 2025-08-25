@@ -23,6 +23,10 @@ class InterventionRepositoryImpl @Inject constructor(
             .map { it.toInterventionMasterResponse() }
     }
 
+    override suspend fun getInterventionMasterByFhirId(fhirId: String): InterventionMasterResponse {
+        return interventionDao.getInterventionByFhirId(fhirId).toInterventionMasterResponse()
+    }
+
     override suspend fun insertIntervention(vararg interventionResponse: InterventionResponse): List<Long> {
         return interventionDao.insertIntervention(*interventionResponse.map { it.toInterventionEntity() }.toTypedArray())
     }

@@ -126,7 +126,8 @@ private fun HandleLaunchedEffect(
             if (handle.remove<Boolean>(INTERVENTIONS_SAVED) == true) {
                 snackBarHostState.showSnackbar(
                     context.getString(
-                        R.string.interventions_saved
+                        if (viewModel.todayIntervention == null) R.string.interventions_saved
+                        else R.string.interventions_updated
                     )
                 )
             }
