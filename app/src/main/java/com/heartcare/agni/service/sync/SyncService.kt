@@ -34,6 +34,7 @@ class SyncService(
     private lateinit var scheduleDownloadJob: Deferred<ResponseMapper<Any>?>
     private lateinit var appointmentPatchJob: Deferred<ResponseMapper<Any>?>
     private lateinit var prescriptionPatchJob: Deferred<ResponseMapper<Any>?>
+    private lateinit var interventionPatchJob: Deferred<ResponseMapper<Any>?>
     private lateinit var interventionMasterDownloadJob: Deferred<ResponseMapper<Any>?>
 
     /**
@@ -56,6 +57,9 @@ class SyncService(
                     },
                     async {
                         patchPrescription(logout)
+                    },
+                    async {
+                        patchIntervention(logout)
                     },
                     async {
                         uploadPatientLastUpdatedData(logout)
@@ -369,6 +373,15 @@ class SyncService(
         }
     }
 
+    /** Patch Intervention */
+    internal suspend fun patchIntervention(logout: (Boolean, String) -> Unit) {
+        coroutineScope {
+            interventionPatchJob = async {
+                checkAuthenticationStatus(syncRepository.sentInterventionPutData(), logout)
+            }
+        }
+    }
+
     /** Patch CVD */
     private suspend fun patchCVD(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
         return checkAuthenticationStatus(syncRepository.sendCVDPatchData(), logout)
@@ -489,6 +502,7 @@ class SyncService(
                     }
                     CoroutineScope(Dispatchers.IO).launch {
                         interventionMasterDownloadJob.await()
+                        interventionPatchJob.await()
                         downloadIntervention(logout)
                     }
                 }

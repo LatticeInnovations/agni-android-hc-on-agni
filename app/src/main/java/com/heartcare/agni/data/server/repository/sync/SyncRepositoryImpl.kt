@@ -1094,7 +1094,8 @@ class SyncRepositoryImpl @Inject constructor(
             if (listOfGenericEntity.isEmpty()) ApiEmptyResponse()
             else ApiResponseConverter.convert(
                 vitalApiService.createData(VITAL, listOfGenericEntity.map {
-                    it.payload.fromJson<LinkedTreeMap<*, *>>().mapToObject(VitalResponse::class.java)!!
+                    it.payload.fromJson<LinkedTreeMap<*, *>>()
+                        .mapToObject(VitalResponse::class.java)!!
                 })
             ).run {
                 when (this) {
@@ -1677,6 +1678,34 @@ class SyncRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun sentInterventionPutData(): ResponseMapper<List<CreateResponse>> {
+        return genericDao.getSameTypeGenericEntityPayload(
+            genericTypeEnum = GenericTypeEnum.INTERVENTION, syncType = SyncType.PUT
+        ).let { listOfGenericEntity ->
+            if (listOfGenericEntity.isEmpty()) ApiEmptyResponse()
+            else {
+                ApiResponseConverter.convert(
+                    interventionApiService.putIntervention(
+                        listOfGenericEntity.map { interventionGenericEntity ->
+                            interventionGenericEntity.payload.fromJson<LinkedTreeMap<*, *>>()
+                                .mapToObject(InterventionResponse::class.java)!!
+                        }
+                    )
+                ).run {
+                    when (this) {
+                        is ApiEndResponse -> {
+                            deleteGenericEntityData(listOfGenericEntity).let {
+                                if (it > 0) sentInterventionPutData() else this
+                            }
+                        }
+
+                        else -> this
+                    }
+                }
+            }
+        }
+    }
+
     override suspend fun deletePrescriptionPhoto(): ResponseMapper<List<CreateResponse>> {
         return genericDao.getSameTypeGenericEntityPayload(
             genericTypeEnum = GenericTypeEnum.PRESCRIPTION_PHOTO_RESPONSE,
@@ -1759,7 +1788,8 @@ class SyncRepositoryImpl @Inject constructor(
             if (listOfGenericEntity.isEmpty()) ApiEmptyResponse()
             else {
                 ApiResponseConverter.convert(
-                    symptomsAndDiagnosisService.patchListOfChanges(EndPoints.SYMPTOMS_DIAGNOSIS,
+                    symptomsAndDiagnosisService.patchListOfChanges(
+                        EndPoints.SYMPTOMS_DIAGNOSIS,
                         listOfGenericEntity.map { it.payload.fromJson() })
                 ).run {
                     when (this) {
@@ -1854,9 +1884,11 @@ class SyncRepositoryImpl @Inject constructor(
         map[COUNT] = COUNT_VALUE.toString()
         map[OFFSET] = offset.toString()
         map[SORT] = "-$ID"
-        if (preferenceRepository.getLastSyncHistoryMedication() != 0L) map[LAST_UPDATED] = String.format(
-            GREATER_THAN_BUILDER, preferenceRepository.getLastSyncHistoryMedication().toTimeStampDate()
-        )
+        if (preferenceRepository.getLastSyncHistoryMedication() != 0L) map[LAST_UPDATED] =
+            String.format(
+                GREATER_THAN_BUILDER,
+                preferenceRepository.getLastSyncHistoryMedication().toTimeStampDate()
+            )
 
         ApiResponseConverter.convert(
             historyAndTestsApiService.getHistoryMedication(
@@ -1886,9 +1918,11 @@ class SyncRepositoryImpl @Inject constructor(
         map[COUNT] = COUNT_VALUE.toString()
         map[OFFSET] = offset.toString()
         map[SORT] = "-$ID"
-        if (preferenceRepository.getLastSyncFamilyHistory() != 0L) map[LAST_UPDATED] = String.format(
-            GREATER_THAN_BUILDER, preferenceRepository.getLastSyncFamilyHistory().toTimeStampDate()
-        )
+        if (preferenceRepository.getLastSyncFamilyHistory() != 0L) map[LAST_UPDATED] =
+            String.format(
+                GREATER_THAN_BUILDER,
+                preferenceRepository.getLastSyncFamilyHistory().toTimeStampDate()
+            )
 
         ApiResponseConverter.convert(
             historyAndTestsApiService.getFamilyHistory(
@@ -1982,9 +2016,11 @@ class SyncRepositoryImpl @Inject constructor(
         map[COUNT] = COUNT_VALUE.toString()
         map[OFFSET] = offset.toString()
         map[SORT] = "-$ID"
-        if (preferenceRepository.getLastSyncTobaccoCessation() != 0L) map[LAST_UPDATED] = String.format(
-            GREATER_THAN_BUILDER, preferenceRepository.getLastSyncTobaccoCessation().toTimeStampDate()
-        )
+        if (preferenceRepository.getLastSyncTobaccoCessation() != 0L) map[LAST_UPDATED] =
+            String.format(
+                GREATER_THAN_BUILDER,
+                preferenceRepository.getLastSyncTobaccoCessation().toTimeStampDate()
+            )
 
         ApiResponseConverter.convert(
             historyAndTestsApiService.getTobaccoCessation(
