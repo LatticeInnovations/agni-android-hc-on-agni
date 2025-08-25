@@ -119,6 +119,7 @@ private fun HandleLaunchedEffect(
                 ?.get<PatientResponse>(PATIENT)?.let {
                     viewModel.patient = it
                 }
+            viewModel.getAppointmentInfo { }
             viewModel.isLaunched = true
         }
         viewModel.getInterventionRecords(viewModel.patient!!.id)

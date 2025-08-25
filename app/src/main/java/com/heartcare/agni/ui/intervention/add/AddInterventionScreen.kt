@@ -1,5 +1,6 @@
 package com.heartcare.agni.ui.intervention.add
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -61,6 +62,15 @@ fun AddInterventionScreen(
                     viewModel.getTodayIntervention(it.id)
                 }
             viewModel.isLaunched = true
+        }
+    }
+
+    BackHandler {
+        when {
+            viewModel.isSearching -> viewModel.isSearching = false
+            viewModel.bottomNavExpanded -> viewModel.bottomNavExpanded = false
+            viewModel.isSearchResult -> viewModel.isSearchResult = false
+            else -> navController.navigateUp()
         }
     }
 
