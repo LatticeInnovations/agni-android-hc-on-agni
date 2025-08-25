@@ -1,5 +1,6 @@
 package com.heartcare.agni.ui.intervention.add
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -58,8 +59,18 @@ fun AddInterventionScreen(
             navController.previousBackStackEntry?.savedStateHandle
                 ?.get<PatientResponse>(PATIENT)?.let {
                     viewModel.patient = it
+                    viewModel.getTodayIntervention(it.id)
                 }
             viewModel.isLaunched = true
+        }
+    }
+
+    BackHandler {
+        when {
+            viewModel.isSearching -> viewModel.isSearching = false
+            viewModel.bottomNavExpanded -> viewModel.bottomNavExpanded = false
+            viewModel.isSearchResult -> viewModel.isSearchResult = false
+            else -> navController.navigateUp()
         }
     }
 
@@ -103,7 +114,7 @@ fun AddInterventionScreen(
                     modifier = Modifier.padding(vertical = 12.dp, horizontal = 8.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    viewModel.listOfInterventions.forEach { intervention ->
+                    viewModel.interventionsMasterList.forEach { intervention ->
                         CheckBoxRow(
                             isChecked = viewModel.selectedInterventionList.contains(intervention),
                             onCheckedChange = { checked ->
@@ -112,7 +123,7 @@ fun AddInterventionScreen(
                                 )
                                 else viewModel.selectedInterventionList -= listOf(intervention)
                             },
-                            label = intervention
+                            label = "${intervention.code} ${intervention.name}"
                         )
                     }
                 }
@@ -145,7 +156,7 @@ fun AddInterventionScreen(
                         )
                         else viewModel.selectedInterventionList -= listOf(intervention)
                     },
-                    label = intervention
+                    label = "${intervention.code} ${intervention.name}"
                 )
             }
         }
@@ -204,7 +215,7 @@ private fun InterventionsBottomBar(
         contentAlignment = Alignment.BottomCenter
     ) {
         ExpandableBottomNavLayout(
-            selectedList = viewModel.selectedInterventionList,
+            selectedList = viewModel.selectedInterventionList.map { "${it.code} ${it.name}" },
             bottomNavExpanded = viewModel.bottomNavExpanded,
             onExpandToggle = {
                 viewModel.bottomNavExpanded = !viewModel.bottomNavExpanded
@@ -212,17 +223,23 @@ private fun InterventionsBottomBar(
             },
             onSave = {
                 // save intervention
-                coroutineScope.launch {
-                    navController.previousBackStackEntry?.savedStateHandle?.set(
-                        INTERVENTIONS_SAVED,
-                        true
-                    )
-                    navController.navigateUp()
+                viewModel.saveIntervention {
+                    coroutineScope.launch {
+                        navController.previousBackStackEntry?.savedStateHandle?.set(
+                            INTERVENTIONS_SAVED,
+                            true
+                        )
+                        navController.navigateUp()
+                    }
                 }
             },
             onClearAll = { viewModel.clearAllConfirmDialog = true },
             onRemoveItem = { intervention ->
-                viewModel.selectedInterventionList -= intervention
+                viewModel.selectedInterventionList -= viewModel.interventionsMasterList.first {
+                    it.code == intervention.substringBefore(
+                        " "
+                    )
+                }
                 if (viewModel.selectedInterventionList.isEmpty()) {
                     viewModel.bottomNavExpanded = false
                 }

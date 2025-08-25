@@ -14,6 +14,7 @@ import com.heartcare.agni.data.server.api.LevelsApiService
 import com.heartcare.agni.data.server.api.PatientApiService
 import com.heartcare.agni.data.server.api.PrescriptionApiService
 import com.heartcare.agni.data.server.api.HistoryAndTestsApiService
+import com.heartcare.agni.data.server.api.InterventionApiService
 import com.heartcare.agni.data.server.api.ScheduleAndAppointmentApiService
 import com.heartcare.agni.data.server.api.SignUpApiService
 import com.heartcare.agni.data.server.api.SymptomsAndDiagnosisService
@@ -287,4 +288,9 @@ object NetworkModule {
     @Singleton
     fun providePriorDxApiService(@Named("agni") retrofit: Retrofit): HistoryAndTestsApiService =
         retrofit.create(HistoryAndTestsApiService::class.java)
+
+    @Provides
+    @Singleton
+    fun provideInterventionApiService(@Named("agni") retrofit: Retrofit): InterventionApiService =
+        retrofit.create(InterventionApiService::class.java)
 }

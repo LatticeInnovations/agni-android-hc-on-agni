@@ -7,6 +7,8 @@ import com.heartcare.agni.data.server.model.dispense.response.DispenseData
 import com.heartcare.agni.data.server.model.dispense.response.MedicineDispenseResponse
 import com.heartcare.agni.data.server.model.family.FamilyHistoryResponse
 import com.heartcare.agni.data.server.model.historymedication.HistoryMedicationResponse
+import com.heartcare.agni.data.server.model.intervention.InterventionMasterResponse
+import com.heartcare.agni.data.server.model.intervention.InterventionResponse
 import com.heartcare.agni.data.server.model.labormed.labtest.LabTestResponse
 import com.heartcare.agni.data.server.model.labormed.medicalrecord.MedicalRecordResponse
 import com.heartcare.agni.data.server.model.levels.LevelResponse
@@ -36,6 +38,7 @@ interface SyncRepository {
     suspend fun getAndInsertPhotoPrescription(patientId: String?): ResponseMapper<List<PrescriptionPhotoResponse>>
     suspend fun getAndInsertFormPrescription(patientId: String?): ResponseMapper<List<PrescriptionResponse>>
     suspend fun getAndInsertMedication(offset: Int): ResponseMapper<List<MedicationResponse>>
+    suspend fun getAndInsertInterventionMaster(offset: Int): ResponseMapper<List<InterventionMasterResponse>>
     suspend fun getMedicineTime(): ResponseMapper<List<MedicineTimeResponse>>
     suspend fun getAndInsertSchedule(offset: Int): ResponseMapper<List<ScheduleResponse>>
     suspend fun getAndInsertAppointment(offset: Int): ResponseMapper<List<AppointmentResponse>>
@@ -56,6 +59,7 @@ interface SyncRepository {
     suspend fun getAndInsertAllergyData(offset: Int): ResponseMapper<List<AllergyResponse>>
     suspend fun getAndInsertRiskFactorData(offset: Int): ResponseMapper<List<RiskFactorResponse>>
     suspend fun getAndInsertTobaccoCessationData(offset: Int): ResponseMapper<List<TobaccoCessationResponse>>
+    suspend fun getAndInsertInterventionsData(offset: Int): ResponseMapper<List<InterventionResponse>>
 
     //POST
     suspend fun sendPersonPostData(): ResponseMapper<List<CreateResponse>>
@@ -78,6 +82,7 @@ interface SyncRepository {
     suspend fun sendAllergyPostData(): ResponseMapper<List<CreateResponse>>
     suspend fun sendRiskFactorPostData(): ResponseMapper<List<CreateResponse>>
     suspend fun sendTobaccoCessationPostData(): ResponseMapper<List<CreateResponse>>
+    suspend fun sendInterventionPostData(): ResponseMapper<List<CreateResponse>>
 
     //PATCH
     suspend fun sendPersonPatchData(): ResponseMapper<List<CreateResponse>>
@@ -90,6 +95,7 @@ interface SyncRepository {
     suspend fun sendLabTestPatchData(): ResponseMapper<List<CreateResponse>>
     suspend fun sendMedRecordPatchData(): ResponseMapper<List<CreateResponse>>
     suspend fun sendPrescriptionPutData(): ResponseMapper<List<CreateResponse>>
+    suspend fun sentInterventionPutData(): ResponseMapper<List<CreateResponse>>
 
     //DELETE
     suspend fun deletePrescriptionPhoto(): ResponseMapper<List<CreateResponse>>

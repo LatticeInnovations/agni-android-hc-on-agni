@@ -34,6 +34,8 @@ class SyncService(
     private lateinit var scheduleDownloadJob: Deferred<ResponseMapper<Any>?>
     private lateinit var appointmentPatchJob: Deferred<ResponseMapper<Any>?>
     private lateinit var prescriptionPatchJob: Deferred<ResponseMapper<Any>?>
+    private lateinit var interventionPatchJob: Deferred<ResponseMapper<Any>?>
+    private lateinit var interventionMasterDownloadJob: Deferred<ResponseMapper<Any>?>
 
     /**
      *
@@ -57,6 +59,9 @@ class SyncService(
                         patchPrescription(logout)
                     },
                     async {
+                        patchIntervention(logout)
+                    },
+                    async {
                         uploadPatientLastUpdatedData(logout)
                     },
                     async {
@@ -70,6 +75,9 @@ class SyncService(
                     },
                     async {
                         downloadMedication(logout)
+                    },
+                    async {
+                        downloadInterventionMasterList(logout)
                     }
                 )
             }
@@ -231,6 +239,9 @@ class SyncService(
                 CoroutineScope(Dispatchers.IO).launch {
                     updateFhirIdInTobaccoCessation(logout)
                 }
+                CoroutineScope(Dispatchers.IO).launch {
+                    updateFhirIdInIntervention(logout)
+                }
             }
         }
     }
@@ -325,6 +336,11 @@ class SyncService(
         return checkAuthenticationStatus(syncRepository.sendTobaccoCessationPostData(), logout)
     }
 
+    /** Upload Intervention */
+    private suspend fun uploadIntervention(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
+        return checkAuthenticationStatus(syncRepository.sendInterventionPostData(), logout)
+    }
+
     /**
      *
      *
@@ -353,6 +369,15 @@ class SyncService(
         coroutineScope {
             prescriptionPatchJob = async {
                 checkAuthenticationStatus(syncRepository.sendPrescriptionPutData(), logout)
+            }
+        }
+    }
+
+    /** Patch Intervention */
+    internal suspend fun patchIntervention(logout: (Boolean, String) -> Unit) {
+        coroutineScope {
+            interventionPatchJob = async {
+                checkAuthenticationStatus(syncRepository.sentInterventionPutData(), logout)
             }
         }
     }
@@ -475,6 +500,11 @@ class SyncService(
                     CoroutineScope(Dispatchers.IO).launch {
                         downloadFormPrescription(null, logout)
                     }
+                    CoroutineScope(Dispatchers.IO).launch {
+                        interventionMasterDownloadJob.await()
+                        interventionPatchJob.await()
+                        downloadIntervention(logout)
+                    }
                 }
             }
         }
@@ -511,6 +541,15 @@ class SyncService(
     /** Download Medication */
     internal suspend fun downloadMedication(logout: (Boolean, String) -> Unit) {
         checkAuthenticationStatus(syncRepository.getAndInsertMedication(0), logout)
+    }
+
+    /** Download Intervention Master */
+    internal suspend fun downloadInterventionMasterList(logout: (Boolean, String) -> Unit) {
+        coroutineScope {
+            interventionMasterDownloadJob = async {
+                checkAuthenticationStatus(syncRepository.getAndInsertInterventionMaster(0), logout)
+            }
+        }
     }
 
     /** Download Medication Timing */
@@ -642,6 +681,11 @@ class SyncService(
         checkAuthenticationStatus(syncRepository.getAndInsertTobaccoCessationData(0), logout)
     }
 
+    /** Download Intervention Data */
+    private suspend fun downloadIntervention(logout: (Boolean, String) -> Unit) {
+        checkAuthenticationStatus(syncRepository.getAndInsertInterventionsData(0), logout)
+    }
+
     /**
      *
      *
@@ -751,6 +795,12 @@ class SyncService(
     private suspend fun updateFhirIdInTobaccoCessation(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
         genericRepository.updateTobaccoCessationFhirId()
         return uploadTobaccoCessation(logout)
+    }
+
+    /** Update FHIR ID in Intervention */
+    private suspend fun updateFhirIdInIntervention(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
+        genericRepository.updateInterventionFhirId()
+        return uploadIntervention(logout)
     }
 
     /** Check Session Expiry and Authorization */

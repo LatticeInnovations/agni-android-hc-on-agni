@@ -50,7 +50,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import com.heartcare.agni.R
-import com.heartcare.agni.utils.regex.OnlyAlphabetRegex.onlyAlphabets
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -93,7 +92,7 @@ fun SearchLayout(
 
                 TextField(
                     value = searchQuery,
-                    onValueChange = { if (it.matches(onlyAlphabets)) onQueryChange(it) },
+                    onValueChange = { if (it.length <= 100) onQueryChange(it) },
                     leadingIcon = {
                         IconButton(onClick = { onBack() }) {
                             Icon(
@@ -188,7 +187,7 @@ fun SearchResults(
     content: @Composable () -> Unit
 ) {
     Box(
-        modifier = modifier
+        modifier = Modifier
             .fillMaxSize(),
     ) {
         AnimatedVisibility(
@@ -231,7 +230,7 @@ fun SearchResults(
                                 modifier = Modifier
                                     .verticalScroll(rememberScrollState())
                                     .padding(vertical = 12.dp, horizontal = 8.dp),
-                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                                verticalArrangement = Arrangement.spacedBy(16.dp)
                             ) {
                                 content()
                             }

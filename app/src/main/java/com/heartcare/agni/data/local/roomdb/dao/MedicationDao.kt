@@ -20,7 +20,7 @@ interface MedicationDao {
     suspend fun insertMedicineDosageInstructions(vararg medicineTimingEntity: MedicineTimingEntity): List<Long>
 
     @Transaction
-    @Query("SELECT DISTINCT activeIngredient FROM MedicationEntity")
+    @Query("SELECT DISTINCT activeIngredient FROM MedicationEntity WHERE status=\"active\"")
     suspend fun getActiveIngredients(): List<String>
 
     @Transaction
@@ -28,7 +28,7 @@ interface MedicationDao {
     suspend fun getAllMedicineDosageInstructions(): List<MedicineTimingEntity>
 
     @Transaction
-    @Query("SELECT * FROM MedicationEntity WHERE activeIngredient = :activeIngredient")
+    @Query("SELECT * FROM MedicationEntity WHERE activeIngredient = :activeIngredient AND status=\"active\"")
     suspend fun getMedicationByActiveIngredient(activeIngredient: String): List<MedicationEntity>
 
     @Transaction
@@ -40,7 +40,7 @@ interface MedicationDao {
     suspend fun getMedicalDosageByMedicalDosageId(medicalDosageId: String): String
 
     @Transaction
-    @Query("SELECT * FROM MedicationEntity")
+    @Query("SELECT * FROM MedicationEntity WHERE status=\"active\"")
     suspend fun getAllMedication(): List<MedicationEntity>
 
     @Transaction

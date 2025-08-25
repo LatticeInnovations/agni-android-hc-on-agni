@@ -22,6 +22,8 @@ import com.heartcare.agni.data.local.repository.historymedication.HistoryMedicat
 import com.heartcare.agni.data.local.repository.historymedication.HistoryMedicationRepositoryImpl
 import com.heartcare.agni.data.local.repository.identifier.IdentifierRepository
 import com.heartcare.agni.data.local.repository.identifier.IdentifierRepositoryImpl
+import com.heartcare.agni.data.local.repository.intervention.InterventionRepository
+import com.heartcare.agni.data.local.repository.intervention.InterventionRepositoryImpl
 import com.heartcare.agni.data.local.repository.levels.LevelRepository
 import com.heartcare.agni.data.local.repository.levels.LevelRepositoryImpl
 import com.heartcare.agni.data.local.repository.medication.MedicationRepository
@@ -207,4 +209,8 @@ abstract class RepositoryModule {
     @Binds
     @ViewModelScoped
     abstract fun provideTobaccoCessationRepository(tobaccoCessationRepositoryImpl: TobaccoCessationRepositoryImpl): TobaccoCessationRepository
+
+    @Binds
+    @ViewModelScoped
+    abstract fun provideInterventionRepository(interventionRepositoryImpl: InterventionRepositoryImpl): InterventionRepository
 }
