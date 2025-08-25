@@ -5,6 +5,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
+import com.heartcare.agni.data.local.roomdb.entities.intervention.InterventionEntity
 import com.heartcare.agni.data.local.roomdb.entities.intervention.InterventionMasterEntity
 
 @Dao
@@ -14,6 +15,14 @@ interface InterventionDao {
     suspend fun insertInterventionMaster(vararg interventionMasterEntity: InterventionMasterEntity): List<Long>
 
     @Transaction
-    @Query("SELECT * FROM InterventionMasterEntity")
+    @Query("SELECT * FROM InterventionMasterEntity WHERE status=\"active\"")
     suspend fun getInterventionsMasterList(): List<InterventionMasterEntity>
+
+    @Transaction
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertIntervention(vararg interventionEntity: InterventionEntity): List<Long>
+
+    @Transaction
+    @Query("SELECT * FROM InterventionEntity")
+    suspend fun getInterventions(): List<InterventionEntity>
 }

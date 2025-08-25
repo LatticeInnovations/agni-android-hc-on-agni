@@ -27,6 +27,7 @@ import com.heartcare.agni.data.local.roomdb.entities.dispense.MedicineDispenseLi
 import com.heartcare.agni.data.local.roomdb.entities.family.FamilyHistoryEntity
 import com.heartcare.agni.data.local.roomdb.entities.generic.GenericEntity
 import com.heartcare.agni.data.local.roomdb.entities.historymedication.HistoryMedicationEntity
+import com.heartcare.agni.data.local.roomdb.entities.intervention.InterventionEntity
 import com.heartcare.agni.data.local.roomdb.entities.intervention.InterventionMasterEntity
 import com.heartcare.agni.data.local.roomdb.entities.labtestandmedrecord.LabTestAndMedEntity
 import com.heartcare.agni.data.local.roomdb.entities.labtestandmedrecord.photo.LabTestAndFileEntity
@@ -75,6 +76,7 @@ import com.heartcare.agni.data.server.model.dispense.response.MedicineDispenseRe
 import com.heartcare.agni.data.server.model.family.FamilyHistoryResponse
 import com.heartcare.agni.data.server.model.historymedication.HistoryMedicationResponse
 import com.heartcare.agni.data.server.model.intervention.InterventionMasterResponse
+import com.heartcare.agni.data.server.model.intervention.InterventionResponse
 import com.heartcare.agni.data.server.model.labormed.labtest.DiagnosticReport
 import com.heartcare.agni.data.server.model.labormed.labtest.LabTestResponse
 import com.heartcare.agni.data.server.model.labormed.medicalrecord.MedicalRecord
@@ -1707,5 +1709,41 @@ fun InterventionMasterEntity.toInterventionMasterResponse(): InterventionMasterR
         name = name,
         secondaryName = secondaryName,
         status = status
+    )
+}
+
+fun InterventionResponse.toInterventionEntity(): InterventionEntity {
+    return InterventionEntity(
+        uuid = uuid!!,
+        fhirId = fhirId,
+        appUpdatedDate = appUpdatedDate,
+        appointmentId = appointmentId,
+        patientId = patientId,
+        practitionerId = practitionerId!!,
+        practitionerName = practitionerName!!,
+        interventions = interventions
+    )
+}
+
+suspend fun InterventionResponse.toInterventionEntity(
+    patientDao: PatientDao,
+    appointmentDao: AppointmentDao
+): InterventionEntity {
+    return this.toInterventionEntity().copy(
+        appointmentId = appointmentDao.getAppointmentIdByFhirId(appointmentId),
+        patientId = patientDao.getPatientIdByFhirId(patientId)!!,
+    )
+}
+
+fun InterventionEntity.toInterventionResponse(): InterventionResponse {
+    return InterventionResponse(
+        uuid = uuid,
+        fhirId = fhirId,
+        appUpdatedDate = appUpdatedDate,
+        appointmentId = appointmentId,
+        patientId = patientId,
+        practitionerId = practitionerId,
+        practitionerName = practitionerName,
+        interventions = interventions
     )
 }

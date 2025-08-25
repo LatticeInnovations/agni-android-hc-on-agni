@@ -47,6 +47,7 @@ import com.heartcare.agni.data.local.roomdb.entities.file.DownloadedFileEntity
 import com.heartcare.agni.data.local.roomdb.entities.file.FileUploadEntity
 import com.heartcare.agni.data.local.roomdb.entities.generic.GenericEntity
 import com.heartcare.agni.data.local.roomdb.entities.historymedication.HistoryMedicationEntity
+import com.heartcare.agni.data.local.roomdb.entities.intervention.InterventionEntity
 import com.heartcare.agni.data.local.roomdb.entities.intervention.InterventionMasterEntity
 import com.heartcare.agni.data.local.roomdb.entities.labtestandmedrecord.LabTestAndMedEntity
 import com.heartcare.agni.data.local.roomdb.entities.labtestandmedrecord.photo.LabTestAndMedPhotoEntity
@@ -123,7 +124,8 @@ import java.util.UUID
         AllergyEntity::class,
         RiskFactorEntity::class,
         TobaccoCessationEntity::class,
-        InterventionMasterEntity::class
+        InterventionMasterEntity::class,
+        InterventionEntity::class
     ],
     views = [RelationView::class, PrescriptionDirectionAndMedicineView::class],
     version = 1,
