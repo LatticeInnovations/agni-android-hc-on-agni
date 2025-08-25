@@ -402,6 +402,15 @@ private fun doneButtonClick(
         ).toSet()
         medReqUuid = prescriptionViewModel.medicationToEdit!!.medication.medReqUuid
         medReqFhirId = prescriptionViewModel.medicationToEdit!!.medication.medReqFhirId
+    } else {
+        prescriptionViewModel.todayPrescription?.let {
+            it.prescriptionDirectionAndMedicineView.firstOrNull { medDirectionView ->
+                medDirectionView.prescriptionDirectionsEntity.medFhirId == viewModel.medFhirId
+            }?.let { medDirectionView ->
+                medReqUuid = medDirectionView.prescriptionDirectionsEntity.id
+                medReqFhirId = medDirectionView.prescriptionDirectionsEntity.medReqFhirId
+            }
+        }
     }
     prescriptionViewModel.selectedMedicationsList += listOf(
         prescriptionViewModel.checkedMedication!!
