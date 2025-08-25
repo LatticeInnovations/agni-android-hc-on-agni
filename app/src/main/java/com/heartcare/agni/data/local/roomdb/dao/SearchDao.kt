@@ -7,6 +7,7 @@ import androidx.room.Query
 import androidx.room.RewriteQueriesToDropUnusedColumns
 import androidx.room.Transaction
 import com.heartcare.agni.data.local.enums.SearchTypeEnum
+import com.heartcare.agni.data.local.roomdb.entities.intervention.InterventionMasterEntity
 import com.heartcare.agni.data.local.roomdb.entities.medication.MedicationEntity
 import com.heartcare.agni.data.local.roomdb.entities.patient.PatientAndIdentifierEntity
 import com.heartcare.agni.data.local.roomdb.entities.search.SearchHistoryEntity
@@ -53,6 +54,10 @@ interface SearchDao {
     @Transaction
     @Query("SELECT * FROM DiagnosisEntity")
     suspend fun getDiagnosis(): List<DiagnosisEntity>
+
+    @Transaction
+    @Query("SELECT * FROM InterventionMasterEntity where status=\"active\"")
+    suspend fun getInterventionMasterList(): List<InterventionMasterEntity>
 
     // Insert a new search entry or update the existing one
     @Insert(onConflict = OnConflictStrategy.REPLACE)

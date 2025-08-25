@@ -2,12 +2,15 @@ package com.heartcare.agni.utils.search
 
 import com.heartcare.agni.data.local.enums.RiskCategoryEnum.Companion.getRiskRange
 import com.heartcare.agni.data.local.model.search.SearchParameters
+import com.heartcare.agni.data.local.roomdb.entities.intervention.InterventionMasterEntity
 import com.heartcare.agni.data.local.roomdb.entities.patient.PatientAndIdentifierEntity
 import com.heartcare.agni.data.local.roomdb.entities.symptomsanddiagnosis.DiagnosisEntity
+import com.heartcare.agni.data.server.model.intervention.InterventionMasterResponse
 import com.heartcare.agni.data.server.model.prescription.medication.MedicationResponse
 import com.heartcare.agni.utils.constants.IdentificationConstants.HOSPITAL_ID
 import com.heartcare.agni.utils.constants.IdentificationConstants.NATIONAL_ID
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toAge
+import com.heartcare.agni.utils.converters.responseconverter.toInterventionMasterResponse
 import me.xdrop.fuzzywuzzy.FuzzySearch
 
 object Search {
@@ -147,5 +150,16 @@ object Search {
         return symptomsList.filter { symptoms ->
             FuzzySearch.partialRatio(searchQuery, symptoms) > matchingRatio
         }
+    }
+
+    internal fun getFuzzySearchInterventionList(
+        searchQuery: String,
+        interventionList: List<InterventionMasterEntity>,
+        matchingRatio: Int
+    ): List<InterventionMasterResponse> {
+        return interventionList.filter { intervention ->
+            FuzzySearch.partialRatio(searchQuery.lowercase(), intervention.name.lowercase()) > matchingRatio
+                    || FuzzySearch.partialRatio(searchQuery.lowercase(), intervention.code.lowercase()) > matchingRatio
+        }.map { it.toInterventionMasterResponse() }
     }
 }

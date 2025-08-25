@@ -103,7 +103,7 @@ fun AddInterventionScreen(
                     modifier = Modifier.padding(vertical = 12.dp, horizontal = 8.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    viewModel.listOfInterventions.forEach { intervention ->
+                    viewModel.interventionsMasterList.forEach { intervention ->
                         CheckBoxRow(
                             isChecked = viewModel.selectedInterventionList.contains(intervention),
                             onCheckedChange = { checked ->
@@ -112,7 +112,7 @@ fun AddInterventionScreen(
                                 )
                                 else viewModel.selectedInterventionList -= listOf(intervention)
                             },
-                            label = intervention
+                            label = "${intervention.code} ${intervention.name}"
                         )
                     }
                 }
@@ -145,7 +145,7 @@ fun AddInterventionScreen(
                         )
                         else viewModel.selectedInterventionList -= listOf(intervention)
                     },
-                    label = intervention
+                    label = "${intervention.code} ${intervention.name}"
                 )
             }
         }
@@ -204,7 +204,7 @@ private fun InterventionsBottomBar(
         contentAlignment = Alignment.BottomCenter
     ) {
         ExpandableBottomNavLayout(
-            selectedList = viewModel.selectedInterventionList,
+            selectedList = viewModel.selectedInterventionList.map { "${it.code} ${it.name}" },
             bottomNavExpanded = viewModel.bottomNavExpanded,
             onExpandToggle = {
                 viewModel.bottomNavExpanded = !viewModel.bottomNavExpanded
@@ -222,7 +222,7 @@ private fun InterventionsBottomBar(
             },
             onClearAll = { viewModel.clearAllConfirmDialog = true },
             onRemoveItem = { intervention ->
-                viewModel.selectedInterventionList -= intervention
+                viewModel.selectedInterventionList -= viewModel.interventionsMasterList.first { it.code == intervention.substringBefore(" ") }
                 if (viewModel.selectedInterventionList.isEmpty()) {
                     viewModel.bottomNavExpanded = false
                 }

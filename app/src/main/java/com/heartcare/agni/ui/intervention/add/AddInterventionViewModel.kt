@@ -5,7 +5,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewModelScope
 import com.heartcare.agni.base.viewmodel.BaseViewModel
+import com.heartcare.agni.data.local.repository.intervention.InterventionRepository
 import com.heartcare.agni.data.local.repository.search.SearchRepository
+import com.heartcare.agni.data.server.model.intervention.InterventionMasterResponse
 import com.heartcare.agni.data.server.model.patient.PatientResponse
 import com.heartcare.agni.di.dispatcher.IoDispatcher
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -16,29 +18,16 @@ import javax.inject.Inject
 
 @HiltViewModel
 class AddInterventionViewModel@Inject constructor(
+    private val interventionRepository: InterventionRepository,
     private val searchRepository: SearchRepository,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ): BaseViewModel() {
     var isLaunched by mutableStateOf(false)
     var patient by mutableStateOf<PatientResponse?>(null)
 
-    var listOfInterventions by mutableStateOf(listOf(
-        "ABC0022 Education - Hypertension",
-        "ABC002 Counselling - Diabetes diet",
-        "ABC001 Education - Hypertension control",
-        "EDU007 Education - High cardiovascular risk",
-        "EDU006 Education - Hypercholesterolaemia control",
-        "EDU005 Education - Diabetes control (insulin injection)",
-        "EDU004 Education - Diabetes control (advanced)",
-        "EDU003 Education - Diabetes control (basic)",
-        "EDU002 Education - Hypertension control (advanced)",
-        "EDU001 Education - Hypertension control (basic)",
-        "CSL008 Counselling - weight control",
-        "CSL007 Counselling - physical activity",
-        "CSL006 Counselling - fruits and vegetables"
-    ))
+    var interventionsMasterList by mutableStateOf(listOf<InterventionMasterResponse>())
 
-    var selectedInterventionList by mutableStateOf(listOf<String>())
+    var selectedInterventionList by mutableStateOf(listOf<InterventionMasterResponse>())
 
     var bottomNavExpanded by mutableStateOf(false)
     var clearAllConfirmDialog by mutableStateOf(false)
@@ -47,8 +36,14 @@ class AddInterventionViewModel@Inject constructor(
     var previousSearchList by mutableStateOf(listOf<String>())
     var searchQuery by mutableStateOf("")
     var tempSearchQuery by mutableStateOf("")
-    var interventionsSearchList by mutableStateOf(listOf<String>())
+    var interventionsSearchList by mutableStateOf(listOf<InterventionMasterResponse>())
     var isSearchResult by mutableStateOf(false)
+
+    init {
+        viewModelScope.launch(ioDispatcher) {
+            interventionsMasterList = interventionRepository.getInterventionMasterList()
+        }
+    }
 
     fun insertRecentSearch(query: String, date: Date = Date()) {
         viewModelScope.launch(ioDispatcher) {
@@ -63,9 +58,8 @@ class AddInterventionViewModel@Inject constructor(
     }
 
     fun getInterventionsSearchList(query: String) {
-        interventionsSearchList = listOf(
-            "ABC0022 Education - Hypertension",
-            "ABC002 Counselling - Diabetes diet"
-        )
+        viewModelScope.launch(ioDispatcher) {
+            interventionsSearchList = searchRepository.searchIntervention(query.trim())
+        }
     }
 }
