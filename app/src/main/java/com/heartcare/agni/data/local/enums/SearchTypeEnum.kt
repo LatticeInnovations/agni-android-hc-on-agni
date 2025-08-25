@@ -5,9 +5,10 @@ enum class SearchTypeEnum(val value: String) {
     PATIENT("Patient"),
     ACTIVE_INGREDIENT("Active Ingredient"),
     SYMPTOM("Symptom"),
-    DIAGNOSIS("Diagnosis");
+    DIAGNOSIS("Diagnosis"),
+    INTERVENTIONS("Interventions");
 
     companion object {
-        fun fromString(value: String) = values().first { it.value == value }
+        fun fromString(value: String) = entries.first { it.value == value }
     }
 }
