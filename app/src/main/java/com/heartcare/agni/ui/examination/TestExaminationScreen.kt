@@ -1,4 +1,4 @@
-package com.heartcare.agni.ui.intervention
+package com.heartcare.agni.ui.examination
 
 import android.content.Context
 import androidx.compose.foundation.layout.Arrangement
@@ -45,16 +45,17 @@ import com.heartcare.agni.ui.common.CustomDialog
 import com.heartcare.agni.ui.common.ExpandableCard
 import com.heartcare.agni.ui.patientlandingscreen.AllSlotsBookedDialog
 import com.heartcare.agni.ui.prescription.photo.view.AppointmentCompletedDialog
-import com.heartcare.agni.utils.constants.NavControllerConstants.INTERVENTIONS_SAVED
 import com.heartcare.agni.utils.constants.NavControllerConstants.PATIENT
+import com.heartcare.agni.utils.constants.NavControllerConstants.TEST_EXAMINATION_SAVED
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import java.util.Date
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun InterventionScreen(
+fun TestExaminationScreen(
     navController: NavController,
-    viewModel: InterventionViewModel = hiltViewModel()
+    viewModel: TestExaminationViewModel = hiltViewModel()
 ) {
     val snackBarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current
@@ -69,7 +70,7 @@ fun InterventionScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = stringResource(R.string.interventions),
+                        text = stringResource(R.string.test_and_examinations),
                         style = MaterialTheme.typography.titleLarge
                     )
                 },
@@ -89,11 +90,11 @@ fun InterventionScreen(
                     .padding(paddingValues)
                     .fillMaxSize()
             ) {
-                InterventionContent(viewModel)
+                TestExaminationContent(viewModel)
             }
         },
         bottomBar = {
-            InterventionBottomBar(
+            TestExaminationBottomBar(
                 navController,
                 viewModel,
                 coroutineScope,
@@ -103,13 +104,14 @@ fun InterventionScreen(
         }
     )
 
-    InterventionDialogs(navController, viewModel, coroutineScope)
+    TestExaminationDialogs(navController, viewModel, coroutineScope)
 }
+
 
 @Composable
 private fun HandleLaunchedEffect(
     navController: NavController,
-    viewModel: InterventionViewModel,
+    viewModel: TestExaminationViewModel,
     snackBarHostState: SnackbarHostState,
     context: Context
 ) {
@@ -122,13 +124,12 @@ private fun HandleLaunchedEffect(
             viewModel.getAppointmentInfo { }
             viewModel.isLaunched = true
         }
-        viewModel.getInterventionRecords(viewModel.patient!!.id)
         navController.currentBackStackEntry?.savedStateHandle?.let { handle ->
-            if (handle.remove<Boolean>(INTERVENTIONS_SAVED) == true) {
+            if (handle.remove<Boolean>(TEST_EXAMINATION_SAVED) == true) {
                 snackBarHostState.showSnackbar(
                     context.getString(
-                        if (viewModel.todayIntervention == null) R.string.interventions_saved
-                        else R.string.interventions_updated
+                        if (viewModel.todayTestExamination == null) R.string.test_and_examinations_saved
+                        else R.string.test_and_examinations_updated
                     )
                 )
             }
@@ -137,10 +138,10 @@ private fun HandleLaunchedEffect(
 }
 
 @Composable
-private fun InterventionContent(
-    viewModel: InterventionViewModel
+private fun TestExaminationContent(
+    viewModel: TestExaminationViewModel
 ) {
-    if (viewModel.interventionLists.isEmpty()) {
+    if (viewModel.testExaminationLists.isEmpty()) {
         Column(
             modifier = Modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally
@@ -163,11 +164,14 @@ private fun InterventionContent(
                 modifier = Modifier.padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                viewModel.interventionLists.forEach { intervention ->
+                viewModel.testExaminationLists.forEach { _ ->
                     ExpandableCard(
-                        createdOn = intervention.appUpdatedDate,
-                        practitionerName = intervention.practitionerName,
-                        listOfItems = intervention.interventions.map { "${it.code} ${it.display}" },
+                        createdOn = Date(),
+                        practitionerName = "Dr. Anamika Sood",
+                        listOfItems = listOf(
+                            "PMT007 Pulmonary function test",
+                            "PMT005 Eye examination - slit lamp biomicroscopy"
+                        ),
                         isBulleted = true
                     )
                 }
@@ -176,10 +180,11 @@ private fun InterventionContent(
     }
 }
 
+
 @Composable
-private fun InterventionBottomBar(
+private fun TestExaminationBottomBar(
     navController: NavController,
-    viewModel: InterventionViewModel,
+    viewModel: TestExaminationViewModel,
     coroutineScope: CoroutineScope,
     context: Context,
     snackBarHostState: SnackbarHostState
@@ -215,7 +220,7 @@ private fun InterventionBottomBar(
                                         PATIENT,
                                         viewModel.patient
                                     )
-                                    navController.navigate(Screen.AddInterventionScreen.route)
+                                    navController.navigate(Screen.AddTestExaminationScreen.route)
                                 }
                             }
 
@@ -235,8 +240,8 @@ private fun InterventionBottomBar(
             Spacer(Modifier.width(6.dp))
             Text(
                 stringResource(
-                    id = if (viewModel.todayIntervention == null || viewModel.existsInOtherHospital) R.string.add_interventions
-                    else R.string.update_interventions
+                    id = if (viewModel.todayTestExamination == null || viewModel.existsInOtherHospital) R.string.add_test_and_examinations
+                    else R.string.update_test_and_examinations
                 )
             )
         }
@@ -244,9 +249,9 @@ private fun InterventionBottomBar(
 }
 
 @Composable
-private fun InterventionDialogs(
+private fun TestExaminationDialogs(
     navController: NavController,
-    viewModel: InterventionViewModel,
+    viewModel: TestExaminationViewModel,
     coroutineScope: CoroutineScope
 ) {
     if (viewModel.showAddToQueueDialog) {
@@ -268,7 +273,7 @@ private fun InterventionDialogs(
 
 @Composable
 private fun AddToQueueDialog(
-    viewModel: InterventionViewModel,
+    viewModel: TestExaminationViewModel,
     navController: NavController,
     coroutineScope: CoroutineScope
 ) {
@@ -294,7 +299,7 @@ private fun AddToQueueDialog(
                                 PATIENT,
                                 viewModel.patient
                             )
-                            navController.navigate(Screen.AddInterventionScreen.route)
+                            navController.navigate(Screen.AddTestExaminationScreen.route)
                         }
                     }
                 )
@@ -311,7 +316,7 @@ private fun AddToQueueDialog(
                                     PATIENT,
                                     viewModel.patient
                                 )
-                                navController.navigate(Screen.AddInterventionScreen.route)
+                                navController.navigate(Screen.AddTestExaminationScreen.route)
                             }
                         }
                     )

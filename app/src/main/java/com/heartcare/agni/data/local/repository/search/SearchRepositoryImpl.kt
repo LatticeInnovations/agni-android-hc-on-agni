@@ -230,6 +230,38 @@ class SearchRepositoryImpl @Inject constructor(
         return searchDao.getRecentSearches(SearchTypeEnum.INTERVENTIONS)
     }
 
+    override suspend fun insertRecentTestExaminationSearch(
+        searchQuery: String,
+        date: Date
+    ): Long {
+        return searchDao.getRecentSearches(SearchTypeEnum.TEST_EXAMINATION).run {
+            if (size == 5) {
+                searchDao.getOldestRecentSearchId(SearchTypeEnum.TEST_EXAMINATION).run {
+                    searchDao.deleteRecentSearch(this)
+                    searchDao.insertRecentSearch(
+                        SearchHistoryEntity(
+                            searchQuery = searchQuery,
+                            date = date,
+                            searchType = SearchTypeEnum.TEST_EXAMINATION
+                        )
+                    )
+                }
+            } else {
+                searchDao.insertRecentSearch(
+                    SearchHistoryEntity(
+                        searchQuery = searchQuery,
+                        date = date,
+                        searchType = SearchTypeEnum.TEST_EXAMINATION
+                    )
+                )
+            }
+        }
+    }
+
+    override suspend fun getRecentTestExaminationSearches(): List<String> {
+        return searchDao.getRecentSearches(SearchTypeEnum.TEST_EXAMINATION)
+    }
+
     override suspend fun getSuggestedMembers(
         patientId: String,
         searchParameters: SearchParameters,

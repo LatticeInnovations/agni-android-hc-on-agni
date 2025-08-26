@@ -47,6 +47,10 @@ interface SearchRepository {
     suspend fun insertRecentInterventionSearch(searchQuery: String, date: Date = Date()): Long
     suspend fun getRecentInterventionSearches(): List<String>
 
+    /** Recent Test and Examination Search*/
+    suspend fun insertRecentTestExaminationSearch(searchQuery: String, date: Date = Date()): Long
+    suspend fun getRecentTestExaminationSearches(): List<String>
+
     /** Get Suggested Members */
     suspend fun getSuggestedMembers(
         patientId: String,
