@@ -17,6 +17,7 @@ import com.heartcare.agni.ui.dispense.DrugDispenseScreen
 import com.heartcare.agni.ui.dispense.otc.OTCScreen
 import com.heartcare.agni.ui.dispense.prescription.dispenseprescription.DispensePrescriptionScreen
 import com.heartcare.agni.ui.examination.TestExaminationScreen
+import com.heartcare.agni.ui.examination.add.AddTestExaminationScreen
 import com.heartcare.agni.ui.historyandtests.HistoryTakingAndTestsScreen
 import com.heartcare.agni.ui.historyandtests.allergy.AddAllergyScreen
 import com.heartcare.agni.ui.historyandtests.family.AddFamilyHistoryScreen
@@ -169,5 +170,6 @@ fun NavigationAppHost(navController: NavController, startDest: String) {
         composable(Screen.InterventionScreen.route) { InterventionScreen(navController = navController) }
         composable(Screen.AddInterventionScreen.route) { AddInterventionScreen(navController = navController) }
         composable(Screen.TestExaminationScreen.route) { TestExaminationScreen(navController = navController) }
+        composable(Screen.AddTestExaminationScreen.route) { AddTestExaminationScreen(navController = navController) }
     }
 }
