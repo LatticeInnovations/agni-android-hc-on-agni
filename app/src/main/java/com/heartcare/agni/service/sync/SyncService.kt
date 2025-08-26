@@ -509,6 +509,10 @@ class SyncService(
                         interventionPatchJob.await()
                         downloadIntervention(logout)
                     }
+                    CoroutineScope(Dispatchers.IO).launch {
+                        examinationMasterDownloadJob.await()
+                        downloadExamination(logout)
+                    }
                 }
             }
         }
@@ -697,6 +701,11 @@ class SyncService(
     /** Download Intervention Data */
     private suspend fun downloadIntervention(logout: (Boolean, String) -> Unit) {
         checkAuthenticationStatus(syncRepository.getAndInsertInterventionsData(0), logout)
+    }
+
+    /** Download Examination Data */
+    private suspend fun downloadExamination(logout: (Boolean, String) -> Unit) {
+        checkAuthenticationStatus(syncRepository.getAndInsertExaminationData(0), logout)
     }
 
     /**

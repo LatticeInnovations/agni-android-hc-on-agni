@@ -43,6 +43,7 @@ import com.heartcare.agni.data.local.roomdb.entities.cvd.RiskPredictionCharts
 import com.heartcare.agni.data.local.roomdb.entities.dispense.DispenseDataEntity
 import com.heartcare.agni.data.local.roomdb.entities.dispense.DispensePrescriptionEntity
 import com.heartcare.agni.data.local.roomdb.entities.dispense.MedicineDispenseListEntity
+import com.heartcare.agni.data.local.roomdb.entities.examination.ExaminationEntity
 import com.heartcare.agni.data.local.roomdb.entities.examination.ExaminationMasterEntity
 import com.heartcare.agni.data.local.roomdb.entities.family.FamilyHistoryEntity
 import com.heartcare.agni.data.local.roomdb.entities.file.DownloadedFileEntity
@@ -128,7 +129,8 @@ import java.util.UUID
         TobaccoCessationEntity::class,
         InterventionMasterEntity::class,
         InterventionEntity::class,
-        ExaminationMasterEntity::class
+        ExaminationMasterEntity::class,
+        ExaminationEntity::class
     ],
     views = [RelationView::class, PrescriptionDirectionAndMedicineView::class],
     version = 1,

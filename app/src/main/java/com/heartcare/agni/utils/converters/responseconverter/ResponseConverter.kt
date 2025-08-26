@@ -7,6 +7,8 @@ import com.heartcare.agni.data.local.enums.RelationEnum
 import com.heartcare.agni.data.local.model.InterventionItem
 import com.heartcare.agni.data.local.model.InterventionResponseLocal
 import com.heartcare.agni.data.local.model.appointment.AppointmentResponseLocal
+import com.heartcare.agni.data.local.model.examination.ExaminationItem
+import com.heartcare.agni.data.local.model.examination.ExaminationResponseLocal
 import com.heartcare.agni.data.local.model.labtest.LabTestLocal
 import com.heartcare.agni.data.local.model.labtest.LabTestPhotoResponseLocal
 import com.heartcare.agni.data.local.model.prescription.MedicationLocal
@@ -15,6 +17,7 @@ import com.heartcare.agni.data.local.model.prescription.PrescriptionResponseLoca
 import com.heartcare.agni.data.local.model.relation.Relation
 import com.heartcare.agni.data.local.model.symdiag.SymptomsAndDiagnosisData
 import com.heartcare.agni.data.local.roomdb.dao.AppointmentDao
+import com.heartcare.agni.data.local.roomdb.dao.ExaminationDao
 import com.heartcare.agni.data.local.roomdb.dao.InterventionDao
 import com.heartcare.agni.data.local.roomdb.dao.MedicationDao
 import com.heartcare.agni.data.local.roomdb.dao.PatientDao
@@ -27,6 +30,7 @@ import com.heartcare.agni.data.local.roomdb.entities.cvd.CVDEntity
 import com.heartcare.agni.data.local.roomdb.entities.dispense.DispenseDataEntity
 import com.heartcare.agni.data.local.roomdb.entities.dispense.DispensePrescriptionEntity
 import com.heartcare.agni.data.local.roomdb.entities.dispense.MedicineDispenseListEntity
+import com.heartcare.agni.data.local.roomdb.entities.examination.ExaminationEntity
 import com.heartcare.agni.data.local.roomdb.entities.examination.ExaminationMasterEntity
 import com.heartcare.agni.data.local.roomdb.entities.family.FamilyHistoryEntity
 import com.heartcare.agni.data.local.roomdb.entities.generic.GenericEntity
@@ -78,6 +82,7 @@ import com.heartcare.agni.data.server.model.cvd.CVDResponse
 import com.heartcare.agni.data.server.model.dispense.response.DispenseData
 import com.heartcare.agni.data.server.model.dispense.response.MedicineDispenseResponse
 import com.heartcare.agni.data.server.model.examination.ExaminationMasterResponse
+import com.heartcare.agni.data.server.model.examination.ExaminationResponse
 import com.heartcare.agni.data.server.model.family.FamilyHistoryResponse
 import com.heartcare.agni.data.server.model.historymedication.HistoryMedicationResponse
 import com.heartcare.agni.data.server.model.intervention.InterventionMasterResponse
@@ -126,6 +131,7 @@ import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toPat
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toTimeInMilli
 import com.heartcare.agni.utils.converters.server.responsemapper.ApiEndResponse
 import com.heartcare.agni.utils.converters.server.responsemapper.ApiResponseConverter
+import timber.log.Timber
 import java.util.Date
 import java.util.UUID
 
@@ -1779,5 +1785,51 @@ fun ExaminationMasterEntity.toExaminationMasterResponse(): ExaminationMasterResp
         name = name,
         secondaryName = secondaryName,
         status = status
+    )
+}
+
+fun ExaminationResponse.toExaminationEntity(): ExaminationEntity{
+    Timber.d("manseeyyy examination $this")
+    return ExaminationEntity(
+        uuid = uuid!!,
+        fhirId = fhirId,
+        appUpdatedDate = appUpdatedDate,
+        appointmentId = appointmentId,
+        patientId = patientId,
+        practitionerId = practitionerId!!,
+        practitionerName = practitionerName!!,
+        examinations = examinations
+    )
+}
+
+suspend fun ExaminationResponse.toExaminationEntity(
+    patientDao: PatientDao,
+    appointmentDao: AppointmentDao
+): ExaminationEntity {
+    return this.toExaminationEntity().copy(
+        appointmentId = appointmentDao.getAppointmentIdByFhirId(appointmentId),
+        patientId = patientDao.getPatientIdByFhirId(patientId)!!
+    )
+}
+
+suspend fun ExaminationEntity.toExaminationResponseLocal(
+    examinationDao: ExaminationDao
+): ExaminationResponseLocal {
+    return ExaminationResponseLocal(
+        uuid = uuid,
+        fhirId = fhirId,
+        appUpdatedDate = appUpdatedDate,
+        appointmentId = appointmentId,
+        patientId = patientId,
+        practitionerId = practitionerId,
+        practitionerName = practitionerName,
+        examinations = examinations.map { fhirId ->
+            val examination = examinationDao.getExaminationByFhirId(fhirId)
+            ExaminationItem(
+                fhirId = fhirId,
+                code = examination.code,
+                display = examination.name
+            )
+        }
     )
 }

@@ -71,6 +71,7 @@ import com.heartcare.agni.data.server.model.dispense.request.MedicineDispenseReq
 import com.heartcare.agni.data.server.model.dispense.response.DispenseData
 import com.heartcare.agni.data.server.model.dispense.response.MedicineDispenseResponse
 import com.heartcare.agni.data.server.model.examination.ExaminationMasterResponse
+import com.heartcare.agni.data.server.model.examination.ExaminationResponse
 import com.heartcare.agni.data.server.model.family.FamilyHistoryResponse
 import com.heartcare.agni.data.server.model.historymedication.HistoryMedicationResponse
 import com.heartcare.agni.data.server.model.intervention.InterventionMasterResponse
@@ -2107,6 +2108,40 @@ class SyncRepositoryImpl @Inject constructor(
                 is ApiEndResponse -> {
                     preferenceRepository.setLastSyncIntervention(Date().time)
                     insertIntervention(body)
+                    this
+                }
+
+                else -> this
+            }
+        }
+    }
+
+    override suspend fun getAndInsertExaminationData(
+        offset: Int
+    ): ResponseMapper<List<ExaminationResponse>> {
+        val map = mutableMapOf<String, String>()
+        map[COUNT] = COUNT_VALUE.toString()
+        map[OFFSET] = offset.toString()
+        map[SORT] = "-$ID"
+        if (preferenceRepository.getLastSyncExamination() != 0L) map[LAST_UPDATED] = String.format(
+            GREATER_THAN_BUILDER, preferenceRepository.getLastSyncExamination().toTimeStampDate()
+        )
+
+        ApiResponseConverter.convert(
+            examinationApiService.getExaminations(
+                map
+            ), true
+        ).run {
+            return when (this) {
+                is ApiContinueResponse -> {
+                    insertExamination(body)
+                    //Call for next batch data
+                    getAndInsertExaminationData(offset + COUNT_VALUE)
+                }
+
+                is ApiEndResponse -> {
+                    preferenceRepository.setLastSyncExamination(Date().time)
+                    insertExamination(body)
                     this
                 }
 

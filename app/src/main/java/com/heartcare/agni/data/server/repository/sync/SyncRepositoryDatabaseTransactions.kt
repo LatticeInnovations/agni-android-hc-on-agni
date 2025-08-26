@@ -50,6 +50,7 @@ import com.heartcare.agni.data.server.model.cvd.CVDResponse
 import com.heartcare.agni.data.server.model.dispense.response.DispenseData
 import com.heartcare.agni.data.server.model.dispense.response.MedicineDispenseResponse
 import com.heartcare.agni.data.server.model.examination.ExaminationMasterResponse
+import com.heartcare.agni.data.server.model.examination.ExaminationResponse
 import com.heartcare.agni.data.server.model.family.FamilyHistoryResponse
 import com.heartcare.agni.data.server.model.historymedication.HistoryMedicationResponse
 import com.heartcare.agni.data.server.model.intervention.InterventionMasterResponse
@@ -86,6 +87,7 @@ import com.heartcare.agni.utils.converters.responseconverter.toAllergyEntity
 import com.heartcare.agni.utils.converters.responseconverter.toAppointmentEntity
 import com.heartcare.agni.utils.converters.responseconverter.toCVDEntity
 import com.heartcare.agni.utils.converters.responseconverter.toDispensePrescriptionEntity
+import com.heartcare.agni.utils.converters.responseconverter.toExaminationEntity
 import com.heartcare.agni.utils.converters.responseconverter.toExaminationMasterEntity
 import com.heartcare.agni.utils.converters.responseconverter.toFamilyHistoryEntity
 import com.heartcare.agni.utils.converters.responseconverter.toHistoryMedicationEntity
@@ -1068,6 +1070,12 @@ open class SyncRepositoryDatabaseTransactions(
     protected suspend fun insertIntervention(body: List<InterventionResponse>) {
         interventionDao.insertIntervention(
             *body.map { it.toInterventionEntity(patientDao, appointmentDao) }.toTypedArray()
+        )
+    }
+
+    protected suspend fun insertExamination(body: List<ExaminationResponse>) {
+        examinationDao.insertExamination(
+            *body.map { it.toExaminationEntity(patientDao, appointmentDao) }.toTypedArray()
         )
     }
 }
