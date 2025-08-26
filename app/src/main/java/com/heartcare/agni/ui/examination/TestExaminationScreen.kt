@@ -46,6 +46,7 @@ import com.heartcare.agni.ui.common.ExpandableCard
 import com.heartcare.agni.ui.patientlandingscreen.AllSlotsBookedDialog
 import com.heartcare.agni.ui.prescription.photo.view.AppointmentCompletedDialog
 import com.heartcare.agni.utils.constants.NavControllerConstants.PATIENT
+import com.heartcare.agni.utils.constants.NavControllerConstants.TEST_EXAMINATION_SAVED
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import java.util.Date
@@ -69,7 +70,7 @@ fun TestExaminationScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = stringResource(R.string.tests_and_examination),
+                        text = stringResource(R.string.test_and_examinations),
                         style = MaterialTheme.typography.titleLarge
                     )
                 },
@@ -122,6 +123,16 @@ private fun HandleLaunchedEffect(
                 }
             viewModel.getAppointmentInfo { }
             viewModel.isLaunched = true
+        }
+        navController.currentBackStackEntry?.savedStateHandle?.let { handle ->
+            if (handle.remove<Boolean>(TEST_EXAMINATION_SAVED) == true) {
+                snackBarHostState.showSnackbar(
+                    context.getString(
+                        if (viewModel.todayTestExamination == null) R.string.test_and_examinations_saved
+                        else R.string.test_and_examinations_updated
+                    )
+                )
+            }
         }
     }
 }
@@ -229,8 +240,8 @@ private fun TestExaminationBottomBar(
             Spacer(Modifier.width(6.dp))
             Text(
                 stringResource(
-                    id = if (viewModel.todayTestExamination == null || viewModel.existsInOtherHospital) R.string.add_test_and_examination
-                    else R.string.update_test_and_examination
+                    id = if (viewModel.todayTestExamination == null || viewModel.existsInOtherHospital) R.string.add_test_and_examinations
+                    else R.string.update_test_and_examinations
                 )
             )
         }

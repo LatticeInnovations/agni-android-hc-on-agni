@@ -703,7 +703,11 @@ include them in the household</string>
     <string name="interventions_saved">Interventions saved!</string>
     <string name="update_interventions">Update interventions</string>
     <string name="interventions_updated">Interventions updated!</string>
-    <string name="tests_and_examination"><![CDATA[Test & examinations]]></string>
-    <string name="add_test_and_examination"><![CDATA[Add test & examinations]]></string>
-    <string name="update_test_and_examination"><![CDATA[Update test & examinations]]></string>
+    <string name="test_and_examinations"><![CDATA[Test & examinations]]></string>
+    <string name="add_test_and_examinations"><![CDATA[Add test & examinations]]></string>
+    <string name="update_test_and_examinations"><![CDATA[Update test & examinations]]></string>
+    <string name="discard_test_examinations_dialog_title"><![CDATA[Discard test & examinations ?]]></string>
+    <string name="discard_test_examinations_dialog_description"><![CDATA[Are you sure you want to discard all test & examinations ?]]></string>
+    <string name="test_and_examinations_saved"><![CDATA[Test & examinations saved!]]></string>
+    <string name="test_and_examinations_updated"><![CDATA[Test & examinations updated!]]></string>
 </resources>

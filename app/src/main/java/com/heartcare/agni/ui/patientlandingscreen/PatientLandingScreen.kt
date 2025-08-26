@@ -314,7 +314,7 @@ private fun CardComposableList(
             )
             CardComposable(
                 viewModel,
-                stringResource(id = R.string.tests_and_examination),
+                stringResource(id = R.string.test_and_examinations),
                 R.drawable.lab_profile,
                 null,
                 onClick = {
