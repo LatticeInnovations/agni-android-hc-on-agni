@@ -2,11 +2,9 @@ package com.heartcare.agni.data.server.api
 
 import com.heartcare.agni.base.server.BaseResponse
 import com.heartcare.agni.data.server.constants.EndPoints.INTERVENTION
-import com.heartcare.agni.data.server.constants.EndPoints.MEDICATION_REQUEST
 import com.heartcare.agni.data.server.model.create.CreateResponse
 import com.heartcare.agni.data.server.model.intervention.InterventionMasterResponse
 import com.heartcare.agni.data.server.model.intervention.InterventionResponse
-import com.heartcare.agni.data.server.model.prescription.prescriptionresponse.PrescriptionResponse
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET

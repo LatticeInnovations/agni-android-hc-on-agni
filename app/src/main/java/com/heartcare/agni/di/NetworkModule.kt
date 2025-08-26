@@ -8,6 +8,7 @@ import com.heartcare.agni.data.server.api.AuthenticationApiService
 import com.heartcare.agni.data.server.api.AuthenticationApiServiceWithToken
 import com.heartcare.agni.data.server.api.CVDApiService
 import com.heartcare.agni.data.server.api.DispenseApiService
+import com.heartcare.agni.data.server.api.ExaminationApiService
 import com.heartcare.agni.data.server.api.FileUploadApiService
 import com.heartcare.agni.data.server.api.LabTestAndMedRecordService
 import com.heartcare.agni.data.server.api.LevelsApiService
@@ -293,4 +294,9 @@ object NetworkModule {
     @Singleton
     fun provideInterventionApiService(@Named("agni") retrofit: Retrofit): InterventionApiService =
         retrofit.create(InterventionApiService::class.java)
+
+    @Provides
+    @Singleton
+    fun provideExaminationApiService(@Named("agni") retrofit: Retrofit): ExaminationApiService =
+        retrofit.create(ExaminationApiService::class.java)
 }

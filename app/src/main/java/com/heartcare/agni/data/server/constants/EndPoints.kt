@@ -23,4 +23,5 @@ object EndPoints {
     const val RISK_FACTOR = "riskFactor"
     const val TOBACCO_CESSATION = "tobaccoCessation"
     const val INTERVENTION = "intervention"
+    const val EXAMINATION = "examination"
 }
