@@ -12,6 +12,8 @@ import com.heartcare.agni.data.local.repository.cvd.records.CVDAssessmentReposit
 import com.heartcare.agni.data.local.repository.cvd.records.CVDAssessmentRepositoryImpl
 import com.heartcare.agni.data.local.repository.dispense.DispenseRepository
 import com.heartcare.agni.data.local.repository.dispense.DispenseRepositoryImpl
+import com.heartcare.agni.data.local.repository.examination.ExaminationRepository
+import com.heartcare.agni.data.local.repository.examination.ExaminationRepositoryImpl
 import com.heartcare.agni.data.local.repository.family.FamilyHistoryRepository
 import com.heartcare.agni.data.local.repository.family.FamilyHistoryRepositoryImpl
 import com.heartcare.agni.data.local.repository.file.DownloadedFileRepository
@@ -213,4 +215,8 @@ abstract class RepositoryModule {
     @Binds
     @ViewModelScoped
     abstract fun provideInterventionRepository(interventionRepositoryImpl: InterventionRepositoryImpl): InterventionRepository
+
+    @Binds
+    @ViewModelScoped
+    abstract fun provideExaminationRepository(examinationRepositoryImpl: ExaminationRepositoryImpl): ExaminationRepository
 }

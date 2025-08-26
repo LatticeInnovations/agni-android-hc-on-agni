@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "c9032e8c140d66764d0c39a1fd1d26d7",
+    "identityHash": "f60804ebc742433f67126710ba061d47",
     "entities": [
       {
         "tableName": "PatientEntity",
@@ -3686,6 +3686,47 @@
             ]
           }
         ]
+      },
+      {
+        "tableName": "ExaminationMasterEntity",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`fhirId` TEXT NOT NULL, `code` TEXT NOT NULL, `name` TEXT NOT NULL, `secondaryName` TEXT, `status` TEXT NOT NULL, PRIMARY KEY(`fhirId`))",
+        "fields": [
+          {
+            "fieldPath": "fhirId",
+            "columnName": "fhirId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "code",
+            "columnName": "code",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "secondaryName",
+            "columnName": "secondaryName",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "status",
+            "columnName": "status",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "fhirId"
+          ]
+        }
       }
     ],
     "views": [
@@ -3700,7 +3741,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'c9032e8c140d66764d0c39a1fd1d26d7')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'f60804ebc742433f67126710ba061d47')"
     ]
   }
 }

@@ -27,6 +27,7 @@ import com.heartcare.agni.data.local.roomdb.entities.cvd.CVDEntity
 import com.heartcare.agni.data.local.roomdb.entities.dispense.DispenseDataEntity
 import com.heartcare.agni.data.local.roomdb.entities.dispense.DispensePrescriptionEntity
 import com.heartcare.agni.data.local.roomdb.entities.dispense.MedicineDispenseListEntity
+import com.heartcare.agni.data.local.roomdb.entities.examination.ExaminationMasterEntity
 import com.heartcare.agni.data.local.roomdb.entities.family.FamilyHistoryEntity
 import com.heartcare.agni.data.local.roomdb.entities.generic.GenericEntity
 import com.heartcare.agni.data.local.roomdb.entities.historymedication.HistoryMedicationEntity
@@ -76,6 +77,7 @@ import com.heartcare.agni.data.server.model.allergy.AllergyResponse
 import com.heartcare.agni.data.server.model.cvd.CVDResponse
 import com.heartcare.agni.data.server.model.dispense.response.DispenseData
 import com.heartcare.agni.data.server.model.dispense.response.MedicineDispenseResponse
+import com.heartcare.agni.data.server.model.examination.ExaminationMasterResponse
 import com.heartcare.agni.data.server.model.family.FamilyHistoryResponse
 import com.heartcare.agni.data.server.model.historymedication.HistoryMedicationResponse
 import com.heartcare.agni.data.server.model.intervention.InterventionMasterResponse
@@ -1757,5 +1759,25 @@ suspend fun InterventionEntity.toInterventionResponseLocal(
                 display = intervention.name
             )
         }
+    )
+}
+
+fun ExaminationMasterResponse.toExaminationMasterEntity(): ExaminationMasterEntity {
+    return ExaminationMasterEntity(
+        fhirId = fhirId,
+        code = code,
+        name = name,
+        secondaryName = secondaryName,
+        status = status
+    )
+}
+
+fun ExaminationMasterEntity.toExaminationMasterResponse(): ExaminationMasterResponse {
+    return ExaminationMasterResponse(
+        fhirId = fhirId,
+        code = code,
+        name = name,
+        secondaryName = secondaryName,
+        status = status
     )
 }
