@@ -49,7 +49,6 @@ import com.heartcare.agni.utils.constants.NavControllerConstants.PATIENT
 import com.heartcare.agni.utils.constants.NavControllerConstants.TEST_EXAMINATION_SAVED
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import java.util.Date
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -124,6 +123,7 @@ private fun HandleLaunchedEffect(
             viewModel.getAppointmentInfo { }
             viewModel.isLaunched = true
         }
+        viewModel.getExaminationRecords(viewModel.patient!!.id)
         navController.currentBackStackEntry?.savedStateHandle?.let { handle ->
             if (handle.remove<Boolean>(TEST_EXAMINATION_SAVED) == true) {
                 snackBarHostState.showSnackbar(
@@ -164,14 +164,11 @@ private fun TestExaminationContent(
                 modifier = Modifier.padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                viewModel.testExaminationLists.forEach { _ ->
+                viewModel.testExaminationLists.forEach { testExamination ->
                     ExpandableCard(
-                        createdOn = Date(),
-                        practitionerName = "Dr. Anamika Sood",
-                        listOfItems = listOf(
-                            "PMT007 Pulmonary function test",
-                            "PMT005 Eye examination - slit lamp biomicroscopy"
-                        ),
+                        createdOn = testExamination.appUpdatedDate,
+                        practitionerName = testExamination.practitionerName,
+                        listOfItems = testExamination.examinations.map { "${it.code} ${it.display}" },
                         isBulleted = true
                     )
                 }

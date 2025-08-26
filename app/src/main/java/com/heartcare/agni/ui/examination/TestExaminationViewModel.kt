@@ -7,7 +7,9 @@ import androidx.lifecycle.viewModelScope
 import com.heartcare.agni.base.viewmodel.BaseViewModel
 import com.heartcare.agni.data.local.enums.AppointmentStatusEnum
 import com.heartcare.agni.data.local.model.appointment.AppointmentResponseLocal
+import com.heartcare.agni.data.local.model.examination.ExaminationResponseLocal
 import com.heartcare.agni.data.local.repository.appointment.AppointmentRepository
+import com.heartcare.agni.data.local.repository.examination.ExaminationRepository
 import com.heartcare.agni.data.local.repository.generic.GenericRepository
 import com.heartcare.agni.data.local.repository.patient.lastupdated.PatientLastUpdatedRepository
 import com.heartcare.agni.data.local.repository.preference.PreferenceRepository
@@ -15,6 +17,7 @@ import com.heartcare.agni.data.local.repository.schedule.ScheduleRepository
 import com.heartcare.agni.data.server.model.patient.PatientResponse
 import com.heartcare.agni.di.dispatcher.IoDispatcher
 import com.heartcare.agni.utils.common.Queries
+import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.isToday
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toEndOfDay
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toTodayStartDate
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -25,6 +28,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class TestExaminationViewModel @Inject constructor(
+    private val examinationRepository: ExaminationRepository,
     private val appointmentRepository: AppointmentRepository,
     private val preferenceRepository: PreferenceRepository,
     private val genericRepository: GenericRepository,
@@ -46,8 +50,8 @@ class TestExaminationViewModel @Inject constructor(
     var isAppointmentCompleted by mutableStateOf(false)
     var existsInOtherHospital by mutableStateOf(false)
 
-    var testExaminationLists by mutableStateOf(listOf<String>())
-    var todayTestExamination by mutableStateOf<String?>(null)
+    var testExaminationLists by mutableStateOf(listOf<ExaminationResponseLocal>())
+    var todayTestExamination by mutableStateOf<ExaminationResponseLocal?>(null)
 
     fun getAppointmentInfo(
         callback: () -> Unit
@@ -129,6 +133,14 @@ class TestExaminationViewModel @Inject constructor(
                 patientLastUpdatedRepository,
                 updated
             )
+        }
+    }
+    
+    fun getExaminationRecords(patientId: String) {
+        viewModelScope.launch(ioDispatcher) {
+            testExaminationLists = examinationRepository.getExaminationList(patientId).also {
+                todayTestExamination = it.firstOrNull { examination -> isToday(examination.appUpdatedDate) }
+            }
         }
     }
 }
