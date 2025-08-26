@@ -703,4 +703,5 @@ include them in the household</string>
     <string name="interventions_saved">Interventions saved!</string>
     <string name="update_interventions">Update interventions</string>
     <string name="interventions_updated">Interventions updated!</string>
+    <string name="tests_and_examination"><![CDATA[Test & examinations]]></string>
 </resources>
