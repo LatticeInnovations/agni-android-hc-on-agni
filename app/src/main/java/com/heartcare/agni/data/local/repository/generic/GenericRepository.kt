@@ -6,6 +6,7 @@ import com.heartcare.agni.data.local.model.symdiag.SymptomsAndDiagnosisData
 import com.heartcare.agni.data.server.model.allergy.AllergyResponse
 import com.heartcare.agni.data.server.model.cvd.CVDResponse
 import com.heartcare.agni.data.server.model.dispense.request.MedicineDispenseRequest
+import com.heartcare.agni.data.server.model.examination.ExaminationResponse
 import com.heartcare.agni.data.server.model.family.FamilyHistoryResponse
 import com.heartcare.agni.data.server.model.historymedication.HistoryMedicationResponse
 import com.heartcare.agni.data.server.model.intervention.InterventionResponse
@@ -117,6 +118,11 @@ interface GenericRepository {
         uuid: String = UUIDBuilder.generateUUID()
     ): Long
 
+    suspend fun insertExaminationRecord(
+        examinationResponse: ExaminationResponse,
+        uuid: String = UUIDBuilder.generateUUID()
+    ): Long
+
     suspend fun updateAppointmentFhirIds()
     suspend fun updateAppointmentFhirIdInPatch()
 
@@ -209,6 +215,12 @@ interface GenericRepository {
     suspend fun insertOrUpdateInterventionPut(
         interventionFhirId: String,
         interventionResponse: InterventionResponse,
+        uuid: String = UUIDBuilder.generateUUID()
+    ): Long
+
+    suspend fun insertOrUpdateExaminationPut(
+        examinationFhirId: String,
+        examinationResponse: ExaminationResponse,
         uuid: String = UUIDBuilder.generateUUID()
     ): Long
 }

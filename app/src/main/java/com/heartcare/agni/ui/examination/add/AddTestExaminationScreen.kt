@@ -59,6 +59,7 @@ fun AddTestExaminationScreen(
             navController.previousBackStackEntry?.savedStateHandle
                 ?.get<PatientResponse>(PATIENT)?.let {
                     viewModel.patient = it
+                    viewModel.getTodayExamination(it.id)
                 }
             viewModel.isLaunched = true
         }
@@ -222,13 +223,14 @@ private fun TestExaminationBottomBar(
                 focusManager.clearFocus()
             },
             onSave = {
-                // save intervention
-                coroutineScope.launch {
-                    navController.previousBackStackEntry?.savedStateHandle?.set(
-                        TEST_EXAMINATION_SAVED,
-                        true
-                    )
-                    navController.navigateUp()
+                viewModel.saveExamination {
+                    coroutineScope.launch {
+                        navController.previousBackStackEntry?.savedStateHandle?.set(
+                            TEST_EXAMINATION_SAVED,
+                            true
+                        )
+                        navController.navigateUp()
+                    }
                 }
             },
             onClearAll = { viewModel.clearAllConfirmDialog = true },
