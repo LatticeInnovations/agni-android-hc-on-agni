@@ -209,7 +209,7 @@ fun FormulationsForm(
     // quantity per dose
     QuantitySelectorDropdown(
         label = stringResource(R.string.qty_per_dose),
-        unit = viewModel.medUnit,
+        unit = viewModel.medDoseForm.lowercase(),
         value = viewModel.quantityPerDose,
         qtyRange = viewModel.qtyRange,
         updateValue = { viewModel.quantityPerDose = it }
