@@ -35,6 +35,7 @@ class SyncService(
     private lateinit var appointmentPatchJob: Deferred<ResponseMapper<Any>?>
     private lateinit var prescriptionPatchJob: Deferred<ResponseMapper<Any>?>
     private lateinit var interventionPatchJob: Deferred<ResponseMapper<Any>?>
+    private lateinit var examinationPatchJob: Deferred<ResponseMapper<Any>?>
     private lateinit var interventionMasterDownloadJob: Deferred<ResponseMapper<Any>?>
     private lateinit var examinationMasterDownloadJob: Deferred<ResponseMapper<Any>?>
 
@@ -61,6 +62,9 @@ class SyncService(
                     },
                     async {
                         patchIntervention(logout)
+                    },
+                    async {
+                        patchExamination(logout)
                     },
                     async {
                         uploadPatientLastUpdatedData(logout)
@@ -394,6 +398,15 @@ class SyncService(
         }
     }
 
+    /** Patch Examination */
+    internal suspend fun patchExamination(logout: (Boolean, String) -> Unit) {
+        coroutineScope {
+            examinationPatchJob = async {
+                checkAuthenticationStatus(syncRepository.sentExaminationPutData(), logout)
+            }
+        }
+    }
+
     /** Patch CVD */
     private suspend fun patchCVD(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
         return checkAuthenticationStatus(syncRepository.sendCVDPatchData(), logout)
@@ -519,6 +532,7 @@ class SyncService(
                     }
                     CoroutineScope(Dispatchers.IO).launch {
                         examinationMasterDownloadJob.await()
+                        examinationPatchJob.await()
                         downloadExamination(logout)
                     }
                 }

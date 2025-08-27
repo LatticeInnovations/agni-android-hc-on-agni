@@ -101,6 +101,7 @@ interface SyncRepository {
     suspend fun sendMedRecordPatchData(): ResponseMapper<List<CreateResponse>>
     suspend fun sendPrescriptionPutData(): ResponseMapper<List<CreateResponse>>
     suspend fun sentInterventionPutData(): ResponseMapper<List<CreateResponse>>
+    suspend fun sentExaminationPutData(): ResponseMapper<List<CreateResponse>>
 
     //DELETE
     suspend fun deletePrescriptionPhoto(): ResponseMapper<List<CreateResponse>>
