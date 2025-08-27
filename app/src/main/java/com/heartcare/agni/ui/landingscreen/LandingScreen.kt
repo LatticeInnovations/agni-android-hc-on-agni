@@ -400,7 +400,7 @@ fun LandingScreen(
                                 snackbarHostState
                             )
 
-                            2 -> ProfileScreen(navController, snackbarHostState)
+                            2 -> ProfileScreen()
                         }
                     }
                 }
