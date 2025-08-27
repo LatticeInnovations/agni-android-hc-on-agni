@@ -14,6 +14,7 @@ import com.heartcare.agni.data.local.roomdb.FhirAppDatabase
 import com.heartcare.agni.data.local.sharedpreferences.PreferenceStorage
 import com.heartcare.agni.data.server.api.CVDApiService
 import com.heartcare.agni.data.server.api.DispenseApiService
+import com.heartcare.agni.data.server.api.ExaminationApiService
 import com.heartcare.agni.data.server.api.FileUploadApiService
 import com.heartcare.agni.data.server.api.LabTestAndMedRecordService
 import com.heartcare.agni.data.server.api.LevelsApiService
@@ -85,6 +86,9 @@ class FhirApp : Application() {
     lateinit var interventionApiService: InterventionApiService
 
     @Inject
+    lateinit var examinationApiService: ExaminationApiService
+
+    @Inject
     lateinit var fileUploadApiService: FileUploadApiService
 
     @Inject
@@ -129,6 +133,7 @@ class FhirApp : Application() {
             levelsApiService,
             historyAndTestsApiService,
             interventionApiService,
+            examinationApiService,
             fhirAppDatabase.getPatientDao(),
             fhirAppDatabase.getGenericDao(),
             preferenceRepository,
@@ -156,7 +161,8 @@ class FhirApp : Application() {
             fhirAppDatabase.getAllergyDao(),
             fhirAppDatabase.getRiskFactorDao(),
             fhirAppDatabase.getTobaccoCessationDao(),
-            fhirAppDatabase.getInterventionDao()
+            fhirAppDatabase.getInterventionDao(),
+            fhirAppDatabase.getExaminationDao()
         )
 
         _fileSyncRepository = FileSyncRepositoryImpl(

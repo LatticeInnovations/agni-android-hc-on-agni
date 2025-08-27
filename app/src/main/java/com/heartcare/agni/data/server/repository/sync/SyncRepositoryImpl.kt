@@ -10,6 +10,7 @@ import com.heartcare.agni.data.local.roomdb.dao.AllergyDao
 import com.heartcare.agni.data.local.roomdb.dao.AppointmentDao
 import com.heartcare.agni.data.local.roomdb.dao.CVDDao
 import com.heartcare.agni.data.local.roomdb.dao.DispenseDao
+import com.heartcare.agni.data.local.roomdb.dao.ExaminationDao
 import com.heartcare.agni.data.local.roomdb.dao.FamilyHistoryDao
 import com.heartcare.agni.data.local.roomdb.dao.FileUploadDao
 import com.heartcare.agni.data.local.roomdb.dao.GenericDao
@@ -34,6 +35,7 @@ import com.heartcare.agni.data.local.roomdb.dao.vaccincation.ImmunizationRecomme
 import com.heartcare.agni.data.local.roomdb.dao.vaccincation.ManufacturerDao
 import com.heartcare.agni.data.server.api.CVDApiService
 import com.heartcare.agni.data.server.api.DispenseApiService
+import com.heartcare.agni.data.server.api.ExaminationApiService
 import com.heartcare.agni.data.server.api.HistoryAndTestsApiService
 import com.heartcare.agni.data.server.api.InterventionApiService
 import com.heartcare.agni.data.server.api.LabTestAndMedRecordService
@@ -68,6 +70,8 @@ import com.heartcare.agni.data.server.model.cvd.CVDResponse
 import com.heartcare.agni.data.server.model.dispense.request.MedicineDispenseRequest
 import com.heartcare.agni.data.server.model.dispense.response.DispenseData
 import com.heartcare.agni.data.server.model.dispense.response.MedicineDispenseResponse
+import com.heartcare.agni.data.server.model.examination.ExaminationMasterResponse
+import com.heartcare.agni.data.server.model.examination.ExaminationResponse
 import com.heartcare.agni.data.server.model.family.FamilyHistoryResponse
 import com.heartcare.agni.data.server.model.historymedication.HistoryMedicationResponse
 import com.heartcare.agni.data.server.model.intervention.InterventionMasterResponse
@@ -120,6 +124,7 @@ class SyncRepositoryImpl @Inject constructor(
     private val levelsApiService: LevelsApiService,
     private val historyAndTestsApiService: HistoryAndTestsApiService,
     private val interventionApiService: InterventionApiService,
+    private val examinationApiService: ExaminationApiService,
     patientDao: PatientDao,
     private val genericDao: GenericDao,
     private val preferenceRepository: PreferenceRepository,
@@ -147,7 +152,8 @@ class SyncRepositoryImpl @Inject constructor(
     allergyDao: AllergyDao,
     riskFactorDao: RiskFactorDao,
     tobaccoCessationDao: TobaccoCessationDao,
-    interventionDao: InterventionDao
+    interventionDao: InterventionDao,
+    examinationDao: ExaminationDao
 ) : SyncRepository, SyncRepositoryDatabaseTransactions(
     patientApiService,
     patientDao,
@@ -176,7 +182,8 @@ class SyncRepositoryImpl @Inject constructor(
     allergyDao,
     riskFactorDao,
     tobaccoCessationDao,
-    interventionDao
+    interventionDao,
+    examinationDao
 ) {
 
     override suspend fun getAndInsertListPatientData(
@@ -411,6 +418,36 @@ class SyncRepositoryImpl @Inject constructor(
                 is ApiEndResponse -> {
                     preferenceRepository.setLastInterventionMasterSyncDate(Date().time)
                     insertInterventionMasterList(body)
+                    this
+                }
+
+                else -> this
+            }
+        }
+    }
+
+    override suspend fun getAndInsertExaminationMaster(offset: Int): ResponseMapper<List<ExaminationMasterResponse>> {
+        val map = mutableMapOf<String, String>()
+        map[COUNT] = COUNT_VALUE.toString()
+        map[OFFSET] = offset.toString()
+        if (preferenceRepository.getLastExaminationMasterSyncDate() != 0L) map[LAST_UPDATED] =
+            String.format(
+                GREATER_THAN_BUILDER,
+                preferenceRepository.getLastExaminationMasterSyncDate().toTimeStampDate()
+            )
+
+        return ApiResponseConverter.convert(
+            examinationApiService.getExaminationMasterList(map), true
+        ).run {
+            when (this) {
+                is ApiContinueResponse -> {
+                    insertExaminationMasterList(body)
+                    getAndInsertExaminationMaster(offset + COUNT_VALUE)
+                }
+
+                is ApiEndResponse -> {
+                    preferenceRepository.setLastExaminationMasterSyncDate(Date().time)
+                    insertExaminationMasterList(body)
                     this
                 }
 
@@ -1443,6 +1480,32 @@ class SyncRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun sendExaminationPostData(): ResponseMapper<List<CreateResponse>> {
+        return genericDao.getSameTypeGenericEntityPayload(
+            genericTypeEnum = GenericTypeEnum.EXAMINATION,
+            syncType = SyncType.POST
+        ).let { listOfGenericEntity ->
+            if (listOfGenericEntity.isEmpty()) ApiEmptyResponse()
+            else {
+                ApiResponseConverter.convert(
+                    examinationApiService.postExamination(
+                        listOfGenericEntity.map {
+                            it.payload.fromJson<LinkedTreeMap<*, *>>()
+                                .mapToObject(ExaminationResponse::class.java)!!
+                        }
+                    )
+                ).apply {
+                    if (this is ApiEndResponse) {
+                        insertExaminationFhirIds(body, listOfGenericEntity)
+                            .apply {
+                                if (this > 0) sendExaminationPostData()
+                            }
+                    }
+                }
+            }
+        }
+    }
+
     override suspend fun sendPersonPatchData(): ResponseMapper<List<CreateResponse>> {
         return genericDao.getSameTypeGenericEntityPayload(
             genericTypeEnum = GenericTypeEnum.PATIENT, syncType = SyncType.PATCH
@@ -1696,6 +1759,34 @@ class SyncRepositoryImpl @Inject constructor(
                         is ApiEndResponse -> {
                             deleteGenericEntityData(listOfGenericEntity).let {
                                 if (it > 0) sentInterventionPutData() else this
+                            }
+                        }
+
+                        else -> this
+                    }
+                }
+            }
+        }
+    }
+
+    override suspend fun sentExaminationPutData(): ResponseMapper<List<CreateResponse>> {
+        return genericDao.getSameTypeGenericEntityPayload(
+            genericTypeEnum = GenericTypeEnum.EXAMINATION, syncType = SyncType.PUT
+        ).let { listOfGenericEntity ->
+            if (listOfGenericEntity.isEmpty()) ApiEmptyResponse()
+            else {
+                ApiResponseConverter.convert(
+                    examinationApiService.putExamination(
+                        listOfGenericEntity.map { examinationGenericEntity ->
+                            examinationGenericEntity.payload.fromJson<LinkedTreeMap<*, *>>()
+                                .mapToObject(ExaminationResponse::class.java)!!
+                        }
+                    )
+                ).run {
+                    when (this) {
+                        is ApiEndResponse -> {
+                            deleteGenericEntityData(listOfGenericEntity).let {
+                                if (it > 0) sentExaminationPutData() else this
                             }
                         }
 
@@ -2071,6 +2162,40 @@ class SyncRepositoryImpl @Inject constructor(
                 is ApiEndResponse -> {
                     preferenceRepository.setLastSyncIntervention(Date().time)
                     insertIntervention(body)
+                    this
+                }
+
+                else -> this
+            }
+        }
+    }
+
+    override suspend fun getAndInsertExaminationData(
+        offset: Int
+    ): ResponseMapper<List<ExaminationResponse>> {
+        val map = mutableMapOf<String, String>()
+        map[COUNT] = COUNT_VALUE.toString()
+        map[OFFSET] = offset.toString()
+        map[SORT] = "-$ID"
+        if (preferenceRepository.getLastSyncExamination() != 0L) map[LAST_UPDATED] = String.format(
+            GREATER_THAN_BUILDER, preferenceRepository.getLastSyncExamination().toTimeStampDate()
+        )
+
+        ApiResponseConverter.convert(
+            examinationApiService.getExaminations(
+                map
+            ), true
+        ).run {
+            return when (this) {
+                is ApiContinueResponse -> {
+                    insertExamination(body)
+                    //Call for next batch data
+                    getAndInsertExaminationData(offset + COUNT_VALUE)
+                }
+
+                is ApiEndResponse -> {
+                    preferenceRepository.setLastSyncExamination(Date().time)
+                    insertExamination(body)
                     this
                 }
 

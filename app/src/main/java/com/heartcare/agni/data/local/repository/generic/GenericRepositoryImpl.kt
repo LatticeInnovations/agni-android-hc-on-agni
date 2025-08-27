@@ -12,6 +12,7 @@ import com.heartcare.agni.data.local.roomdb.entities.generic.GenericEntity
 import com.heartcare.agni.data.server.model.allergy.AllergyResponse
 import com.heartcare.agni.data.server.model.cvd.CVDResponse
 import com.heartcare.agni.data.server.model.dispense.request.MedicineDispenseRequest
+import com.heartcare.agni.data.server.model.examination.ExaminationResponse
 import com.heartcare.agni.data.server.model.family.FamilyHistoryResponse
 import com.heartcare.agni.data.server.model.historymedication.HistoryMedicationResponse
 import com.heartcare.agni.data.server.model.intervention.InterventionResponse
@@ -244,6 +245,13 @@ class GenericRepositoryImpl @Inject constructor(
             }
     }
 
+    override suspend fun updateExaminationFhirId() {
+        genericDao.getNotSyncedData(GenericTypeEnum.EXAMINATION)
+            .forEach { examinationGenericEntity ->
+                updateExaminationFhirIdInGenericEntity(examinationGenericEntity)
+            }
+    }
+
     override suspend fun insertAppointment(
         appointmentResponse: AppointmentResponse,
         uuid: String
@@ -378,6 +386,19 @@ class GenericRepositoryImpl @Inject constructor(
             syncType = SyncType.POST
         ).let { interventionGenericEntity ->
             insertInterventionGenericEntity(interventionGenericEntity, interventionResponse, uuid)
+        }
+    }
+
+    override suspend fun insertExaminationRecord(
+        examinationResponse: ExaminationResponse,
+        uuid: String
+    ): Long {
+        return genericDao.getGenericEntityById(
+            patientId = examinationResponse.uuid!!,
+            genericTypeEnum = GenericTypeEnum.EXAMINATION,
+            syncType = SyncType.POST
+        ).let { examinationGenericEntity ->
+            insertExaminationGenericEntity(examinationGenericEntity, examinationResponse, uuid)
         }
     }
 
@@ -604,6 +625,20 @@ class GenericRepositoryImpl @Inject constructor(
             syncType = SyncType.PUT
         ).let { interventionGenericEntity ->
             insertInterventionPutGenericEntity(interventionFhirId, interventionResponse, interventionGenericEntity, uuid)
+        }
+    }
+
+    override suspend fun insertOrUpdateExaminationPut(
+        examinationFhirId: String,
+        examinationResponse: ExaminationResponse,
+        uuid: String
+    ): Long {
+        return genericDao.getGenericEntityById(
+            patientId = examinationFhirId,
+            genericTypeEnum = GenericTypeEnum.EXAMINATION,
+            syncType = SyncType.PUT
+        ).let { examinationGenericEntity ->
+            insertExaminationPutGenericEntity(examinationFhirId, examinationResponse, examinationGenericEntity, uuid)
         }
     }
 }

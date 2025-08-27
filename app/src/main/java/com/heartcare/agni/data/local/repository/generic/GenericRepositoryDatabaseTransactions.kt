@@ -14,6 +14,7 @@ import com.heartcare.agni.data.local.roomdb.entities.generic.GenericEntity
 import com.heartcare.agni.data.server.model.allergy.AllergyResponse
 import com.heartcare.agni.data.server.model.cvd.CVDResponse
 import com.heartcare.agni.data.server.model.dispense.request.MedicineDispenseRequest
+import com.heartcare.agni.data.server.model.examination.ExaminationResponse
 import com.heartcare.agni.data.server.model.family.FamilyHistoryResponse
 import com.heartcare.agni.data.server.model.historymedication.HistoryMedicationResponse
 import com.heartcare.agni.data.server.model.intervention.InterventionResponse
@@ -137,6 +138,30 @@ open class GenericRepositoryDatabaseTransactions(
                     patientId = interventionFhirId,
                     payload = interventionResponse.toJson(),
                     type = GenericTypeEnum.INTERVENTION,
+                    syncType = SyncType.PUT
+                )
+            )[0]
+        }
+    }
+
+    protected suspend fun insertExaminationPutGenericEntity(
+        examinationFhirId: String,
+        examinationResponse: ExaminationResponse,
+        examinationGenericEntity: GenericEntity?,
+        uuid: String
+    ): Long {
+        return if (examinationGenericEntity != null) {
+            genericDao.insertGenericEntity(
+                examinationGenericEntity.copy(
+                    payload = examinationResponse.toJson()
+                ))[0]
+        } else {
+            genericDao.insertGenericEntity(
+                GenericEntity(
+                    id = uuid,
+                    patientId = examinationFhirId,
+                    payload = examinationResponse.toJson(),
+                    type = GenericTypeEnum.EXAMINATION,
                     syncType = SyncType.PUT
                 )
             )[0]
@@ -522,6 +547,28 @@ open class GenericRepositoryDatabaseTransactions(
         }
     }
 
+    protected suspend fun insertExaminationGenericEntity(
+        examinationGenericEntity: GenericEntity?,
+        examinationResponse: ExaminationResponse,
+        uuid: String
+    ): Long {
+        return if (examinationGenericEntity != null) {
+            genericDao.insertGenericEntity(
+                examinationGenericEntity.copy(payload = examinationResponse.toJson())
+            )[0]
+        } else {
+            genericDao.insertGenericEntity(
+                GenericEntity(
+                    id = uuid,
+                    patientId = examinationResponse.uuid!!,
+                    payload = examinationResponse.toJson(),
+                    type = GenericTypeEnum.EXAMINATION,
+                    syncType = SyncType.POST
+                )
+            )[0]
+        }
+    }
+
     protected suspend fun updateAppointmentFhirIdInGenericEntity(appointmentGenericEntity: GenericEntity) {
         val existingMap = appointmentGenericEntity.payload.fromJson<MutableMap<String, Any>>()
             .mapToObject(AppointmentResponse::class.java)
@@ -836,6 +883,26 @@ open class GenericRepositoryDatabaseTransactions(
         if (existingMap != null) {
             genericDao.insertGenericEntity(
                 interventionGenericEntity.copy(
+                    payload = existingMap.copy(
+                        patientId = if (!existingMap.patientId.isFhirId()) getPatientFhirIdById(
+                            existingMap.patientId
+                        )!! else existingMap.patientId,
+                        appointmentId = if (!existingMap.appointmentId.isFhirId()) getAppointmentFhirIdById(
+                            existingMap.appointmentId
+                        )!! else existingMap.appointmentId
+                    ).toJson()
+                )
+            )
+        }
+    }
+
+    protected suspend fun updateExaminationFhirIdInGenericEntity(examinationGenericEntity: GenericEntity) {
+        val existingMap = examinationGenericEntity.payload.fromJson<MutableMap<String, Any>>()
+            .mapToObject(ExaminationResponse::class.java)
+
+        if (existingMap != null) {
+            genericDao.insertGenericEntity(
+                examinationGenericEntity.copy(
                     payload = existingMap.copy(
                         patientId = if (!existingMap.patientId.isFhirId()) getPatientFhirIdById(
                             existingMap.patientId

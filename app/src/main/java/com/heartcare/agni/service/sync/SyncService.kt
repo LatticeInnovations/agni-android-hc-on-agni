@@ -35,7 +35,9 @@ class SyncService(
     private lateinit var appointmentPatchJob: Deferred<ResponseMapper<Any>?>
     private lateinit var prescriptionPatchJob: Deferred<ResponseMapper<Any>?>
     private lateinit var interventionPatchJob: Deferred<ResponseMapper<Any>?>
+    private lateinit var examinationPatchJob: Deferred<ResponseMapper<Any>?>
     private lateinit var interventionMasterDownloadJob: Deferred<ResponseMapper<Any>?>
+    private lateinit var examinationMasterDownloadJob: Deferred<ResponseMapper<Any>?>
 
     /**
      *
@@ -62,6 +64,9 @@ class SyncService(
                         patchIntervention(logout)
                     },
                     async {
+                        patchExamination(logout)
+                    },
+                    async {
                         uploadPatientLastUpdatedData(logout)
                     },
                     async {
@@ -78,6 +83,9 @@ class SyncService(
                     },
                     async {
                         downloadInterventionMasterList(logout)
+                    },
+                    async {
+                        downloadExaminationMasterList(logout)
                     }
                 )
             }
@@ -242,6 +250,9 @@ class SyncService(
                 CoroutineScope(Dispatchers.IO).launch {
                     updateFhirIdInIntervention(logout)
                 }
+                CoroutineScope(Dispatchers.IO).launch {
+                    updateFhirIdInExamination(logout)
+                }
             }
         }
     }
@@ -341,6 +352,11 @@ class SyncService(
         return checkAuthenticationStatus(syncRepository.sendInterventionPostData(), logout)
     }
 
+    /** Upload Examination */
+    private suspend fun uploadExamination(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
+        return checkAuthenticationStatus(syncRepository.sendExaminationPostData(), logout)
+    }
+
     /**
      *
      *
@@ -378,6 +394,15 @@ class SyncService(
         coroutineScope {
             interventionPatchJob = async {
                 checkAuthenticationStatus(syncRepository.sentInterventionPutData(), logout)
+            }
+        }
+    }
+
+    /** Patch Examination */
+    internal suspend fun patchExamination(logout: (Boolean, String) -> Unit) {
+        coroutineScope {
+            examinationPatchJob = async {
+                checkAuthenticationStatus(syncRepository.sentExaminationPutData(), logout)
             }
         }
     }
@@ -505,6 +530,11 @@ class SyncService(
                         interventionPatchJob.await()
                         downloadIntervention(logout)
                     }
+                    CoroutineScope(Dispatchers.IO).launch {
+                        examinationMasterDownloadJob.await()
+                        examinationPatchJob.await()
+                        downloadExamination(logout)
+                    }
                 }
             }
         }
@@ -548,6 +578,15 @@ class SyncService(
         coroutineScope {
             interventionMasterDownloadJob = async {
                 checkAuthenticationStatus(syncRepository.getAndInsertInterventionMaster(0), logout)
+            }
+        }
+    }
+
+    /** Download Test and Examinations Master */
+    internal suspend fun downloadExaminationMasterList(logout: (Boolean, String) -> Unit) {
+        coroutineScope {
+            examinationMasterDownloadJob = async {
+                checkAuthenticationStatus(syncRepository.getAndInsertExaminationMaster(0), logout)
             }
         }
     }
@@ -686,6 +725,11 @@ class SyncService(
         checkAuthenticationStatus(syncRepository.getAndInsertInterventionsData(0), logout)
     }
 
+    /** Download Examination Data */
+    private suspend fun downloadExamination(logout: (Boolean, String) -> Unit) {
+        checkAuthenticationStatus(syncRepository.getAndInsertExaminationData(0), logout)
+    }
+
     /**
      *
      *
@@ -801,6 +845,12 @@ class SyncService(
     private suspend fun updateFhirIdInIntervention(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
         genericRepository.updateInterventionFhirId()
         return uploadIntervention(logout)
+    }
+
+    /** Update FHIR ID in Examination */
+    private suspend fun updateFhirIdInExamination(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
+        genericRepository.updateExaminationFhirId()
+        return uploadExamination(logout)
     }
 
     /** Check Session Expiry and Authorization */

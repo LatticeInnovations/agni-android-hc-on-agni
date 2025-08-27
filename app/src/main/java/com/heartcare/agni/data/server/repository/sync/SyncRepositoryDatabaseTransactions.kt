@@ -9,6 +9,7 @@ import com.heartcare.agni.data.local.roomdb.dao.AllergyDao
 import com.heartcare.agni.data.local.roomdb.dao.AppointmentDao
 import com.heartcare.agni.data.local.roomdb.dao.CVDDao
 import com.heartcare.agni.data.local.roomdb.dao.DispenseDao
+import com.heartcare.agni.data.local.roomdb.dao.ExaminationDao
 import com.heartcare.agni.data.local.roomdb.dao.FamilyHistoryDao
 import com.heartcare.agni.data.local.roomdb.dao.FileUploadDao
 import com.heartcare.agni.data.local.roomdb.dao.GenericDao
@@ -48,6 +49,8 @@ import com.heartcare.agni.data.server.model.create.MedDocumentIdResponse
 import com.heartcare.agni.data.server.model.cvd.CVDResponse
 import com.heartcare.agni.data.server.model.dispense.response.DispenseData
 import com.heartcare.agni.data.server.model.dispense.response.MedicineDispenseResponse
+import com.heartcare.agni.data.server.model.examination.ExaminationMasterResponse
+import com.heartcare.agni.data.server.model.examination.ExaminationResponse
 import com.heartcare.agni.data.server.model.family.FamilyHistoryResponse
 import com.heartcare.agni.data.server.model.historymedication.HistoryMedicationResponse
 import com.heartcare.agni.data.server.model.intervention.InterventionMasterResponse
@@ -84,6 +87,8 @@ import com.heartcare.agni.utils.converters.responseconverter.toAllergyEntity
 import com.heartcare.agni.utils.converters.responseconverter.toAppointmentEntity
 import com.heartcare.agni.utils.converters.responseconverter.toCVDEntity
 import com.heartcare.agni.utils.converters.responseconverter.toDispensePrescriptionEntity
+import com.heartcare.agni.utils.converters.responseconverter.toExaminationEntity
+import com.heartcare.agni.utils.converters.responseconverter.toExaminationMasterEntity
 import com.heartcare.agni.utils.converters.responseconverter.toFamilyHistoryEntity
 import com.heartcare.agni.utils.converters.responseconverter.toHistoryMedicationEntity
 import com.heartcare.agni.utils.converters.responseconverter.toInterventionEntity
@@ -146,7 +151,8 @@ open class SyncRepositoryDatabaseTransactions(
     private val allergyDao: AllergyDao,
     private val riskFactorDao: RiskFactorDao,
     private val tobaccoCessationDao: TobaccoCessationDao,
-    private val interventionDao: InterventionDao
+    private val interventionDao: InterventionDao,
+    private val examinationDao: ExaminationDao
 ) {
 
 
@@ -285,6 +291,12 @@ open class SyncRepositoryDatabaseTransactions(
     protected suspend fun insertInterventionMasterList(body: List<InterventionMasterResponse>) {
         interventionDao.insertInterventionMaster(
             *body.map { it.toInterventionMasterEntity() }.toTypedArray()
+        )
+    }
+
+    protected suspend fun insertExaminationMasterList(body: List<ExaminationMasterResponse>) {
+        examinationDao.insertExaminationMaster(
+            *body.map { it.toExaminationMasterEntity() }.toTypedArray()
         )
     }
 
@@ -1013,6 +1025,30 @@ open class SyncRepositoryDatabaseTransactions(
         return deleteGenericEntityByListOfIds(idsToDelete.toList())
     }
 
+    protected suspend fun insertExaminationFhirIds(
+        body: List<CreateResponse>,
+        listOfGenericEntities: List<GenericEntity>
+    ): Int {
+        val idsToDelete = mutableSetOf<String>()
+        idsToDelete.addAll(listOfGenericEntities.map { genericEntity -> genericEntity.id })
+        body.forEach { createResponse ->
+            when (createResponse.error) {
+                null -> {
+                    examinationDao.updateFhirId(
+                        createResponse.id!!, createResponse.fhirId!!
+                    )
+                }
+                DUPLICATE_RECORD -> {
+                    examinationDao.deleteExamination(createResponse.id!!)
+                }
+                else -> {
+                    idsToDelete.remove(createResponse.id)
+                }
+            }
+        }
+        return deleteGenericEntityByListOfIds(idsToDelete.toList())
+    }
+
     protected suspend fun insertLevels(body: List<LevelResponse>) {
         levelsDao.insertLevelEntity(
             *body.map { it.toLevelEntity() }.toTypedArray()
@@ -1058,6 +1094,12 @@ open class SyncRepositoryDatabaseTransactions(
     protected suspend fun insertIntervention(body: List<InterventionResponse>) {
         interventionDao.insertIntervention(
             *body.map { it.toInterventionEntity(patientDao, appointmentDao) }.toTypedArray()
+        )
+    }
+
+    protected suspend fun insertExamination(body: List<ExaminationResponse>) {
+        examinationDao.insertExamination(
+            *body.map { it.toExaminationEntity(patientDao, appointmentDao) }.toTypedArray()
         )
     }
 }

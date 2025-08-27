@@ -116,6 +116,14 @@ interface PreferenceRepository {
     fun setLastSyncIntervention(long: Long)
     fun getLastSyncIntervention(): Long
 
+    /** Last Examination Master Sync Date */
+    fun setLastExaminationMasterSyncDate(long: Long)
+    fun getLastExaminationMasterSyncDate(): Long
+
+    /** Last Examination Sync Date */
+    fun setLastSyncExamination(long: Long)
+    fun getLastSyncExamination(): Long
+
     /** User Data */
     fun setUserFhirId(userFhirId: String)
     fun getUserFhirId(): String

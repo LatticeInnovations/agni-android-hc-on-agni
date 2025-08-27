@@ -11,6 +11,7 @@ import com.heartcare.agni.data.local.roomdb.dao.AppointmentDao
 import com.heartcare.agni.data.local.roomdb.dao.CVDDao
 import com.heartcare.agni.data.local.roomdb.dao.DispenseDao
 import com.heartcare.agni.data.local.roomdb.dao.DownloadedFileDao
+import com.heartcare.agni.data.local.roomdb.dao.ExaminationDao
 import com.heartcare.agni.data.local.roomdb.dao.FamilyHistoryDao
 import com.heartcare.agni.data.local.roomdb.dao.FileUploadDao
 import com.heartcare.agni.data.local.roomdb.dao.GenericDao
@@ -42,6 +43,8 @@ import com.heartcare.agni.data.local.roomdb.entities.cvd.RiskPredictionCharts
 import com.heartcare.agni.data.local.roomdb.entities.dispense.DispenseDataEntity
 import com.heartcare.agni.data.local.roomdb.entities.dispense.DispensePrescriptionEntity
 import com.heartcare.agni.data.local.roomdb.entities.dispense.MedicineDispenseListEntity
+import com.heartcare.agni.data.local.roomdb.entities.examination.ExaminationEntity
+import com.heartcare.agni.data.local.roomdb.entities.examination.ExaminationMasterEntity
 import com.heartcare.agni.data.local.roomdb.entities.family.FamilyHistoryEntity
 import com.heartcare.agni.data.local.roomdb.entities.file.DownloadedFileEntity
 import com.heartcare.agni.data.local.roomdb.entities.file.FileUploadEntity
@@ -125,7 +128,9 @@ import java.util.UUID
         RiskFactorEntity::class,
         TobaccoCessationEntity::class,
         InterventionMasterEntity::class,
-        InterventionEntity::class
+        InterventionEntity::class,
+        ExaminationMasterEntity::class,
+        ExaminationEntity::class
     ],
     views = [RelationView::class, PrescriptionDirectionAndMedicineView::class],
     version = 1,
@@ -163,6 +168,7 @@ abstract class FhirAppDatabase : RoomDatabase() {
     abstract fun getRiskFactorDao(): RiskFactorDao
     abstract fun getTobaccoCessationDao(): TobaccoCessationDao
     abstract fun getInterventionDao(): InterventionDao
+    abstract fun getExaminationDao(): ExaminationDao
 
     companion object {
         @Volatile
