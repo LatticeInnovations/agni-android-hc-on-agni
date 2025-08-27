@@ -7,11 +7,13 @@ import androidx.lifecycle.viewModelScope
 import com.heartcare.agni.base.viewmodel.BaseViewModel
 import com.heartcare.agni.data.local.model.appointment.AppointmentResponseLocal
 import com.heartcare.agni.data.local.repository.appointment.AppointmentRepository
+import com.heartcare.agni.data.local.repository.examination.ExaminationRepository
 import com.heartcare.agni.data.local.repository.generic.GenericRepository
 import com.heartcare.agni.data.local.repository.patient.lastupdated.PatientLastUpdatedRepository
 import com.heartcare.agni.data.local.repository.preference.PreferenceRepository
 import com.heartcare.agni.data.local.repository.schedule.ScheduleRepository
 import com.heartcare.agni.data.local.repository.search.SearchRepository
+import com.heartcare.agni.data.server.model.examination.ExaminationMasterResponse
 import com.heartcare.agni.data.server.model.patient.PatientResponse
 import com.heartcare.agni.di.dispatcher.IoDispatcher
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -22,6 +24,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class AddTestExaminationViewModel @Inject constructor(
+    private val examinationRepository: ExaminationRepository,
     private val searchRepository: SearchRepository,
     private val appointmentRepository: AppointmentRepository,
     private val preferenceRepository: PreferenceRepository,
@@ -35,21 +38,9 @@ class AddTestExaminationViewModel @Inject constructor(
     var patient by mutableStateOf<PatientResponse?>(null)
     var appointmentResponseLocal by mutableStateOf<AppointmentResponseLocal?>(null)
 
-    var testExaminationMasterList by mutableStateOf(listOf(
-        "PMT007 Pulmonary function test",
-        "PMT006 Eye examination - retinal fundus photography",
-        "PMT005 Eye examination - slit lamp biomicroscopy",
-        "PMT004 Eye examination - ophthalmoscopy (indirect)",
-        "PMT003 Eye examination - ophthalmoscopy (direct)",
-        "PMT002 Eye examination - visual acuity",
-        "PMT001 Foot examination - comprehensive",
-        "BCU008 Microalbumin (urine)",
-        "BCU007 Albumin (urine)",
-        "BCU006 Chloride (urine)",
-        "BCU005 Sodium (urine)"
-    ))
+    var testExaminationMasterList by mutableStateOf(listOf<ExaminationMasterResponse>())
 
-    var selectedTestExaminationList by mutableStateOf(listOf<String>())
+    var selectedTestExaminationList by mutableStateOf(listOf<ExaminationMasterResponse>())
 
     var bottomNavExpanded by mutableStateOf(false)
     var clearAllConfirmDialog by mutableStateOf(false)
@@ -58,8 +49,14 @@ class AddTestExaminationViewModel @Inject constructor(
     var previousSearchList by mutableStateOf(listOf<String>())
     var searchQuery by mutableStateOf("")
     var tempSearchQuery by mutableStateOf("")
-    var testExaminationSearchList by mutableStateOf(listOf<String>())
+    var testExaminationSearchList by mutableStateOf(listOf<ExaminationMasterResponse>())
     var isSearchResult by mutableStateOf(false)
+
+    init {
+        viewModelScope.launch(ioDispatcher) {
+            testExaminationMasterList = examinationRepository.getExaminationMaster()
+        }
+    }
 
     fun insertRecentSearch(query: String, date: Date = Date()) {
         viewModelScope.launch(ioDispatcher) {
@@ -75,10 +72,6 @@ class AddTestExaminationViewModel @Inject constructor(
 
     fun getTestExaminationSearchList(query: String) {
         viewModelScope.launch(ioDispatcher) {
-            testExaminationSearchList = listOf(
-                "PMT007 Pulmonary function test",
-                "PMT006 Eye examination - retinal fundus photography"
-            )
         }
     }
 }

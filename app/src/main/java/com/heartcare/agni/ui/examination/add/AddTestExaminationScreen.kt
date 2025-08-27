@@ -114,14 +114,16 @@ fun AddTestExaminationScreen(
                 ) {
                     viewModel.testExaminationMasterList.forEach { testExamination ->
                         CheckBoxRow(
-                            isChecked = viewModel.selectedTestExaminationList.contains(testExamination),
+                            isChecked = viewModel.selectedTestExaminationList.contains(
+                                testExamination
+                            ),
                             onCheckedChange = { checked ->
                                 if (checked) viewModel.selectedTestExaminationList += listOf(
                                     testExamination
                                 )
                                 else viewModel.selectedTestExaminationList -= listOf(testExamination)
                             },
-                            label = testExamination
+                            label = "${testExamination.code} ${testExamination.name}"
                         )
                     }
                 }
@@ -154,7 +156,7 @@ fun AddTestExaminationScreen(
                         )
                         else viewModel.selectedTestExaminationList -= listOf(testExamination)
                     },
-                    label = testExamination
+                    label = "${testExamination.code} ${testExamination.name}"
                 )
             }
         }
@@ -213,7 +215,7 @@ private fun TestExaminationBottomBar(
         contentAlignment = Alignment.BottomCenter
     ) {
         ExpandableBottomNavLayout(
-            selectedList = viewModel.selectedTestExaminationList,
+            selectedList = viewModel.selectedTestExaminationList.map { testExamination -> "${testExamination.code} ${testExamination.name}" },
             bottomNavExpanded = viewModel.bottomNavExpanded,
             onExpandToggle = {
                 viewModel.bottomNavExpanded = !viewModel.bottomNavExpanded
@@ -231,7 +233,11 @@ private fun TestExaminationBottomBar(
             },
             onClearAll = { viewModel.clearAllConfirmDialog = true },
             onRemoveItem = { testExamination ->
-                viewModel.selectedTestExaminationList -= testExamination
+                viewModel.selectedTestExaminationList -= viewModel.testExaminationMasterList.first {
+                    it.code == testExamination.substringBefore(
+                        " "
+                    )
+                }
                 if (viewModel.selectedTestExaminationList.isEmpty()) {
                     viewModel.bottomNavExpanded = false
                 }
