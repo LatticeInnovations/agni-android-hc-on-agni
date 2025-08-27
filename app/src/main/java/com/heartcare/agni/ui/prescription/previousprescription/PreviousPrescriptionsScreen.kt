@@ -169,7 +169,7 @@ fun PrescriptionCard(
                                 details = getMedInfo(
                                     duration = directionAndMedication.prescriptionDirectionsEntity.duration,
                                     frequency = directionAndMedication.prescriptionDirectionsEntity.frequency,
-                                    medUnit = directionAndMedication.medicationEntity.medUnit,
+                                    medUnit = directionAndMedication.medicationEntity.doseForm.lowercase(),
                                     timing = directionAndMedication.prescriptionDirectionsEntity.timing,
                                     note = directionAndMedication.prescriptionDirectionsEntity.note,
                                     qtyPerDose = directionAndMedication.prescriptionDirectionsEntity.qtyPerDose,

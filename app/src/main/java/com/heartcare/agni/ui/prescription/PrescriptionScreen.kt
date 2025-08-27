@@ -573,7 +573,7 @@ fun SelectedCompoundCard(
                     text = getMedInfo(
                         duration = medication.medication.duration,
                         frequency = medication.medication.frequency,
-                        medUnit = medication.medUnit,
+                        medUnit = medication.medication.doseForm.lowercase(),
                         timing = medication.medication.timing,
                         note = medication.medication.note,
                         qtyPerDose = medication.medication.qtyPerDose,
