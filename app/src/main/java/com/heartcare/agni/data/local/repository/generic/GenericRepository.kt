@@ -140,6 +140,7 @@ interface GenericRepository {
     suspend fun updateRiskFactorsFhirId()
     suspend fun updateTobaccoCessationFhirId()
     suspend fun updateInterventionFhirId()
+    suspend fun updateExaminationFhirId()
 
     suspend fun insertOrUpdatePatientPatchEntity(
         patientFhirId: String,

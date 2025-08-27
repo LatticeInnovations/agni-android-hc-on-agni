@@ -246,6 +246,9 @@ class SyncService(
                 CoroutineScope(Dispatchers.IO).launch {
                     updateFhirIdInIntervention(logout)
                 }
+                CoroutineScope(Dispatchers.IO).launch {
+                    updateFhirIdInExamination(logout)
+                }
             }
         }
     }
@@ -343,6 +346,11 @@ class SyncService(
     /** Upload Intervention */
     private suspend fun uploadIntervention(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
         return checkAuthenticationStatus(syncRepository.sendInterventionPostData(), logout)
+    }
+
+    /** Upload Examination */
+    private suspend fun uploadExamination(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
+        return checkAuthenticationStatus(syncRepository.sendExaminationPostData(), logout)
     }
 
     /**
@@ -823,6 +831,12 @@ class SyncService(
     private suspend fun updateFhirIdInIntervention(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
         genericRepository.updateInterventionFhirId()
         return uploadIntervention(logout)
+    }
+
+    /** Update FHIR ID in Examination */
+    private suspend fun updateFhirIdInExamination(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
+        genericRepository.updateExaminationFhirId()
+        return uploadExamination(logout)
     }
 
     /** Check Session Expiry and Authorization */
