@@ -13,6 +13,7 @@ import com.heartcare.agni.data.local.roomdb.dao.SearchDao
 import com.heartcare.agni.data.local.roomdb.entities.patient.PatientAndIdentifierEntity
 import com.heartcare.agni.data.local.roomdb.entities.search.SearchHistoryEntity
 import com.heartcare.agni.data.local.roomdb.entities.search.SymDiagSearchEntity
+import com.heartcare.agni.data.server.model.examination.ExaminationMasterResponse
 import com.heartcare.agni.data.server.model.intervention.InterventionMasterResponse
 import com.heartcare.agni.data.server.model.patient.PatientAddressResponse
 import com.heartcare.agni.data.server.model.patient.PatientResponse
@@ -22,6 +23,7 @@ import com.heartcare.agni.utils.converters.responseconverter.toMedicationRespons
 import com.heartcare.agni.utils.converters.responseconverter.toPatientResponse
 import com.heartcare.agni.utils.paging.SearchPagingSource
 import com.heartcare.agni.utils.search.Search.getFuzzySearchDiagnosisList
+import com.heartcare.agni.utils.search.Search.getFuzzySearchExaminationList
 import com.heartcare.agni.utils.search.Search.getFuzzySearchInterventionList
 import com.heartcare.agni.utils.search.Search.getFuzzySearchList
 import com.heartcare.agni.utils.search.Search.getFuzzySearchListByQuery
@@ -372,5 +374,9 @@ class SearchRepositoryImpl @Inject constructor(
 
     override suspend fun searchIntervention(searchQuery: String): List<InterventionMasterResponse> {
         return getFuzzySearchInterventionList(searchQuery, searchDao.getInterventionMasterList(), 70)
+    }
+
+    override suspend fun searchExamination(searchQuery: String): List<ExaminationMasterResponse> {
+        return getFuzzySearchExaminationList(searchQuery, searchDao.getExaminationMasterList(), 70)
     }
 }

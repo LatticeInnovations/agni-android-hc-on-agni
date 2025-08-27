@@ -72,6 +72,7 @@ class AddTestExaminationViewModel @Inject constructor(
 
     fun getTestExaminationSearchList(query: String) {
         viewModelScope.launch(ioDispatcher) {
+            testExaminationSearchList = searchRepository.searchExamination(query.trim())
         }
     }
 }

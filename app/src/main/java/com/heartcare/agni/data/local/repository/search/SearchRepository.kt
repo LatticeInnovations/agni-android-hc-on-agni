@@ -5,6 +5,7 @@ import com.heartcare.agni.data.local.enums.SearchTypeEnum
 import com.heartcare.agni.data.local.model.pagination.PaginationResponse
 import com.heartcare.agni.data.local.model.search.SearchParameters
 import com.heartcare.agni.data.local.roomdb.entities.patient.PatientAndIdentifierEntity
+import com.heartcare.agni.data.server.model.examination.ExaminationMasterResponse
 import com.heartcare.agni.data.server.model.intervention.InterventionMasterResponse
 import com.heartcare.agni.data.server.model.patient.PatientAddressResponse
 import com.heartcare.agni.data.server.model.patient.PatientResponse
@@ -73,4 +74,5 @@ interface SearchRepository {
     suspend fun searchDiagnosis(searchQuery: String): List<String>
 
     suspend fun searchIntervention(searchQuery: String): List<InterventionMasterResponse>
+    suspend fun searchExamination(searchQuery: String): List<ExaminationMasterResponse>
 }
