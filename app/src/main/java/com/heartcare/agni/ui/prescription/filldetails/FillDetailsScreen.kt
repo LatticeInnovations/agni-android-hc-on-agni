@@ -372,8 +372,8 @@ private fun setMedicationData(
     viewModel.getMedicationByMedFhirId(prescriptionViewModel.medicationToEdit!!.medication.medFhirId) {
         viewModel.medicationSelected = it[0]
     }
-    viewModel.medSelected = prescriptionViewModel.medicationToEdit!!.medName
-    viewModel.medUnit = prescriptionViewModel.medicationToEdit!!.medUnit
+    viewModel.medSelected = prescriptionViewModel.medicationToEdit!!.medicationResponse.name
+    viewModel.medUnit = prescriptionViewModel.medicationToEdit!!.medicationResponse.medUnit
     viewModel.medDoseForm = prescriptionViewModel.medicationToEdit!!.medication.doseForm
     viewModel.quantityPerDose =
         prescriptionViewModel.medicationToEdit!!.medication.qtyPerDose.toString()
@@ -417,9 +417,7 @@ private fun doneButtonClick(
     )
     prescriptionViewModel.medicationsResponseWithMedicationList += listOf(
         MedicationResponseWithMedication(
-            medName = viewModel.medSelected,
-            medUnit = viewModel.medUnit,
-            activeIngredient = prescriptionViewModel.checkedMedication!!.activeIngredient,
+            medicationResponse = viewModel.medicationSelected!!,
             medication = Medication(
                 duration = viewModel.duration.toInt(),
                 frequency = viewModel.frequency.toInt(),

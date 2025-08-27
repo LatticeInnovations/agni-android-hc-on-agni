@@ -562,13 +562,26 @@ fun SelectedCompoundCard(
             Column(
                 modifier = Modifier
                     .padding(10.dp)
-                    .weight(1f)
+                    .weight(1f),
+                verticalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 Text(
-                    text = medication.medName,
+                    text = medication.medicationResponse.name,
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurface
                 )
+                Text(
+                    text = "${medication.medicationResponse.code} · ${medication.medicationResponse.categoryName} · ${medication.medicationResponse.className} ",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                medication.medication.brandName?.let {
+                    Text(
+                        text = stringResource(R.string.brand_name, it),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
                 Text(
                     text = getMedInfo(
                         duration = medication.medication.duration,

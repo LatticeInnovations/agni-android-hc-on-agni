@@ -121,9 +121,7 @@ class PrescriptionViewModel @Inject constructor(
             medicationsResponseWithMedicationList =
                 prescription.prescriptionDirectionAndMedicineView.map {
                     MedicationResponseWithMedication(
-                        activeIngredient = it.medicationEntity.activeIngredient,
-                        medName = it.medicationEntity.medName,
-                        medUnit = it.medicationEntity.medUnit,
+                        medicationResponse = it.medicationEntity.toMedicationResponse(),
                         medication = Medication(
                             medReqUuid = it.prescriptionDirectionsEntity.id,
                             medReqFhirId = it.prescriptionDirectionsEntity.medReqFhirId,

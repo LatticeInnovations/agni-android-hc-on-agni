@@ -710,4 +710,5 @@ include them in the household</string>
     <string name="discard_test_examinations_dialog_description"><![CDATA[Are you sure you want to discard all test & examinations ?]]></string>
     <string name="test_and_examinations_saved"><![CDATA[Test & examinations saved!]]></string>
     <string name="test_and_examinations_updated"><![CDATA[Test & examinations updated!]]></string>
+    <string name="brand_name">Brand - %s</string>
 </resources>
