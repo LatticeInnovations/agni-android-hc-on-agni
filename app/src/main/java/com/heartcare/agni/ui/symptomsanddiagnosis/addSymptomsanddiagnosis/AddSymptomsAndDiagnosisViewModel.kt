@@ -235,7 +235,7 @@ class AddSymptomsAndDiagnosisViewModel @Inject constructor(
                 getSymDiagDetails(
                     symDiagUuid = symDiagUuid,
                     fhirId = null,
-                    practitionerName = preferenceRepository.getUserName(),
+                    practitionerName = "",
                     createdOn = createdOn,
                     patient!!.id
                 )
@@ -337,7 +337,7 @@ class AddSymptomsAndDiagnosisViewModel @Inject constructor(
         }
     }
 
-    private suspend fun insertUpdateSymDiag(
+    private fun insertUpdateSymDiag(
         ioDispatcher: CoroutineDispatcher, updated: (Int) -> Unit
     ) {
 
@@ -345,7 +345,7 @@ class AddSymptomsAndDiagnosisViewModel @Inject constructor(
             updateSymDiagInDB(
                 getSymDiagDetails(
                     symDiagUuid = local!!.symDiagUuid, fhirId = local?.symDiagFhirId,
-                    practitionerName = preferenceRepository.getUserName(),
+                    practitionerName = "",
                     createdOn = local!!.createdOn,
                     patient!!.id
 
@@ -357,7 +357,7 @@ class AddSymptomsAndDiagnosisViewModel @Inject constructor(
                     genericRepository.insertSymDiag(
                         getSymDiagDetails(
                             symDiagUuid = local!!.symDiagUuid, fhirId = local?.symDiagFhirId,
-                            practitionerName = preferenceRepository.getUserName(),
+                            practitionerName = "",
                             createdOn = local!!.createdOn,
                             patient!!.id
 

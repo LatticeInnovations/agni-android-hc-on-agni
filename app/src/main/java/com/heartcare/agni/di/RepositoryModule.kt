@@ -52,8 +52,6 @@ import com.heartcare.agni.data.server.repository.authentication.AuthenticationRe
 import com.heartcare.agni.data.server.repository.authentication.AuthenticationRepositoryImpl
 import com.heartcare.agni.data.server.repository.file.FileSyncRepository
 import com.heartcare.agni.data.server.repository.file.FileSyncRepositoryImpl
-import com.heartcare.agni.data.server.repository.signup.SignUpRepository
-import com.heartcare.agni.data.server.repository.signup.SignUpRepositoryImpl
 import com.heartcare.agni.data.server.repository.symptomsanddiagnosis.SymptomsAndDiagnosisRepository
 import com.heartcare.agni.data.server.repository.symptomsanddiagnosis.SymptomsAndDiagnosisRepositoryImpl
 import com.heartcare.agni.data.server.repository.sync.SyncRepository
@@ -123,10 +121,6 @@ abstract class RepositoryModule {
     @Binds
     @ViewModelScoped
     abstract fun provideDownloadedFileRepository(downloadedFileRepositoryImpl: DownloadedFileRepositoryImpl): DownloadedFileRepository
-
-    @Binds
-    @ViewModelScoped
-    abstract fun provideSignUpRepository(signUpRepositoryImpl: SignUpRepositoryImpl): SignUpRepository
 
     @Binds
     @ViewModelScoped

@@ -14,19 +14,6 @@ interface PreferenceStorage {
     /** M-Pin */
     var pin: String
 
-    /** Auth Token */
-    var token: String
-
-    /** User Data */
-    var userFhirId: String
-    var userName: String
-    var userMobile: Long
-    var userEmail: String
-    var userRoleId: String
-    var userRole: String
-    var organizationFhirId: String
-    var organization: String
-
     /** Room DB Encryption Key */
     var roomDBEncryptionKey: String
 

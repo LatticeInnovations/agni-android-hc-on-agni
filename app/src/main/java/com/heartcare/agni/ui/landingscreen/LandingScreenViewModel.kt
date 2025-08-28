@@ -28,27 +28,18 @@ import com.heartcare.agni.data.local.repository.cvd.chart.RiskPredictionChartRep
 import com.heartcare.agni.data.local.repository.patient.PatientRepository
 import com.heartcare.agni.data.local.repository.preference.PreferenceRepository
 import com.heartcare.agni.data.local.repository.search.SearchRepository
-import com.heartcare.agni.data.local.roomdb.FhirAppDatabase
 import com.heartcare.agni.data.local.roomdb.entities.cvd.RiskPredictionCharts
-import com.heartcare.agni.data.server.enums.RegisterTypeEnum
 import com.heartcare.agni.data.server.model.patient.PatientResponse
-import com.heartcare.agni.data.server.repository.authentication.AuthenticationRepository
-import com.heartcare.agni.data.server.repository.signup.SignUpRepository
 import com.heartcare.agni.di.dispatcher.DefaultDispatcher
 import com.heartcare.agni.di.dispatcher.IoDispatcher
-import com.heartcare.agni.service.sync.SyncService
 import com.heartcare.agni.service.workmanager.request.WorkRequestBuilders
 import com.heartcare.agni.service.workmanager.utils.Delay
 import com.heartcare.agni.service.workmanager.utils.Sync
 import com.heartcare.agni.service.workmanager.workers.trigger.TriggerWorkerPeriodicImpl
 import com.heartcare.agni.utils.common.Queries.getSearchListWithLastVisited
-import com.heartcare.agni.utils.constants.ErrorConstants.TOO_MANY_ATTEMPTS_ERROR
 import com.heartcare.agni.utils.converters.responseconverter.NameConverter.getFullName
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.calculateMinutesToOneThirty
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toLastSyncTime
-import com.heartcare.agni.utils.converters.server.responsemapper.ApiEmptyResponse
-import com.heartcare.agni.utils.converters.server.responsemapper.ApiEndResponse
-import com.heartcare.agni.utils.converters.server.responsemapper.ApiErrorResponse
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
@@ -72,16 +63,12 @@ class LandingScreenViewModel @Inject constructor(
     private val searchRepository: SearchRepository,
     private val preferenceRepository: PreferenceRepository,
     private val appointmentRepository: AppointmentRepository,
-    private val signUpRepository: SignUpRepository,
-    private val authenticationRepository: AuthenticationRepository,
-    private val fhirAppDatabase: FhirAppDatabase,
     private val riskPredictionChartRepository: RiskPredictionChartRepository,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
     @DefaultDispatcher private val defaultDispatcher: CoroutineDispatcher
 ) : BaseAndroidViewModel(application) {
 
     private val workRequestBuilders: WorkRequestBuilders by lazy { (application as FhirApp).workRequestBuilder }
-    private val syncService: SyncService by lazy { (application as FhirApp).syncService }
 
     var isLaunched by mutableStateOf(false)
     var isLoading by mutableStateOf(true)
@@ -108,9 +95,6 @@ class LandingScreenViewModel @Inject constructor(
 
     var logoutUser by mutableStateOf(false)
     var logoutReason by mutableStateOf("")
-    internal var deleteAccountError by mutableStateOf("")
-
-    var showConfirmDeleteAccountDialog by mutableStateOf(false)
 
     // queue screen
     var showStatusChangeLayout by mutableStateOf(false)
@@ -123,17 +107,7 @@ class LandingScreenViewModel @Inject constructor(
     var syncStatusDisplay by mutableStateOf("")
     var syncIconDisplay by mutableIntStateOf(0)
 
-    var twoMinuteTimer by mutableIntStateOf(120)
-    var showOtpFields by mutableStateOf(false)
-    var otpEntered by mutableStateOf("")
-    var isOtpIncorrect by mutableStateOf(false)
-    var errorMsg by mutableStateOf("")
-    var otpAttemptsExpired by mutableStateOf(false)
-    var isVerifying by mutableStateOf(false)
-    var isResending by mutableStateOf(false)
-
     init {
-
         viewModelScope.launch(ioDispatcher) {
             val data = mutableListOf<RiskPredictionCharts>()
             val inputStream = application.assets.open("RiskPredictionChartOceania.csv")
@@ -369,100 +343,5 @@ class LandingScreenViewModel @Inject constructor(
                     preferenceRepository.setPin("")
                 }
         }
-    }
-
-    internal fun sendDeleteAccountOtp(navigate: (Boolean) -> Unit) {
-        viewModelScope.launch(ioDispatcher) {
-            signUpRepository.verification(
-                userEmail.ifBlank { userPhoneNo },
-                RegisterTypeEnum.DELETE
-            ).apply {
-                if (this is ApiEmptyResponse) {
-                    navigate(true)
-                } else if (this is ApiErrorResponse) {
-                    deleteAccountError = errorMessage
-                    navigate(false)
-                }
-            }
-        }
-    }
-
-    internal fun validateOtp(navigate: (Boolean) -> Unit) {
-        viewModelScope.launch(ioDispatcher) {
-            signUpRepository.otpVerification(
-                userEmail.ifBlank { userPhoneNo },
-                otpEntered.toInt(),
-                RegisterTypeEnum.DELETE
-            ).apply {
-                if (this is ApiEndResponse) {
-                    deleteAccount(body.token, navigate)
-                } else if (this is ApiErrorResponse) {
-                    when (errorMessage) {
-                        TOO_MANY_ATTEMPTS_ERROR -> {
-                            isOtpIncorrect = false
-                            otpAttemptsExpired = true
-                        }
-
-                        else -> isOtpIncorrect = true
-                    }
-                    isVerifying = false
-                    errorMsg = errorMessage
-                    navigate(false)
-                }
-            }
-        }
-    }
-
-    private suspend fun deleteAccount(tempAuthToken: String, navigate: (Boolean) -> Unit) {
-        authenticationRepository.deleteAccount(tempAuthToken).apply {
-            if (this is ApiErrorResponse) {
-                errorMsg = errorMessage
-                navigate(false)
-            } else if (this is ApiEndResponse) {
-                logoutReason = body ?: "INTERNAL_SERVER_ERROR"
-                stopWorkers()
-                clearAllAppData()
-                navigate(true)
-            }
-        }
-    }
-
-    internal fun resendOTP(resent: (Boolean) -> Unit) {
-        viewModelScope.launch(ioDispatcher) {
-            signUpRepository.verification(
-                userEmail.ifBlank { userPhoneNo },
-                RegisterTypeEnum.DELETE
-            ).apply {
-                if (this is ApiEmptyResponse) {
-                    isResending = false
-                    resent(true)
-                } else if (this is ApiErrorResponse) {
-                    when (errorMessage) {
-                        TOO_MANY_ATTEMPTS_ERROR -> {
-                            isOtpIncorrect = false
-                            otpEntered = ""
-                            otpAttemptsExpired = true
-                        }
-
-                        else -> isOtpIncorrect = true
-                    }
-                    errorMsg = errorMessage
-                    isResending = false
-                    resent(false)
-                }
-            }
-        }
-    }
-
-    private fun clearAllAppData() {
-        fhirAppDatabase.clearAllTables()
-        preferenceRepository.clearPreferences()
-    }
-
-    private suspend fun stopWorkers() {
-        WorkManager.getInstance(getApplication<Application>().applicationContext)
-            .cancelAllWork().await().also {
-                (getApplication<FhirApp>().applicationContext.getSystemService(Context.JOB_SCHEDULER_SERVICE) as JobScheduler).cancelAll()
-            }
     }
 }

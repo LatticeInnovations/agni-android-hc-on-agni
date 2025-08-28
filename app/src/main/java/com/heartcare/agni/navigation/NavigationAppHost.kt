@@ -27,8 +27,6 @@ import com.heartcare.agni.ui.historyandtests.tobacco.view.TobaccoCessationViewSc
 import com.heartcare.agni.ui.intervention.InterventionScreen
 import com.heartcare.agni.ui.intervention.add.AddInterventionScreen
 import com.heartcare.agni.ui.landingscreen.LandingScreen
-import com.heartcare.agni.ui.login.OtpScreen
-import com.heartcare.agni.ui.login.PhoneEmailScreen
 import com.heartcare.agni.ui.login.createpassword.CreatePasswordScreen
 import com.heartcare.agni.ui.login.forgotpassword.ForgotPasswordScreen
 import com.heartcare.agni.ui.login.forgotpassword.otp.AuthenticateOtpScreen
@@ -45,8 +43,6 @@ import com.heartcare.agni.ui.prescription.PrescriptionScreen
 import com.heartcare.agni.ui.prescription.photo.upload.PrescriptionPhotoUploadScreen
 import com.heartcare.agni.ui.prescription.photo.view.PrescriptionPhotoViewScreen
 import com.heartcare.agni.ui.searchpatient.SearchPatient
-import com.heartcare.agni.ui.signup.SignUpPhoneEmailScreen
-import com.heartcare.agni.ui.signup.SignUpScreen
 import com.heartcare.agni.ui.symptomsanddiagnosis.SymptomsAndDiagnosisScreen
 import com.heartcare.agni.ui.symptomsanddiagnosis.selectsymptoms.SelectSymptomScreen
 import com.heartcare.agni.ui.vitalsscreen.VitalsScreen
@@ -60,10 +56,6 @@ fun NavigationAppHost(navController: NavController, startDest: String) {
         composable(Screen.PinScreen.route) { PinScreen(navController) }
         composable(Screen.ForgotPasswordScreen.route) { ForgotPasswordScreen(navController) }
         composable(Screen.AuthenticateOtpScreen.route) { AuthenticateOtpScreen(navController) }
-        composable(Screen.PhoneEmailScreen.route) { PhoneEmailScreen(navController) }
-        composable(Screen.SignUpPhoneEmailScreen.route) { SignUpPhoneEmailScreen(navController) }
-        composable(Screen.SignUpScreen.route) { SignUpScreen(navController = navController) }
-        composable(Screen.OtpScreen.route) { OtpScreen(navController) }
         composable(Screen.LandingScreen.route) { LandingScreen(navController = navController) }
         composable(Screen.SearchPatientScreen.route) { SearchPatient(navController = navController) }
         composable(Screen.PatientRegistrationScreen.route) { PatientRegistration(navController = navController) }
