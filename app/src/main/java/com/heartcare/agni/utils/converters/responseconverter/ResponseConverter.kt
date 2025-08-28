@@ -19,15 +19,11 @@ import com.heartcare.agni.data.local.roomdb.dao.ExaminationDao
 import com.heartcare.agni.data.local.roomdb.dao.InterventionDao
 import com.heartcare.agni.data.local.roomdb.dao.MedicationDao
 import com.heartcare.agni.data.local.roomdb.dao.PatientDao
-import com.heartcare.agni.data.local.roomdb.dao.PrescriptionDao
 import com.heartcare.agni.data.local.roomdb.dao.RiskPredictionDao
 import com.heartcare.agni.data.local.roomdb.dao.ScheduleDao
 import com.heartcare.agni.data.local.roomdb.entities.allergy.AllergyEntity
 import com.heartcare.agni.data.local.roomdb.entities.appointment.AppointmentEntity
 import com.heartcare.agni.data.local.roomdb.entities.cvd.CVDEntity
-import com.heartcare.agni.data.local.roomdb.entities.dispense.DispenseDataEntity
-import com.heartcare.agni.data.local.roomdb.entities.dispense.DispensePrescriptionEntity
-import com.heartcare.agni.data.local.roomdb.entities.dispense.MedicineDispenseListEntity
 import com.heartcare.agni.data.local.roomdb.entities.examination.ExaminationEntity
 import com.heartcare.agni.data.local.roomdb.entities.examination.ExaminationMasterEntity
 import com.heartcare.agni.data.local.roomdb.entities.family.FamilyHistoryEntity
@@ -73,8 +69,6 @@ import com.heartcare.agni.data.local.roomdb.entities.vitals.VitalEntity
 import com.heartcare.agni.data.local.roomdb.views.PrescriptionDirectionAndMedicineView
 import com.heartcare.agni.data.server.model.allergy.AllergyResponse
 import com.heartcare.agni.data.server.model.cvd.CVDResponse
-import com.heartcare.agni.data.server.model.dispense.response.DispenseData
-import com.heartcare.agni.data.server.model.dispense.response.MedicineDispenseResponse
 import com.heartcare.agni.data.server.model.examination.ExaminationMasterResponse
 import com.heartcare.agni.data.server.model.examination.ExaminationResponse
 import com.heartcare.agni.data.server.model.family.FamilyHistoryResponse
@@ -1058,61 +1052,6 @@ internal fun MedicationEntity.toMedicationResponse(): MedicationResponse {
         categoryName = categoryName,
         brandList = brandList
     )
-}
-
-internal suspend fun MedicineDispenseResponse.toDispensePrescriptionEntity(
-    patientDao: PatientDao,
-    prescriptionDao: PrescriptionDao
-): DispensePrescriptionEntity {
-    return DispensePrescriptionEntity(
-        patientId = patientDao.getPatientIdByFhirId(this.patientId)!!,
-        prescriptionId = prescriptionDao.getPrescriptionIdByFhirId(this.prescriptionFhirId),
-        status = this.status
-    )
-}
-
-internal suspend fun DispenseData.toListOfDispenseDataEntity(
-    patientDao: PatientDao,
-    prescriptionDao: PrescriptionDao,
-    appointmentDao: AppointmentDao,
-    prescriptionFhirId: String?
-): DispenseDataEntity {
-    return DispenseDataEntity(
-        dispenseId = this.dispenseId,
-        dispenseFhirId = this.dispenseFhirId,
-        generatedOn = this.generatedOn,
-        note = this.note,
-        patientId = patientDao.getPatientIdByFhirId(this.patientId)!!,
-        prescriptionId = if (prescriptionFhirId.isNullOrBlank()) null else prescriptionDao.getPrescriptionIdByFhirId(
-            prescriptionFhirId
-        ),
-        appointmentId = if (this.appointmentId.isNullOrBlank()) null else appointmentDao.getAppointmentIdByFhirId(
-            this.appointmentId
-        )
-    )
-}
-
-internal suspend fun DispenseData.toListOfMedicineDispenseListEntity(
-    patientDao: PatientDao
-): List<MedicineDispenseListEntity> {
-    return this.medicineDispensedList.map {
-        MedicineDispenseListEntity(
-            medDispenseUuid = it.medDispenseUuid,
-            medDispenseFhirId = it.medDispenseFhirId,
-            dispenseId = this.dispenseId,
-            patientId = patientDao.getPatientIdByFhirId(it.patientId)!!,
-            category = it.category,
-            qtyDispensed = it.qtyDispensed,
-            qtyPrescribed = it.prescriptionData?.qtyPrescribed ?: it.qtyDispensed,
-            date = it.date,
-            isModified = it.isModified,
-            modificationType = it.modificationType,
-            medNote = it.medNote,
-            dispensedMedFhirId = it.dispensedMedication.medFhirId,
-            prescribedMedFhirId = it.prescriptionData?.medFhirId ?: it.medFhirId,
-            prescribedMedReqId = it.prescriptionData?.medReqFhirId
-        )
-    }
 }
 
 internal fun LevelResponse.toLevelEntity(): LevelEntity {

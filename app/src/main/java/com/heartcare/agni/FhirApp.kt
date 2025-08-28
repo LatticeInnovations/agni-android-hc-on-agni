@@ -13,7 +13,6 @@ import com.heartcare.agni.data.local.repository.preference.PreferenceRepositoryI
 import com.heartcare.agni.data.local.roomdb.FhirAppDatabase
 import com.heartcare.agni.data.local.sharedpreferences.PreferenceStorage
 import com.heartcare.agni.data.server.api.CVDApiService
-import com.heartcare.agni.data.server.api.DispenseApiService
 import com.heartcare.agni.data.server.api.ExaminationApiService
 import com.heartcare.agni.data.server.api.FileUploadApiService
 import com.heartcare.agni.data.server.api.HistoryAndTestsApiService
@@ -69,8 +68,7 @@ class FhirApp : Application() {
     lateinit var symptomsAndDiagnosisService: SymptomsAndDiagnosisService
     @Inject
     lateinit var labTestAndMedRecordService: LabTestAndMedRecordService
-    @Inject
-    lateinit var dispenseApiService: DispenseApiService
+
     @Inject
     lateinit var vaccinationApiService: VaccinationApiService
     @Inject
@@ -121,7 +119,6 @@ class FhirApp : Application() {
             vitalApiService,
             symptomsAndDiagnosisService,
             labTestAndMedRecordService,
-            dispenseApiService,
             vaccinationApiService,
             levelsApiService,
             historyAndTestsApiService,
@@ -140,7 +137,6 @@ class FhirApp : Application() {
             fhirAppDatabase.getVitalDao(),
             fhirAppDatabase.getSymptomsAndDiagnosisDao(),
             fhirAppDatabase.getLabTestAndMedDao(),
-            fhirAppDatabase.getDispenseDao(),
             fhirAppDatabase.getFileUploadDao(),
             fhirAppDatabase.getImmunizationRecommendationDao(),
             fhirAppDatabase.getImmunizationDao(),
@@ -161,8 +157,7 @@ class FhirApp : Application() {
             fhirAppDatabase.getGenericDao(),
             fhirAppDatabase.getPatientDao(),
             fhirAppDatabase.getScheduleDao(),
-            fhirAppDatabase.getAppointmentDao(),
-            fhirAppDatabase.getPrescriptionDao()
+            fhirAppDatabase.getAppointmentDao()
         )
 
         _symDiagnosisRepository = SymptomsAndDiagnosisRepositoryImpl(

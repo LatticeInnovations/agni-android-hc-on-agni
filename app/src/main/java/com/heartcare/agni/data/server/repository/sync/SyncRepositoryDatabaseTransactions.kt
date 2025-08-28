@@ -1,6 +1,5 @@
 package com.heartcare.agni.data.server.repository.sync
 
-import com.heartcare.agni.data.local.enums.DispenseStatusEnum
 import com.heartcare.agni.data.local.enums.GenericTypeEnum
 import com.heartcare.agni.data.local.enums.PhotoDeleteEnum
 import com.heartcare.agni.data.local.enums.PhotoUploadTypeEnum
@@ -8,7 +7,6 @@ import com.heartcare.agni.data.local.enums.SyncType
 import com.heartcare.agni.data.local.roomdb.dao.AllergyDao
 import com.heartcare.agni.data.local.roomdb.dao.AppointmentDao
 import com.heartcare.agni.data.local.roomdb.dao.CVDDao
-import com.heartcare.agni.data.local.roomdb.dao.DispenseDao
 import com.heartcare.agni.data.local.roomdb.dao.ExaminationDao
 import com.heartcare.agni.data.local.roomdb.dao.FamilyHistoryDao
 import com.heartcare.agni.data.local.roomdb.dao.FileUploadDao
@@ -31,9 +29,6 @@ import com.heartcare.agni.data.local.roomdb.dao.VitalDao
 import com.heartcare.agni.data.local.roomdb.dao.vaccincation.ImmunizationDao
 import com.heartcare.agni.data.local.roomdb.dao.vaccincation.ImmunizationRecommendationDao
 import com.heartcare.agni.data.local.roomdb.dao.vaccincation.ManufacturerDao
-import com.heartcare.agni.data.local.roomdb.entities.dispense.DispenseDataEntity
-import com.heartcare.agni.data.local.roomdb.entities.dispense.DispensePrescriptionEntity
-import com.heartcare.agni.data.local.roomdb.entities.dispense.MedicineDispenseListEntity
 import com.heartcare.agni.data.local.roomdb.entities.generic.GenericEntity
 import com.heartcare.agni.data.local.roomdb.entities.labtestandmedrecord.photo.LabTestAndMedPhotoEntity
 import com.heartcare.agni.data.local.roomdb.entities.patient.IdentifierEntity
@@ -44,8 +39,6 @@ import com.heartcare.agni.data.server.model.create.CreateResponse
 import com.heartcare.agni.data.server.model.create.LabDocumentIdResponse
 import com.heartcare.agni.data.server.model.create.MedDocumentIdResponse
 import com.heartcare.agni.data.server.model.cvd.CVDResponse
-import com.heartcare.agni.data.server.model.dispense.response.DispenseData
-import com.heartcare.agni.data.server.model.dispense.response.MedicineDispenseResponse
 import com.heartcare.agni.data.server.model.examination.ExaminationMasterResponse
 import com.heartcare.agni.data.server.model.examination.ExaminationResponse
 import com.heartcare.agni.data.server.model.family.FamilyHistoryResponse
@@ -82,7 +75,6 @@ import com.heartcare.agni.utils.converters.responseconverter.Vaccination.toManuf
 import com.heartcare.agni.utils.converters.responseconverter.toAllergyEntity
 import com.heartcare.agni.utils.converters.responseconverter.toAppointmentEntity
 import com.heartcare.agni.utils.converters.responseconverter.toCVDEntity
-import com.heartcare.agni.utils.converters.responseconverter.toDispensePrescriptionEntity
 import com.heartcare.agni.utils.converters.responseconverter.toExaminationEntity
 import com.heartcare.agni.utils.converters.responseconverter.toExaminationMasterEntity
 import com.heartcare.agni.utils.converters.responseconverter.toFamilyHistoryEntity
@@ -92,14 +84,12 @@ import com.heartcare.agni.utils.converters.responseconverter.toInterventionMaste
 import com.heartcare.agni.utils.converters.responseconverter.toLabTestEntity
 import com.heartcare.agni.utils.converters.responseconverter.toLabTestPhotoResponseLocal
 import com.heartcare.agni.utils.converters.responseconverter.toLevelEntity
-import com.heartcare.agni.utils.converters.responseconverter.toListOfDispenseDataEntity
 import com.heartcare.agni.utils.converters.responseconverter.toListOfId
 import com.heartcare.agni.utils.converters.responseconverter.toListOfIdentifierEntity
 import com.heartcare.agni.utils.converters.responseconverter.toListOfLabTestAndMedPhotoEntity
 import com.heartcare.agni.utils.converters.responseconverter.toListOfLabTestPhotoEntity
 import com.heartcare.agni.utils.converters.responseconverter.toListOfMedicationEntity
 import com.heartcare.agni.utils.converters.responseconverter.toListOfMedicineDirectionsEntity
-import com.heartcare.agni.utils.converters.responseconverter.toListOfMedicineDispenseListEntity
 import com.heartcare.agni.utils.converters.responseconverter.toListOfPrescriptionDirectionsEntity
 import com.heartcare.agni.utils.converters.responseconverter.toListOfPrescriptionPhotoEntity
 import com.heartcare.agni.utils.converters.responseconverter.toMedRecordPhotoResponseLocal
@@ -127,7 +117,6 @@ open class SyncRepositoryDatabaseTransactions(
     private val vitalDao: VitalDao,
     private val symptomsAndDiagnosisDao: SymptomsAndDiagnosisDao,
     private val labTestAndMedDao: LabTestAndMedDao,
-    private val dispenseDao: DispenseDao,
     private val fileUploadDao: FileUploadDao,
     private val deleteFileManager: DeleteFileManager,
     private val immunizationRecommendationDao: ImmunizationRecommendationDao,
@@ -639,111 +628,6 @@ open class SyncRepositoryDatabaseTransactions(
             }
         }
         return deleteGenericEntityData(listOfGenericEntities)
-    }
-
-
-    protected suspend fun insertDispenseFhirId(
-        listOfGenericEntities: List<GenericEntity>,
-        body: List<CreateResponse>
-    ): Int {
-        val idsToDelete = mutableSetOf<String>()
-        idsToDelete.addAll(listOfGenericEntities.map { genericEntity -> genericEntity.id })
-        body.forEach { createResponse ->
-            if (createResponse.error == null) {
-                dispenseDao.updateDispenseFhirId(
-                    createResponse.id!!, createResponse.fhirId!!
-                )
-                createResponse.medicineDispensedList!!.forEach { medicineResponse ->
-                    dispenseDao.updateMedicineDispenseFhirId(
-                        medicineResponse.medDispenseUuid,
-                        medicineResponse.medDispenseFhirId
-                    )
-                }
-            } else {
-                idsToDelete.remove(createResponse.id)
-            }
-        }
-        return deleteGenericEntityByListOfIds(idsToDelete.toList())
-    }
-
-    protected suspend fun insertDispense(body: List<MedicineDispenseResponse>) {
-        dispenseDao.insertPrescriptionDispenseData(*body.map { medDispenseResponse ->
-            medDispenseResponse.toDispensePrescriptionEntity(
-                patientDao,
-                prescriptionDao
-            )
-        }.toTypedArray())
-
-        val dispenseRecords = mutableListOf<DispenseDataEntity>()
-        body.forEach { medDispenseResponse ->
-            dispenseRecords.addAll(
-                medDispenseResponse.dispenseData.map { dispenseData ->
-                    dispenseData.toListOfDispenseDataEntity(
-                        patientDao,
-                        prescriptionDao,
-                        appointmentDao,
-                        medDispenseResponse.prescriptionFhirId
-                    )
-                }
-            )
-        }
-        dispenseDao.insertDispenseDataEntity(
-            *dispenseRecords.toTypedArray()
-        )
-
-        val dispensedMedicationList = mutableListOf<MedicineDispenseListEntity>()
-        body.forEach { medDispenseResponse ->
-            medDispenseResponse.dispenseData.forEach { dispenseData ->
-                dispensedMedicationList.addAll(
-                    dispenseData.toListOfMedicineDispenseListEntity(
-                        patientDao
-                    )
-                )
-            }
-        }
-        dispenseDao.insertMedicineDispenseDataList(
-            *dispensedMedicationList.toTypedArray()
-        )
-    }
-
-    protected suspend fun insertNotDispensedPrescriptions() {
-        dispenseDao.insertPrescriptionDispenseData(
-            *prescriptionDao.getAllFormPrescriptions().filter {
-                it.id !in dispenseDao.getAllDispense().map { it.prescriptionId }
-            }.map { prescription ->
-                DispensePrescriptionEntity(
-                    patientId = prescription.patientId,
-                    prescriptionId = prescription.id,
-                    status = DispenseStatusEnum.NOT_DISPENSED.code
-                )
-            }.toTypedArray()
-        )
-    }
-
-    protected suspend fun insertOTC(body: List<DispenseData>) {
-        dispenseDao.insertDispenseDataEntity(
-            *body.map {
-                it.toListOfDispenseDataEntity(
-                    patientDao,
-                    prescriptionDao,
-                    appointmentDao,
-                    null
-                )
-            }
-                .toTypedArray()
-        )
-
-        val dispensedMedicationList = mutableListOf<MedicineDispenseListEntity>()
-        body.forEach { dispenseData ->
-            dispensedMedicationList.addAll(
-                dispenseData.toListOfMedicineDispenseListEntity(
-                    patientDao
-                )
-            )
-        }
-        dispenseDao.insertMedicineDispenseDataList(
-            *dispensedMedicationList.toTypedArray()
-        )
     }
 
     protected suspend fun insertImmunizationRecommendation(body: List<ImmunizationRecommendationResponse>) {

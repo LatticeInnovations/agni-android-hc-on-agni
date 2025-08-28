@@ -8,8 +8,6 @@ import com.heartcare.agni.data.local.repository.cvd.chart.RiskPredictionChartRep
 import com.heartcare.agni.data.local.repository.cvd.chart.RiskPredictionChartRepositoryImpl
 import com.heartcare.agni.data.local.repository.cvd.records.CVDAssessmentRepository
 import com.heartcare.agni.data.local.repository.cvd.records.CVDAssessmentRepositoryImpl
-import com.heartcare.agni.data.local.repository.dispense.DispenseRepository
-import com.heartcare.agni.data.local.repository.dispense.DispenseRepositoryImpl
 import com.heartcare.agni.data.local.repository.examination.ExaminationRepository
 import com.heartcare.agni.data.local.repository.examination.ExaminationRepositoryImpl
 import com.heartcare.agni.data.local.repository.family.FamilyHistoryRepository
@@ -161,10 +159,6 @@ abstract class RepositoryModule {
     @Binds
     @ViewModelScoped
     abstract fun provideLabTestRepository(labTestRepositoryImpl: LabTestRepositoryImpl): LabTestRepository
-
-    @Binds
-    @ViewModelScoped
-    abstract fun provideDispenseRepository(dispenseRepositoryImpl: DispenseRepositoryImpl): DispenseRepository
 
     @Binds
     @ViewModelScoped

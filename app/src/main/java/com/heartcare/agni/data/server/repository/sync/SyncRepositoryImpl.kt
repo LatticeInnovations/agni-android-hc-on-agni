@@ -9,7 +9,6 @@ import com.heartcare.agni.data.local.repository.preference.PreferenceRepository
 import com.heartcare.agni.data.local.roomdb.dao.AllergyDao
 import com.heartcare.agni.data.local.roomdb.dao.AppointmentDao
 import com.heartcare.agni.data.local.roomdb.dao.CVDDao
-import com.heartcare.agni.data.local.roomdb.dao.DispenseDao
 import com.heartcare.agni.data.local.roomdb.dao.ExaminationDao
 import com.heartcare.agni.data.local.roomdb.dao.FamilyHistoryDao
 import com.heartcare.agni.data.local.roomdb.dao.FileUploadDao
@@ -33,7 +32,6 @@ import com.heartcare.agni.data.local.roomdb.dao.vaccincation.ImmunizationDao
 import com.heartcare.agni.data.local.roomdb.dao.vaccincation.ImmunizationRecommendationDao
 import com.heartcare.agni.data.local.roomdb.dao.vaccincation.ManufacturerDao
 import com.heartcare.agni.data.server.api.CVDApiService
-import com.heartcare.agni.data.server.api.DispenseApiService
 import com.heartcare.agni.data.server.api.ExaminationApiService
 import com.heartcare.agni.data.server.api.HistoryAndTestsApiService
 import com.heartcare.agni.data.server.api.InterventionApiService
@@ -48,7 +46,6 @@ import com.heartcare.agni.data.server.api.VitalApiService
 import com.heartcare.agni.data.server.constants.ConstantValues.COUNT_VALUE
 import com.heartcare.agni.data.server.constants.ConstantValues.DEFAULT_MAX_COUNT_VALUE
 import com.heartcare.agni.data.server.constants.EndPoints
-import com.heartcare.agni.data.server.constants.EndPoints.MEDICATION_DISPENSE
 import com.heartcare.agni.data.server.constants.EndPoints.MEDICATION_REQUEST
 import com.heartcare.agni.data.server.constants.EndPoints.PATIENT
 import com.heartcare.agni.data.server.constants.EndPoints.PATIENT_IMMUNIZATION_RECOMMENDATION
@@ -65,9 +62,6 @@ import com.heartcare.agni.data.server.constants.QueryParameters.TYPE
 import com.heartcare.agni.data.server.model.allergy.AllergyResponse
 import com.heartcare.agni.data.server.model.create.CreateResponse
 import com.heartcare.agni.data.server.model.cvd.CVDResponse
-import com.heartcare.agni.data.server.model.dispense.request.MedicineDispenseRequest
-import com.heartcare.agni.data.server.model.dispense.response.DispenseData
-import com.heartcare.agni.data.server.model.dispense.response.MedicineDispenseResponse
 import com.heartcare.agni.data.server.model.examination.ExaminationMasterResponse
 import com.heartcare.agni.data.server.model.examination.ExaminationResponse
 import com.heartcare.agni.data.server.model.family.FamilyHistoryResponse
@@ -116,7 +110,6 @@ class SyncRepositoryImpl @Inject constructor(
     private val vitalApiService: VitalApiService,
     private val symptomsAndDiagnosisService: SymptomsAndDiagnosisService,
     private val labTestAndMedRecordService: LabTestAndMedRecordService,
-    private val dispenseApiService: DispenseApiService,
     private val vaccinationApiService: VaccinationApiService,
     private val levelsApiService: LevelsApiService,
     private val historyAndTestsApiService: HistoryAndTestsApiService,
@@ -135,7 +128,6 @@ class SyncRepositoryImpl @Inject constructor(
     vitalDao: VitalDao,
     symptomsAndDiagnosisDao: SymptomsAndDiagnosisDao,
     labTestAndMedDao: LabTestAndMedDao,
-    dispenseDao: DispenseDao,
     fileUploadDao: FileUploadDao,
     immunizationRecommendationDao: ImmunizationRecommendationDao,
     immunizationDao: ImmunizationDao,
@@ -162,7 +154,6 @@ class SyncRepositoryImpl @Inject constructor(
     vitalDao,
     symptomsAndDiagnosisDao,
     labTestAndMedDao,
-    dispenseDao,
     fileUploadDao,
     deleteFileManager,
     immunizationRecommendationDao,
@@ -704,103 +695,6 @@ class SyncRepositoryImpl @Inject constructor(
 
     }
 
-    override suspend fun getAndInsertDispense(patientId: String?): ResponseMapper<List<MedicineDispenseResponse>> {
-        return if (patientId == null) {
-            genericDao.getSameTypeGenericEntityPayload(
-                GenericTypeEnum.FHIR_IDS_DISPENSE, SyncType.POST, COUNT_VALUE
-            ).let { listOfGenericEntity ->
-                if (listOfGenericEntity.isEmpty()) {
-                    insertNotDispensedPrescriptions()
-                    ApiEmptyResponse()
-                } else {
-                    val map = mutableMapOf<String, String>()
-                    map[PATIENT_ID] =
-                        listOfGenericEntity.map { it.payload }.toNoBracketAndNoSpaceString()
-                    map[COUNT] = DEFAULT_MAX_COUNT_VALUE.toString()
-                    ApiResponseConverter.convert(dispenseApiService.getDispenseRecords(map))
-                        .run {
-                            when (this) {
-                                is ApiEndResponse -> {
-                                    insertDispense(body)
-                                    genericDao.deleteSyncPayload(listOfGenericEntity.toListOfId())
-                                    getAndInsertDispense(null)
-                                }
-
-                                else -> {
-                                    this
-                                }
-                            }
-                        }
-                }
-            }
-        } else {
-            ApiResponseConverter.convert(
-                dispenseApiService.getDispenseRecords(
-                    mapOf(
-                        Pair(PATIENT_ID, patientId)
-                    )
-                )
-            ).run {
-                when (this) {
-                    is ApiEndResponse -> {
-                        insertDispense(body)
-                        insertNotDispensedPrescriptions()
-                        this
-                    }
-
-                    else -> this
-                }
-            }
-        }
-    }
-
-    override suspend fun getAndInsertOTC(patientId: String?): ResponseMapper<List<DispenseData>> {
-        return if (patientId == null) {
-            genericDao.getSameTypeGenericEntityPayload(
-                GenericTypeEnum.FHIR_IDS_OTC, SyncType.POST, COUNT_VALUE
-            ).let { listOfGenericEntity ->
-                if (listOfGenericEntity.isEmpty()) ApiEmptyResponse()
-                else {
-                    val map = mutableMapOf<String, String>()
-                    map[PATIENT_ID] =
-                        listOfGenericEntity.map { it.payload }.toNoBracketAndNoSpaceString()
-                    map[COUNT] = DEFAULT_MAX_COUNT_VALUE.toString()
-                    ApiResponseConverter.convert(dispenseApiService.getOTCRecords(map))
-                        .run {
-                            when (this) {
-                                is ApiEndResponse -> {
-                                    insertOTC(body)
-                                    genericDao.deleteSyncPayload(listOfGenericEntity.toListOfId())
-                                    getAndInsertOTC(null)
-                                }
-
-                                else -> {
-                                    this
-                                }
-                            }
-                        }
-                }
-            }
-        } else {
-            ApiResponseConverter.convert(
-                dispenseApiService.getOTCRecords(
-                    mapOf(
-                        Pair(PATIENT_ID, patientId)
-                    )
-                )
-            ).run {
-                when (this) {
-                    is ApiEndResponse -> {
-                        insertOTC(body)
-                        this
-                    }
-
-                    else -> this
-                }
-            }
-        }
-    }
-
     override suspend fun getAndInsertImmunization(patientId: String?): ResponseMapper<List<ImmunizationResponse>> {
         return if (patientId == null) {
             genericDao.getSameTypeGenericEntityPayload(
@@ -1177,36 +1071,6 @@ class SyncRepositoryImpl @Inject constructor(
             }
         }
 
-    }
-
-    override suspend fun sendDispensePostData(): ResponseMapper<List<CreateResponse>> {
-        return genericDao.getSameTypeGenericEntityPayload(
-            genericTypeEnum = GenericTypeEnum.DISPENSE,
-            syncType = SyncType.POST
-        ).let { listOfGenericEntity ->
-            if (listOfGenericEntity.isEmpty()) ApiEmptyResponse()
-            else {
-                ApiResponseConverter.convert(
-                    dispenseApiService.postDispenseData(
-                        MEDICATION_DISPENSE,
-                        listOfGenericEntity.map { dispenseGenericEntity ->
-                            dispenseGenericEntity.payload.fromJson<LinkedTreeMap<*, *>>()
-                                .mapToObject(MedicineDispenseRequest::class.java)!!
-                        }
-                    )
-                ).run {
-                    when (this) {
-                        is ApiEndResponse -> {
-                            insertDispenseFhirId(listOfGenericEntity, body).let { deletedRows ->
-                                if (deletedRows > 0) sendDispensePostData() else this
-                            }
-                        }
-
-                        else -> this
-                    }
-                }
-            }
-        }
     }
 
     override suspend fun sendImmunizationPostData(): ResponseMapper<List<CreateResponse>> {

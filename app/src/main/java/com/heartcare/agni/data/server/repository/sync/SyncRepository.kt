@@ -3,8 +3,6 @@ package com.heartcare.agni.data.server.repository.sync
 import com.heartcare.agni.data.server.model.allergy.AllergyResponse
 import com.heartcare.agni.data.server.model.create.CreateResponse
 import com.heartcare.agni.data.server.model.cvd.CVDResponse
-import com.heartcare.agni.data.server.model.dispense.response.DispenseData
-import com.heartcare.agni.data.server.model.dispense.response.MedicineDispenseResponse
 import com.heartcare.agni.data.server.model.examination.ExaminationMasterResponse
 import com.heartcare.agni.data.server.model.examination.ExaminationResponse
 import com.heartcare.agni.data.server.model.family.FamilyHistoryResponse
@@ -49,8 +47,6 @@ interface SyncRepository {
     suspend fun getAndInsertListSymptomsAndDiagnosisData(offset: Int): ResponseMapper<List<SymptomsAndDiagnosisResponse>>
     suspend fun getAndInsertListLabTestData(offset: Int): ResponseMapper<List<LabTestResponse>>
     suspend fun getAndInsertListMedicalRecordData(offset: Int): ResponseMapper<List<MedicalRecordResponse>>
-    suspend fun getAndInsertDispense(patientId: String?): ResponseMapper<List<MedicineDispenseResponse>>
-    suspend fun getAndInsertOTC(patientId: String?): ResponseMapper<List<DispenseData>>
     suspend fun getAndInsertImmunization(patientId: String?): ResponseMapper<List<ImmunizationResponse>>
     suspend fun getAndInsertManufacturer(): ResponseMapper<List<ManufacturerResponse>>
     suspend fun getAndInsertLevelsData(offset: Int): ResponseMapper<List<LevelResponse>>
@@ -75,7 +71,6 @@ interface SyncRepository {
     suspend fun sendSymptomsAndDiagnosisPostData(): ResponseMapper<List<CreateResponse>>
     suspend fun sendLabTestPostData(): ResponseMapper<List<CreateResponse>>
     suspend fun sendMedRecordPostData(): ResponseMapper<List<CreateResponse>>
-    suspend fun sendDispensePostData(): ResponseMapper<List<CreateResponse>>
     suspend fun sendImmunizationPostData(): ResponseMapper<List<CreateResponse>>
     suspend fun sendPriorDxPostData(): ResponseMapper<List<CreateResponse>>
     suspend fun sendHistoryMedicationPostData(): ResponseMapper<List<CreateResponse>>

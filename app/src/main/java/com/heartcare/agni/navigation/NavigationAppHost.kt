@@ -13,9 +13,6 @@ import com.heartcare.agni.ui.appointments.schedule.ScheduleAppointments
 import com.heartcare.agni.ui.cvd.CVDRiskAssessmentScreen
 import com.heartcare.agni.ui.diagnosis.DiagnosisScreen
 import com.heartcare.agni.ui.diagnosis.add.AddDiagnosisScreen
-import com.heartcare.agni.ui.dispense.DrugDispenseScreen
-import com.heartcare.agni.ui.dispense.otc.OTCScreen
-import com.heartcare.agni.ui.dispense.prescription.dispenseprescription.DispensePrescriptionScreen
 import com.heartcare.agni.ui.examination.TestExaminationScreen
 import com.heartcare.agni.ui.examination.add.AddTestExaminationScreen
 import com.heartcare.agni.ui.historyandtests.HistoryTakingAndTestsScreen
@@ -107,10 +104,6 @@ fun NavigationAppHost(navController: NavController, startDest: String) {
         composable(Screen.AddSymptomsScreen.route) { SelectSymptomScreen(navController = navController) }
         composable(Screen.LabAndMedPhotoUploadScreen.route) { PhotoUploadScreen(navController = navController) }
         composable(Screen.LabAndMedRecordPhotoViewScreen.route) { PhotoViewScreen(navController = navController) }
-
-        composable(Screen.DrugDispenseScreen.route) { DrugDispenseScreen(navController = navController) }
-        composable(Screen.DispensePrescriptionScreen.route) { DispensePrescriptionScreen(navController = navController) }
-        composable(Screen.OTCScreen.route) { OTCScreen(navController = navController) }
 
         composable(Screen.VaccinationScreen.route) { VaccinationScreen(navController = navController) }
         composable(Screen.AddVaccinationScreen.route) { AddVaccinationScreen(navController = navController) }

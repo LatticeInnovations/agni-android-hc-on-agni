@@ -7,7 +7,6 @@ import com.heartcare.agni.data.local.sharedpreferences.PreferenceStorage
 import com.heartcare.agni.data.server.api.AuthenticationApiService
 import com.heartcare.agni.data.server.api.AuthenticationApiServiceWithToken
 import com.heartcare.agni.data.server.api.CVDApiService
-import com.heartcare.agni.data.server.api.DispenseApiService
 import com.heartcare.agni.data.server.api.ExaminationApiService
 import com.heartcare.agni.data.server.api.FileUploadApiService
 import com.heartcare.agni.data.server.api.LabTestAndMedRecordService
@@ -269,11 +268,6 @@ object NetworkModule {
     @Singleton
     fun provideLabAndMedRecordService(@Named("agni") retrofit: Retrofit): LabTestAndMedRecordService =
         retrofit.create(LabTestAndMedRecordService::class.java)
-
-    @Provides
-    @Singleton
-    fun provideDispenseApiService(@Named("agni") retrofit: Retrofit): DispenseApiService =
-        retrofit.create(DispenseApiService::class.java)
 
     @Provides
     @Singleton

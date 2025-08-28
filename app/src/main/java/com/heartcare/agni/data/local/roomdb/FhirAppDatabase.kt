@@ -9,7 +9,6 @@ import com.heartcare.agni.BuildConfig
 import com.heartcare.agni.data.local.roomdb.dao.AllergyDao
 import com.heartcare.agni.data.local.roomdb.dao.AppointmentDao
 import com.heartcare.agni.data.local.roomdb.dao.CVDDao
-import com.heartcare.agni.data.local.roomdb.dao.DispenseDao
 import com.heartcare.agni.data.local.roomdb.dao.DownloadedFileDao
 import com.heartcare.agni.data.local.roomdb.dao.ExaminationDao
 import com.heartcare.agni.data.local.roomdb.dao.FamilyHistoryDao
@@ -39,9 +38,6 @@ import com.heartcare.agni.data.local.roomdb.entities.allergy.AllergyEntity
 import com.heartcare.agni.data.local.roomdb.entities.appointment.AppointmentEntity
 import com.heartcare.agni.data.local.roomdb.entities.cvd.CVDEntity
 import com.heartcare.agni.data.local.roomdb.entities.cvd.RiskPredictionCharts
-import com.heartcare.agni.data.local.roomdb.entities.dispense.DispenseDataEntity
-import com.heartcare.agni.data.local.roomdb.entities.dispense.DispensePrescriptionEntity
-import com.heartcare.agni.data.local.roomdb.entities.dispense.MedicineDispenseListEntity
 import com.heartcare.agni.data.local.roomdb.entities.examination.ExaminationEntity
 import com.heartcare.agni.data.local.roomdb.entities.examination.ExaminationMasterEntity
 import com.heartcare.agni.data.local.roomdb.entities.family.FamilyHistoryEntity
@@ -109,9 +105,6 @@ import java.util.UUID
         SymDiagSearchEntity::class,
         LabTestAndMedEntity::class,
         LabTestAndMedPhotoEntity::class,
-        DispensePrescriptionEntity::class,
-        DispenseDataEntity::class,
-        MedicineDispenseListEntity::class,
         ImmunizationRecommendationEntity::class,
         ImmunizationEntity::class,
         ImmunizationFileEntity::class,
@@ -151,7 +144,6 @@ abstract class FhirAppDatabase : RoomDatabase() {
     abstract fun getVitalDao(): VitalDao
     abstract fun getSymptomsAndDiagnosisDao(): SymptomsAndDiagnosisDao
     abstract fun getLabTestAndMedDao(): LabTestAndMedDao
-    abstract fun getDispenseDao(): DispenseDao
     abstract fun getManufacturerDao(): ManufacturerDao
     abstract fun getImmunizationDao(): ImmunizationDao
     abstract fun getImmunizationRecommendationDao(): ImmunizationRecommendationDao

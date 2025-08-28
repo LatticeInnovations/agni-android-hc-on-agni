@@ -6,13 +6,11 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewModelScope
 import com.heartcare.agni.base.viewmodel.BaseViewModel
 import com.heartcare.agni.data.local.enums.AppointmentStatusEnum
-import com.heartcare.agni.data.local.enums.DispenseStatusEnum
 import com.heartcare.agni.data.local.model.appointment.AppointmentResponseLocal
 import com.heartcare.agni.data.local.model.prescription.MedicationLocal
 import com.heartcare.agni.data.local.model.prescription.PrescriptionResponseLocal
 import com.heartcare.agni.data.local.model.prescription.medication.MedicationResponseWithMedication
 import com.heartcare.agni.data.local.repository.appointment.AppointmentRepository
-import com.heartcare.agni.data.local.repository.dispense.DispenseRepository
 import com.heartcare.agni.data.local.repository.generic.GenericRepository
 import com.heartcare.agni.data.local.repository.medication.MedicationRepository
 import com.heartcare.agni.data.local.repository.patient.lastupdated.PatientLastUpdatedRepository
@@ -20,7 +18,6 @@ import com.heartcare.agni.data.local.repository.preference.PreferenceRepository
 import com.heartcare.agni.data.local.repository.prescription.PrescriptionRepository
 import com.heartcare.agni.data.local.repository.schedule.ScheduleRepository
 import com.heartcare.agni.data.local.repository.search.SearchRepository
-import com.heartcare.agni.data.local.roomdb.entities.dispense.DispensePrescriptionEntity
 import com.heartcare.agni.data.local.roomdb.entities.medication.MedicineTimingEntity
 import com.heartcare.agni.data.local.roomdb.entities.prescription.PrescriptionAndMedicineRelation
 import com.heartcare.agni.data.server.model.patient.PatientResponse
@@ -54,7 +51,6 @@ class PrescriptionViewModel @Inject constructor(
     private val searchRepository: SearchRepository,
     private val genericRepository: GenericRepository,
     private val appointmentRepository: AppointmentRepository,
-    private val dispenseRepository: DispenseRepository,
     private val scheduleRepository: ScheduleRepository,
     private val patientLastUpdatedRepository: PatientLastUpdatedRepository,
     private val preferenceRepository: PreferenceRepository,
@@ -256,13 +252,6 @@ class PrescriptionViewModel @Inject constructor(
                         prescriptionUuid = uuid,
                         prescriptionFhirId = fhirId,
                         medicationsList = medicationsList
-                    )
-                    dispenseRepository.insertPrescriptionDispenseData(
-                        DispensePrescriptionEntity(
-                            patientId = patient!!.id,
-                            prescriptionId = uuid,
-                            status = DispenseStatusEnum.NOT_DISPENSED.code
-                        )
                     )
                     checkAndUpdateAppointmentStatusToInProgress(
                         inProgressTime = date,

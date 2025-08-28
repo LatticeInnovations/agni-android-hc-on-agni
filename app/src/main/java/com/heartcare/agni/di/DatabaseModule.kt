@@ -5,7 +5,6 @@ import com.heartcare.agni.data.local.roomdb.FhirAppDatabase
 import com.heartcare.agni.data.local.roomdb.dao.AllergyDao
 import com.heartcare.agni.data.local.roomdb.dao.AppointmentDao
 import com.heartcare.agni.data.local.roomdb.dao.CVDDao
-import com.heartcare.agni.data.local.roomdb.dao.DispenseDao
 import com.heartcare.agni.data.local.roomdb.dao.DownloadedFileDao
 import com.heartcare.agni.data.local.roomdb.dao.ExaminationDao
 import com.heartcare.agni.data.local.roomdb.dao.FamilyHistoryDao
@@ -144,12 +143,6 @@ object DatabaseModule {
     @Provides
     fun provideLabTestAndMedDao(fhirAppDatabase: FhirAppDatabase): LabTestAndMedDao {
         return fhirAppDatabase.getLabTestAndMedDao()
-    }
-
-    @Singleton
-    @Provides
-    fun provideDispenseDao(fhirAppDatabase: FhirAppDatabase): DispenseDao {
-        return fhirAppDatabase.getDispenseDao()
     }
 
     @Singleton

@@ -5,7 +5,6 @@ import com.heartcare.agni.data.local.enums.SyncType
 import com.heartcare.agni.data.local.model.symdiag.SymptomsAndDiagnosisData
 import com.heartcare.agni.data.server.model.allergy.AllergyResponse
 import com.heartcare.agni.data.server.model.cvd.CVDResponse
-import com.heartcare.agni.data.server.model.dispense.request.MedicineDispenseRequest
 import com.heartcare.agni.data.server.model.examination.ExaminationResponse
 import com.heartcare.agni.data.server.model.family.FamilyHistoryResponse
 import com.heartcare.agni.data.server.model.historymedication.HistoryMedicationResponse
@@ -69,11 +68,6 @@ interface GenericRepository {
         local: SymptomsAndDiagnosisData, uuid: String = UUIDBuilder.generateUUID()
     ): Long
 
-    suspend fun insertDispense(
-        medicineDispenseRequest: MedicineDispenseRequest,
-        uuid: String = UUIDBuilder.generateUUID()
-    ): Long
-
     suspend fun insertPriorDxRecord(
         priorDxResponse: PriorDxResponse,
         uuid: String = UUIDBuilder.generateUUID()
@@ -122,7 +116,6 @@ interface GenericRepository {
     suspend fun updateSymDiagFhirId()
     suspend fun updateLabTestFhirId()
     suspend fun updateMedRecordFhirId()
-    suspend fun updateDispenseFhirId()
     suspend fun updateImmunizationFhirId()
     suspend fun updatePriorDxFhirId()
     suspend fun updateHistoryMedicationFhirId()

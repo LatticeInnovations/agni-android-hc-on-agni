@@ -10,7 +10,6 @@ object NavControllerConstants {
     const val SCHEDULED = "scheduled"
     const val IF_RESCHEDULING = "ifRescheduling"
     const val SELECTED_INDEX = "selectedIndex"
-    const val OTC_DISPENSED = "otc_dispensed"
     const val VACCINE_ERROR_TYPE = "vaccine_error_type"
     const val VACCINE = "vaccine_error_type"
     const val VACCINE_ADDED = "vaccine_added"
