@@ -26,7 +26,6 @@ import com.heartcare.agni.data.server.model.risk.RiskFactorResponse
 import com.heartcare.agni.data.server.model.scheduleandappointment.appointment.AppointmentResponse
 import com.heartcare.agni.data.server.model.scheduleandappointment.schedule.ScheduleResponse
 import com.heartcare.agni.data.server.model.tobacco.TobaccoCessationResponse
-import com.heartcare.agni.data.server.model.vaccination.ImmunizationResponse
 import com.heartcare.agni.data.server.model.vitals.VitalResponse
 import com.heartcare.agni.utils.builders.GenericEntityPatchBuilder.processPatch
 import com.heartcare.agni.utils.constants.Id
@@ -582,26 +581,6 @@ open class GenericRepositoryDatabaseTransactions(
     }
 
 
-    protected suspend fun updateImmunizationFhirIdInGenericEntity(immunizationGenericEntity: GenericEntity) {
-        val existingMap = immunizationGenericEntity.payload.fromJson<MutableMap<String, Any>>()
-            .mapToObject(ImmunizationResponse::class.java)
-
-        if (existingMap != null) {
-            genericDao.insertGenericEntity(
-                immunizationGenericEntity.copy(
-                    payload = existingMap.copy(
-                        patientId = if (!existingMap.patientId.isFhirId()) getPatientFhirIdById(
-                            existingMap.patientId
-                        )!! else existingMap.patientId,
-                        appointmentId = if (!existingMap.appointmentId.isFhirId()) getAppointmentFhirIdById(
-                            existingMap.appointmentId
-                        )!! else existingMap.appointmentId
-                    ).toJson()
-                )
-            )
-        }
-    }
-
     protected suspend fun updatePriorDxFhirIdInGenericEntity(priorDxGenericEntity: GenericEntity) {
         val existingMap = priorDxGenericEntity.payload.fromJson<MutableMap<String, Any>>()
             .mapToObject(PriorDxResponse::class.java)
@@ -1081,25 +1060,4 @@ open class GenericRepositoryDatabaseTransactions(
         }
     }
 
-    protected suspend fun insertImmunizationGenericEntity(
-        immunizationResponse: ImmunizationResponse,
-        immunizationGenericEntity: GenericEntity?,
-        uuid: String
-    ): Long {
-        return if (immunizationGenericEntity != null) {
-            genericDao.insertGenericEntity(
-                immunizationGenericEntity.copy(payload = immunizationResponse.toJson())
-            )[0]
-        } else {
-            genericDao.insertGenericEntity(
-                GenericEntity(
-                    id = uuid,
-                    patientId = immunizationResponse.immunizationUuid,
-                    payload = immunizationResponse.toJson(),
-                    type = GenericTypeEnum.IMMUNIZATION,
-                    syncType = SyncType.POST
-                )
-            )[0]
-        }
-    }
 }

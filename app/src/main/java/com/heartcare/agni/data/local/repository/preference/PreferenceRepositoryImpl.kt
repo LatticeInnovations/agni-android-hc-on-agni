@@ -104,12 +104,6 @@ class PreferenceRepositoryImpl @Inject constructor(private val preferenceStorage
 
     override fun getLastSyncSymDiag() = preferenceStorage.lastSymptomsSyncTime
 
-    override fun setLastSyncManufacturerRecord(long: Long) {
-        preferenceStorage.lastSyncManufacturerRecord = long
-    }
-
-    override fun getLastSyncManufacturerRecord() = preferenceStorage.lastSyncManufacturerRecord
-
     override fun setLastSyncLevelRecord(long: Long) {
         preferenceStorage.lastSyncLevelRecord = long
     }

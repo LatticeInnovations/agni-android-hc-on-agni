@@ -24,7 +24,6 @@ import com.heartcare.agni.data.server.model.risk.RiskFactorResponse
 import com.heartcare.agni.data.server.model.scheduleandappointment.appointment.AppointmentResponse
 import com.heartcare.agni.data.server.model.scheduleandappointment.schedule.ScheduleResponse
 import com.heartcare.agni.data.server.model.tobacco.TobaccoCessationResponse
-import com.heartcare.agni.data.server.model.vaccination.ImmunizationResponse
 import com.heartcare.agni.data.server.model.vitals.VitalResponse
 import com.heartcare.agni.utils.builders.UUIDBuilder
 import com.heartcare.agni.utils.converters.responseconverter.GsonConverters.toJson
@@ -136,13 +135,6 @@ class GenericRepositoryImpl @Inject constructor(
         genericDao.getNotSyncedData(GenericTypeEnum.SYMPTOMS_DIAGNOSIS)
             .forEach { symDiagGenericEntity ->
                 updateSymDiagFhirIdInGenericEntity(symDiagGenericEntity)
-            }
-    }
-
-    override suspend fun updateImmunizationFhirId() {
-        genericDao.getNotSyncedData(GenericTypeEnum.IMMUNIZATION)
-            .forEach { immunizationGenericEntity ->
-                updateImmunizationFhirIdInGenericEntity(immunizationGenericEntity)
             }
     }
 
@@ -478,19 +470,6 @@ class GenericRepositoryImpl @Inject constructor(
                 syncType = syncType
             )
         )[0]
-    }
-
-    override suspend fun insertImmunization(
-        immunizationResponse: ImmunizationResponse,
-        uuid: String
-    ): Long {
-        return genericDao.getGenericEntityById(
-            patientId = immunizationResponse.immunizationUuid,
-            genericTypeEnum = GenericTypeEnum.IMMUNIZATION,
-            syncType = SyncType.POST
-        ).let { immunizationGenericEntity ->
-            insertImmunizationGenericEntity(immunizationResponse, immunizationGenericEntity, uuid)
-        }
     }
 
     override suspend fun insertOrUpdatePrescriptionPut(

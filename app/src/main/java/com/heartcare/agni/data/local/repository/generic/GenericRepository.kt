@@ -19,7 +19,6 @@ import com.heartcare.agni.data.server.model.risk.RiskFactorResponse
 import com.heartcare.agni.data.server.model.scheduleandappointment.appointment.AppointmentResponse
 import com.heartcare.agni.data.server.model.scheduleandappointment.schedule.ScheduleResponse
 import com.heartcare.agni.data.server.model.tobacco.TobaccoCessationResponse
-import com.heartcare.agni.data.server.model.vaccination.ImmunizationResponse
 import com.heartcare.agni.data.server.model.vitals.VitalResponse
 import com.heartcare.agni.utils.builders.UUIDBuilder
 
@@ -114,7 +113,6 @@ interface GenericRepository {
     suspend fun updateCVDFhirIds()
     suspend fun updateVitalFhirId()
     suspend fun updateSymDiagFhirId()
-    suspend fun updateImmunizationFhirId()
     suspend fun updatePriorDxFhirId()
     suspend fun updateHistoryMedicationFhirId()
     suspend fun updateFamilyHistoryFhirId()
@@ -168,11 +166,6 @@ interface GenericRepository {
 
     suspend fun removeGenericRecord(id: String): Int
     suspend fun insertDeleteRequest(fhirId: String, typeEnum: GenericTypeEnum, syncType: SyncType): Long
-
-    suspend fun insertImmunization(
-        immunizationResponse: ImmunizationResponse,
-        uuid: String = UUIDBuilder.generateUUID()
-    ): Long
 
     suspend fun insertOrUpdatePrescriptionPut(
         prescriptionFhirId: String,

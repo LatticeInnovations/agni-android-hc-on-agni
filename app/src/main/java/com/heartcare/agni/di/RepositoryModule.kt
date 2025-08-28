@@ -46,12 +46,6 @@ import com.heartcare.agni.data.local.repository.symptomsanddiagnosis.SymDiagRepo
 import com.heartcare.agni.data.local.repository.symptomsanddiagnosis.SymDiagRepositoryImpl
 import com.heartcare.agni.data.local.repository.tobacco.TobaccoCessationRepository
 import com.heartcare.agni.data.local.repository.tobacco.TobaccoCessationRepositoryImpl
-import com.heartcare.agni.data.local.repository.vaccination.ImmunizationRecommendationRepository
-import com.heartcare.agni.data.local.repository.vaccination.ImmunizationRepository
-import com.heartcare.agni.data.local.repository.vaccination.ManufacturerRepository
-import com.heartcare.agni.data.local.repository.vaccination.impl.ImmunizationRecommendationRepositoryImpl
-import com.heartcare.agni.data.local.repository.vaccination.impl.ImmunizationRepositoryImpl
-import com.heartcare.agni.data.local.repository.vaccination.impl.ManufacturerRepositoryImpl
 import com.heartcare.agni.data.local.repository.vital.VitalRepository
 import com.heartcare.agni.data.local.repository.vital.VitalRepositoryImpl
 import com.heartcare.agni.data.server.repository.authentication.AuthenticationRepository
@@ -153,18 +147,6 @@ abstract class RepositoryModule {
     @Binds
     @ViewModelScoped
     abstract fun provideSymDiagRepository(symDiagRepositoryImpl: SymDiagRepositoryImpl): SymDiagRepository
-
-    @Binds
-    @ViewModelScoped
-    abstract fun provideImmunizationRepository(immunizationRepositoryImpl: ImmunizationRepositoryImpl): ImmunizationRepository
-
-    @Binds
-    @ViewModelScoped
-    abstract fun provideImmunizationRecommendationRepository(immunizationRecommendationRepositoryImpl: ImmunizationRecommendationRepositoryImpl): ImmunizationRecommendationRepository
-
-    @Binds
-    @ViewModelScoped
-    abstract fun provideManufacturerRepository(manufacturerRepositoryImpl: ManufacturerRepositoryImpl): ManufacturerRepository
 
     @Binds
     @ViewModelScoped

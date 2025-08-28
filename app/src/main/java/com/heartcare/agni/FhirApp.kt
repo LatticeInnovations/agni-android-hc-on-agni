@@ -21,7 +21,6 @@ import com.heartcare.agni.data.server.api.PatientApiService
 import com.heartcare.agni.data.server.api.PrescriptionApiService
 import com.heartcare.agni.data.server.api.ScheduleAndAppointmentApiService
 import com.heartcare.agni.data.server.api.SymptomsAndDiagnosisService
-import com.heartcare.agni.data.server.api.VaccinationApiService
 import com.heartcare.agni.data.server.api.VitalApiService
 import com.heartcare.agni.data.server.repository.symptomsanddiagnosis.SymptomsAndDiagnosisRepository
 import com.heartcare.agni.data.server.repository.symptomsanddiagnosis.SymptomsAndDiagnosisRepositoryImpl
@@ -66,8 +65,6 @@ class FhirApp : Application() {
     lateinit var symptomsAndDiagnosisService: SymptomsAndDiagnosisService
 
     @Inject
-    lateinit var vaccinationApiService: VaccinationApiService
-    @Inject
     lateinit var levelsApiService: LevelsApiService
     @Inject
     lateinit var historyAndTestsApiService: HistoryAndTestsApiService
@@ -111,7 +108,6 @@ class FhirApp : Application() {
             cvdApiService,
             vitalApiService,
             symptomsAndDiagnosisService,
-            vaccinationApiService,
             levelsApiService,
             historyAndTestsApiService,
             interventionApiService,
@@ -129,9 +125,6 @@ class FhirApp : Application() {
             fhirAppDatabase.getVitalDao(),
             fhirAppDatabase.getSymptomsAndDiagnosisDao(),
             fhirAppDatabase.getFileUploadDao(),
-            fhirAppDatabase.getImmunizationRecommendationDao(),
-            fhirAppDatabase.getImmunizationDao(),
-            fhirAppDatabase.getManufacturerDao(),
             fhirAppDatabase.getLevelsDao(),
             fhirAppDatabase.getRiskPredictionDao(),
             fhirAppDatabase.getPriorDxDao(),

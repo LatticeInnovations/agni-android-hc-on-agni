@@ -22,8 +22,6 @@ import com.heartcare.agni.data.server.model.scheduleandappointment.appointment.A
 import com.heartcare.agni.data.server.model.scheduleandappointment.schedule.ScheduleResponse
 import com.heartcare.agni.data.server.model.symptomsanddiagnosis.SymptomsAndDiagnosisResponse
 import com.heartcare.agni.data.server.model.tobacco.TobaccoCessationResponse
-import com.heartcare.agni.data.server.model.vaccination.ImmunizationResponse
-import com.heartcare.agni.data.server.model.vaccination.ManufacturerResponse
 import com.heartcare.agni.data.server.model.vitals.VitalResponse
 import com.heartcare.agni.utils.converters.server.responsemapper.ResponseMapper
 
@@ -43,8 +41,6 @@ interface SyncRepository {
     suspend fun getAndInsertCVD(offset: Int): ResponseMapper<List<CVDResponse>>
     suspend fun getAndInsertListVitalData(offset: Int): ResponseMapper<List<VitalResponse>>
     suspend fun getAndInsertListSymptomsAndDiagnosisData(offset: Int): ResponseMapper<List<SymptomsAndDiagnosisResponse>>
-    suspend fun getAndInsertImmunization(patientId: String?): ResponseMapper<List<ImmunizationResponse>>
-    suspend fun getAndInsertManufacturer(): ResponseMapper<List<ManufacturerResponse>>
     suspend fun getAndInsertLevelsData(offset: Int): ResponseMapper<List<LevelResponse>>
     suspend fun getAndInsertPriorDxData(offset: Int): ResponseMapper<List<PriorDxResponse>>
     suspend fun getAndInsertHistoryMedicationData(offset: Int): ResponseMapper<List<HistoryMedicationResponse>>
@@ -65,7 +61,6 @@ interface SyncRepository {
     suspend fun sendCVDPostData(): ResponseMapper<List<CreateResponse>>
     suspend fun sendVitalPostData(): ResponseMapper<List<CreateResponse>>
     suspend fun sendSymptomsAndDiagnosisPostData(): ResponseMapper<List<CreateResponse>>
-    suspend fun sendImmunizationPostData(): ResponseMapper<List<CreateResponse>>
     suspend fun sendPriorDxPostData(): ResponseMapper<List<CreateResponse>>
     suspend fun sendHistoryMedicationPostData(): ResponseMapper<List<CreateResponse>>
     suspend fun sendFamilyHistoryPostData(): ResponseMapper<List<CreateResponse>>

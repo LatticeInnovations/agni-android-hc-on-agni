@@ -26,9 +26,6 @@ import com.heartcare.agni.data.local.roomdb.dao.SearchDao
 import com.heartcare.agni.data.local.roomdb.dao.SymptomsAndDiagnosisDao
 import com.heartcare.agni.data.local.roomdb.dao.TobaccoCessationDao
 import com.heartcare.agni.data.local.roomdb.dao.VitalDao
-import com.heartcare.agni.data.local.roomdb.dao.vaccincation.ImmunizationDao
-import com.heartcare.agni.data.local.roomdb.dao.vaccincation.ImmunizationRecommendationDao
-import com.heartcare.agni.data.local.roomdb.dao.vaccincation.ManufacturerDao
 import com.heartcare.agni.data.local.sharedpreferences.PreferenceStorage
 import dagger.Module
 import dagger.Provides
@@ -137,24 +134,6 @@ object DatabaseModule {
     @Provides
     fun provideSymptomsAndDiagnosisDao(fhirAppDatabase: FhirAppDatabase): SymptomsAndDiagnosisDao {
         return fhirAppDatabase.getSymptomsAndDiagnosisDao()
-    }
-
-    @Singleton
-    @Provides
-    fun provideImmunizationDao(fhirAppDatabase: FhirAppDatabase): ImmunizationDao {
-        return fhirAppDatabase.getImmunizationDao()
-    }
-
-    @Singleton
-    @Provides
-    fun provideImmunizationRecommendationDao(fhirAppDatabase: FhirAppDatabase): ImmunizationRecommendationDao {
-        return fhirAppDatabase.getImmunizationRecommendationDao()
-    }
-
-    @Singleton
-    @Provides
-    fun provideManufacturerDao(fhirAppDatabase: FhirAppDatabase): ManufacturerDao {
-        return fhirAppDatabase.getManufacturerDao()
     }
 
     @Singleton

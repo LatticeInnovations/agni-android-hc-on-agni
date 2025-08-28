@@ -30,9 +30,6 @@ import com.heartcare.agni.data.local.roomdb.dao.SearchDao
 import com.heartcare.agni.data.local.roomdb.dao.SymptomsAndDiagnosisDao
 import com.heartcare.agni.data.local.roomdb.dao.TobaccoCessationDao
 import com.heartcare.agni.data.local.roomdb.dao.VitalDao
-import com.heartcare.agni.data.local.roomdb.dao.vaccincation.ImmunizationDao
-import com.heartcare.agni.data.local.roomdb.dao.vaccincation.ImmunizationRecommendationDao
-import com.heartcare.agni.data.local.roomdb.dao.vaccincation.ManufacturerDao
 import com.heartcare.agni.data.local.roomdb.entities.allergy.AllergyEntity
 import com.heartcare.agni.data.local.roomdb.entities.appointment.AppointmentEntity
 import com.heartcare.agni.data.local.roomdb.entities.cvd.CVDEntity
@@ -64,10 +61,6 @@ import com.heartcare.agni.data.local.roomdb.entities.symptomsanddiagnosis.Diagno
 import com.heartcare.agni.data.local.roomdb.entities.symptomsanddiagnosis.SymptomAndDiagnosisEntity
 import com.heartcare.agni.data.local.roomdb.entities.symptomsanddiagnosis.SymptomsEntity
 import com.heartcare.agni.data.local.roomdb.entities.tobacco.TobaccoCessationEntity
-import com.heartcare.agni.data.local.roomdb.entities.vaccination.ImmunizationEntity
-import com.heartcare.agni.data.local.roomdb.entities.vaccination.ImmunizationFileEntity
-import com.heartcare.agni.data.local.roomdb.entities.vaccination.ImmunizationRecommendationEntity
-import com.heartcare.agni.data.local.roomdb.entities.vaccination.ManufacturerEntity
 import com.heartcare.agni.data.local.roomdb.entities.vitals.VitalEntity
 import com.heartcare.agni.data.local.roomdb.typeconverters.SymptomDiagnosisTypeConverter
 import com.heartcare.agni.data.local.roomdb.typeconverters.TypeConverter
@@ -100,10 +93,6 @@ import java.util.UUID
         DiagnosisEntity::class,
         SymptomAndDiagnosisEntity::class,
         SymDiagSearchEntity::class,
-        ImmunizationRecommendationEntity::class,
-        ImmunizationEntity::class,
-        ImmunizationFileEntity::class,
-        ManufacturerEntity::class,
         LevelEntity::class,
         PriorDxEntity::class,
         HistoryMedicationEntity::class,
@@ -138,9 +127,6 @@ abstract class FhirAppDatabase : RoomDatabase() {
     abstract fun getCVDDao(): CVDDao
     abstract fun getVitalDao(): VitalDao
     abstract fun getSymptomsAndDiagnosisDao(): SymptomsAndDiagnosisDao
-    abstract fun getManufacturerDao(): ManufacturerDao
-    abstract fun getImmunizationDao(): ImmunizationDao
-    abstract fun getImmunizationRecommendationDao(): ImmunizationRecommendationDao
     abstract fun getLevelsDao(): LevelsDao
     abstract fun getPriorDxDao(): PriorDxDao
     abstract fun getHistoryMedicationDao(): HistoryMedicationDao

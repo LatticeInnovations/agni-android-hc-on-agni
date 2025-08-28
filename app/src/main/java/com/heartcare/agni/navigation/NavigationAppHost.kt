@@ -49,10 +49,6 @@ import com.heartcare.agni.ui.signup.SignUpPhoneEmailScreen
 import com.heartcare.agni.ui.signup.SignUpScreen
 import com.heartcare.agni.ui.symptomsanddiagnosis.SymptomsAndDiagnosisScreen
 import com.heartcare.agni.ui.symptomsanddiagnosis.selectsymptoms.SelectSymptomScreen
-import com.heartcare.agni.ui.vaccination.VaccinationScreen
-import com.heartcare.agni.ui.vaccination.add.AddVaccinationScreen
-import com.heartcare.agni.ui.vaccination.error.VaccinationErrorScreen
-import com.heartcare.agni.ui.vaccination.view.ViewVaccinationScreen
 import com.heartcare.agni.ui.vitalsscreen.VitalsScreen
 import com.heartcare.agni.ui.vitalsscreen.addvitals.AddVitalsScreen
 
@@ -100,11 +96,6 @@ fun NavigationAppHost(navController: NavController, startDest: String) {
 
         composable(Screen.SymptomsAndDiagnosisScreen.route) { SymptomsAndDiagnosisScreen(navController = navController) }
         composable(Screen.AddSymptomsScreen.route) { SelectSymptomScreen(navController = navController) }
-
-        composable(Screen.VaccinationScreen.route) { VaccinationScreen(navController = navController) }
-        composable(Screen.AddVaccinationScreen.route) { AddVaccinationScreen(navController = navController) }
-        composable(Screen.ViewVaccinationScreen.route) { ViewVaccinationScreen(navController = navController) }
-        composable(Screen.VaccinationErrorScreen.route) { VaccinationErrorScreen(navController = navController) }
 
         composable(Screen.HistoryTakingAndTestsScreen.route) { HistoryTakingAndTestsScreen(navController = navController) }
         composable(Screen.AddPriorDxScreen.route) { AddPriorDxScreen(navController = navController) }

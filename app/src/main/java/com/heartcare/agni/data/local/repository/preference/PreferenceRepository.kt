@@ -64,10 +64,6 @@ interface PreferenceRepository {
     fun setLastSyncSymDiag(long: Long)
     fun getLastSyncSymDiag(): Long
 
-    /** Last Sync Manufacturer Record */
-    fun setLastSyncManufacturerRecord(long: Long)
-    fun getLastSyncManufacturerRecord(): Long
-
     /** Last Level Data */
     fun setLastSyncLevelRecord(long: Long)
     fun getLastSyncLevelRecord(): Long

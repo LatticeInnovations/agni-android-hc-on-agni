@@ -24,9 +24,6 @@ import com.heartcare.agni.data.local.roomdb.dao.ScheduleDao
 import com.heartcare.agni.data.local.roomdb.dao.SymptomsAndDiagnosisDao
 import com.heartcare.agni.data.local.roomdb.dao.TobaccoCessationDao
 import com.heartcare.agni.data.local.roomdb.dao.VitalDao
-import com.heartcare.agni.data.local.roomdb.dao.vaccincation.ImmunizationDao
-import com.heartcare.agni.data.local.roomdb.dao.vaccincation.ImmunizationRecommendationDao
-import com.heartcare.agni.data.local.roomdb.dao.vaccincation.ManufacturerDao
 import com.heartcare.agni.data.local.roomdb.entities.generic.GenericEntity
 import com.heartcare.agni.data.local.roomdb.entities.patient.IdentifierEntity
 import com.heartcare.agni.data.local.roomdb.entities.prescription.PrescriptionDirectionsEntity
@@ -53,17 +50,10 @@ import com.heartcare.agni.data.server.model.scheduleandappointment.appointment.A
 import com.heartcare.agni.data.server.model.scheduleandappointment.schedule.ScheduleResponse
 import com.heartcare.agni.data.server.model.symptomsanddiagnosis.SymptomsAndDiagnosisResponse
 import com.heartcare.agni.data.server.model.tobacco.TobaccoCessationResponse
-import com.heartcare.agni.data.server.model.vaccination.ImmunizationRecommendationResponse
-import com.heartcare.agni.data.server.model.vaccination.ImmunizationResponse
-import com.heartcare.agni.data.server.model.vaccination.ManufacturerResponse
 import com.heartcare.agni.data.server.model.vitals.VitalResponse
 import com.heartcare.agni.utils.constants.ErrorConstants
 import com.heartcare.agni.utils.constants.ErrorConstants.APPOINTMENT_ERROR
 import com.heartcare.agni.utils.constants.ErrorConstants.DUPLICATE_RECORD
-import com.heartcare.agni.utils.converters.responseconverter.Vaccination.toImmunizationEntity
-import com.heartcare.agni.utils.converters.responseconverter.Vaccination.toImmunizationFileEntity
-import com.heartcare.agni.utils.converters.responseconverter.Vaccination.toImmunizationRecommendationEntity
-import com.heartcare.agni.utils.converters.responseconverter.Vaccination.toManufacturerEntity
 import com.heartcare.agni.utils.converters.responseconverter.toAllergyEntity
 import com.heartcare.agni.utils.converters.responseconverter.toAppointmentEntity
 import com.heartcare.agni.utils.converters.responseconverter.toCVDEntity
@@ -105,9 +95,6 @@ open class SyncRepositoryDatabaseTransactions(
     private val symptomsAndDiagnosisDao: SymptomsAndDiagnosisDao,
     private val fileUploadDao: FileUploadDao,
     private val deleteFileManager: DeleteFileManager,
-    private val immunizationRecommendationDao: ImmunizationRecommendationDao,
-    private val immunizationDao: ImmunizationDao,
-    private val manufacturerDao: ManufacturerDao,
     private val levelsDao: LevelsDao,
     private val riskPredictionDao: RiskPredictionDao,
     private val priorDxDao: PriorDxDao,
@@ -460,68 +447,6 @@ open class SyncRepositoryDatabaseTransactions(
 
     protected suspend fun deleteGenericEntityData(listOfGenericEntities: List<GenericEntity>): Int {
         return genericDao.deleteSyncPayload(listOfGenericEntities.toListOfId())
-    }
-
-    protected suspend fun insertImmunizationRecommendation(body: List<ImmunizationRecommendationResponse>) {
-        immunizationRecommendationDao.insertImmunizationRecommendation(
-            *body.map { immunizationRecommendationResponse ->
-                patientDao.getPatientIdByFhirId(immunizationRecommendationResponse.patientId)!!
-                    .let {
-                        immunizationRecommendationResponse.toImmunizationRecommendationEntity(it)
-                    }
-            }.toTypedArray()
-        )
-    }
-
-    protected suspend fun insertImmunization(body: List<ImmunizationResponse>) {
-        immunizationDao.insertImmunization(
-            *body.map { immunizationResponse ->
-                val patientId = patientDao.getPatientIdByFhirId(immunizationResponse.patientId)!!
-                val appointmentId =
-                    appointmentDao.getAppointmentIdByFhirId(immunizationResponse.appointmentId)
-                immunizationResponse.toImmunizationEntity(patientId, appointmentId)
-            }.toTypedArray()
-        )
-
-        body.map { immunizationResponse ->
-            immunizationResponse.toImmunizationFileEntity()?.let { immunizationFiles ->
-                immunizationDao.insertImmunizationFiles(*immunizationFiles.toTypedArray())
-            }
-        }
-
-        val listOfGenericEntity = mutableListOf<GenericEntity>()
-        body.map { immunizationResponse ->
-            immunizationResponse.immunizationFiles?.forEach { file ->
-                listOfGenericEntity.add(
-                    GenericEntity(
-                        id = UUID.randomUUID().toString(),
-                        patientId = immunizationResponse.immunizationUuid,
-                        payload = file.filename,
-                        type = GenericTypeEnum.PRESCRIPTION_PHOTO,
-                        syncType = SyncType.POST
-                    )
-                )
-            }
-        }
-        genericDao.insertGenericEntity(
-            *listOfGenericEntity.toTypedArray()
-        )
-    }
-
-    protected suspend fun insertManufacturer(body: List<ManufacturerResponse>) {
-        manufacturerDao.insertManufacturer(
-            *body.map { it.toManufacturerEntity() }.toTypedArray()
-        )
-    }
-
-    protected suspend fun insertImmunizationFhirIds(
-        body: List<CreateResponse>,
-        listOfGenericEntities: List<GenericEntity>
-    ): Int {
-        body.forEach { createResponse ->
-            immunizationDao.updateFhirId(createResponse.id!!, createResponse.fhirId!!)
-        }
-        return deleteGenericEntityData(listOfGenericEntities)
     }
 
     protected suspend fun insertPriorDxFhirIds(

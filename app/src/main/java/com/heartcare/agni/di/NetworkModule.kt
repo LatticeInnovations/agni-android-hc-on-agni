@@ -17,7 +17,6 @@ import com.heartcare.agni.data.server.api.InterventionApiService
 import com.heartcare.agni.data.server.api.ScheduleAndAppointmentApiService
 import com.heartcare.agni.data.server.api.SignUpApiService
 import com.heartcare.agni.data.server.api.SymptomsAndDiagnosisService
-import com.heartcare.agni.data.server.api.VaccinationApiService
 import com.heartcare.agni.data.server.api.VitalApiService
 import com.heartcare.agni.service.authentication.TokenAuthenticator
 import com.heartcare.agni.utils.constants.AuthenticationConstants.AUTHORIZATION
@@ -41,6 +40,7 @@ import java.net.SocketTimeoutException
 import java.util.concurrent.TimeUnit
 import javax.inject.Named
 import javax.inject.Singleton
+
 @Module
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
@@ -262,11 +262,6 @@ object NetworkModule {
     @Singleton
     fun provideSymptomsAndDiagnosisService(@Named("agni") retrofit: Retrofit): SymptomsAndDiagnosisService =
         retrofit.create(SymptomsAndDiagnosisService::class.java)
-
-    @Provides
-    @Singleton
-    fun provideVaccinationApiService(@Named("agni") retrofit: Retrofit): VaccinationApiService =
-        retrofit.create(VaccinationApiService::class.java)
 
     @Provides
     @Singleton
