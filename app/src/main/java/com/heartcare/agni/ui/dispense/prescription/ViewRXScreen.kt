@@ -59,6 +59,7 @@ fun ViewRXScreen(
                     ) {
                         MedicineDetails(
                             medName = directionAndMedication.medicationEntity.medName,
+                            codeCategoryClass = "${directionAndMedication.medicationEntity.medCodeName} · ${directionAndMedication.medicationEntity.categoryName} · ${directionAndMedication.medicationEntity.className}",
                             details = getMedInfo(
                                 duration = directionAndMedication.prescriptionDirectionsEntity.duration,
                                 frequency = directionAndMedication.prescriptionDirectionsEntity.frequency,

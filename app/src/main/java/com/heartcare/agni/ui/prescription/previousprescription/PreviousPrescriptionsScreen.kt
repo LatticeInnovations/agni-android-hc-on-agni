@@ -166,10 +166,11 @@ fun PrescriptionCard(
                             MedicineDetails(
                                 medName = directionAndMedication.medicationEntity.medName,
                                 brandName = directionAndMedication.prescriptionDirectionsEntity.brandName,
+                                codeCategoryClass = "${directionAndMedication.medicationEntity.medCodeName} · ${directionAndMedication.medicationEntity.categoryName} · ${directionAndMedication.medicationEntity.className}",
                                 details = getMedInfo(
                                     duration = directionAndMedication.prescriptionDirectionsEntity.duration,
                                     frequency = directionAndMedication.prescriptionDirectionsEntity.frequency,
-                                    medUnit = directionAndMedication.medicationEntity.medUnit,
+                                    medUnit = directionAndMedication.medicationEntity.doseForm.lowercase(),
                                     timing = directionAndMedication.prescriptionDirectionsEntity.timing,
                                     note = directionAndMedication.prescriptionDirectionsEntity.note,
                                     qtyPerDose = directionAndMedication.prescriptionDirectionsEntity.qtyPerDose,
@@ -236,20 +237,26 @@ fun PrescriptionCard(
 fun MedicineDetails(
     medName: String,
     brandName: String? = null,
+    codeCategoryClass: String,
     details: String
 ) {
     Column(
-        verticalArrangement = Arrangement.spacedBy(4.dp)
+        verticalArrangement = Arrangement.spacedBy(6.dp)
     ) {
         Text(
             text = medName,
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurface
         )
+        Text(
+            text = codeCategoryClass,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
         brandName?.let {
             Text(
-                text = it,
-                style = MaterialTheme.typography.bodyLarge,
+                text = stringResource(R.string.brand_name, it),
+                style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurface
             )
         }
@@ -277,9 +284,7 @@ fun saveRePrescription(
         )
         viewModel.medicationsResponseWithMedicationList += listOf(
             MedicationResponseWithMedication(
-                activeIngredient = directionAndMedication.medicationEntity.activeIngredient,
-                medName = directionAndMedication.medicationEntity.medName,
-                medUnit = directionAndMedication.medicationEntity.medUnit,
+                medicationResponse = directionAndMedication.medicationEntity.toMedicationResponse(),
                 medication = Medication(
                     doseForm = directionAndMedication.medicationEntity.doseForm,
                     duration = directionAndMedication.prescriptionDirectionsEntity.duration,
