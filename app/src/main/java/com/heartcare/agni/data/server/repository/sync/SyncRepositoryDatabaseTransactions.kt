@@ -2,7 +2,6 @@ package com.heartcare.agni.data.server.repository.sync
 
 import com.heartcare.agni.data.local.enums.GenericTypeEnum
 import com.heartcare.agni.data.local.enums.PhotoDeleteEnum
-import com.heartcare.agni.data.local.enums.PhotoUploadTypeEnum
 import com.heartcare.agni.data.local.enums.SyncType
 import com.heartcare.agni.data.local.roomdb.dao.AllergyDao
 import com.heartcare.agni.data.local.roomdb.dao.AppointmentDao
@@ -13,7 +12,6 @@ import com.heartcare.agni.data.local.roomdb.dao.FileUploadDao
 import com.heartcare.agni.data.local.roomdb.dao.GenericDao
 import com.heartcare.agni.data.local.roomdb.dao.HistoryMedicationDao
 import com.heartcare.agni.data.local.roomdb.dao.InterventionDao
-import com.heartcare.agni.data.local.roomdb.dao.LabTestAndMedDao
 import com.heartcare.agni.data.local.roomdb.dao.LevelsDao
 import com.heartcare.agni.data.local.roomdb.dao.MedicationDao
 import com.heartcare.agni.data.local.roomdb.dao.PatientDao
@@ -30,14 +28,11 @@ import com.heartcare.agni.data.local.roomdb.dao.vaccincation.ImmunizationDao
 import com.heartcare.agni.data.local.roomdb.dao.vaccincation.ImmunizationRecommendationDao
 import com.heartcare.agni.data.local.roomdb.dao.vaccincation.ManufacturerDao
 import com.heartcare.agni.data.local.roomdb.entities.generic.GenericEntity
-import com.heartcare.agni.data.local.roomdb.entities.labtestandmedrecord.photo.LabTestAndMedPhotoEntity
 import com.heartcare.agni.data.local.roomdb.entities.patient.IdentifierEntity
 import com.heartcare.agni.data.local.roomdb.entities.prescription.PrescriptionDirectionsEntity
 import com.heartcare.agni.data.local.roomdb.entities.prescription.photo.PrescriptionPhotoEntity
 import com.heartcare.agni.data.server.model.allergy.AllergyResponse
 import com.heartcare.agni.data.server.model.create.CreateResponse
-import com.heartcare.agni.data.server.model.create.LabDocumentIdResponse
-import com.heartcare.agni.data.server.model.create.MedDocumentIdResponse
 import com.heartcare.agni.data.server.model.cvd.CVDResponse
 import com.heartcare.agni.data.server.model.examination.ExaminationMasterResponse
 import com.heartcare.agni.data.server.model.examination.ExaminationResponse
@@ -45,8 +40,6 @@ import com.heartcare.agni.data.server.model.family.FamilyHistoryResponse
 import com.heartcare.agni.data.server.model.historymedication.HistoryMedicationResponse
 import com.heartcare.agni.data.server.model.intervention.InterventionMasterResponse
 import com.heartcare.agni.data.server.model.intervention.InterventionResponse
-import com.heartcare.agni.data.server.model.labormed.labtest.LabTestResponse
-import com.heartcare.agni.data.server.model.labormed.medicalrecord.MedicalRecordResponse
 import com.heartcare.agni.data.server.model.levels.LevelResponse
 import com.heartcare.agni.data.server.model.patient.PatientLastUpdatedResponse
 import com.heartcare.agni.data.server.model.patient.PatientResponse
@@ -67,7 +60,6 @@ import com.heartcare.agni.data.server.model.vitals.VitalResponse
 import com.heartcare.agni.utils.constants.ErrorConstants
 import com.heartcare.agni.utils.constants.ErrorConstants.APPOINTMENT_ERROR
 import com.heartcare.agni.utils.constants.ErrorConstants.DUPLICATE_RECORD
-import com.heartcare.agni.utils.converters.responseconverter.GsonConverters
 import com.heartcare.agni.utils.converters.responseconverter.Vaccination.toImmunizationEntity
 import com.heartcare.agni.utils.converters.responseconverter.Vaccination.toImmunizationFileEntity
 import com.heartcare.agni.utils.converters.responseconverter.Vaccination.toImmunizationRecommendationEntity
@@ -81,18 +73,13 @@ import com.heartcare.agni.utils.converters.responseconverter.toFamilyHistoryEnti
 import com.heartcare.agni.utils.converters.responseconverter.toHistoryMedicationEntity
 import com.heartcare.agni.utils.converters.responseconverter.toInterventionEntity
 import com.heartcare.agni.utils.converters.responseconverter.toInterventionMasterEntity
-import com.heartcare.agni.utils.converters.responseconverter.toLabTestEntity
-import com.heartcare.agni.utils.converters.responseconverter.toLabTestPhotoResponseLocal
 import com.heartcare.agni.utils.converters.responseconverter.toLevelEntity
 import com.heartcare.agni.utils.converters.responseconverter.toListOfId
 import com.heartcare.agni.utils.converters.responseconverter.toListOfIdentifierEntity
-import com.heartcare.agni.utils.converters.responseconverter.toListOfLabTestAndMedPhotoEntity
-import com.heartcare.agni.utils.converters.responseconverter.toListOfLabTestPhotoEntity
 import com.heartcare.agni.utils.converters.responseconverter.toListOfMedicationEntity
 import com.heartcare.agni.utils.converters.responseconverter.toListOfMedicineDirectionsEntity
 import com.heartcare.agni.utils.converters.responseconverter.toListOfPrescriptionDirectionsEntity
 import com.heartcare.agni.utils.converters.responseconverter.toListOfPrescriptionPhotoEntity
-import com.heartcare.agni.utils.converters.responseconverter.toMedRecordPhotoResponseLocal
 import com.heartcare.agni.utils.converters.responseconverter.toPatientEntity
 import com.heartcare.agni.utils.converters.responseconverter.toPatientLastUpdatedEntity
 import com.heartcare.agni.utils.converters.responseconverter.toPrescriptionEntity
@@ -116,7 +103,6 @@ open class SyncRepositoryDatabaseTransactions(
     private val cvdDao: CVDDao,
     private val vitalDao: VitalDao,
     private val symptomsAndDiagnosisDao: SymptomsAndDiagnosisDao,
-    private val labTestAndMedDao: LabTestAndMedDao,
     private val fileUploadDao: FileUploadDao,
     private val deleteFileManager: DeleteFileManager,
     private val immunizationRecommendationDao: ImmunizationRecommendationDao,
@@ -414,7 +400,6 @@ open class SyncRepositoryDatabaseTransactions(
         return deleteGenericEntityByListOfIds(idsToDelete.toList())
     }
 
-
     protected suspend fun insertPatientLastUpdated(body: List<PatientLastUpdatedResponse>) {
         //Insert Patient Last Updated Data
         patientLastUpdatedDao.insertPatientLastUpdatedData(
@@ -475,159 +460,6 @@ open class SyncRepositoryDatabaseTransactions(
 
     protected suspend fun deleteGenericEntityData(listOfGenericEntities: List<GenericEntity>): Int {
         return genericDao.deleteSyncPayload(listOfGenericEntities.toListOfId())
-    }
-
-
-    protected suspend fun insertLabTest(body: List<LabTestResponse>, type: String) {
-        body.map { labTestResponse ->
-            labTestResponse.diagnosticReport.filter { it.status == PhotoDeleteEnum.SAVED.value }
-                .map {
-                    it.toLabTestPhotoResponseLocal(
-                        labTestResponse,
-                        appointmentDao,
-                        patientDao
-                    ).toLabTestEntity(type)
-                }.also { labTests ->
-                    labTestAndMedDao.insertLabAndMedTest(*labTests.toTypedArray())
-                }
-        }
-
-        body.map { labTestResponse ->
-            labTestResponse.diagnosticReport.filter { it.status == PhotoDeleteEnum.DELETE.value }
-                .map {
-                    fileUploadDao.deleteFile(it.documents[0].filename)
-                    deleteFileManager.removeFromInternalStorage(it.documents[0].filename)
-                    labTestAndMedDao.deleteLabTestAndMedPhoto(it.documents[0].filename)
-                    labTestAndMedDao.deleteLabTestAndMedEntity(it.diagnosticUuid)
-                }
-        }
-
-        val labTestAndMedPhotoEntity = mutableListOf<LabTestAndMedPhotoEntity>()
-        body.forEach { response ->
-            labTestAndMedPhotoEntity.addAll(
-                response.toListOfLabTestPhotoEntity()
-            )
-        }
-        labTestAndMedDao.insertLabTestsAndMedPhotos(
-            *labTestAndMedPhotoEntity.toTypedArray()
-        )
-        val listOfGenericEntity = mutableListOf<GenericEntity>()
-
-        body.map { labTestResponse ->
-            labTestResponse.diagnosticReport.filter { it.status == PhotoDeleteEnum.SAVED.value }
-                .map {
-                    it.documents.forEach { fileName ->
-                        listOfGenericEntity.add(
-                            GenericEntity(
-                                id = UUID.randomUUID().toString(),
-                                patientId = it.diagnosticReportFhirId,
-                                payload = fileName.filename,
-                                type = GenericTypeEnum.PHOTO_DOWNLOAD,
-                                syncType = SyncType.POST
-                            )
-                        )
-
-                    }
-
-                }
-
-        }
-
-        genericDao.insertGenericEntity(
-            *listOfGenericEntity.toTypedArray()
-        )
-
-    }
-
-    protected suspend fun insertMedicalRecord(body: List<MedicalRecordResponse>, type: String) {
-        body.map { medicalRecordResponse ->
-            medicalRecordResponse.medicalRecord.filter { it.status == PhotoDeleteEnum.SAVED.value }
-                .map {
-                    it.toMedRecordPhotoResponseLocal(
-                        medicalRecordResponse,
-                        appointmentDao, patientDao
-                    ).toLabTestEntity(type)
-                }.also { labTests ->
-                    labTestAndMedDao.insertLabAndMedTest(*labTests.toTypedArray())
-                }
-
-        }
-        body.map { labTestResponse ->
-            labTestResponse.medicalRecord.filter { it.status == PhotoDeleteEnum.DELETE.value }
-                .map {
-                    fileUploadDao.deleteFile(it.documents[0].filename)
-                    deleteFileManager.removeFromInternalStorage(it.documents[0].filename)
-                    labTestAndMedDao.deleteLabTestAndMedPhoto(it.documents[0].filename)
-                    labTestAndMedDao.deleteLabTestAndMedEntity(it.medicalReportUuid)
-                }
-        }
-        val labTestAndMedPhotoEntity = mutableSetOf<LabTestAndMedPhotoEntity>()
-        body.forEach { response ->
-            labTestAndMedPhotoEntity.addAll(
-                response.toListOfLabTestAndMedPhotoEntity()
-            )
-        }
-        labTestAndMedDao.insertLabTestsAndMedPhotos(
-            *labTestAndMedPhotoEntity.toTypedArray()
-        )
-        val listOfGenericEntity = mutableListOf<GenericEntity>()
-
-        body.map { labTestResponse ->
-            labTestResponse.medicalRecord.filter { it.status == PhotoDeleteEnum.SAVED.value }
-                .map {
-                    it.documents.forEach { fileName ->
-                        listOfGenericEntity.add(
-                            GenericEntity(
-                                id = UUID.randomUUID().toString(),
-                                patientId = it.medicalRecordFhirId,
-                                payload = fileName.filename,
-                                type = GenericTypeEnum.PHOTO_DOWNLOAD,
-                                syncType = SyncType.POST
-                            )
-                        )
-
-                    }
-
-                }
-
-        }
-
-        genericDao.insertGenericEntity(
-            *listOfGenericEntity.toTypedArray()
-        )
-
-    }
-
-    protected suspend fun insertLabOrMedFhirId(
-        listOfGenericEntities: List<GenericEntity>, body: List<CreateResponse>, type: String
-    ): Int {
-        body.map { createResponse ->
-            labTestAndMedDao.updateLabTestAndFhirId(
-                createResponse.id!!, createResponse.fhirId!!
-            )
-            if (type == PhotoUploadTypeEnum.LAB_TEST.value) {
-                val labDocumentIdResponse =
-                    GsonConverters.deserializeList<LabDocumentIdResponse>(createResponse.files)
-
-                labDocumentIdResponse!!.forEach { labTestResponse ->
-                    labTestAndMedDao.updateDocumentFhirId(
-                        labTestResponse.labDocumentUuid,
-                        labTestResponse.labDocumentfhirId
-                    )
-                }
-            } else {
-                val medDocumentIdResponse =
-                    GsonConverters.deserializeList<MedDocumentIdResponse>(createResponse.files)
-
-                medDocumentIdResponse!!.forEach { medRecordResponse ->
-                    labTestAndMedDao.updateDocumentFhirId(
-                        medRecordResponse.medicalDocumentUuid,
-                        medRecordResponse.medicalDocumentfhirId
-                    )
-                }
-            }
-        }
-        return deleteGenericEntityData(listOfGenericEntities)
     }
 
     protected suspend fun insertImmunizationRecommendation(body: List<ImmunizationRecommendationResponse>) {

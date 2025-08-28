@@ -9,8 +9,6 @@ import com.heartcare.agni.data.server.model.family.FamilyHistoryResponse
 import com.heartcare.agni.data.server.model.historymedication.HistoryMedicationResponse
 import com.heartcare.agni.data.server.model.intervention.InterventionMasterResponse
 import com.heartcare.agni.data.server.model.intervention.InterventionResponse
-import com.heartcare.agni.data.server.model.labormed.labtest.LabTestResponse
-import com.heartcare.agni.data.server.model.labormed.medicalrecord.MedicalRecordResponse
 import com.heartcare.agni.data.server.model.levels.LevelResponse
 import com.heartcare.agni.data.server.model.patient.PatientLastUpdatedResponse
 import com.heartcare.agni.data.server.model.patient.PatientResponse
@@ -45,8 +43,6 @@ interface SyncRepository {
     suspend fun getAndInsertCVD(offset: Int): ResponseMapper<List<CVDResponse>>
     suspend fun getAndInsertListVitalData(offset: Int): ResponseMapper<List<VitalResponse>>
     suspend fun getAndInsertListSymptomsAndDiagnosisData(offset: Int): ResponseMapper<List<SymptomsAndDiagnosisResponse>>
-    suspend fun getAndInsertListLabTestData(offset: Int): ResponseMapper<List<LabTestResponse>>
-    suspend fun getAndInsertListMedicalRecordData(offset: Int): ResponseMapper<List<MedicalRecordResponse>>
     suspend fun getAndInsertImmunization(patientId: String?): ResponseMapper<List<ImmunizationResponse>>
     suspend fun getAndInsertManufacturer(): ResponseMapper<List<ManufacturerResponse>>
     suspend fun getAndInsertLevelsData(offset: Int): ResponseMapper<List<LevelResponse>>
@@ -69,8 +65,6 @@ interface SyncRepository {
     suspend fun sendCVDPostData(): ResponseMapper<List<CreateResponse>>
     suspend fun sendVitalPostData(): ResponseMapper<List<CreateResponse>>
     suspend fun sendSymptomsAndDiagnosisPostData(): ResponseMapper<List<CreateResponse>>
-    suspend fun sendLabTestPostData(): ResponseMapper<List<CreateResponse>>
-    suspend fun sendMedRecordPostData(): ResponseMapper<List<CreateResponse>>
     suspend fun sendImmunizationPostData(): ResponseMapper<List<CreateResponse>>
     suspend fun sendPriorDxPostData(): ResponseMapper<List<CreateResponse>>
     suspend fun sendHistoryMedicationPostData(): ResponseMapper<List<CreateResponse>>
@@ -88,14 +82,10 @@ interface SyncRepository {
     suspend fun sendCVDPatchData(): ResponseMapper<List<CreateResponse>>
     suspend fun sendVitalPatchData(): ResponseMapper<List<CreateResponse>>
     suspend fun sendSymptomsAndDiagnosisPatchData(): ResponseMapper<List<CreateResponse>>
-    suspend fun sendLabTestPatchData(): ResponseMapper<List<CreateResponse>>
-    suspend fun sendMedRecordPatchData(): ResponseMapper<List<CreateResponse>>
     suspend fun sendPrescriptionPutData(): ResponseMapper<List<CreateResponse>>
     suspend fun sentInterventionPutData(): ResponseMapper<List<CreateResponse>>
     suspend fun sentExaminationPutData(): ResponseMapper<List<CreateResponse>>
 
     //DELETE
     suspend fun deletePrescriptionPhoto(): ResponseMapper<List<CreateResponse>>
-    suspend fun deleteLabTestPhoto(): ResponseMapper<List<CreateResponse>>
-    suspend fun deleteMedTestPhoto(): ResponseMapper<List<CreateResponse>>
 }

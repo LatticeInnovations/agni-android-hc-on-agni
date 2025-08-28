@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "4c24070ad1a9c08272bf78aed8be5c4c",
+    "identityHash": "2719d86e540c447ab5a245b35266da23",
     "entities": [
       {
         "tableName": "PatientEntity",
@@ -1723,149 +1723,6 @@
         }
       },
       {
-        "tableName": "LabTestAndMedEntity",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `appointmentId` TEXT NOT NULL, `labTestFhirId` TEXT, `patientId` TEXT NOT NULL, `createdOn` INTEGER NOT NULL, `type` TEXT NOT NULL, PRIMARY KEY(`id`), FOREIGN KEY(`patientId`) REFERENCES `PatientEntity`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION )",
-        "fields": [
-          {
-            "fieldPath": "id",
-            "columnName": "id",
-            "affinity": "TEXT",
-            "notNull": true
-          },
-          {
-            "fieldPath": "appointmentId",
-            "columnName": "appointmentId",
-            "affinity": "TEXT",
-            "notNull": true
-          },
-          {
-            "fieldPath": "labTestFhirId",
-            "columnName": "labTestFhirId",
-            "affinity": "TEXT"
-          },
-          {
-            "fieldPath": "patientId",
-            "columnName": "patientId",
-            "affinity": "TEXT",
-            "notNull": true
-          },
-          {
-            "fieldPath": "createdOn",
-            "columnName": "createdOn",
-            "affinity": "INTEGER",
-            "notNull": true
-          },
-          {
-            "fieldPath": "type",
-            "columnName": "type",
-            "affinity": "TEXT",
-            "notNull": true
-          }
-        ],
-        "primaryKey": {
-          "autoGenerate": false,
-          "columnNames": [
-            "id"
-          ]
-        },
-        "indices": [
-          {
-            "name": "index_LabTestAndMedEntity_patientId",
-            "unique": false,
-            "columnNames": [
-              "patientId"
-            ],
-            "orders": [],
-            "createSql": "CREATE INDEX IF NOT EXISTS `index_LabTestAndMedEntity_patientId` ON `${TABLE_NAME}` (`patientId`)"
-          },
-          {
-            "name": "index_LabTestAndMedEntity_labTestFhirId",
-            "unique": false,
-            "columnNames": [
-              "labTestFhirId"
-            ],
-            "orders": [],
-            "createSql": "CREATE INDEX IF NOT EXISTS `index_LabTestAndMedEntity_labTestFhirId` ON `${TABLE_NAME}` (`labTestFhirId`)"
-          },
-          {
-            "name": "index_LabTestAndMedEntity_appointmentId",
-            "unique": false,
-            "columnNames": [
-              "appointmentId"
-            ],
-            "orders": [],
-            "createSql": "CREATE INDEX IF NOT EXISTS `index_LabTestAndMedEntity_appointmentId` ON `${TABLE_NAME}` (`appointmentId`)"
-          }
-        ],
-        "foreignKeys": [
-          {
-            "table": "PatientEntity",
-            "onDelete": "NO ACTION",
-            "onUpdate": "NO ACTION",
-            "columns": [
-              "patientId"
-            ],
-            "referencedColumns": [
-              "id"
-            ]
-          }
-        ]
-      },
-      {
-        "tableName": "LabTestAndMedPhotoEntity",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `labTestId` TEXT NOT NULL, `fileName` TEXT NOT NULL, `note` TEXT, `fhirId` TEXT, PRIMARY KEY(`labTestId`, `fileName`), FOREIGN KEY(`labTestId`) REFERENCES `LabTestAndMedEntity`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION )",
-        "fields": [
-          {
-            "fieldPath": "id",
-            "columnName": "id",
-            "affinity": "TEXT",
-            "notNull": true
-          },
-          {
-            "fieldPath": "labTestId",
-            "columnName": "labTestId",
-            "affinity": "TEXT",
-            "notNull": true
-          },
-          {
-            "fieldPath": "fileName",
-            "columnName": "fileName",
-            "affinity": "TEXT",
-            "notNull": true
-          },
-          {
-            "fieldPath": "note",
-            "columnName": "note",
-            "affinity": "TEXT"
-          },
-          {
-            "fieldPath": "fhirId",
-            "columnName": "fhirId",
-            "affinity": "TEXT"
-          }
-        ],
-        "primaryKey": {
-          "autoGenerate": false,
-          "columnNames": [
-            "labTestId",
-            "fileName"
-          ]
-        },
-        "foreignKeys": [
-          {
-            "table": "LabTestAndMedEntity",
-            "onDelete": "NO ACTION",
-            "onUpdate": "NO ACTION",
-            "columns": [
-              "labTestId"
-            ],
-            "referencedColumns": [
-              "id"
-            ]
-          }
-        ]
-      },
-      {
         "tableName": "ImmunizationRecommendationEntity",
         "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `patientId` TEXT NOT NULL, `vaccine` TEXT NOT NULL, `vaccineShortName` TEXT NOT NULL, `vaccineCode` TEXT NOT NULL, `seriesDoses` INTEGER NOT NULL, `doseNumber` INTEGER NOT NULL, `vaccineStartDate` INTEGER NOT NULL, `vaccineEndDate` INTEGER NOT NULL, `vaccineBufferDate` INTEGER NOT NULL, `vaccineDueDate` INTEGER NOT NULL, PRIMARY KEY(`id`))",
         "fields": [
@@ -3445,7 +3302,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '4c24070ad1a9c08272bf78aed8be5c4c')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '2719d86e540c447ab5a245b35266da23')"
     ]
   }
 }

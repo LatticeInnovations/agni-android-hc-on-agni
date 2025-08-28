@@ -14,10 +14,8 @@ import com.heartcare.agni.data.local.roomdb.FhirAppDatabase
 import com.heartcare.agni.data.local.sharedpreferences.PreferenceStorage
 import com.heartcare.agni.data.server.api.CVDApiService
 import com.heartcare.agni.data.server.api.ExaminationApiService
-import com.heartcare.agni.data.server.api.FileUploadApiService
 import com.heartcare.agni.data.server.api.HistoryAndTestsApiService
 import com.heartcare.agni.data.server.api.InterventionApiService
-import com.heartcare.agni.data.server.api.LabTestAndMedRecordService
 import com.heartcare.agni.data.server.api.LevelsApiService
 import com.heartcare.agni.data.server.api.PatientApiService
 import com.heartcare.agni.data.server.api.PrescriptionApiService
@@ -66,8 +64,6 @@ class FhirApp : Application() {
     lateinit var vitalApiService: VitalApiService
     @Inject
     lateinit var symptomsAndDiagnosisService: SymptomsAndDiagnosisService
-    @Inject
-    lateinit var labTestAndMedRecordService: LabTestAndMedRecordService
 
     @Inject
     lateinit var vaccinationApiService: VaccinationApiService
@@ -80,9 +76,6 @@ class FhirApp : Application() {
 
     @Inject
     lateinit var examinationApiService: ExaminationApiService
-
-    @Inject
-    lateinit var fileUploadApiService: FileUploadApiService
 
     @Inject
     lateinit var deleteFileManager: DeleteFileManager
@@ -118,7 +111,6 @@ class FhirApp : Application() {
             cvdApiService,
             vitalApiService,
             symptomsAndDiagnosisService,
-            labTestAndMedRecordService,
             vaccinationApiService,
             levelsApiService,
             historyAndTestsApiService,
@@ -136,7 +128,6 @@ class FhirApp : Application() {
             fhirAppDatabase.getCVDDao(),
             fhirAppDatabase.getVitalDao(),
             fhirAppDatabase.getSymptomsAndDiagnosisDao(),
-            fhirAppDatabase.getLabTestAndMedDao(),
             fhirAppDatabase.getFileUploadDao(),
             fhirAppDatabase.getImmunizationRecommendationDao(),
             fhirAppDatabase.getImmunizationDao(),

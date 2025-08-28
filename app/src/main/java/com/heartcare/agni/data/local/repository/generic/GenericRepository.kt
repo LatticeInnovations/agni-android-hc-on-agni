@@ -114,8 +114,6 @@ interface GenericRepository {
     suspend fun updateCVDFhirIds()
     suspend fun updateVitalFhirId()
     suspend fun updateSymDiagFhirId()
-    suspend fun updateLabTestFhirId()
-    suspend fun updateMedRecordFhirId()
     suspend fun updateImmunizationFhirId()
     suspend fun updatePriorDxFhirId()
     suspend fun updateHistoryMedicationFhirId()
@@ -170,21 +168,6 @@ interface GenericRepository {
 
     suspend fun removeGenericRecord(id: String): Int
     suspend fun insertDeleteRequest(fhirId: String, typeEnum: GenericTypeEnum, syncType: SyncType): Long
-
-    suspend fun insertPhotoLabTestAndMedRecord(
-        map: Map<String, Any>,
-        patientId: String,
-        uuid: String = UUIDBuilder.generateUUID(),
-        labTestId:String,
-        typeEnum: GenericTypeEnum
-    ): Long
-
-    suspend fun insertOrUpdatePhotoLabTestAndMedPatch(
-        fhirId: String,
-        map: Map<String, Any>,
-        uuid: String = UUIDBuilder.generateUUID(),
-        typeEnum: GenericTypeEnum
-    ): Long
 
     suspend fun insertImmunization(
         immunizationResponse: ImmunizationResponse,

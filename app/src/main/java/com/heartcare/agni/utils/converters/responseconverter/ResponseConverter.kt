@@ -1,15 +1,12 @@
 package com.heartcare.agni.utils.converters.responseconverter
 
 import com.heartcare.agni.data.local.enums.IdentifierIgnoreEnum
-import com.heartcare.agni.data.local.enums.PhotoDeleteEnum
 import com.heartcare.agni.data.local.enums.PrescriptionType
 import com.heartcare.agni.data.local.model.InterventionItem
 import com.heartcare.agni.data.local.model.InterventionResponseLocal
 import com.heartcare.agni.data.local.model.appointment.AppointmentResponseLocal
 import com.heartcare.agni.data.local.model.examination.ExaminationItem
 import com.heartcare.agni.data.local.model.examination.ExaminationResponseLocal
-import com.heartcare.agni.data.local.model.labtest.LabTestLocal
-import com.heartcare.agni.data.local.model.labtest.LabTestPhotoResponseLocal
 import com.heartcare.agni.data.local.model.prescription.MedicationLocal
 import com.heartcare.agni.data.local.model.prescription.PrescriptionPhotoResponseLocal
 import com.heartcare.agni.data.local.model.prescription.PrescriptionResponseLocal
@@ -31,9 +28,6 @@ import com.heartcare.agni.data.local.roomdb.entities.generic.GenericEntity
 import com.heartcare.agni.data.local.roomdb.entities.historymedication.HistoryMedicationEntity
 import com.heartcare.agni.data.local.roomdb.entities.intervention.InterventionEntity
 import com.heartcare.agni.data.local.roomdb.entities.intervention.InterventionMasterEntity
-import com.heartcare.agni.data.local.roomdb.entities.labtestandmedrecord.LabTestAndMedEntity
-import com.heartcare.agni.data.local.roomdb.entities.labtestandmedrecord.photo.LabTestAndFileEntity
-import com.heartcare.agni.data.local.roomdb.entities.labtestandmedrecord.photo.LabTestAndMedPhotoEntity
 import com.heartcare.agni.data.local.roomdb.entities.levels.LevelEntity
 import com.heartcare.agni.data.local.roomdb.entities.medication.MedicationEntity
 import com.heartcare.agni.data.local.roomdb.entities.medication.MedicineTimingEntity
@@ -75,10 +69,6 @@ import com.heartcare.agni.data.server.model.family.FamilyHistoryResponse
 import com.heartcare.agni.data.server.model.historymedication.HistoryMedicationResponse
 import com.heartcare.agni.data.server.model.intervention.InterventionMasterResponse
 import com.heartcare.agni.data.server.model.intervention.InterventionResponse
-import com.heartcare.agni.data.server.model.labormed.labtest.DiagnosticReport
-import com.heartcare.agni.data.server.model.labormed.labtest.LabTestResponse
-import com.heartcare.agni.data.server.model.labormed.medicalrecord.MedicalRecord
-import com.heartcare.agni.data.server.model.labormed.medicalrecord.MedicalRecordResponse
 import com.heartcare.agni.data.server.model.levels.LevelResponse
 import com.heartcare.agni.data.server.model.patient.GeneralPractitioner
 import com.heartcare.agni.data.server.model.patient.ManagingOrganization
@@ -110,7 +100,6 @@ import com.heartcare.agni.data.server.model.symptomsanddiagnosis.SymptomsItem
 import com.heartcare.agni.data.server.model.tobacco.TobaccoCessationResponse
 import com.heartcare.agni.data.server.model.vitals.UnitValue
 import com.heartcare.agni.data.server.model.vitals.VitalResponse
-import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.convertStringToDate
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toAge
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toPatientDate
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toTimeInMilli
@@ -860,153 +849,6 @@ internal fun SymptomsAndDiagnosisLocal.toSymDiagData(): SymptomsAndDiagnosisData
         diagnosis = diagnosis.map { it.code },
         symptoms = symptoms.map { it.code }.ifEmpty { null },
         patientId = patientId
-    )
-}
-
-internal fun LabTestAndFileEntity.toFilesList(): List<File> {
-    return labTestAndMedPhotoEntity.map {
-        File(
-            filename = it.fileName, note = it.note ?: "", documentFhirId = "", documentUuid = ""
-        )
-    }
-}
-
-internal suspend fun LabTestAndFileEntity.toLabTestPhotoResponseLocal(
-    appointmentDao: AppointmentDao
-): LabTestPhotoResponseLocal {
-    return LabTestPhotoResponseLocal(
-        labTestId = labTestAndMedEntity.id,
-        appointmentId = appointmentDao.getFhirIdByAppointmentId(labTestAndMedEntity.appointmentId)
-            ?: labTestAndMedEntity.appointmentId,
-        patientId = labTestAndMedEntity.patientId,
-        labTestFhirId = labTestAndMedEntity.labTestFhirId,
-        createdOn = labTestAndMedEntity.createdOn,
-        labTests = labTestAndMedPhotoEntity.map { labTestAndMedPhotoEntity ->
-            File(
-                labTestAndMedPhotoEntity.id,
-                labTestAndMedPhotoEntity.fhirId,
-                labTestAndMedPhotoEntity.fileName,
-                labTestAndMedPhotoEntity.note ?: ""
-            )
-        })
-}
-
-internal suspend fun DiagnosticReport.toLabTestPhotoResponseLocal(
-    labTestResponse: LabTestResponse,
-    appointmentDao: AppointmentDao,
-    studentDao: PatientDao
-): LabTestLocal {
-    return LabTestLocal(
-        labTestId = diagnosticUuid,
-        appointmentId = appointmentDao.getAppointmentIdByFhirId(labTestResponse.appointmentId),
-        patientId = studentDao.getPatientIdByFhirId(labTestResponse.patientId)!!,
-        labTestFhirId = diagnosticReportFhirId,
-        createdOn = createdOn.convertStringToDate()
-    )
-}
-
-internal suspend fun MedicalRecord.toMedRecordPhotoResponseLocal(
-    medicalRecordResponse: MedicalRecordResponse,
-    appointmentDao: AppointmentDao,
-    studentDao: PatientDao
-): LabTestLocal {
-    return LabTestLocal(
-        labTestId = medicalReportUuid,
-        appointmentId = appointmentDao.getAppointmentIdByFhirId(medicalRecordResponse.appointmentId),
-        patientId = studentDao.getPatientIdByFhirId(medicalRecordResponse.patientId)!!,
-        labTestFhirId = medicalRecordFhirId,
-        createdOn = createdOn.convertStringToDate()
-    )
-}
-
-internal fun LabTestResponse.toListOfLabTestPhotoEntity(
-): List<LabTestAndMedPhotoEntity> {
-    val list: MutableList<LabTestAndMedPhotoEntity> = mutableListOf()
-    val fileNameSet: MutableSet<String> = mutableSetOf()
-
-    diagnosticReport.filter { it.status == PhotoDeleteEnum.SAVED.value }.map { diagnosticReport ->
-        diagnosticReport.documents.map {
-            if (!fileNameSet.contains(it.filename)) {
-
-                list.add(
-                    LabTestAndMedPhotoEntity(
-                        id = it.labDocumentUuid,
-                        labTestId = diagnosticReport.diagnosticUuid,
-                        fileName = it.filename, note = it.note, fhirId = it.labDocumentfhirId
-                    )
-                )
-                fileNameSet.add(it.filename)
-
-            }
-        }
-    }
-    return list
-}
-
-internal fun MedicalRecordResponse.toListOfLabTestAndMedPhotoEntity(
-): List<LabTestAndMedPhotoEntity> {
-    val list: MutableList<LabTestAndMedPhotoEntity> = mutableListOf()
-    val fileNameSet: MutableSet<String> = mutableSetOf() // Set to track unique file names
-
-    medicalRecord.filter { it.status == PhotoDeleteEnum.SAVED.value }.map { diagnosticReport ->
-        diagnosticReport.documents.map {
-            if (!fileNameSet.contains(it.filename)) { // Check if fileName is not already in the set
-                list.add(
-                    LabTestAndMedPhotoEntity(
-                        id = it.medicalDocumentUuid,
-                        labTestId = diagnosticReport.medicalReportUuid,
-                        fileName = it.filename, note = it.note, fhirId = it.medicalDocumentfhirId
-                    )
-                )
-                fileNameSet.add(it.filename) // Add the fileName to the set
-            }
-        }
-    }
-    return list
-}
-
-internal fun LabTestPhotoResponseLocal.toLabTestAndMedEntity(type: String): LabTestAndMedEntity {
-    return LabTestAndMedEntity(
-        id = labTestId,
-        appointmentId = appointmentId,
-        labTestFhirId = labTestFhirId,
-        patientId = patientId,
-        createdOn = createdOn,
-        type = type
-
-    )
-}
-
-internal fun LabTestPhotoResponseLocal.toListOfLabTestPhotoEntity(): List<LabTestAndMedPhotoEntity> {
-    return labTests.map { labTestItem ->
-        LabTestAndMedPhotoEntity(
-            id = labTestItem.documentUuid,
-            fileName = labTestItem.filename,
-            labTestId = labTestId, note = labTestItem.note, fhirId = labTestItem.documentFhirId
-        )
-    }
-}
-
-internal fun LabTestAndMedEntity.toLabTestLocal(): LabTestLocal {
-    return LabTestLocal(
-        labTestId = id,
-        appointmentId = appointmentId,
-        patientId = patientId,
-        labTestFhirId = labTestFhirId,
-        createdOn = createdOn
-
-    )
-}
-
-internal fun LabTestLocal.toLabTestEntity(type: String): LabTestAndMedEntity {
-    return LabTestAndMedEntity(
-        id = labTestId,
-        appointmentId = appointmentId,
-        patientId = patientId,
-        labTestFhirId = labTestFhirId,
-        createdOn = createdOn,
-        type = type
-
     )
 }
 

@@ -17,7 +17,6 @@ import com.heartcare.agni.data.local.roomdb.dao.GenericDao
 import com.heartcare.agni.data.local.roomdb.dao.HistoryMedicationDao
 import com.heartcare.agni.data.local.roomdb.dao.IdentifierDao
 import com.heartcare.agni.data.local.roomdb.dao.InterventionDao
-import com.heartcare.agni.data.local.roomdb.dao.LabTestAndMedDao
 import com.heartcare.agni.data.local.roomdb.dao.LevelsDao
 import com.heartcare.agni.data.local.roomdb.dao.MedicationDao
 import com.heartcare.agni.data.local.roomdb.dao.PatientDao
@@ -47,8 +46,6 @@ import com.heartcare.agni.data.local.roomdb.entities.generic.GenericEntity
 import com.heartcare.agni.data.local.roomdb.entities.historymedication.HistoryMedicationEntity
 import com.heartcare.agni.data.local.roomdb.entities.intervention.InterventionEntity
 import com.heartcare.agni.data.local.roomdb.entities.intervention.InterventionMasterEntity
-import com.heartcare.agni.data.local.roomdb.entities.labtestandmedrecord.LabTestAndMedEntity
-import com.heartcare.agni.data.local.roomdb.entities.labtestandmedrecord.photo.LabTestAndMedPhotoEntity
 import com.heartcare.agni.data.local.roomdb.entities.levels.LevelEntity
 import com.heartcare.agni.data.local.roomdb.entities.medication.MedicationEntity
 import com.heartcare.agni.data.local.roomdb.entities.medication.MedicineTimingEntity
@@ -103,8 +100,6 @@ import java.util.UUID
         DiagnosisEntity::class,
         SymptomAndDiagnosisEntity::class,
         SymDiagSearchEntity::class,
-        LabTestAndMedEntity::class,
-        LabTestAndMedPhotoEntity::class,
         ImmunizationRecommendationEntity::class,
         ImmunizationEntity::class,
         ImmunizationFileEntity::class,
@@ -143,7 +138,6 @@ abstract class FhirAppDatabase : RoomDatabase() {
     abstract fun getCVDDao(): CVDDao
     abstract fun getVitalDao(): VitalDao
     abstract fun getSymptomsAndDiagnosisDao(): SymptomsAndDiagnosisDao
-    abstract fun getLabTestAndMedDao(): LabTestAndMedDao
     abstract fun getManufacturerDao(): ManufacturerDao
     abstract fun getImmunizationDao(): ImmunizationDao
     abstract fun getImmunizationRecommendationDao(): ImmunizationRecommendationDao

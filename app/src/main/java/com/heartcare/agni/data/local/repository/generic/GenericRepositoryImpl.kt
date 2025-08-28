@@ -28,7 +28,6 @@ import com.heartcare.agni.data.server.model.vaccination.ImmunizationResponse
 import com.heartcare.agni.data.server.model.vitals.VitalResponse
 import com.heartcare.agni.utils.builders.UUIDBuilder
 import com.heartcare.agni.utils.converters.responseconverter.GsonConverters.toJson
-import timber.log.Timber
 import javax.inject.Inject
 
 /**
@@ -137,19 +136,6 @@ class GenericRepositoryImpl @Inject constructor(
         genericDao.getNotSyncedData(GenericTypeEnum.SYMPTOMS_DIAGNOSIS)
             .forEach { symDiagGenericEntity ->
                 updateSymDiagFhirIdInGenericEntity(symDiagGenericEntity)
-            }
-    }
-    override suspend fun updateLabTestFhirId() {
-        genericDao.getNotSyncedData(GenericTypeEnum.LAB_TEST)
-            .forEach { genericEntity ->
-                updateLabTestFhirIdInGenericEntity(genericEntity)
-            }
-    }
-
-    override suspend fun updateMedRecordFhirId() {
-        genericDao.getNotSyncedData(GenericTypeEnum.MEDICAL_RECORD)
-            .forEach { genericEntity ->
-                updateMedicalRecordFhirIdInGenericEntity(genericEntity)
             }
     }
 
@@ -492,50 +478,6 @@ class GenericRepositoryImpl @Inject constructor(
                 syncType = syncType
             )
         )[0]
-    }
-
-    override suspend fun insertPhotoLabTestAndMedRecord(
-        map: Map<String, Any>,
-        patientId: String,
-        uuid: String,
-        labTestId:String,
-        typeEnum: GenericTypeEnum
-    ): Long {
-        Timber.d("LAB: $labTestId")
-        return genericDao.getGenericEntityById(
-            patientId = labTestId,
-            genericTypeEnum = typeEnum,
-            syncType = SyncType.POST
-        ).let { genericEntity ->
-            insertLabTestPhotoGenericEntity(
-                map = map,
-                labTestId = labTestId,
-                photoGenericEntity = genericEntity,
-                uuid = uuid, typeEnum = typeEnum
-            )
-        }
-    }
-    
-    override suspend fun insertOrUpdatePhotoLabTestAndMedPatch(
-        fhirId: String,
-        map: Map<String, Any>,
-        uuid: String,
-        typeEnum: GenericTypeEnum
-    ): Long {
-        return genericDao.getGenericEntityById(
-            fhirId,
-            typeEnum,
-            SyncType.PATCH
-        ).let { prescriptionGenericEntity ->
-            insertOrUpdatePhotoLabTestGenericEntityPatch(
-                prescriptionFhirId = fhirId,
-                prescriptionGenericEntity = prescriptionGenericEntity,
-                map = map,
-                uuid = uuid,
-                typeEnum = typeEnum
-            )
-        }
-
     }
 
     override suspend fun insertImmunization(

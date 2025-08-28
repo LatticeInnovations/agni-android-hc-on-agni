@@ -44,9 +44,6 @@ interface PreferenceStorage {
 
     var lastSymptomsSyncTime: Long
 
-    var lastLabTestSyncTime: Long
-    var lastMedicalRecordSyncTime: Long
-
     var lastSyncManufacturerRecord: Long
 
     var lastSyncLevelRecord: Long

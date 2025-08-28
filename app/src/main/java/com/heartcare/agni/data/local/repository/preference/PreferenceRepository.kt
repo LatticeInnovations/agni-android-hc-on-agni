@@ -64,14 +64,6 @@ interface PreferenceRepository {
     fun setLastSyncSymDiag(long: Long)
     fun getLastSyncSymDiag(): Long
 
-    /** Last Sync Lab Test */
-    fun setLastSyncLabTest(long: Long)
-    fun getLastSyncLabTest(): Long
-
-    /** Last Sync Medical Record */
-    fun setLastSyncMedicalRecord(long: Long)
-    fun getLastSyncMedicalRecord(): Long
-
     /** Last Sync Manufacturer Record */
     fun setLastSyncManufacturerRecord(long: Long)
     fun getLastSyncManufacturerRecord(): Long

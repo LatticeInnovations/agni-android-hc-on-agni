@@ -26,8 +26,6 @@ import com.heartcare.agni.ui.historyandtests.tobacco.add.AddTobaccoCessationScre
 import com.heartcare.agni.ui.historyandtests.tobacco.view.TobaccoCessationViewScreen
 import com.heartcare.agni.ui.intervention.InterventionScreen
 import com.heartcare.agni.ui.intervention.add.AddInterventionScreen
-import com.heartcare.agni.ui.labtestandmedicalrecord.photo.upload.PhotoUploadScreen
-import com.heartcare.agni.ui.labtestandmedicalrecord.photo.view.PhotoViewScreen
 import com.heartcare.agni.ui.landingscreen.LandingScreen
 import com.heartcare.agni.ui.login.OtpScreen
 import com.heartcare.agni.ui.login.PhoneEmailScreen
@@ -102,8 +100,6 @@ fun NavigationAppHost(navController: NavController, startDest: String) {
 
         composable(Screen.SymptomsAndDiagnosisScreen.route) { SymptomsAndDiagnosisScreen(navController = navController) }
         composable(Screen.AddSymptomsScreen.route) { SelectSymptomScreen(navController = navController) }
-        composable(Screen.LabAndMedPhotoUploadScreen.route) { PhotoUploadScreen(navController = navController) }
-        composable(Screen.LabAndMedRecordPhotoViewScreen.route) { PhotoViewScreen(navController = navController) }
 
         composable(Screen.VaccinationScreen.route) { VaccinationScreen(navController = navController) }
         composable(Screen.AddVaccinationScreen.route) { AddVaccinationScreen(navController = navController) }

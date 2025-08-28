@@ -22,8 +22,6 @@ import com.heartcare.agni.data.local.repository.identifier.IdentifierRepository
 import com.heartcare.agni.data.local.repository.identifier.IdentifierRepositoryImpl
 import com.heartcare.agni.data.local.repository.intervention.InterventionRepository
 import com.heartcare.agni.data.local.repository.intervention.InterventionRepositoryImpl
-import com.heartcare.agni.data.local.repository.labtest.LabTestRepository
-import com.heartcare.agni.data.local.repository.labtest.LabTestRepositoryImpl
 import com.heartcare.agni.data.local.repository.levels.LevelRepository
 import com.heartcare.agni.data.local.repository.levels.LevelRepositoryImpl
 import com.heartcare.agni.data.local.repository.medication.MedicationRepository
@@ -155,10 +153,6 @@ abstract class RepositoryModule {
     @Binds
     @ViewModelScoped
     abstract fun provideSymDiagRepository(symDiagRepositoryImpl: SymDiagRepositoryImpl): SymDiagRepository
-
-    @Binds
-    @ViewModelScoped
-    abstract fun provideLabTestRepository(labTestRepositoryImpl: LabTestRepositoryImpl): LabTestRepository
 
     @Binds
     @ViewModelScoped
