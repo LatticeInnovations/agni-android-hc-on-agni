@@ -2,7 +2,6 @@ package com.heartcare.agni.data.local.enums
 
 enum class GenericTypeEnum(val number: Int, val value: String) {
     PATIENT(1, "Patient"),
-    RELATION(2, "Relation"),
     FHIR_IDS(3, "FHIR_IDS"),
     PRESCRIPTION(4, "Prescription"),
     APPOINTMENT(5, "Appointment"),
@@ -31,8 +30,4 @@ enum class GenericTypeEnum(val number: Int, val value: String) {
     TOBACCO_CESSATION(28, "tobacco_cessation"),
     INTERVENTION(29, "intervention"),
     EXAMINATION(30, "examination");
-
-    companion object {
-        fun fromString(value: String) = entries.firstOrNull { it.value == value }
-    }
 }

@@ -23,7 +23,6 @@ import com.heartcare.agni.data.local.roomdb.dao.PatientDao
 import com.heartcare.agni.data.local.roomdb.dao.PatientLastUpdatedDao
 import com.heartcare.agni.data.local.roomdb.dao.PrescriptionDao
 import com.heartcare.agni.data.local.roomdb.dao.PriorDxDao
-import com.heartcare.agni.data.local.roomdb.dao.RelationDao
 import com.heartcare.agni.data.local.roomdb.dao.RiskFactorDao
 import com.heartcare.agni.data.local.roomdb.dao.RiskPredictionDao
 import com.heartcare.agni.data.local.roomdb.dao.ScheduleDao
@@ -54,7 +53,6 @@ import com.heartcare.agni.data.server.constants.EndPoints.MEDICATION_REQUEST
 import com.heartcare.agni.data.server.constants.EndPoints.PATIENT
 import com.heartcare.agni.data.server.constants.EndPoints.PATIENT_IMMUNIZATION_RECOMMENDATION
 import com.heartcare.agni.data.server.constants.EndPoints.PRESCRIPTION_FILE
-import com.heartcare.agni.data.server.constants.EndPoints.RELATED_PERSON
 import com.heartcare.agni.data.server.constants.EndPoints.VITAL
 import com.heartcare.agni.data.server.constants.QueryParameters.COUNT
 import com.heartcare.agni.data.server.constants.QueryParameters.GREATER_THAN_BUILDER
@@ -86,7 +84,6 @@ import com.heartcare.agni.data.server.model.prescription.medication.MedicineTime
 import com.heartcare.agni.data.server.model.prescription.photo.PrescriptionPhotoResponse
 import com.heartcare.agni.data.server.model.prescription.prescriptionresponse.PrescriptionResponse
 import com.heartcare.agni.data.server.model.priordx.PriorDxResponse
-import com.heartcare.agni.data.server.model.relatedperson.RelatedPersonResponse
 import com.heartcare.agni.data.server.model.risk.RiskFactorResponse
 import com.heartcare.agni.data.server.model.scheduleandappointment.appointment.AppointmentResponse
 import com.heartcare.agni.data.server.model.scheduleandappointment.schedule.ScheduleResponse
@@ -129,7 +126,6 @@ class SyncRepositoryImpl @Inject constructor(
     private val genericDao: GenericDao,
     private val preferenceRepository: PreferenceRepository,
     deleteFileManager: DeleteFileManager,
-    relationDao: RelationDao,
     medicationDao: MedicationDao,
     prescriptionDao: PrescriptionDao,
     scheduleDao: ScheduleDao,
@@ -155,10 +151,8 @@ class SyncRepositoryImpl @Inject constructor(
     interventionDao: InterventionDao,
     examinationDao: ExaminationDao
 ) : SyncRepository, SyncRepositoryDatabaseTransactions(
-    patientApiService,
     patientDao,
     genericDao,
-    relationDao,
     medicationDao,
     prescriptionDao,
     scheduleDao,
@@ -242,35 +236,6 @@ class SyncRepositoryImpl @Inject constructor(
             }
         }
     }
-
-    override suspend fun getAndInsertRelation(): ResponseMapper<List<RelatedPersonResponse>> {
-        return genericDao.getSameTypeGenericEntityPayload(
-            GenericTypeEnum.FHIR_IDS, SyncType.POST, COUNT_VALUE
-        ).let { listOfGenericEntity ->
-            if (listOfGenericEntity.isEmpty()) ApiEmptyResponse()
-            else {
-                val map = mutableMapOf<String, String>()
-                map[PATIENT_ID] =
-                    listOfGenericEntity.map { it.payload }.toNoBracketAndNoSpaceString()
-                map[COUNT] = DEFAULT_MAX_COUNT_VALUE.toString()
-                ApiResponseConverter.convert(patientApiService.getRelationData(RELATED_PERSON, map))
-                    .run {
-                        when (this) {
-                            is ApiEndResponse -> {
-                                insertRelations(body)
-                                genericDao.deleteSyncPayload(listOfGenericEntity.toListOfId())
-                                getAndInsertRelation()
-                            }
-
-                            else -> {
-                                this
-                            }
-                        }
-                    }
-            }
-        }
-    }
-
 
     override suspend fun getAndInsertPhotoPrescription(patientId: String?): ResponseMapper<List<PrescriptionPhotoResponse>> {
         return if (patientId == null) {
@@ -932,33 +897,6 @@ class SyncRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun sendRelatedPersonPostData(): ResponseMapper<List<CreateResponse>> {
-        return genericDao.getSameTypeGenericEntityPayload(
-            genericTypeEnum = GenericTypeEnum.RELATION, syncType = SyncType.POST
-        ).let { listOfRelatedEntity ->
-            if (listOfRelatedEntity.isEmpty()) ApiEmptyResponse()
-            else ApiResponseConverter.convert(
-                patientApiService.createData(
-                    RELATED_PERSON,
-                    listOfRelatedEntity.map { relationGenericEntity ->
-                        relationGenericEntity.payload.fromJson<LinkedTreeMap<*, *>>()
-                            .mapToObject(RelatedPersonResponse::class.java)!!
-                    })
-            ).run {
-                when (this) {
-                    is ApiEndResponse -> {
-                        genericDao.deleteSyncPayload(listOfRelatedEntity.toListOfId())
-                            .let { deletedRows ->
-                                if (deletedRows > 0) sendRelatedPersonPostData() else this
-                            }
-                    }
-
-                    else -> this
-                }
-            }
-        }
-    }
-
     override suspend fun sendFormPrescriptionPostData(): ResponseMapper<List<CreateResponse>> {
         return genericDao.getSameTypeGenericEntityPayload(
             genericTypeEnum = GenericTypeEnum.PRESCRIPTION,
@@ -999,7 +937,6 @@ class SyncRepositoryImpl @Inject constructor(
         ).let { listOfGenericEntity ->
             if (listOfGenericEntity.isEmpty()) ApiEmptyResponse()
             else {
-                Timber.d("manseeyy prescription post data $listOfGenericEntity")
                 ApiResponseConverter.convert(
                     prescriptionApiService.postPrescriptionRelatedData(
                         PRESCRIPTION_FILE,
@@ -1523,31 +1460,6 @@ class SyncRepositoryImpl @Inject constructor(
                         is ApiEndResponse -> {
                             deleteGenericEntityData(listOfGenericEntity).let {
                                 if (it > 0) sendPersonPatchData() else this
-                            }
-                        }
-
-                        else -> this
-                    }
-                }
-            }
-        }
-    }
-
-    override suspend fun sendRelatedPersonPatchData(): ResponseMapper<List<CreateResponse>> {
-        return genericDao.getSameTypeGenericEntityPayload(
-            GenericTypeEnum.RELATION, SyncType.PATCH
-        ).let { listOfGenericEntity ->
-            if (listOfGenericEntity.isEmpty()) ApiEmptyResponse()
-            else {
-                ApiResponseConverter.convert(
-                    patientApiService.patchListOfChanges(
-                        RELATED_PERSON,
-                        listOfGenericEntity.map { it.payload.fromJson() })
-                ).run {
-                    when (this) {
-                        is ApiEndResponse -> {
-                            deleteGenericEntityData(listOfGenericEntity).let {
-                                if (it > 0) sendRelatedPersonPatchData() else this
                             }
                         }
 

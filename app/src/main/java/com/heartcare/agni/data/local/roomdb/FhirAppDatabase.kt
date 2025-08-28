@@ -25,7 +25,6 @@ import com.heartcare.agni.data.local.roomdb.dao.PatientDao
 import com.heartcare.agni.data.local.roomdb.dao.PatientLastUpdatedDao
 import com.heartcare.agni.data.local.roomdb.dao.PrescriptionDao
 import com.heartcare.agni.data.local.roomdb.dao.PriorDxDao
-import com.heartcare.agni.data.local.roomdb.dao.RelationDao
 import com.heartcare.agni.data.local.roomdb.dao.RiskFactorDao
 import com.heartcare.agni.data.local.roomdb.dao.RiskPredictionDao
 import com.heartcare.agni.data.local.roomdb.dao.ScheduleDao
@@ -64,7 +63,6 @@ import com.heartcare.agni.data.local.roomdb.entities.prescription.PrescriptionDi
 import com.heartcare.agni.data.local.roomdb.entities.prescription.PrescriptionEntity
 import com.heartcare.agni.data.local.roomdb.entities.prescription.photo.PrescriptionPhotoEntity
 import com.heartcare.agni.data.local.roomdb.entities.priordx.PriorDxEntity
-import com.heartcare.agni.data.local.roomdb.entities.relation.RelationEntity
 import com.heartcare.agni.data.local.roomdb.entities.risk.RiskFactorEntity
 import com.heartcare.agni.data.local.roomdb.entities.schedule.ScheduleEntity
 import com.heartcare.agni.data.local.roomdb.entities.search.SearchHistoryEntity
@@ -81,7 +79,6 @@ import com.heartcare.agni.data.local.roomdb.entities.vitals.VitalEntity
 import com.heartcare.agni.data.local.roomdb.typeconverters.SymptomDiagnosisTypeConverter
 import com.heartcare.agni.data.local.roomdb.typeconverters.TypeConverter
 import com.heartcare.agni.data.local.roomdb.views.PrescriptionDirectionAndMedicineView
-import com.heartcare.agni.data.local.roomdb.views.RelationView
 import com.heartcare.agni.data.local.sharedpreferences.PreferenceStorage
 import net.sqlcipher.database.SQLiteDatabase
 import net.sqlcipher.database.SupportFactory
@@ -92,7 +89,6 @@ import java.util.UUID
         PatientEntity::class,
         GenericEntity::class,
         IdentifierEntity::class,
-        RelationEntity::class,
         SearchHistoryEntity::class,
         MedicationEntity::class,
         PrescriptionEntity::class,
@@ -132,7 +128,7 @@ import java.util.UUID
         ExaminationMasterEntity::class,
         ExaminationEntity::class
     ],
-    views = [RelationView::class, PrescriptionDirectionAndMedicineView::class],
+    views = [PrescriptionDirectionAndMedicineView::class],
     version = 1,
     exportSchema = true
 )
@@ -142,7 +138,6 @@ abstract class FhirAppDatabase : RoomDatabase() {
     abstract fun getPatientDao(): PatientDao
     abstract fun getIdentifierDao(): IdentifierDao
     abstract fun getGenericDao(): GenericDao
-    abstract fun getRelationDao(): RelationDao
     abstract fun getSearchDao(): SearchDao
     abstract fun getPrescriptionDao(): PrescriptionDao
     abstract fun getMedicationDao(): MedicationDao

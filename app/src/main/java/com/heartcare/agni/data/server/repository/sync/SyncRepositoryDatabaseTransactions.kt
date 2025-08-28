@@ -22,7 +22,6 @@ import com.heartcare.agni.data.local.roomdb.dao.PatientDao
 import com.heartcare.agni.data.local.roomdb.dao.PatientLastUpdatedDao
 import com.heartcare.agni.data.local.roomdb.dao.PrescriptionDao
 import com.heartcare.agni.data.local.roomdb.dao.PriorDxDao
-import com.heartcare.agni.data.local.roomdb.dao.RelationDao
 import com.heartcare.agni.data.local.roomdb.dao.RiskFactorDao
 import com.heartcare.agni.data.local.roomdb.dao.RiskPredictionDao
 import com.heartcare.agni.data.local.roomdb.dao.ScheduleDao
@@ -40,8 +39,6 @@ import com.heartcare.agni.data.local.roomdb.entities.labtestandmedrecord.photo.L
 import com.heartcare.agni.data.local.roomdb.entities.patient.IdentifierEntity
 import com.heartcare.agni.data.local.roomdb.entities.prescription.PrescriptionDirectionsEntity
 import com.heartcare.agni.data.local.roomdb.entities.prescription.photo.PrescriptionPhotoEntity
-import com.heartcare.agni.data.local.roomdb.entities.relation.RelationEntity
-import com.heartcare.agni.data.server.api.PatientApiService
 import com.heartcare.agni.data.server.model.allergy.AllergyResponse
 import com.heartcare.agni.data.server.model.create.CreateResponse
 import com.heartcare.agni.data.server.model.create.LabDocumentIdResponse
@@ -65,7 +62,6 @@ import com.heartcare.agni.data.server.model.prescription.medication.MedicineTime
 import com.heartcare.agni.data.server.model.prescription.photo.PrescriptionPhotoResponse
 import com.heartcare.agni.data.server.model.prescription.prescriptionresponse.PrescriptionResponse
 import com.heartcare.agni.data.server.model.priordx.PriorDxResponse
-import com.heartcare.agni.data.server.model.relatedperson.RelatedPersonResponse
 import com.heartcare.agni.data.server.model.risk.RiskFactorResponse
 import com.heartcare.agni.data.server.model.scheduleandappointment.appointment.AppointmentResponse
 import com.heartcare.agni.data.server.model.scheduleandappointment.schedule.ScheduleResponse
@@ -111,23 +107,17 @@ import com.heartcare.agni.utils.converters.responseconverter.toPatientEntity
 import com.heartcare.agni.utils.converters.responseconverter.toPatientLastUpdatedEntity
 import com.heartcare.agni.utils.converters.responseconverter.toPrescriptionEntity
 import com.heartcare.agni.utils.converters.responseconverter.toPriorDxEntity
-import com.heartcare.agni.utils.converters.responseconverter.toRelationEntity
 import com.heartcare.agni.utils.converters.responseconverter.toRiskFactorEntity
 import com.heartcare.agni.utils.converters.responseconverter.toScheduleEntity
 import com.heartcare.agni.utils.converters.responseconverter.toSymptomsAndDiagnosisEntity
 import com.heartcare.agni.utils.converters.responseconverter.toTobaccoCessationEntity
 import com.heartcare.agni.utils.converters.responseconverter.toVitalEntity
 import com.heartcare.agni.utils.file.DeleteFileManager
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import java.util.UUID
 
 open class SyncRepositoryDatabaseTransactions(
-    private val patientApiService: PatientApiService,
     private val patientDao: PatientDao,
     private val genericDao: GenericDao,
-    private val relationDao: RelationDao,
     private val medicationDao: MedicationDao,
     private val prescriptionDao: PrescriptionDao,
     private val scheduleDao: ScheduleDao,
@@ -184,30 +174,6 @@ open class SyncRepositoryDatabaseTransactions(
 
         //Insert Identifier Data
         patientDao.insertIdentifiers(*identifierList.toTypedArray())
-    }
-
-    protected suspend fun insertRelations(body: List<RelatedPersonResponse>) {
-        val relationEntity = mutableListOf<RelationEntity>()
-        body.map { relatedPersonResponse ->
-            if (relatedPersonResponse.relationship.isNotEmpty()) {
-                relatedPersonResponse.relationship.map { relationship ->
-                    relationEntity.add(
-                        relationship.toRelationEntity(
-                            relatedPersonResponse.id,
-                            patientDao,
-                            patientApiService
-                        )
-                    )
-                }
-            }
-        }
-        if (relationEntity.isNotEmpty()) {
-            CoroutineScope(Dispatchers.IO).launch {
-                relationDao.insertRelation(
-                    *relationEntity.toTypedArray()
-                )
-            }
-        }
     }
 
     protected suspend fun insertFormPrescriptions(body: List<PrescriptionResponse>) {
@@ -328,13 +294,6 @@ open class SyncRepositoryDatabaseTransactions(
         //Insert Vital Data
         vitalDao.insertVital(*body.map { it.toVitalEntity(patientDao, appointmentDao) }
             .toTypedArray())
-
-        val listOfGenericEntity = mutableListOf<GenericEntity>()
-
-        genericDao.insertGenericEntity(
-            *listOfGenericEntity.toTypedArray()
-        )
-
     }
 
     protected suspend fun insertSymDiag(body: List<SymptomsAndDiagnosisResponse>) {
@@ -344,15 +303,7 @@ open class SyncRepositoryDatabaseTransactions(
                 patientDao,
                 appointmentDao
             )
-        }
-            .toTypedArray())
-
-        val listOfGenericEntity = mutableListOf<GenericEntity>()
-
-        genericDao.insertGenericEntity(
-            *listOfGenericEntity.toTypedArray()
-        )
-
+        }.toTypedArray())
     }
 
     protected suspend fun insertPatientFhirId(

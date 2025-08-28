@@ -18,7 +18,6 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -26,7 +25,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.heartcare.agni.R
 import com.heartcare.agni.data.local.model.search.SearchParameters
-import com.heartcare.agni.data.server.model.patient.PatientResponse
 import com.heartcare.agni.navigation.Screen
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -35,29 +33,15 @@ fun SearchPatient(
     navController: NavController,
     viewModel: SearchPatientViewModel = hiltViewModel()
 ) {
-    LaunchedEffect(viewModel.isLaunched) {
-        if (navController.previousBackStackEntry?.savedStateHandle?.get<Boolean>(
-                "fromHouseholdMember"
-            ) == true
-        ) {
-            viewModel.fromHouseholdMember = true
-            viewModel.patientFrom =
-                navController.previousBackStackEntry?.savedStateHandle?.get<PatientResponse>(
-                    "patient"
-                )
-        }
-        viewModel.isLaunched = true
-    }
     Scaffold(
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier
+            .fillMaxSize()
             .imePadding(),
         topBar = {
             TopAppBar(
                 title = {
                     Text(
-                        text = if (viewModel.fromHouseholdMember) stringResource(id = R.string.search_patients) else stringResource(
-                            id = R.string.advanced_search
-                        ),
+                        text = stringResource(id = R.string.advanced_search),
                         style = MaterialTheme.typography.titleLarge
                     )
                 },
@@ -102,23 +86,13 @@ fun SearchPatient(
                         gender = viewModel.gender.ifBlank { null },
                         fhirId = null
                     )
-                    if (viewModel.fromHouseholdMember) {
-                        navController.currentBackStackEntry?.savedStateHandle?.set(
-                            "searchParameters", searchParameters
-                        )
-                        navController.currentBackStackEntry?.savedStateHandle?.set(
-                            "patient", viewModel.patientFrom
-                        )
-                        navController.navigate(Screen.SearchResult.route)
-                    } else {
-                        navController.currentBackStackEntry?.savedStateHandle?.set(
-                            "isSearchResult", true
-                        )
-                        navController.currentBackStackEntry?.savedStateHandle?.set(
-                            "searchParameters", searchParameters
-                        )
-                        navController.navigate(Screen.LandingScreen.route)
-                    }
+                    navController.currentBackStackEntry?.savedStateHandle?.set(
+                        "isSearchResult", true
+                    )
+                    navController.currentBackStackEntry?.savedStateHandle?.set(
+                        "searchParameters", searchParameters
+                    )
+                    navController.navigate(Screen.LandingScreen.route)
                 },
                 modifier = Modifier
                     .fillMaxWidth()

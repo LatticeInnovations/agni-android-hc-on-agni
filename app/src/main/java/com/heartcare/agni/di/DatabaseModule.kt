@@ -21,14 +21,13 @@ import com.heartcare.agni.data.local.roomdb.dao.PatientDao
 import com.heartcare.agni.data.local.roomdb.dao.PatientLastUpdatedDao
 import com.heartcare.agni.data.local.roomdb.dao.PrescriptionDao
 import com.heartcare.agni.data.local.roomdb.dao.PriorDxDao
-import com.heartcare.agni.data.local.roomdb.dao.RelationDao
 import com.heartcare.agni.data.local.roomdb.dao.RiskFactorDao
 import com.heartcare.agni.data.local.roomdb.dao.RiskPredictionDao
 import com.heartcare.agni.data.local.roomdb.dao.ScheduleDao
 import com.heartcare.agni.data.local.roomdb.dao.SearchDao
-import com.heartcare.agni.data.local.roomdb.dao.VitalDao
 import com.heartcare.agni.data.local.roomdb.dao.SymptomsAndDiagnosisDao
 import com.heartcare.agni.data.local.roomdb.dao.TobaccoCessationDao
+import com.heartcare.agni.data.local.roomdb.dao.VitalDao
 import com.heartcare.agni.data.local.roomdb.dao.vaccincation.ImmunizationDao
 import com.heartcare.agni.data.local.roomdb.dao.vaccincation.ImmunizationRecommendationDao
 import com.heartcare.agni.data.local.roomdb.dao.vaccincation.ManufacturerDao
@@ -69,12 +68,6 @@ object DatabaseModule {
     @Provides
     fun provideGenericDao(fhirAppDatabase: FhirAppDatabase): GenericDao {
         return fhirAppDatabase.getGenericDao()
-    }
-
-    @Singleton
-    @Provides
-    fun provideRelationDao(fhirAppDatabase: FhirAppDatabase): RelationDao {
-        return fhirAppDatabase.getRelationDao()
     }
 
     @Singleton

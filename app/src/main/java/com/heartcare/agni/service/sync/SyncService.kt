@@ -175,20 +175,12 @@ class SyncService(
         return checkAuthenticationStatus(syncRepository.sendPersonPostData(), logout)?.apply {
             if (this is ApiEmptyResponse) {
                 CoroutineScope(Dispatchers.IO).apply {
-                    launch {
-                        updateFhirIdInRelation(logout)
-                    }
                     patientDownloadJob = async {
                         downloadPatient(logout)
                     }
                 }
             }
         }
-    }
-
-    /** Upload Relation */
-    private suspend fun uploadRelation(logout: (Boolean, String) -> Unit) {
-        checkAuthenticationStatus(syncRepository.sendRelatedPersonPostData(), logout)
     }
 
     /** Upload Schedule */
@@ -550,13 +542,6 @@ class SyncService(
      *
      *
      * */
-
-    /** Update Patient FHIR ID in Relation */
-    private suspend fun updateFhirIdInRelation(logout: (Boolean, String) -> Unit) {
-        genericRepository.updateRelationFhirId()
-        /** Start Relation Worker */
-        uploadRelation(logout)
-    }
 
     /** Update Schedule and Patient FHIR ID in Appointment */
     private suspend fun updateFhirIdsInAppointment(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {

@@ -26,7 +26,6 @@ import com.heartcare.agni.data.server.model.prescription.photo.PrescriptionPhoto
 import com.heartcare.agni.data.server.model.prescription.photo.PrescriptionPhotoResponse
 import com.heartcare.agni.data.server.model.prescription.prescriptionresponse.PrescriptionResponse
 import com.heartcare.agni.data.server.model.priordx.PriorDxResponse
-import com.heartcare.agni.data.server.model.relatedperson.RelatedPersonResponse
 import com.heartcare.agni.data.server.model.risk.RiskFactorResponse
 import com.heartcare.agni.data.server.model.scheduleandappointment.appointment.AppointmentResponse
 import com.heartcare.agni.data.server.model.scheduleandappointment.schedule.ScheduleResponse
@@ -165,61 +164,6 @@ open class GenericRepositoryDatabaseTransactions(
                     syncType = SyncType.PUT
                 )
             )[0]
-        }
-    }
-
-    protected suspend fun insertRelationGenericEntity(
-        relationGenericEntity: GenericEntity?,
-        relatedPersonResponse: RelatedPersonResponse,
-        uuid: String,
-        patientId: String
-    ): Long {
-        return relationGenericEntity?.payload?.fromJson<MutableMap<String, Any>>()?.mapToObject(
-            RelatedPersonResponse::class.java
-        )?.let { existingRelatedPersonResponse ->
-            val updatedRelationList = existingRelatedPersonResponse.relationship.toMutableList()
-                .apply { addAll(relatedPersonResponse.relationship) }
-            genericDao.insertGenericEntity(
-                GenericEntity(
-                    id = relationGenericEntity.id,
-                    patientId = relationGenericEntity.patientId,
-                    payload = existingRelatedPersonResponse.copy(relationship = updatedRelationList)
-                        .toJson(),
-                    type = GenericTypeEnum.RELATION,
-                    syncType = SyncType.POST
-                )
-            )[0]
-        } ?: genericDao.insertGenericEntity(
-            GenericEntity(
-                id = uuid,
-                patientId = patientId,
-                payload = relatedPersonResponse.toJson(),
-                type = GenericTypeEnum.RELATION,
-                syncType = SyncType.POST
-            )
-        )[0]
-    }
-
-    protected suspend fun updateRelationFhirIdInGenericEntity(relationGenericEntity: GenericEntity) {
-        val existingMap = relationGenericEntity.payload.fromJson<MutableMap<String, Any>>()
-            .mapToObject(RelatedPersonResponse::class.java)
-        if (existingMap != null) {
-            genericDao.insertGenericEntity(
-                relationGenericEntity.copy(
-                    payload = existingMap.copy(
-                        id = if (existingMap.id.isFhirId()) existingMap.id else getPatientFhirIdById(
-                            existingMap.id
-                        )!!,
-                        relationship = existingMap.relationship.map { relationship ->
-                            relationship.copy(
-                                relativeId = if (relationship.relativeId.isFhirId()) relationship.relativeId else getPatientFhirIdById(
-                                    relationship.relativeId
-                                )!!
-                            )
-                        }
-                    ).toJson()
-                )
-            )
         }
     }
 

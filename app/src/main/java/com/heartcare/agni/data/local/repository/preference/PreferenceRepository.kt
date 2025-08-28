@@ -32,10 +32,6 @@ interface PreferenceRepository {
     fun setLastSyncPatient(long: Long)
     fun getLastSyncPatient(): Long
 
-    /** Last Sync Relation */
-    fun setLastSyncRelation(long: Long)
-    fun getLastSyncRelation(): Long
-
     /** Last Sync Prescription */
     fun setLastSyncPrescription(long: Long)
     fun getLastSyncPrescription(): Long

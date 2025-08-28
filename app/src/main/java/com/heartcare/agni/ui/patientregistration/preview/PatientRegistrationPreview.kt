@@ -21,7 +21,6 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
@@ -56,26 +55,6 @@ fun PatientRegistrationPreview(
             key = "patient_register_details"
         )
     setData(patientRegisterDetails, viewModel)
-    LaunchedEffect(viewModel.isLaunched) {
-        if (!viewModel.isLaunched) {
-            if (navController.previousBackStackEntry?.savedStateHandle?.get<Boolean>(
-                    key = "fromHouseholdMember"
-                ) == true
-            ) {
-                viewModel.fromHouseholdMember = true
-                viewModel.relation =
-                    navController.previousBackStackEntry?.savedStateHandle?.get<String>(
-                        key = "relation"
-                    )!!
-                viewModel.patientFrom =
-                    navController.previousBackStackEntry?.savedStateHandle?.get<PatientResponse>(
-                        key = "patientFrom"
-                    )!!
-                viewModel.patientFromId = viewModel.patientFrom!!.id
-            }
-            viewModel.isLaunched = true
-        }
-    }
     BackHandler {
         navController.previousBackStackEntry?.savedStateHandle?.set(
             "isEditing",

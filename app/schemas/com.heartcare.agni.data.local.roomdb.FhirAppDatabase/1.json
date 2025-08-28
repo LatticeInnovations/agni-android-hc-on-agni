@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "8c5c17a7104d1dcfc14ebc2d0537a71d",
+    "identityHash": "33ca1fa1f3dbb05fb079b01357331763",
     "entities": [
       {
         "tableName": "PatientEntity",
@@ -267,67 +267,6 @@
             "onUpdate": "NO ACTION",
             "columns": [
               "patientId"
-            ],
-            "referencedColumns": [
-              "id"
-            ]
-          }
-        ]
-      },
-      {
-        "tableName": "RelationEntity",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `fromId` TEXT NOT NULL, `toId` TEXT NOT NULL, `relation` TEXT NOT NULL, PRIMARY KEY(`id`), FOREIGN KEY(`fromId`) REFERENCES `PatientEntity`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION )",
-        "fields": [
-          {
-            "fieldPath": "id",
-            "columnName": "id",
-            "affinity": "TEXT",
-            "notNull": true
-          },
-          {
-            "fieldPath": "fromId",
-            "columnName": "fromId",
-            "affinity": "TEXT",
-            "notNull": true
-          },
-          {
-            "fieldPath": "toId",
-            "columnName": "toId",
-            "affinity": "TEXT",
-            "notNull": true
-          },
-          {
-            "fieldPath": "relation",
-            "columnName": "relation",
-            "affinity": "TEXT",
-            "notNull": true
-          }
-        ],
-        "primaryKey": {
-          "autoGenerate": false,
-          "columnNames": [
-            "id"
-          ]
-        },
-        "indices": [
-          {
-            "name": "index_RelationEntity_fromId_toId",
-            "unique": false,
-            "columnNames": [
-              "fromId",
-              "toId"
-            ],
-            "orders": [],
-            "createSql": "CREATE INDEX IF NOT EXISTS `index_RelationEntity_fromId_toId` ON `${TABLE_NAME}` (`fromId`, `toId`)"
-          }
-        ],
-        "foreignKeys": [
-          {
-            "table": "PatientEntity",
-            "onDelete": "NO ACTION",
-            "onUpdate": "NO ACTION",
-            "columns": [
-              "fromId"
             ],
             "referencedColumns": [
               "id"
@@ -3843,17 +3782,13 @@
     ],
     "views": [
       {
-        "viewName": "RelationView",
-        "createSql": "CREATE VIEW `${VIEW_NAME}` AS select rel.id, pat1.id as patientId , pat1.firstName as patientFirstName, pat1.lastName as patientLastName, pat1.gender as patientGender, pat1.fhirId as patientFhirId, pat2.id as relativeId ,pat2.firstName as relativeFirstName, pat2.lastName as relativeLastName,pat2.gender as relativeGender,pat2.fhirId as relativeFhirId , rel.relation  as relation from RelationEntity rel \ninner join PatientEntity pat1 on rel.fromId = pat1.id\ninner join PatientEntity pat2 on rel.toId = pat2.id"
-      },
-      {
         "viewName": "PrescriptionDirectionAndMedicineView",
         "createSql": "CREATE VIEW `${VIEW_NAME}` AS SELECT * FROM PrescriptionDirectionsEntity prescriptionDirectionsEntity INNER JOIN MedicationEntity medicationEntity ON medicationEntity.medFhirId = prescriptionDirectionsEntity.med_fhir_id"
       }
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '8c5c17a7104d1dcfc14ebc2d0537a71d')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '33ca1fa1f3dbb05fb079b01357331763')"
     ]
   }
 }

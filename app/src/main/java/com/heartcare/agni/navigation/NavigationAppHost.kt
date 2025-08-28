@@ -27,10 +27,6 @@ import com.heartcare.agni.ui.historyandtests.risk.add.AddRiskFactorScreen
 import com.heartcare.agni.ui.historyandtests.risk.view.RiskFactorsViewScreen
 import com.heartcare.agni.ui.historyandtests.tobacco.add.AddTobaccoCessationScreen
 import com.heartcare.agni.ui.historyandtests.tobacco.view.TobaccoCessationViewScreen
-import com.heartcare.agni.ui.householdmember.HouseholdMembersScreen
-import com.heartcare.agni.ui.householdmember.addhouseholdmember.AddHouseholdMember
-import com.heartcare.agni.ui.householdmember.connectpatient.ConnectPatient
-import com.heartcare.agni.ui.householdmember.searchresult.SearchResult
 import com.heartcare.agni.ui.intervention.InterventionScreen
 import com.heartcare.agni.ui.intervention.add.AddInterventionScreen
 import com.heartcare.agni.ui.labtestandmedicalrecord.photo.upload.PhotoUploadScreen
@@ -38,10 +34,10 @@ import com.heartcare.agni.ui.labtestandmedicalrecord.photo.view.PhotoViewScreen
 import com.heartcare.agni.ui.landingscreen.LandingScreen
 import com.heartcare.agni.ui.login.OtpScreen
 import com.heartcare.agni.ui.login.PhoneEmailScreen
-import com.heartcare.agni.ui.login.pin.PinScreen
-import com.heartcare.agni.ui.login.forgotpassword.ForgotPasswordScreen
 import com.heartcare.agni.ui.login.createpassword.CreatePasswordScreen
+import com.heartcare.agni.ui.login.forgotpassword.ForgotPasswordScreen
 import com.heartcare.agni.ui.login.forgotpassword.otp.AuthenticateOtpScreen
+import com.heartcare.agni.ui.login.pin.PinScreen
 import com.heartcare.agni.ui.login.userpassword.UserPasswordScreen
 import com.heartcare.agni.ui.patienteditscreen.address.EditPatientAddress
 import com.heartcare.agni.ui.patienteditscreen.basicinfo.EditBasicInformation
@@ -50,21 +46,20 @@ import com.heartcare.agni.ui.patientlandingscreen.PatientLandingScreen
 import com.heartcare.agni.ui.patientprofile.PatientProfile
 import com.heartcare.agni.ui.patientregistration.PatientRegistration
 import com.heartcare.agni.ui.patientregistration.preview.PatientRegistrationPreview
-import com.heartcare.agni.ui.patientregistration.step4.ConfirmRelationship
 import com.heartcare.agni.ui.prescription.PrescriptionScreen
 import com.heartcare.agni.ui.prescription.photo.upload.PrescriptionPhotoUploadScreen
 import com.heartcare.agni.ui.prescription.photo.view.PrescriptionPhotoViewScreen
 import com.heartcare.agni.ui.searchpatient.SearchPatient
 import com.heartcare.agni.ui.signup.SignUpPhoneEmailScreen
 import com.heartcare.agni.ui.signup.SignUpScreen
-import com.heartcare.agni.ui.vitalsscreen.VitalsScreen
-import com.heartcare.agni.ui.vitalsscreen.addvitals.AddVitalsScreen
 import com.heartcare.agni.ui.symptomsanddiagnosis.SymptomsAndDiagnosisScreen
 import com.heartcare.agni.ui.symptomsanddiagnosis.selectsymptoms.SelectSymptomScreen
-import com.heartcare.agni.ui.vaccination.error.VaccinationErrorScreen
 import com.heartcare.agni.ui.vaccination.VaccinationScreen
 import com.heartcare.agni.ui.vaccination.add.AddVaccinationScreen
+import com.heartcare.agni.ui.vaccination.error.VaccinationErrorScreen
 import com.heartcare.agni.ui.vaccination.view.ViewVaccinationScreen
+import com.heartcare.agni.ui.vitalsscreen.VitalsScreen
+import com.heartcare.agni.ui.vitalsscreen.addvitals.AddVitalsScreen
 
 @Composable
 fun NavigationAppHost(navController: NavController, startDest: String) {
@@ -87,11 +82,6 @@ fun NavigationAppHost(navController: NavController, startDest: String) {
             )
         }
         composable(Screen.PatientLandingScreen.route) { PatientLandingScreen(navController = navController) }
-        composable(Screen.HouseholdMembersScreen.route) { HouseholdMembersScreen(navController = navController) }
-        composable(Screen.AddHouseholdMember.route) { AddHouseholdMember(navController = navController) }
-        composable(Screen.ConfirmRelationship.route) { ConfirmRelationship(navController = navController) }
-        composable(Screen.SearchResult.route) { SearchResult(navController = navController) }
-        composable(Screen.ConnectPatient.route) { ConnectPatient(navController = navController) }
         composable(Screen.Prescription.route) { PrescriptionScreen(navController = navController) }
         composable(Screen.PatientProfile.route) { PatientProfile(navController = navController) }
         composable(Screen.EditBasicInfo.route) { EditBasicInformation(navController = navController) }

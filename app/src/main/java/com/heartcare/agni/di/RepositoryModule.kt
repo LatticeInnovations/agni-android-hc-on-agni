@@ -2,8 +2,6 @@ package com.heartcare.agni.di
 
 import com.heartcare.agni.data.local.repository.allergy.AllergyRepository
 import com.heartcare.agni.data.local.repository.allergy.AllergyRepositoryImpl
-import com.heartcare.agni.data.local.repository.labtest.LabTestRepository
-import com.heartcare.agni.data.local.repository.labtest.LabTestRepositoryImpl
 import com.heartcare.agni.data.local.repository.appointment.AppointmentRepository
 import com.heartcare.agni.data.local.repository.appointment.AppointmentRepositoryImpl
 import com.heartcare.agni.data.local.repository.cvd.chart.RiskPredictionChartRepository
@@ -26,6 +24,8 @@ import com.heartcare.agni.data.local.repository.identifier.IdentifierRepository
 import com.heartcare.agni.data.local.repository.identifier.IdentifierRepositoryImpl
 import com.heartcare.agni.data.local.repository.intervention.InterventionRepository
 import com.heartcare.agni.data.local.repository.intervention.InterventionRepositoryImpl
+import com.heartcare.agni.data.local.repository.labtest.LabTestRepository
+import com.heartcare.agni.data.local.repository.labtest.LabTestRepositoryImpl
 import com.heartcare.agni.data.local.repository.levels.LevelRepository
 import com.heartcare.agni.data.local.repository.levels.LevelRepositoryImpl
 import com.heartcare.agni.data.local.repository.medication.MedicationRepository
@@ -40,16 +40,12 @@ import com.heartcare.agni.data.local.repository.prescription.PrescriptionReposit
 import com.heartcare.agni.data.local.repository.prescription.PrescriptionRepositoryImpl
 import com.heartcare.agni.data.local.repository.priordx.PriorDxRepository
 import com.heartcare.agni.data.local.repository.priordx.PriorDxRepositoryImpl
-import com.heartcare.agni.data.local.repository.relation.RelationRepository
-import com.heartcare.agni.data.local.repository.relation.RelationRepositoryImpl
 import com.heartcare.agni.data.local.repository.risk.RiskFactorRepository
 import com.heartcare.agni.data.local.repository.risk.RiskFactorRepositoryImpl
 import com.heartcare.agni.data.local.repository.schedule.ScheduleRepository
 import com.heartcare.agni.data.local.repository.schedule.ScheduleRepositoryImpl
 import com.heartcare.agni.data.local.repository.search.SearchRepository
 import com.heartcare.agni.data.local.repository.search.SearchRepositoryImpl
-import com.heartcare.agni.data.local.repository.vital.VitalRepository
-import com.heartcare.agni.data.local.repository.vital.VitalRepositoryImpl
 import com.heartcare.agni.data.local.repository.symptomsanddiagnosis.SymDiagRepository
 import com.heartcare.agni.data.local.repository.symptomsanddiagnosis.SymDiagRepositoryImpl
 import com.heartcare.agni.data.local.repository.tobacco.TobaccoCessationRepository
@@ -60,6 +56,8 @@ import com.heartcare.agni.data.local.repository.vaccination.ManufacturerReposito
 import com.heartcare.agni.data.local.repository.vaccination.impl.ImmunizationRecommendationRepositoryImpl
 import com.heartcare.agni.data.local.repository.vaccination.impl.ImmunizationRepositoryImpl
 import com.heartcare.agni.data.local.repository.vaccination.impl.ManufacturerRepositoryImpl
+import com.heartcare.agni.data.local.repository.vital.VitalRepository
+import com.heartcare.agni.data.local.repository.vital.VitalRepositoryImpl
 import com.heartcare.agni.data.server.repository.authentication.AuthenticationRepository
 import com.heartcare.agni.data.server.repository.authentication.AuthenticationRepositoryImpl
 import com.heartcare.agni.data.server.repository.file.FileSyncRepository
@@ -91,10 +89,6 @@ abstract class RepositoryModule {
     @Binds
     @ViewModelScoped
     abstract fun provideGenericRepository(genericRepositoryImpl: GenericRepositoryImpl): GenericRepository
-
-    @Binds
-    @ViewModelScoped
-    abstract fun provideRelationRepository(relationRepositoryImpl: RelationRepositoryImpl): RelationRepository
 
     @Binds
     @ViewModelScoped

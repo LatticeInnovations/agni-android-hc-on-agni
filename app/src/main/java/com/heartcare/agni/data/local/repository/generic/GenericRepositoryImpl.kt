@@ -22,7 +22,6 @@ import com.heartcare.agni.data.server.model.prescription.photo.PrescriptionPhoto
 import com.heartcare.agni.data.server.model.prescription.photo.PrescriptionPhotoResponse
 import com.heartcare.agni.data.server.model.prescription.prescriptionresponse.PrescriptionResponse
 import com.heartcare.agni.data.server.model.priordx.PriorDxResponse
-import com.heartcare.agni.data.server.model.relatedperson.RelatedPersonResponse
 import com.heartcare.agni.data.server.model.risk.RiskFactorResponse
 import com.heartcare.agni.data.server.model.scheduleandappointment.appointment.AppointmentResponse
 import com.heartcare.agni.data.server.model.scheduleandappointment.schedule.ScheduleResponse
@@ -57,31 +56,6 @@ class GenericRepositoryImpl @Inject constructor(
             syncType = SyncType.POST
         ).let { patientGenericEntity ->
             insertPatientGenericEntity(patientResponse, patientGenericEntity, uuid)
-        }
-    }
-
-    override suspend fun insertRelation(
-        patientId: String,
-        relatedPersonResponse: RelatedPersonResponse,
-        uuid: String
-    ): Long {
-        return genericDao.getGenericEntityById(
-            patientId = patientId,
-            genericTypeEnum = GenericTypeEnum.RELATION,
-            syncType = SyncType.POST
-        ).let { relationGenericEntity ->
-            insertRelationGenericEntity(
-                relationGenericEntity,
-                relatedPersonResponse,
-                uuid,
-                patientId
-            )
-        }
-    }
-
-    override suspend fun updateRelationFhirId() {
-        genericDao.getNotSyncedData(GenericTypeEnum.RELATION).forEach { relationGenericEntity ->
-            updateRelationFhirIdInGenericEntity(relationGenericEntity)
         }
     }
 

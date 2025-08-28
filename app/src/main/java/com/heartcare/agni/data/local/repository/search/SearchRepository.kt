@@ -7,12 +7,10 @@ import com.heartcare.agni.data.local.model.search.SearchParameters
 import com.heartcare.agni.data.local.roomdb.entities.patient.PatientAndIdentifierEntity
 import com.heartcare.agni.data.server.model.examination.ExaminationMasterResponse
 import com.heartcare.agni.data.server.model.intervention.InterventionMasterResponse
-import com.heartcare.agni.data.server.model.patient.PatientAddressResponse
 import com.heartcare.agni.data.server.model.patient.PatientResponse
 import com.heartcare.agni.data.server.model.prescription.medication.MedicationResponse
 import kotlinx.coroutines.flow.Flow
 import java.util.Date
-import java.util.LinkedList
 
 interface SearchRepository {
 
@@ -51,18 +49,6 @@ interface SearchRepository {
     /** Recent Test and Examination Search*/
     suspend fun insertRecentTestExaminationSearch(searchQuery: String, date: Date = Date()): Long
     suspend fun getRecentTestExaminationSearches(): List<String>
-
-    /** Get Suggested Members */
-    suspend fun getSuggestedMembers(
-        patientId: String,
-        searchParameters: SearchParameters,
-        returnList: (LinkedList<PatientResponse>) -> Unit
-    )
-
-    suspend fun getFiveSuggestedMembers(
-        patientId: String,
-        address: PatientAddressResponse
-    ): List<PatientResponse>
 
     suspend fun getSearchList(): List<PatientAndIdentifierEntity>
 

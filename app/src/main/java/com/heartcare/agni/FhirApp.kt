@@ -131,7 +131,6 @@ class FhirApp : Application() {
             fhirAppDatabase.getGenericDao(),
             preferenceRepository,
             deleteFileManager,
-            fhirAppDatabase.getRelationDao(),
             fhirAppDatabase.getMedicationDao(),
             fhirAppDatabase.getPrescriptionDao(),
             fhirAppDatabase.getScheduleDao(),

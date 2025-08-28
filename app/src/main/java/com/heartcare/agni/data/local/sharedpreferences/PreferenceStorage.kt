@@ -34,7 +34,6 @@ interface PreferenceStorage {
     var syncStatus: String
     var lastSyncTime: Long
     var lastPatientSyncTime: Long
-    var lastRelationSyncTime: Long
     var lastPrescriptionSyncTime: Long
     var lastMedicationSyncTime: Long
     var lastMedicineDosageInstructionSyncTime: Long

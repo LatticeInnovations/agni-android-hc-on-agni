@@ -8,14 +8,12 @@ import com.heartcare.agni.data.local.enums.GenderEnum
 import com.heartcare.agni.data.local.enums.SearchTypeEnum
 import com.heartcare.agni.data.local.model.pagination.PaginationResponse
 import com.heartcare.agni.data.local.model.search.SearchParameters
-import com.heartcare.agni.data.local.roomdb.dao.RelationDao
 import com.heartcare.agni.data.local.roomdb.dao.SearchDao
 import com.heartcare.agni.data.local.roomdb.entities.patient.PatientAndIdentifierEntity
 import com.heartcare.agni.data.local.roomdb.entities.search.SearchHistoryEntity
 import com.heartcare.agni.data.local.roomdb.entities.search.SymDiagSearchEntity
 import com.heartcare.agni.data.server.model.examination.ExaminationMasterResponse
 import com.heartcare.agni.data.server.model.intervention.InterventionMasterResponse
-import com.heartcare.agni.data.server.model.patient.PatientAddressResponse
 import com.heartcare.agni.data.server.model.patient.PatientResponse
 import com.heartcare.agni.data.server.model.prescription.medication.MedicationResponse
 import com.heartcare.agni.utils.constants.Paging.PAGE_SIZE
@@ -32,12 +30,10 @@ import com.heartcare.agni.utils.search.Search.getFuzzySearchSymptomsList
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import java.util.Date
-import java.util.LinkedList
 import javax.inject.Inject
 
 class SearchRepositoryImpl @Inject constructor(
-    private val searchDao: SearchDao,
-    private val relationDao: RelationDao
+    private val searchDao: SearchDao
 ) : SearchRepository {
 
     @Volatile
@@ -264,64 +260,12 @@ class SearchRepositoryImpl @Inject constructor(
         return searchDao.getRecentSearches(SearchTypeEnum.TEST_EXAMINATION)
     }
 
-    override suspend fun getSuggestedMembers(
-        patientId: String,
-        searchParameters: SearchParameters,
-        returnList: (LinkedList<PatientResponse>) -> Unit
-    ) {
-        val linkedList = LinkedList<PatientResponse>()
-        val existingMembers = relationDao.getAllRelationOfPatient(patientId)
-            .map { relationEntity -> relationEntity.toId }.toMutableSet().apply { add(patientId) }
-        getFuzzySearchList(
-            getSearchList(),
-            searchParameters,
-            90
-        ).filter {
-            !existingMembers.contains(it.patientEntity.id)
-        }.map { patientAndIdentifierEntity ->
-            linkedList.add(patientAndIdentifierEntity.toPatientResponse())
-        }
-        returnList(
-            linkedList
-        )
-    }
-
-    override suspend fun getFiveSuggestedMembers(
-        patientId: String,
-        address: PatientAddressResponse
-    ): List<PatientResponse> {
-        val suggestionsList = listOf<PatientResponse>()
-        /*** Household member feature is not included
-        getSuggestedMembers(
-            patientId, SearchParameters(
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                address.village,
-                address.areaCouncil,
-                address.island,
-                address.province,
-                address.postalCode,
-                address.addressLine2
-            )
-        ) { list ->
-            suggestionsList = if (list.size > 5) {
-                list.subList(0, 5)
-            } else list
-        }
-        ***/
-        return suggestionsList
-    }
-
     override suspend fun insertRecentSymptomAndDiagnosisSearch(
         searchQuery: String, searchTypeEnum: SearchTypeEnum, size: Int, date: Date
     ): Long {
-        val symDiagSearchEntity = searchDao.getSearchByQuery(searchQuery)
+        val symDiagnosisSearchEntity = searchDao.getSearchByQuery(searchQuery)
         return insertSearch(
-            symDiagSearchEntity = symDiagSearchEntity,
+            symDiagnosisSearchEntity = symDiagnosisSearchEntity,
             searchTypeEnum = searchTypeEnum,
             date = date,
             searchQuery = searchQuery
@@ -330,12 +274,12 @@ class SearchRepositoryImpl @Inject constructor(
     }
 
     private suspend fun insertSearch(
-        symDiagSearchEntity: SymDiagSearchEntity?,
+        symDiagnosisSearchEntity: SymDiagSearchEntity?,
         searchTypeEnum: SearchTypeEnum,
         date: Date,
         searchQuery: String
     ): Long {
-        return if (symDiagSearchEntity == null) {
+        return if (symDiagnosisSearchEntity == null) {
             searchDao.insertOrUpdateSearch(
                 SymDiagSearchEntity(
                     searchQuery = searchQuery,
@@ -346,8 +290,8 @@ class SearchRepositoryImpl @Inject constructor(
             )
         } else {
             searchDao.updateSearch(
-                searchQuery = symDiagSearchEntity.searchQuery,
-                searchCount = symDiagSearchEntity.searchCount + 1
+                searchQuery = symDiagnosisSearchEntity.searchQuery,
+                searchCount = symDiagnosisSearchEntity.searchCount + 1
             ).toLong()
         }
 
