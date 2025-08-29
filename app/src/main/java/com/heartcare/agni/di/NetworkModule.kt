@@ -43,6 +43,8 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
 
+    const val CONTENT_TYPE = "application/json"
+
     // ---------------------- AUTH CLIENTS ----------------------
 
     @Provides
@@ -69,7 +71,7 @@ object NetworkModule {
         return OkHttpClient.Builder()
             .addInterceptor { chain ->
                 val requestBuilder = chain.request().newBuilder()
-                    .addHeader("Content-Type", "application/json")
+                    .addHeader("Content-Type", CONTENT_TYPE)
 
                 if (preferenceStorage.accessToken.isNotBlank()) {
                     requestBuilder.addHeader(AUTHORIZATION, preferenceStorage.accessToken)
@@ -147,7 +149,7 @@ object NetworkModule {
             .addInterceptor { chain ->
                 val originalRequest = chain.request()
                 val requestBuilder = originalRequest.newBuilder()
-                    .addHeader("Content-Type", "application/json")
+                    .addHeader("Content-Type", CONTENT_TYPE)
 
                 val url = originalRequest.url.toString()
 
@@ -182,7 +184,7 @@ object NetworkModule {
                                 put("status", 0)
                                 put("message", errorMsg)
                             }.toString().toByteArray()
-                                .toResponseBody("application/json".toMediaType())
+                                .toResponseBody(CONTENT_TYPE.toMediaType())
                         )
                         .build()
                 }
