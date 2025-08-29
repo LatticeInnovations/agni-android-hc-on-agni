@@ -72,8 +72,6 @@ interface SyncRepository {
     //PATCH
     suspend fun sendPersonPatchData(): ResponseMapper<List<CreateResponse>>
     suspend fun sendAppointmentPatchData(): ResponseMapper<List<CreateResponse>>
-    suspend fun sendCVDPatchData(): ResponseMapper<List<CreateResponse>>
-    suspend fun sendVitalPatchData(): ResponseMapper<List<CreateResponse>>
     suspend fun sendPrescriptionPutData(): ResponseMapper<List<CreateResponse>>
     suspend fun sentInterventionPutData(): ResponseMapper<List<CreateResponse>>
     suspend fun sentExaminationPutData(): ResponseMapper<List<CreateResponse>>

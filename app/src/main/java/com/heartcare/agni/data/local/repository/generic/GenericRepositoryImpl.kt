@@ -357,42 +357,6 @@ class GenericRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun insertOrUpdateCVDPatch(
-        cvdFhirId: String,
-        map: Map<String, Any>,
-        uuid: String
-    ): Long {
-        return genericDao.getSameTypeGenericEntityPayload(
-            GenericTypeEnum.CVD,
-            SyncType.PATCH
-        ).let { genericEntities ->
-            insertOrUpdateCVDGenericEntityPatch(genericEntities, cvdFhirId, map, uuid)
-        }
-    }
-    override suspend fun insertOrUpdateSymDiagPatchEntity(
-        fhirId: String,
-        map: Map<String, Any>,
-        uuid: String
-    ): Long {
-        return genericDao.getGenericEntityById(
-            patientId = fhirId,
-            genericTypeEnum = GenericTypeEnum.DIAGNOSIS,
-            syncType = SyncType.PATCH
-        ).let { genericEntity ->
-            insertSymDiagGenericEntityPatch(genericEntity, fhirId, map, uuid)
-        }
-    }
-
-    override suspend fun insertOrUpdateVitalPatchEntity(
-        vitalFhirId: String, map: Map<String, Any>, uuid: String
-    ): Long {
-        return genericDao.getSameTypeGenericEntityPayload(
-            genericTypeEnum = GenericTypeEnum.VITAL,
-            syncType = SyncType.PATCH
-        ).let { genericEntity ->
-            insertVitalGenericEntityPatch(genericEntity, vitalFhirId, map, uuid)
-        }
-    }
     override suspend fun insertPatientLastUpdated(
         patientLastUpdatedResponse: PatientLastUpdatedResponse,
         uuid: String

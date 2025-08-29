@@ -1037,56 +1037,6 @@ class SyncRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun sendCVDPatchData(): ResponseMapper<List<CreateResponse>> {
-        return genericDao.getSameTypeGenericEntityPayload(
-            genericTypeEnum = GenericTypeEnum.CVD, syncType = SyncType.PATCH
-        ).let { listOfGenericEntity ->
-            if (listOfGenericEntity.isEmpty()) ApiEmptyResponse()
-            else {
-                ApiResponseConverter.convert(
-                    cvdApiService.patchListOfChanges(
-                        listOfGenericEntity.map { it.payload.fromJson() })
-                ).run {
-                    when (this) {
-                        is ApiEndResponse -> {
-                            deleteGenericEntityData(listOfGenericEntity).let {
-                                if (it > 0) sendCVDPatchData() else this
-                            }
-                        }
-
-                        else -> this
-                    }
-                }
-            }
-        }
-    }
-
-    override suspend fun sendVitalPatchData(): ResponseMapper<List<CreateResponse>> {
-        return genericDao.getSameTypeGenericEntityPayload(
-            genericTypeEnum = GenericTypeEnum.VITAL, syncType = SyncType.PATCH
-        ).let { listOfGenericEntity ->
-            if (listOfGenericEntity.isEmpty()) ApiEmptyResponse()
-            else {
-                ApiResponseConverter.convert(
-                    vitalApiService.patchListOfChanges(
-                        VITAL,
-                        listOfGenericEntity.map { it.payload.fromJson() })
-                ).run {
-                    when (this) {
-                        is ApiEndResponse -> {
-                            deleteGenericEntityData(listOfGenericEntity).let {
-                                if (it > 0) sendVitalPatchData() else this
-                            }
-                        }
-
-                        else -> this
-                    }
-                }
-            }
-        }
-
-    }
-
     override suspend fun sendPrescriptionPutData(): ResponseMapper<List<CreateResponse>> {
         return genericDao.getSameTypeGenericEntityPayload(
             genericTypeEnum = GenericTypeEnum.PRESCRIPTION, syncType = SyncType.PUT

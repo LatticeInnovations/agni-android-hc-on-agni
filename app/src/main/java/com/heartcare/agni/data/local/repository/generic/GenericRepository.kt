@@ -128,24 +128,11 @@ interface GenericRepository {
         uuid: String = UUIDBuilder.generateUUID()
     ): Long
 
-    suspend fun insertOrUpdateCVDPatch(
-        cvdFhirId: String,
-        map: Map<String, Any>,
-        uuid: String = UUIDBuilder.generateUUID()
-    ): Long
-
-    suspend fun insertOrUpdateSymDiagPatchEntity(
-        fhirId: String, map: Map<String, Any>, uuid: String = UUIDBuilder.generateUUID()
-    ): Long
-
     suspend fun insertVital(
         vitalResponse: VitalResponse,
         uuid: String = UUIDBuilder.generateUUID()
     ): Long
 
-    suspend fun insertOrUpdateVitalPatchEntity(
-        vitalFhirId: String, map: Map<String, Any>, uuid: String = UUIDBuilder.generateUUID()
-    ): Long
     suspend fun insertPatientLastUpdated(
         patientLastUpdatedResponse: PatientLastUpdatedResponse,
         uuid: String = UUIDBuilder.generateUUID()
