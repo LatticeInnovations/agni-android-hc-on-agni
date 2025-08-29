@@ -15,7 +15,7 @@ import com.heartcare.agni.data.server.api.PrescriptionApiService
 import com.heartcare.agni.data.server.api.HistoryAndTestsApiService
 import com.heartcare.agni.data.server.api.InterventionApiService
 import com.heartcare.agni.data.server.api.ScheduleAndAppointmentApiService
-import com.heartcare.agni.data.server.api.SymptomsAndDiagnosisService
+import com.heartcare.agni.data.server.api.DiagnosisApiService
 import com.heartcare.agni.data.server.api.VitalApiService
 import com.heartcare.agni.service.authentication.TokenAuthenticator
 import com.heartcare.agni.utils.constants.AuthenticationConstants.AUTHORIZATION
@@ -254,8 +254,8 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideSymptomsAndDiagnosisService(@Named("agni") retrofit: Retrofit): SymptomsAndDiagnosisService =
-        retrofit.create(SymptomsAndDiagnosisService::class.java)
+    fun provideSymptomsAndDiagnosisService(@Named("agni") retrofit: Retrofit): DiagnosisApiService =
+        retrofit.create(DiagnosisApiService::class.java)
 
     @Provides
     @Singleton

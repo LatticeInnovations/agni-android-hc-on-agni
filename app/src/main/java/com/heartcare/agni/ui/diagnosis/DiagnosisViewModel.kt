@@ -12,8 +12,8 @@ import com.heartcare.agni.data.local.repository.generic.GenericRepository
 import com.heartcare.agni.data.local.repository.patient.lastupdated.PatientLastUpdatedRepository
 import com.heartcare.agni.data.local.repository.preference.PreferenceRepository
 import com.heartcare.agni.data.local.repository.schedule.ScheduleRepository
-import com.heartcare.agni.data.local.repository.symptomsanddiagnosis.SymDiagRepository
-import com.heartcare.agni.data.local.roomdb.entities.symptomsanddiagnosis.SymptomsAndDiagnosisLocal
+import com.heartcare.agni.data.local.repository.diagnosis.DiagnosisRepository
+import com.heartcare.agni.data.local.roomdb.entities.diagnosis.DiagnosisLocal
 import com.heartcare.agni.data.server.model.patient.PatientResponse
 import com.heartcare.agni.di.dispatcher.IoDispatcher
 import com.heartcare.agni.utils.common.Queries
@@ -29,7 +29,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class DiagnosisViewModel @Inject constructor(
-    private val symDiagRepository: SymDiagRepository,
+    private val diagRepository: DiagnosisRepository,
     private val appointmentRepository: AppointmentRepository,
     private val preferenceRepository: PreferenceRepository,
     private val genericRepository: GenericRepository,
@@ -41,8 +41,8 @@ class DiagnosisViewModel @Inject constructor(
     var patient by mutableStateOf<PatientResponse?>(null)
     val user = preferenceRepository.getUserDetails()!!
 
-    var diagnosisList by mutableStateOf(listOf<SymptomsAndDiagnosisLocal>())
-    var todayDiagnosis by mutableStateOf<SymptomsAndDiagnosisLocal?>(null)
+    var diagnosisList by mutableStateOf(listOf<DiagnosisLocal>())
+    var todayDiagnosis by mutableStateOf<DiagnosisLocal?>(null)
 
     var appointment by mutableStateOf<AppointmentResponseLocal?>(null)
     var canAddAssessment by mutableStateOf(false)
@@ -56,7 +56,7 @@ class DiagnosisViewModel @Inject constructor(
 
     fun getPreviousDiagnosis(patientId: String) {
         viewModelScope.launch(ioDispatcher) {
-            diagnosisList = symDiagRepository.getPastSymptomsAndDiagnosis(patientId).also {
+            diagnosisList = diagRepository.getPastDiagnosis(patientId).also {
                 todayDiagnosis = it.firstOrNull { priorDx -> isToday(priorDx.createdOn) }
             }
         }

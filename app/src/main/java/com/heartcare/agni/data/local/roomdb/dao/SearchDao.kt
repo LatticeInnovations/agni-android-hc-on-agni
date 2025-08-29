@@ -12,9 +12,8 @@ import com.heartcare.agni.data.local.roomdb.entities.intervention.InterventionMa
 import com.heartcare.agni.data.local.roomdb.entities.medication.MedicationEntity
 import com.heartcare.agni.data.local.roomdb.entities.patient.PatientAndIdentifierEntity
 import com.heartcare.agni.data.local.roomdb.entities.search.SearchHistoryEntity
-import com.heartcare.agni.data.local.roomdb.entities.search.SymDiagSearchEntity
-import com.heartcare.agni.data.local.roomdb.entities.symptomsanddiagnosis.DiagnosisEntity
-import com.heartcare.agni.data.local.roomdb.entities.symptomsanddiagnosis.SymptomsEntity
+import com.heartcare.agni.data.local.roomdb.entities.search.SearchEntity
+import com.heartcare.agni.data.local.roomdb.entities.diagnosis.DiagnosisMasterEntity
 
 @Dao
 interface SearchDao {
@@ -41,20 +40,12 @@ interface SearchDao {
     suspend fun deleteRecentSearch(id: Int): Int
 
     @Transaction
-    @Query("SELECT DISTINCT activeIngredient FROM MedicationEntity WHERE status=\"active\"")
-    suspend fun getActiveIngredients(): List<String>
-
-    @Transaction
     @Query("SELECT * FROM MedicationEntity WHERE status=\"active\"")
     suspend fun getAllMedication(): List<MedicationEntity>
 
     @Transaction
-    @Query("SELECT * FROM symptoms")
-    suspend fun getSymptoms(): List<SymptomsEntity>
-
-    @Transaction
-    @Query("SELECT * FROM DiagnosisEntity")
-    suspend fun getDiagnosis(): List<DiagnosisEntity>
+    @Query("SELECT * FROM DiagnosisMasterEntity")
+    suspend fun getDiagnosisMasterList(): List<DiagnosisMasterEntity>
 
     @Transaction
     @Query("SELECT * FROM InterventionMasterEntity where status=\"active\"")
@@ -66,25 +57,25 @@ interface SearchDao {
 
     // Insert a new search entry or update the existing one
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertOrUpdateSearch(symDiagSearchEntity: SymDiagSearchEntity): Long
+    suspend fun insertOrUpdateSearch(diagSearchEntity: SearchEntity): Long
 
     // Get the most frequent searches (limit to 5)
-    @Query("SELECT searchQuery FROM SymDiagSearchEntity where searchType=:searchTypeEnum ORDER BY searchCount DESC, date DESC LIMIT 5")
+    @Query("SELECT searchQuery FROM SearchEntity where searchType=:searchTypeEnum ORDER BY searchCount DESC, date DESC LIMIT 5")
     suspend fun getMostFrequentSearches(searchTypeEnum: SearchTypeEnum): List<String>
 
     // Check if a query already exists
-    @Query("SELECT * FROM SymDiagSearchEntity WHERE searchQuery = :searchQuery")
-    suspend fun getSearchByQuery(searchQuery: String): SymDiagSearchEntity?
+    @Query("SELECT * FROM SearchEntity WHERE searchQuery = :searchQuery")
+    suspend fun getSearchByQuery(searchQuery: String): SearchEntity?
 
     // Delete the oldest record (the one with the lowest `id`)
-    @Query("DELETE FROM SymDiagSearchEntity WHERE id = (SELECT MIN(id) FROM SymDiagSearchEntity)")
+    @Query("DELETE FROM SearchEntity WHERE id = (SELECT MIN(id) FROM SearchEntity)")
     suspend fun deleteOldestEntry()
 
     // Get the count of records in the table
-    @Query("SELECT COUNT(*) FROM SymDiagSearchEntity")
+    @Query("SELECT COUNT(*) FROM SearchEntity")
     suspend fun getRowCount(): Int
 
-    @Query("UPDATE SymDiagSearchEntity Set searchCount=:searchCount where searchQuery=:searchQuery")
+    @Query("UPDATE SearchEntity Set searchCount=:searchCount where searchQuery=:searchQuery")
     suspend fun updateSearch(searchCount: Long, searchQuery: String): Int
 
 }

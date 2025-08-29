@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "1119b14d54528e091a640d3e8e297c67",
+    "identityHash": "2d5a48538428f8747e6a8fc6a74e09c4",
     "entities": [
       {
         "tableName": "PatientEntity",
@@ -1505,47 +1505,7 @@
         ]
       },
       {
-        "tableName": "symptoms",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `code` TEXT NOT NULL, `display` TEXT NOT NULL, `type` TEXT, `gender` TEXT, PRIMARY KEY(`id`))",
-        "fields": [
-          {
-            "fieldPath": "id",
-            "columnName": "id",
-            "affinity": "TEXT",
-            "notNull": true
-          },
-          {
-            "fieldPath": "code",
-            "columnName": "code",
-            "affinity": "TEXT",
-            "notNull": true
-          },
-          {
-            "fieldPath": "display",
-            "columnName": "display",
-            "affinity": "TEXT",
-            "notNull": true
-          },
-          {
-            "fieldPath": "type",
-            "columnName": "type",
-            "affinity": "TEXT"
-          },
-          {
-            "fieldPath": "gender",
-            "columnName": "gender",
-            "affinity": "TEXT"
-          }
-        ],
-        "primaryKey": {
-          "autoGenerate": false,
-          "columnNames": [
-            "id"
-          ]
-        }
-      },
-      {
-        "tableName": "DiagnosisEntity",
+        "tableName": "DiagnosisMasterEntity",
         "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `code` TEXT NOT NULL, `display` TEXT NOT NULL, PRIMARY KEY(`id`))",
         "fields": [
           {
@@ -1575,12 +1535,12 @@
         }
       },
       {
-        "tableName": "SymptomAndDiagnosisEntity",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`symDiagUuid` TEXT NOT NULL, `appointmentId` TEXT NOT NULL, `fhirId` TEXT, `createdOn` INTEGER NOT NULL, `diagnosis` TEXT NOT NULL, `symptoms` TEXT NOT NULL, `practitionerName` TEXT NOT NULL, `patientId` TEXT NOT NULL, `progressNote` TEXT, PRIMARY KEY(`symDiagUuid`), FOREIGN KEY(`patientId`) REFERENCES `PatientEntity`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION )",
+        "tableName": "DiagnosisEntity",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`diagnosisUuid` TEXT NOT NULL, `appointmentId` TEXT NOT NULL, `fhirId` TEXT, `createdOn` INTEGER NOT NULL, `diagnosis` TEXT NOT NULL, `symptoms` TEXT NOT NULL, `practitionerName` TEXT NOT NULL, `patientId` TEXT NOT NULL, `progressNote` TEXT, PRIMARY KEY(`diagnosisUuid`), FOREIGN KEY(`patientId`) REFERENCES `PatientEntity`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION )",
         "fields": [
           {
-            "fieldPath": "symDiagUuid",
-            "columnName": "symDiagUuid",
+            "fieldPath": "diagnosisUuid",
+            "columnName": "diagnosisUuid",
             "affinity": "TEXT",
             "notNull": true
           },
@@ -1634,36 +1594,36 @@
         "primaryKey": {
           "autoGenerate": false,
           "columnNames": [
-            "symDiagUuid"
+            "diagnosisUuid"
           ]
         },
         "indices": [
           {
-            "name": "index_SymptomAndDiagnosisEntity_fhirId",
+            "name": "index_DiagnosisEntity_fhirId",
             "unique": false,
             "columnNames": [
               "fhirId"
             ],
             "orders": [],
-            "createSql": "CREATE INDEX IF NOT EXISTS `index_SymptomAndDiagnosisEntity_fhirId` ON `${TABLE_NAME}` (`fhirId`)"
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_DiagnosisEntity_fhirId` ON `${TABLE_NAME}` (`fhirId`)"
           },
           {
-            "name": "index_SymptomAndDiagnosisEntity_appointmentId",
+            "name": "index_DiagnosisEntity_appointmentId",
             "unique": false,
             "columnNames": [
               "appointmentId"
             ],
             "orders": [],
-            "createSql": "CREATE INDEX IF NOT EXISTS `index_SymptomAndDiagnosisEntity_appointmentId` ON `${TABLE_NAME}` (`appointmentId`)"
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_DiagnosisEntity_appointmentId` ON `${TABLE_NAME}` (`appointmentId`)"
           },
           {
-            "name": "index_SymptomAndDiagnosisEntity_patientId",
+            "name": "index_DiagnosisEntity_patientId",
             "unique": false,
             "columnNames": [
               "patientId"
             ],
             "orders": [],
-            "createSql": "CREATE INDEX IF NOT EXISTS `index_SymptomAndDiagnosisEntity_patientId` ON `${TABLE_NAME}` (`patientId`)"
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_DiagnosisEntity_patientId` ON `${TABLE_NAME}` (`patientId`)"
           }
         ],
         "foreignKeys": [
@@ -1681,7 +1641,7 @@
         ]
       },
       {
-        "tableName": "SymDiagSearchEntity",
+        "tableName": "SearchEntity",
         "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`searchQuery` TEXT NOT NULL, `date` INTEGER NOT NULL, `searchCount` INTEGER NOT NULL, `searchType` TEXT NOT NULL, `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL)",
         "fields": [
           {
@@ -3000,7 +2960,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '1119b14d54528e091a640d3e8e297c67')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '2d5a48538428f8747e6a8fc6a74e09c4')"
     ]
   }
 }

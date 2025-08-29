@@ -575,7 +575,7 @@ fun SelectedCompoundCard(
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                medication.medication.brandName?.let {
+                medication.medication.brandName?.ifBlank { null }?.let {
                     Text(
                         text = stringResource(R.string.brand_name, it),
                         style = MaterialTheme.typography.bodyMedium,

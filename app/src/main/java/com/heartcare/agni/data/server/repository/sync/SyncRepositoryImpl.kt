@@ -3,7 +3,7 @@ package com.heartcare.agni.data.server.repository.sync
 import com.google.gson.internal.LinkedTreeMap
 import com.heartcare.agni.data.local.enums.GenericTypeEnum
 import com.heartcare.agni.data.local.enums.SyncType
-import com.heartcare.agni.data.local.model.symdiag.SymptomsAndDiagnosisData
+import com.heartcare.agni.data.local.model.diagnosis.DiagnosisData
 import com.heartcare.agni.data.local.repository.preference.PreferenceRepository
 import com.heartcare.agni.data.local.roomdb.dao.AllergyDao
 import com.heartcare.agni.data.local.roomdb.dao.AppointmentDao
@@ -23,7 +23,7 @@ import com.heartcare.agni.data.local.roomdb.dao.PriorDxDao
 import com.heartcare.agni.data.local.roomdb.dao.RiskFactorDao
 import com.heartcare.agni.data.local.roomdb.dao.RiskPredictionDao
 import com.heartcare.agni.data.local.roomdb.dao.ScheduleDao
-import com.heartcare.agni.data.local.roomdb.dao.SymptomsAndDiagnosisDao
+import com.heartcare.agni.data.local.roomdb.dao.DiagnosisDao
 import com.heartcare.agni.data.local.roomdb.dao.TobaccoCessationDao
 import com.heartcare.agni.data.local.roomdb.dao.VitalDao
 import com.heartcare.agni.data.server.api.CVDApiService
@@ -34,7 +34,7 @@ import com.heartcare.agni.data.server.api.LevelsApiService
 import com.heartcare.agni.data.server.api.PatientApiService
 import com.heartcare.agni.data.server.api.PrescriptionApiService
 import com.heartcare.agni.data.server.api.ScheduleAndAppointmentApiService
-import com.heartcare.agni.data.server.api.SymptomsAndDiagnosisService
+import com.heartcare.agni.data.server.api.DiagnosisApiService
 import com.heartcare.agni.data.server.api.VitalApiService
 import com.heartcare.agni.data.server.constants.ConstantValues.COUNT_VALUE
 import com.heartcare.agni.data.server.constants.ConstantValues.DEFAULT_MAX_COUNT_VALUE
@@ -71,7 +71,7 @@ import com.heartcare.agni.data.server.model.priordx.PriorDxResponse
 import com.heartcare.agni.data.server.model.risk.RiskFactorResponse
 import com.heartcare.agni.data.server.model.scheduleandappointment.appointment.AppointmentResponse
 import com.heartcare.agni.data.server.model.scheduleandappointment.schedule.ScheduleResponse
-import com.heartcare.agni.data.server.model.symptomsanddiagnosis.SymptomsAndDiagnosisResponse
+import com.heartcare.agni.data.server.model.diagnosis.DiagnosisResponse
 import com.heartcare.agni.data.server.model.tobacco.TobaccoCessationResponse
 import com.heartcare.agni.data.server.model.vitals.VitalResponse
 import com.heartcare.agni.utils.converters.responseconverter.GsonConverters.fromJson
@@ -94,7 +94,7 @@ class SyncRepositoryImpl @Inject constructor(
     private val scheduleAndAppointmentApiService: ScheduleAndAppointmentApiService,
     private val cvdApiService: CVDApiService,
     private val vitalApiService: VitalApiService,
-    private val symptomsAndDiagnosisService: SymptomsAndDiagnosisService,
+    private val diagnosisService: DiagnosisApiService,
     private val levelsApiService: LevelsApiService,
     private val historyAndTestsApiService: HistoryAndTestsApiService,
     private val interventionApiService: InterventionApiService,
@@ -110,7 +110,7 @@ class SyncRepositoryImpl @Inject constructor(
     patientLastUpdatedDao: PatientLastUpdatedDao,
     cvdDao: CVDDao,
     vitalDao: VitalDao,
-    symptomsAndDiagnosisDao: SymptomsAndDiagnosisDao,
+    diagnosisDao: DiagnosisDao,
     fileUploadDao: FileUploadDao,
     levelsDao: LevelsDao,
     riskPredictionDao: RiskPredictionDao,
@@ -132,7 +132,7 @@ class SyncRepositoryImpl @Inject constructor(
     patientLastUpdatedDao,
     cvdDao,
     vitalDao,
-    symptomsAndDiagnosisDao,
+    diagnosisDao,
     fileUploadDao,
     deleteFileManager,
     levelsDao,
@@ -563,18 +563,18 @@ class SyncRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun getAndInsertListSymptomsAndDiagnosisData(offset: Int): ResponseMapper<List<SymptomsAndDiagnosisResponse>> {
+    override suspend fun getAndInsertListDiagnosisData(offset: Int): ResponseMapper<List<DiagnosisResponse>> {
         val map = mutableMapOf<String, String>()
         map[COUNT] = COUNT_VALUE.toString()
         map[OFFSET] = offset.toString()
         map[SORT] = "-$ID"
-        if (preferenceRepository.getLastSyncSymDiag() != 0L) map[LAST_UPDATED] = String.format(
-            GREATER_THAN_BUILDER, preferenceRepository.getLastSyncSymDiag().toTimeStampDate()
+        if (preferenceRepository.getLastSyncDiagnosis() != 0L) map[LAST_UPDATED] = String.format(
+            GREATER_THAN_BUILDER, preferenceRepository.getLastSyncDiagnosis().toTimeStampDate()
         )
 
         ApiResponseConverter.convert(
-            symptomsAndDiagnosisService.getListData(
-                EndPoints.SYMPTOMS_DIAGNOSIS, map
+            diagnosisService.getListData(
+                EndPoints.DIAGNOSIS, map
             ), true
         ).run {
             return when (this) {
@@ -582,12 +582,12 @@ class SyncRepositoryImpl @Inject constructor(
                     //Insert Patient
                     insertSymDiag(body)
                     //Call for next batch data
-                    getAndInsertListSymptomsAndDiagnosisData(offset + COUNT_VALUE)
+                    getAndInsertListDiagnosisData(offset + COUNT_VALUE)
                 }
 
                 is ApiEndResponse -> {
                     //Set Last Update Time
-                    preferenceRepository.setLastSyncSymDiag(Date().time)
+                    preferenceRepository.setLastSyncDiagnosis(Date().time)
                     //Insert Patient
                     insertSymDiag(body)
                     this
@@ -815,24 +815,24 @@ class SyncRepositoryImpl @Inject constructor(
 
     }
 
-    override suspend fun sendSymptomsAndDiagnosisPostData(): ResponseMapper<List<CreateResponse>> {
+    override suspend fun sendDiagnosisPostData(): ResponseMapper<List<CreateResponse>> {
         return genericDao.getSameTypeGenericEntityPayload(
-            genericTypeEnum = GenericTypeEnum.SYMPTOMS_DIAGNOSIS, syncType = SyncType.POST
+            genericTypeEnum = GenericTypeEnum.DIAGNOSIS, syncType = SyncType.POST
         ).let { listOfGenericEntity ->
             if (listOfGenericEntity.isEmpty()) ApiEmptyResponse()
             else ApiResponseConverter.convert(
-                symptomsAndDiagnosisService.createData(
-                    EndPoints.SYMPTOMS_DIAGNOSIS,
+                diagnosisService.createData(
+                    EndPoints.DIAGNOSIS,
                     listOfGenericEntity.map {
                         it.payload.fromJson<LinkedTreeMap<*, *>>()
-                            .mapToObject(SymptomsAndDiagnosisData::class.java)!!
+                            .mapToObject(DiagnosisData::class.java)!!
                     })
             ).run {
                 when (this) {
                     is ApiEndResponse -> {
                         insertSymDiagFhirId(
                             listOfGenericEntity, body
-                        ).let { deletedRows -> if (deletedRows > 0) sendSymptomsAndDiagnosisPostData() else this }
+                        ).let { deletedRows -> if (deletedRows > 0) sendDiagnosisPostData() else this }
                     }
 
                     else -> this
@@ -1285,32 +1285,6 @@ class SyncRepositoryImpl @Inject constructor(
                 }
             }
         }
-    }
-
-    override suspend fun sendSymptomsAndDiagnosisPatchData(): ResponseMapper<List<CreateResponse>> {
-        return genericDao.getSameTypeGenericEntityPayload(
-            genericTypeEnum = GenericTypeEnum.SYMPTOMS_DIAGNOSIS, syncType = SyncType.PATCH
-        ).let { listOfGenericEntity ->
-            if (listOfGenericEntity.isEmpty()) ApiEmptyResponse()
-            else {
-                ApiResponseConverter.convert(
-                    symptomsAndDiagnosisService.patchListOfChanges(
-                        EndPoints.SYMPTOMS_DIAGNOSIS,
-                        listOfGenericEntity.map { it.payload.fromJson() })
-                ).run {
-                    when (this) {
-                        is ApiEndResponse -> {
-                            deleteGenericEntityData(listOfGenericEntity).let {
-                                if (it > 0) sendSymptomsAndDiagnosisPatchData() else this
-                            }
-                        }
-
-                        else -> this
-                    }
-                }
-            }
-        }
-
     }
 
     override suspend fun getAndInsertLevelsData(

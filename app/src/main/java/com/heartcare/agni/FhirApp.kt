@@ -20,10 +20,10 @@ import com.heartcare.agni.data.server.api.LevelsApiService
 import com.heartcare.agni.data.server.api.PatientApiService
 import com.heartcare.agni.data.server.api.PrescriptionApiService
 import com.heartcare.agni.data.server.api.ScheduleAndAppointmentApiService
-import com.heartcare.agni.data.server.api.SymptomsAndDiagnosisService
+import com.heartcare.agni.data.server.api.DiagnosisApiService
 import com.heartcare.agni.data.server.api.VitalApiService
-import com.heartcare.agni.data.server.repository.symptomsanddiagnosis.SymptomsAndDiagnosisRepository
-import com.heartcare.agni.data.server.repository.symptomsanddiagnosis.SymptomsAndDiagnosisRepositoryImpl
+import com.heartcare.agni.data.server.repository.diagnosismaster.DiagnosisMasterRepository
+import com.heartcare.agni.data.server.repository.diagnosismaster.DiagnosisMasterRepositoryImpl
 import com.heartcare.agni.data.server.repository.sync.SyncRepository
 import com.heartcare.agni.data.server.repository.sync.SyncRepositoryImpl
 import com.heartcare.agni.service.sync.SyncService
@@ -62,7 +62,7 @@ class FhirApp : Application() {
     @Inject
     lateinit var vitalApiService: VitalApiService
     @Inject
-    lateinit var symptomsAndDiagnosisService: SymptomsAndDiagnosisService
+    lateinit var diagnosisApiService: DiagnosisApiService
 
     @Inject
     lateinit var levelsApiService: LevelsApiService
@@ -87,8 +87,8 @@ class FhirApp : Application() {
     internal val syncService get() = _syncService
     val sessionExpireFlow = MutableLiveData<Map<String, Any>>(emptyMap())
 
-    private lateinit var _symDiagnosisRepository: SymptomsAndDiagnosisRepository
-    private val symDiagnosisRepository get() = _symDiagnosisRepository
+    private lateinit var _diagnosisMasterRepository: DiagnosisMasterRepository
+    private val diagnosisMasterRepository get() = _diagnosisMasterRepository
     internal var syncWorkerStatus = MutableLiveData<WorkerStatus>()
     internal var photosWorkerStatus = MutableLiveData<WorkerStatus>()
     private val isSyncing = AtomicBoolean(false)
@@ -107,7 +107,7 @@ class FhirApp : Application() {
             scheduleAndAppointmentApiService,
             cvdApiService,
             vitalApiService,
-            symptomsAndDiagnosisService,
+            diagnosisApiService,
             levelsApiService,
             historyAndTestsApiService,
             interventionApiService,
@@ -123,7 +123,7 @@ class FhirApp : Application() {
             fhirAppDatabase.getPatientLastUpdatedDao(),
             fhirAppDatabase.getCVDDao(),
             fhirAppDatabase.getVitalDao(),
-            fhirAppDatabase.getSymptomsAndDiagnosisDao(),
+            fhirAppDatabase.getDiagnosisDao(),
             fhirAppDatabase.getFileUploadDao(),
             fhirAppDatabase.getLevelsDao(),
             fhirAppDatabase.getRiskPredictionDao(),
@@ -144,9 +144,9 @@ class FhirApp : Application() {
             fhirAppDatabase.getAppointmentDao()
         )
 
-        _symDiagnosisRepository = SymptomsAndDiagnosisRepositoryImpl(
-            symptomsAndDiagnosisService,
-            fhirAppDatabase.getSymptomsAndDiagnosisDao()
+        _diagnosisMasterRepository = DiagnosisMasterRepositoryImpl(
+            diagnosisApiService,
+            fhirAppDatabase.getDiagnosisDao()
         )
         if (!this::_workRequestBuilder.isInitialized) {
             _workRequestBuilder = WorkRequestBuilders(this)
@@ -159,7 +159,7 @@ class FhirApp : Application() {
                     syncRepository,
                     genericRepository,
                     preferenceRepository,
-                    symptomsAndDiagnosisRepository = symDiagnosisRepository
+                    diagnosisMasterRepository = diagnosisMasterRepository
                 )
         }
     }

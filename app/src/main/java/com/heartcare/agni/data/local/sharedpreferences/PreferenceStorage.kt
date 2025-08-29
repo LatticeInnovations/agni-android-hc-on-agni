@@ -29,7 +29,7 @@ interface PreferenceStorage {
     var lastCVDSyncTime: Long
     var lastVitalSyncTime: Long
 
-    var lastSymptomsSyncTime: Long
+    var lastDiagnosisSyncTime: Long
 
     var lastSyncLevelRecord: Long
     var lastSyncPriorDxRecord: Long

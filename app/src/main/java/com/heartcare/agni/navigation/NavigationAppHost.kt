@@ -43,8 +43,6 @@ import com.heartcare.agni.ui.prescription.PrescriptionScreen
 import com.heartcare.agni.ui.prescription.photo.upload.PrescriptionPhotoUploadScreen
 import com.heartcare.agni.ui.prescription.photo.view.PrescriptionPhotoViewScreen
 import com.heartcare.agni.ui.searchpatient.SearchPatient
-import com.heartcare.agni.ui.symptomsanddiagnosis.SymptomsAndDiagnosisScreen
-import com.heartcare.agni.ui.symptomsanddiagnosis.selectsymptoms.SelectSymptomScreen
 import com.heartcare.agni.ui.vitalsscreen.VitalsScreen
 import com.heartcare.agni.ui.vitalsscreen.addvitals.AddVitalsScreen
 
@@ -85,9 +83,6 @@ fun NavigationAppHost(navController: NavController, startDest: String) {
         composable(Screen.CVDRiskAssessmentScreen.route) { CVDRiskAssessmentScreen(navController) }
         composable(Screen.VitalsScreen.route) { VitalsScreen(navController = navController) }
         composable(Screen.AddVitalsScreen.route) { AddVitalsScreen(navController = navController) }
-
-        composable(Screen.SymptomsAndDiagnosisScreen.route) { SymptomsAndDiagnosisScreen(navController = navController) }
-        composable(Screen.AddSymptomsScreen.route) { SelectSymptomScreen(navController = navController) }
 
         composable(Screen.HistoryTakingAndTestsScreen.route) { HistoryTakingAndTestsScreen(navController = navController) }
         composable(Screen.AddPriorDxScreen.route) { AddPriorDxScreen(navController = navController) }

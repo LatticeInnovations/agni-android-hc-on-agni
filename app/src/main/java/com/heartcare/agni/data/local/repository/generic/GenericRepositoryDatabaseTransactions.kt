@@ -4,7 +4,7 @@ import com.heartcare.agni.data.local.enums.GenericTypeEnum
 import com.heartcare.agni.data.local.enums.SyncType
 import com.heartcare.agni.data.local.model.patch.AppointmentPatchRequest
 import com.heartcare.agni.data.local.model.patch.ChangeRequest
-import com.heartcare.agni.data.local.model.symdiag.SymptomsAndDiagnosisData
+import com.heartcare.agni.data.local.model.diagnosis.DiagnosisData
 import com.heartcare.agni.data.local.roomdb.dao.AppointmentDao
 import com.heartcare.agni.data.local.roomdb.dao.GenericDao
 import com.heartcare.agni.data.local.roomdb.dao.PatientDao
@@ -289,7 +289,7 @@ open class GenericRepositoryDatabaseTransactions(
     }
 
     protected suspend fun insertSymDiagGenericEntity(
-        local: SymptomsAndDiagnosisData,
+        local: DiagnosisData,
         genericEntity: GenericEntity?,
         uuid: String
     ): Long {
@@ -300,9 +300,9 @@ open class GenericRepositoryDatabaseTransactions(
         } else {
             genericDao.insertGenericEntity(
                 GenericEntity(
-                    id = uuid, patientId = local.symDiagUuid,
+                    id = uuid, patientId = local.diagnosisUuid,
                     payload = local.toJson(),
-                    type = GenericTypeEnum.SYMPTOMS_DIAGNOSIS,
+                    type = GenericTypeEnum.DIAGNOSIS,
                     syncType = SyncType.POST
                 )
             )[0]
@@ -542,7 +542,7 @@ open class GenericRepositoryDatabaseTransactions(
     protected suspend fun updateSymDiagFhirIdInGenericEntity(genericEntity: GenericEntity) {
         val existingMap =
             genericEntity.payload.fromJson<MutableMap<String, Any>>()
-                .mapToObject(SymptomsAndDiagnosisData::class.java)
+                .mapToObject(DiagnosisData::class.java)
         if (existingMap != null) {
             genericDao.insertGenericEntity(
                 genericEntity.copy(
@@ -885,7 +885,7 @@ open class GenericRepositoryDatabaseTransactions(
                         mutableMap[Id.ID] = fhirId
                         mutableMap
                     }.toJson(),
-                    type = GenericTypeEnum.SYMPTOMS_DIAGNOSIS,
+                    type = GenericTypeEnum.DIAGNOSIS,
                     syncType = SyncType.PATCH
                 )
             )[0]

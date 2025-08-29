@@ -24,9 +24,6 @@ sealed class Screen(val route: String) {
     data object VitalsScreen : Screen("vitals_screen")
     data object AddVitalsScreen : Screen("add_vitals_screen")
 
-    data object SymptomsAndDiagnosisScreen : Screen("symptoms_and_diagnosis")
-    data object AddSymptomsScreen : Screen("add_symptoms")
-
     data object HistoryTakingAndTestsScreen : Screen("history_taking_and_tests_screen")
     data object AddPriorDxScreen : Screen("add_prior_dx_screen")
     data object AddMedicationScreen : Screen("add_medication_screen")

@@ -21,7 +21,7 @@ import com.heartcare.agni.data.local.roomdb.dao.PriorDxDao
 import com.heartcare.agni.data.local.roomdb.dao.RiskFactorDao
 import com.heartcare.agni.data.local.roomdb.dao.RiskPredictionDao
 import com.heartcare.agni.data.local.roomdb.dao.ScheduleDao
-import com.heartcare.agni.data.local.roomdb.dao.SymptomsAndDiagnosisDao
+import com.heartcare.agni.data.local.roomdb.dao.DiagnosisDao
 import com.heartcare.agni.data.local.roomdb.dao.TobaccoCessationDao
 import com.heartcare.agni.data.local.roomdb.dao.VitalDao
 import com.heartcare.agni.data.local.roomdb.entities.generic.GenericEntity
@@ -48,7 +48,7 @@ import com.heartcare.agni.data.server.model.priordx.PriorDxResponse
 import com.heartcare.agni.data.server.model.risk.RiskFactorResponse
 import com.heartcare.agni.data.server.model.scheduleandappointment.appointment.AppointmentResponse
 import com.heartcare.agni.data.server.model.scheduleandappointment.schedule.ScheduleResponse
-import com.heartcare.agni.data.server.model.symptomsanddiagnosis.SymptomsAndDiagnosisResponse
+import com.heartcare.agni.data.server.model.diagnosis.DiagnosisResponse
 import com.heartcare.agni.data.server.model.tobacco.TobaccoCessationResponse
 import com.heartcare.agni.data.server.model.vitals.VitalResponse
 import com.heartcare.agni.utils.constants.ErrorConstants
@@ -76,7 +76,7 @@ import com.heartcare.agni.utils.converters.responseconverter.toPrescriptionEntit
 import com.heartcare.agni.utils.converters.responseconverter.toPriorDxEntity
 import com.heartcare.agni.utils.converters.responseconverter.toRiskFactorEntity
 import com.heartcare.agni.utils.converters.responseconverter.toScheduleEntity
-import com.heartcare.agni.utils.converters.responseconverter.toSymptomsAndDiagnosisEntity
+import com.heartcare.agni.utils.converters.responseconverter.toDiagnosisEntity
 import com.heartcare.agni.utils.converters.responseconverter.toTobaccoCessationEntity
 import com.heartcare.agni.utils.converters.responseconverter.toVitalEntity
 import com.heartcare.agni.utils.file.DeleteFileManager
@@ -92,7 +92,7 @@ open class SyncRepositoryDatabaseTransactions(
     private val patientLastUpdatedDao: PatientLastUpdatedDao,
     private val cvdDao: CVDDao,
     private val vitalDao: VitalDao,
-    private val symptomsAndDiagnosisDao: SymptomsAndDiagnosisDao,
+    private val diagnosisDao: DiagnosisDao,
     private val fileUploadDao: FileUploadDao,
     private val deleteFileManager: DeleteFileManager,
     private val levelsDao: LevelsDao,
@@ -258,10 +258,10 @@ open class SyncRepositoryDatabaseTransactions(
             .toTypedArray())
     }
 
-    protected suspend fun insertSymDiag(body: List<SymptomsAndDiagnosisResponse>) {
+    protected suspend fun insertSymDiag(body: List<DiagnosisResponse>) {
         //Insert Vital Data
-        symptomsAndDiagnosisDao.insertSymptomsAndDiagnosis(*body.map {
-            it.toSymptomsAndDiagnosisEntity(
+        diagnosisDao.insertDiagnosis(*body.map {
+            it.toDiagnosisEntity(
                 patientDao,
                 appointmentDao
             )
@@ -434,7 +434,7 @@ open class SyncRepositoryDatabaseTransactions(
         listOfGenericEntities: List<GenericEntity>, body: List<CreateResponse>
     ): Int {
         body.map { createResponse ->
-            symptomsAndDiagnosisDao.updateSymDiagFhirId(
+            diagnosisDao.updateDiagnosisFhirId(
                 createResponse.id!!, createResponse.fhirId!!
             )
         }

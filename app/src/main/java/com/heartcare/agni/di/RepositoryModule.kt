@@ -42,8 +42,8 @@ import com.heartcare.agni.data.local.repository.schedule.ScheduleRepository
 import com.heartcare.agni.data.local.repository.schedule.ScheduleRepositoryImpl
 import com.heartcare.agni.data.local.repository.search.SearchRepository
 import com.heartcare.agni.data.local.repository.search.SearchRepositoryImpl
-import com.heartcare.agni.data.local.repository.symptomsanddiagnosis.SymDiagRepository
-import com.heartcare.agni.data.local.repository.symptomsanddiagnosis.SymDiagRepositoryImpl
+import com.heartcare.agni.data.local.repository.diagnosis.DiagnosisRepository
+import com.heartcare.agni.data.local.repository.diagnosis.DiagnosisRepositoryImpl
 import com.heartcare.agni.data.local.repository.tobacco.TobaccoCessationRepository
 import com.heartcare.agni.data.local.repository.tobacco.TobaccoCessationRepositoryImpl
 import com.heartcare.agni.data.local.repository.vital.VitalRepository
@@ -52,8 +52,8 @@ import com.heartcare.agni.data.server.repository.authentication.AuthenticationRe
 import com.heartcare.agni.data.server.repository.authentication.AuthenticationRepositoryImpl
 import com.heartcare.agni.data.server.repository.file.FileSyncRepository
 import com.heartcare.agni.data.server.repository.file.FileSyncRepositoryImpl
-import com.heartcare.agni.data.server.repository.symptomsanddiagnosis.SymptomsAndDiagnosisRepository
-import com.heartcare.agni.data.server.repository.symptomsanddiagnosis.SymptomsAndDiagnosisRepositoryImpl
+import com.heartcare.agni.data.server.repository.diagnosismaster.DiagnosisMasterRepository
+import com.heartcare.agni.data.server.repository.diagnosismaster.DiagnosisMasterRepositoryImpl
 import com.heartcare.agni.data.server.repository.sync.SyncRepository
 import com.heartcare.agni.data.server.repository.sync.SyncRepositoryImpl
 import dagger.Binds
@@ -136,11 +136,11 @@ abstract class RepositoryModule {
 
     @Binds
     @ViewModelScoped
-    abstract fun provideSymptomsAndDiagnosisRepository(symptomsAndDiagnosisRepositoryImpl: SymptomsAndDiagnosisRepositoryImpl): SymptomsAndDiagnosisRepository
+    abstract fun provideDiagnosisMasterRepository(diagnosisMasterRepositoryImpl: DiagnosisMasterRepositoryImpl): DiagnosisMasterRepository
 
     @Binds
     @ViewModelScoped
-    abstract fun provideSymDiagRepository(symDiagRepositoryImpl: SymDiagRepositoryImpl): SymDiagRepository
+    abstract fun provideDiagnosisRepository(diagnosisRepositoryImpl: DiagnosisRepositoryImpl): DiagnosisRepository
 
     @Binds
     @ViewModelScoped

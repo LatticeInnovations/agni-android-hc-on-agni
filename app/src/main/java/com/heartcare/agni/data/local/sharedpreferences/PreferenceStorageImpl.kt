@@ -66,9 +66,9 @@ class PreferenceStorageImpl(private val sharedPreferences: SharedPreferences) : 
         PREF_LAST_VITAL_SYNC_TIME,
         0L
     )
-    override var lastSymptomsSyncTime by LongPreference(
+    override var lastDiagnosisSyncTime by LongPreference(
         sharedPreferences,
-        PREF_LAST_SYM_DIAG_SYNC_TIME,
+        PREF_LAST_DIAGNOSIS_SYNC_TIME,
         0L
     )
 
@@ -162,7 +162,7 @@ class PreferenceStorageImpl(private val sharedPreferences: SharedPreferences) : 
         const val PREF_LAST_APPOINTMENT_SYNC_TIME = "pref_last_appointment_sync_time"
         const val PREF_LAST_CVD_SYNC_TIME = "pref_last_cvd_sync_time"
         const val PREF_LAST_VITAL_SYNC_TIME = "pref_last_vital_sync_time"
-        const val PREF_LAST_SYM_DIAG_SYNC_TIME = "pref_last_sym_diag_sync_time"
+        const val PREF_LAST_DIAGNOSIS_SYNC_TIME = "pref_last_diagnosis_sync_time"
         const val PREF_LAST_LEVELS_SYNC_TIME = "pref_last_levels_sync_time"
         const val PREF_LAST_PRIOR_DX_SYNC_TIME = "pref_last_prior_dx_sync_time"
         const val PREF_LAST_HISTORY_MEDICATION_SYNC_TIME = "pref_last_history_medication_sync_time"

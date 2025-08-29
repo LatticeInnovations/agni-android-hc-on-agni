@@ -60,9 +60,9 @@ interface PreferenceRepository {
     fun setLastSyncVital(long: Long)
     fun getLastSyncVital(): Long
 
-    /** Last Sync Symptoms And Diagnosis */
-    fun setLastSyncSymDiag(long: Long)
-    fun getLastSyncSymDiag(): Long
+    /** Last Sync Diagnosis */
+    fun setLastSyncDiagnosis(long: Long)
+    fun getLastSyncDiagnosis(): Long
 
     /** Last Level Data */
     fun setLastSyncLevelRecord(long: Long)

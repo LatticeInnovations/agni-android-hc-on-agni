@@ -2,7 +2,7 @@ package com.heartcare.agni.data.local.repository.generic
 
 import com.heartcare.agni.data.local.enums.GenericTypeEnum
 import com.heartcare.agni.data.local.enums.SyncType
-import com.heartcare.agni.data.local.model.symdiag.SymptomsAndDiagnosisData
+import com.heartcare.agni.data.local.model.diagnosis.DiagnosisData
 import com.heartcare.agni.data.server.model.allergy.AllergyResponse
 import com.heartcare.agni.data.server.model.cvd.CVDResponse
 import com.heartcare.agni.data.server.model.examination.ExaminationResponse
@@ -64,7 +64,7 @@ interface GenericRepository {
     ): Long
 
     suspend fun insertSymDiag(
-        local: SymptomsAndDiagnosisData, uuid: String = UUIDBuilder.generateUUID()
+        local: DiagnosisData, uuid: String = UUIDBuilder.generateUUID()
     ): Long
 
     suspend fun insertPriorDxRecord(

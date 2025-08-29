@@ -52,11 +52,9 @@ interface SearchRepository {
 
     suspend fun getSearchList(): List<PatientAndIdentifierEntity>
 
-    /** Recent Symptoms Search*/
-    suspend fun insertRecentSymptomAndDiagnosisSearch(searchQuery: String, searchTypeEnum: SearchTypeEnum, size:Int, date: Date = Date()): Long
-    suspend fun getRecentSymptomAndDiagnosisSearches(searchTypeEnum: SearchTypeEnum): List<String>
-
-    suspend fun searchSymptoms(searchQuery: String, gender:String?): List<String>
+    /** Recent Diagnosis Search*/
+    suspend fun insertRecentDiagnosisSearch(searchQuery: String, searchTypeEnum: SearchTypeEnum, size:Int, date: Date = Date()): Long
+    suspend fun getRecentDiagnosisSearches(searchTypeEnum: SearchTypeEnum): List<String>
     suspend fun searchDiagnosis(searchQuery: String): List<String>
 
     suspend fun searchIntervention(searchQuery: String): List<InterventionMasterResponse>

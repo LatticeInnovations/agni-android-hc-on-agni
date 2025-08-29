@@ -9,7 +9,7 @@ import java.util.Date
 
 @Entity
 @Keep
-data class SymDiagSearchEntity(
+data class SearchEntity(
     val searchQuery: String,
     val date: Date,
     val searchCount: Long,

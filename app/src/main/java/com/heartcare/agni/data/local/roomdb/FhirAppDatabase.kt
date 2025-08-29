@@ -27,7 +27,7 @@ import com.heartcare.agni.data.local.roomdb.dao.RiskFactorDao
 import com.heartcare.agni.data.local.roomdb.dao.RiskPredictionDao
 import com.heartcare.agni.data.local.roomdb.dao.ScheduleDao
 import com.heartcare.agni.data.local.roomdb.dao.SearchDao
-import com.heartcare.agni.data.local.roomdb.dao.SymptomsAndDiagnosisDao
+import com.heartcare.agni.data.local.roomdb.dao.DiagnosisDao
 import com.heartcare.agni.data.local.roomdb.dao.TobaccoCessationDao
 import com.heartcare.agni.data.local.roomdb.dao.VitalDao
 import com.heartcare.agni.data.local.roomdb.entities.allergy.AllergyEntity
@@ -56,13 +56,12 @@ import com.heartcare.agni.data.local.roomdb.entities.priordx.PriorDxEntity
 import com.heartcare.agni.data.local.roomdb.entities.risk.RiskFactorEntity
 import com.heartcare.agni.data.local.roomdb.entities.schedule.ScheduleEntity
 import com.heartcare.agni.data.local.roomdb.entities.search.SearchHistoryEntity
-import com.heartcare.agni.data.local.roomdb.entities.search.SymDiagSearchEntity
-import com.heartcare.agni.data.local.roomdb.entities.symptomsanddiagnosis.DiagnosisEntity
-import com.heartcare.agni.data.local.roomdb.entities.symptomsanddiagnosis.SymptomAndDiagnosisEntity
-import com.heartcare.agni.data.local.roomdb.entities.symptomsanddiagnosis.SymptomsEntity
+import com.heartcare.agni.data.local.roomdb.entities.search.SearchEntity
+import com.heartcare.agni.data.local.roomdb.entities.diagnosis.DiagnosisMasterEntity
+import com.heartcare.agni.data.local.roomdb.entities.diagnosis.DiagnosisEntity
 import com.heartcare.agni.data.local.roomdb.entities.tobacco.TobaccoCessationEntity
 import com.heartcare.agni.data.local.roomdb.entities.vitals.VitalEntity
-import com.heartcare.agni.data.local.roomdb.typeconverters.SymptomDiagnosisTypeConverter
+import com.heartcare.agni.data.local.roomdb.typeconverters.DiagnosisTypeConverter
 import com.heartcare.agni.data.local.roomdb.typeconverters.TypeConverter
 import com.heartcare.agni.data.local.roomdb.views.PrescriptionDirectionAndMedicineView
 import com.heartcare.agni.data.local.sharedpreferences.PreferenceStorage
@@ -89,10 +88,9 @@ import java.util.UUID
         RiskPredictionCharts::class,
         CVDEntity::class,
         VitalEntity::class,
-        SymptomsEntity::class,
+        DiagnosisMasterEntity::class,
         DiagnosisEntity::class,
-        SymptomAndDiagnosisEntity::class,
-        SymDiagSearchEntity::class,
+        SearchEntity::class,
         LevelEntity::class,
         PriorDxEntity::class,
         HistoryMedicationEntity::class,
@@ -109,7 +107,7 @@ import java.util.UUID
     version = 1,
     exportSchema = true
 )
-@TypeConverters(TypeConverter::class, SymptomDiagnosisTypeConverter::class)
+@TypeConverters(TypeConverter::class, DiagnosisTypeConverter::class)
 abstract class FhirAppDatabase : RoomDatabase() {
 
     abstract fun getPatientDao(): PatientDao
@@ -126,7 +124,7 @@ abstract class FhirAppDatabase : RoomDatabase() {
     abstract fun getRiskPredictionDao(): RiskPredictionDao
     abstract fun getCVDDao(): CVDDao
     abstract fun getVitalDao(): VitalDao
-    abstract fun getSymptomsAndDiagnosisDao(): SymptomsAndDiagnosisDao
+    abstract fun getDiagnosisDao(): DiagnosisDao
     abstract fun getLevelsDao(): LevelsDao
     abstract fun getPriorDxDao(): PriorDxDao
     abstract fun getHistoryMedicationDao(): HistoryMedicationDao

@@ -3,7 +3,7 @@ package com.heartcare.agni.service.sync
 import android.content.Context
 import com.heartcare.agni.data.local.repository.generic.GenericRepository
 import com.heartcare.agni.data.local.repository.preference.PreferenceRepository
-import com.heartcare.agni.data.server.repository.symptomsanddiagnosis.SymptomsAndDiagnosisRepository
+import com.heartcare.agni.data.server.repository.diagnosismaster.DiagnosisMasterRepository
 import com.heartcare.agni.data.server.repository.sync.SyncRepository
 import com.heartcare.agni.utils.constants.ErrorConstants
 import com.heartcare.agni.utils.converters.server.responsemapper.ApiEmptyResponse
@@ -24,7 +24,7 @@ class SyncService(
     private val syncRepository: SyncRepository,
     private val genericRepository: GenericRepository,
     private val preferenceRepository: PreferenceRepository,
-    private val symptomsAndDiagnosisRepository: SymptomsAndDiagnosisRepository
+    private val diagnosisMasterRepository: DiagnosisMasterRepository
 ) {
 
     private lateinit var patientDownloadJob: Deferred<ResponseMapper<Any>?>
@@ -254,7 +254,7 @@ class SyncService(
 
     /** Upload Diagnosis */
     private suspend fun uploadSymDiagnosis(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
-        return checkAuthenticationStatus(syncRepository.sendSymptomsAndDiagnosisPostData(), logout)
+        return checkAuthenticationStatus(syncRepository.sendDiagnosisPostData(), logout)
     }
 
     /** Upload Vital */
@@ -480,7 +480,7 @@ class SyncService(
     /** Download Diagnosis*/
     private suspend fun downloadSymDiagnosis(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
         return checkAuthenticationStatus(
-            syncRepository.getAndInsertListSymptomsAndDiagnosisData(0),
+            syncRepository.getAndInsertListDiagnosisData(0),
             logout
         )
     }
@@ -646,8 +646,8 @@ class SyncService(
     }
 
     private suspend fun getAndInsertDiagnosis() {
-        if (symptomsAndDiagnosisRepository.getDiagnosis().isEmpty()) {
-            symptomsAndDiagnosisRepository.insertDiagnosis()
+        if (diagnosisMasterRepository.getDiagnosis().isEmpty()) {
+            diagnosisMasterRepository.insertDiagnosis()
         }
     }
 }

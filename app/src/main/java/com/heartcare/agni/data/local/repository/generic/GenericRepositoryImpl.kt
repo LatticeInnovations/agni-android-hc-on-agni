@@ -2,7 +2,7 @@ package com.heartcare.agni.data.local.repository.generic
 
 import com.heartcare.agni.data.local.enums.GenericTypeEnum
 import com.heartcare.agni.data.local.enums.SyncType
-import com.heartcare.agni.data.local.model.symdiag.SymptomsAndDiagnosisData
+import com.heartcare.agni.data.local.model.diagnosis.DiagnosisData
 import com.heartcare.agni.data.local.roomdb.dao.AppointmentDao
 import com.heartcare.agni.data.local.roomdb.dao.GenericDao
 import com.heartcare.agni.data.local.roomdb.dao.PatientDao
@@ -132,9 +132,9 @@ class GenericRepositoryImpl @Inject constructor(
             }
     }
     override suspend fun updateSymDiagFhirId() {
-        genericDao.getNotSyncedData(GenericTypeEnum.SYMPTOMS_DIAGNOSIS)
-            .forEach { symDiagGenericEntity ->
-                updateSymDiagFhirIdInGenericEntity(symDiagGenericEntity)
+        genericDao.getNotSyncedData(GenericTypeEnum.DIAGNOSIS)
+            .forEach { diagGenericEntity ->
+                updateSymDiagFhirIdInGenericEntity(diagGenericEntity)
             }
     }
 
@@ -220,10 +220,10 @@ class GenericRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun insertSymDiag(local: SymptomsAndDiagnosisData, uuid: String): Long {
+    override suspend fun insertSymDiag(local: DiagnosisData, uuid: String): Long {
         return genericDao.getGenericEntityById(
-            patientId = local.symDiagUuid,
-            genericTypeEnum = GenericTypeEnum.SYMPTOMS_DIAGNOSIS,
+            patientId = local.diagnosisUuid,
+            genericTypeEnum = GenericTypeEnum.DIAGNOSIS,
             syncType = SyncType.POST
         ).let {
             insertSymDiagGenericEntity(local, it, uuid)
@@ -418,7 +418,7 @@ class GenericRepositoryImpl @Inject constructor(
     ): Long {
         return genericDao.getGenericEntityById(
             patientId = fhirId,
-            genericTypeEnum = GenericTypeEnum.SYMPTOMS_DIAGNOSIS,
+            genericTypeEnum = GenericTypeEnum.DIAGNOSIS,
             syncType = SyncType.PATCH
         ).let { genericEntity ->
             insertSymDiagGenericEntityPatch(genericEntity, fhirId, map, uuid)

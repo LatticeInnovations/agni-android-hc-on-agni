@@ -10,7 +10,7 @@ import com.heartcare.agni.data.local.model.examination.ExaminationResponseLocal
 import com.heartcare.agni.data.local.model.prescription.MedicationLocal
 import com.heartcare.agni.data.local.model.prescription.PrescriptionPhotoResponseLocal
 import com.heartcare.agni.data.local.model.prescription.PrescriptionResponseLocal
-import com.heartcare.agni.data.local.model.symdiag.SymptomsAndDiagnosisData
+import com.heartcare.agni.data.local.model.diagnosis.DiagnosisData
 import com.heartcare.agni.data.local.roomdb.dao.AppointmentDao
 import com.heartcare.agni.data.local.roomdb.dao.ExaminationDao
 import com.heartcare.agni.data.local.roomdb.dao.InterventionDao
@@ -52,10 +52,9 @@ import com.heartcare.agni.data.local.roomdb.entities.risk.SaltEntity
 import com.heartcare.agni.data.local.roomdb.entities.risk.SugarEntity
 import com.heartcare.agni.data.local.roomdb.entities.risk.TobaccoEntity
 import com.heartcare.agni.data.local.roomdb.entities.schedule.ScheduleEntity
-import com.heartcare.agni.data.local.roomdb.entities.symptomsanddiagnosis.DiagnosisEntity
-import com.heartcare.agni.data.local.roomdb.entities.symptomsanddiagnosis.SymptomAndDiagnosisEntity
-import com.heartcare.agni.data.local.roomdb.entities.symptomsanddiagnosis.SymptomsAndDiagnosisLocal
-import com.heartcare.agni.data.local.roomdb.entities.symptomsanddiagnosis.SymptomsEntity
+import com.heartcare.agni.data.local.roomdb.entities.diagnosis.DiagnosisMasterEntity
+import com.heartcare.agni.data.local.roomdb.entities.diagnosis.DiagnosisEntity
+import com.heartcare.agni.data.local.roomdb.entities.diagnosis.DiagnosisLocal
 import com.heartcare.agni.data.local.roomdb.entities.tobacco.TobaccoCessationEntity
 import com.heartcare.agni.data.local.roomdb.entities.vitals.BloodGlucoseMeasurement
 import com.heartcare.agni.data.local.roomdb.entities.vitals.Measurement
@@ -94,9 +93,8 @@ import com.heartcare.agni.data.server.model.risk.TobaccoResponse
 import com.heartcare.agni.data.server.model.scheduleandappointment.Slot
 import com.heartcare.agni.data.server.model.scheduleandappointment.appointment.AppointmentResponse
 import com.heartcare.agni.data.server.model.scheduleandappointment.schedule.ScheduleResponse
-import com.heartcare.agni.data.server.model.symptomsanddiagnosis.Diagnosis
-import com.heartcare.agni.data.server.model.symptomsanddiagnosis.SymptomsAndDiagnosisResponse
-import com.heartcare.agni.data.server.model.symptomsanddiagnosis.SymptomsItem
+import com.heartcare.agni.data.server.model.diagnosis.DiagnosisMasterResponse
+import com.heartcare.agni.data.server.model.diagnosis.DiagnosisResponse
 import com.heartcare.agni.data.server.model.tobacco.TobaccoCessationResponse
 import com.heartcare.agni.data.server.model.vitals.UnitValue
 import com.heartcare.agni.data.server.model.vitals.VitalResponse
@@ -104,7 +102,6 @@ import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toAge
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toPatientDate
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toTimeInMilli
 import java.util.Date
-import java.util.UUID
 
 fun PatientResponse.toPatientEntity(): PatientEntity {
     return PatientEntity(
@@ -769,38 +766,26 @@ internal suspend fun VitalResponse.toVitalEntity(
     )
 }
 
-internal fun SymptomsItem.toSymptomsEntity(): SymptomsEntity {
-    return SymptomsEntity(
-        id = UUID.randomUUID().toString(), code = code, display = display,
-        type = type,
-        gender = gender
-    )
-}
-
-internal fun Diagnosis.toDiagnosisEntity(): DiagnosisEntity {
-    return DiagnosisEntity(
+internal fun DiagnosisMasterResponse.toDiagnosisMasterEntity(): DiagnosisMasterEntity {
+    return DiagnosisMasterEntity(
         id = diagnosisId,
         code = code,
         display = display
     )
 }
 
-internal fun SymptomsEntity.toSymptoms(): SymptomsItem {
-    return SymptomsItem(code = code, display = display, type = type, gender = gender)
-}
-
-internal fun DiagnosisEntity.toDiagnosis(): Diagnosis {
-    return Diagnosis(
+internal fun DiagnosisMasterEntity.toDiagnosisMasterResponse(): DiagnosisMasterResponse {
+    return DiagnosisMasterResponse(
         diagnosisId = id,
         code = code,
         display = display
     )
 }
 
-internal fun SymptomsAndDiagnosisLocal.toSymptomsAndDiagnosisEntity(): SymptomAndDiagnosisEntity {
-    return SymptomAndDiagnosisEntity(
-        symDiagUuid = symDiagUuid,
-        appointmentId = appointmentId, fhirId = symDiagFhirId,
+internal fun DiagnosisLocal.toDiagnosisEntity(): DiagnosisEntity {
+    return DiagnosisEntity(
+        diagnosisUuid = diagnosisUuid,
+        appointmentId = appointmentId, fhirId = diagnosisFhirId,
         createdOn = createdOn,
         diagnosis = diagnosis,
         symptoms = symptoms,
@@ -810,10 +795,10 @@ internal fun SymptomsAndDiagnosisLocal.toSymptomsAndDiagnosisEntity(): SymptomAn
     )
 }
 
-internal fun SymptomAndDiagnosisEntity.toSymptomsAndDiagnosisLocal(): SymptomsAndDiagnosisLocal {
-    return SymptomsAndDiagnosisLocal(
-        symDiagUuid = symDiagUuid,
-        appointmentId = appointmentId, symDiagFhirId = fhirId,
+internal fun DiagnosisEntity.toDiagnosisLocal(): DiagnosisLocal {
+    return DiagnosisLocal(
+        diagnosisUuid = diagnosisUuid,
+        appointmentId = appointmentId, diagnosisFhirId = fhirId,
         createdOn = createdOn,
         diagnosis = diagnosis,
         symptoms = symptoms,
@@ -824,14 +809,14 @@ internal fun SymptomAndDiagnosisEntity.toSymptomsAndDiagnosisLocal(): SymptomsAn
 }
 
 
-internal suspend fun SymptomsAndDiagnosisResponse.toSymptomsAndDiagnosisEntity(
+internal suspend fun DiagnosisResponse.toDiagnosisEntity(
     studentDao: PatientDao,
     appointmentDao: AppointmentDao
-): SymptomAndDiagnosisEntity {
-    return SymptomAndDiagnosisEntity(
-        symDiagUuid = symDiagUuid,
+): DiagnosisEntity {
+    return DiagnosisEntity(
+        diagnosisUuid = diagnosisUuid,
         appointmentId = appointmentDao.getAppointmentIdByFhirId(appointmentId),
-        fhirId = symDiagFhirId,
+        fhirId = diagnosisFhirId,
         createdOn = createdOn,
         diagnosis = diagnosis,
         symptoms = symptoms,
@@ -841,9 +826,9 @@ internal suspend fun SymptomsAndDiagnosisResponse.toSymptomsAndDiagnosisEntity(
     )
 }
 
-internal fun SymptomsAndDiagnosisLocal.toSymDiagData(): SymptomsAndDiagnosisData {
-    return SymptomsAndDiagnosisData(
-        symDiagUuid = symDiagUuid,
+internal fun DiagnosisLocal.toDiagnosisData(): DiagnosisData {
+    return DiagnosisData(
+        diagnosisUuid = diagnosisUuid,
         appointmentId = appointmentId,
         createdOn = createdOn,
         diagnosis = diagnosis.map { it.code },
