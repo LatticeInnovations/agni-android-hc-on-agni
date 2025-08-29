@@ -52,6 +52,7 @@ import com.heartcare.agni.data.server.constants.QueryParameters.TYPE
 import com.heartcare.agni.data.server.model.allergy.AllergyResponse
 import com.heartcare.agni.data.server.model.create.CreateResponse
 import com.heartcare.agni.data.server.model.cvd.CVDResponse
+import com.heartcare.agni.data.server.model.diagnosis.DiagnosisMasterResponse
 import com.heartcare.agni.data.server.model.diagnosis.DiagnosisResponse
 import com.heartcare.agni.data.server.model.examination.ExaminationMasterResponse
 import com.heartcare.agni.data.server.model.examination.ExaminationResponse
@@ -90,7 +91,7 @@ class SyncRepositoryImpl @Inject constructor(
     private val scheduleAndAppointmentApiService: ScheduleAndAppointmentApiService,
     private val cvdApiService: CVDApiService,
     private val vitalApiService: VitalApiService,
-    private val diagnosisService: DiagnosisApiService,
+    private val diagnosisApiService: DiagnosisApiService,
     private val levelsApiService: LevelsApiService,
     private val historyAndTestsApiService: HistoryAndTestsApiService,
     private val interventionApiService: InterventionApiService,
@@ -333,6 +334,29 @@ class SyncRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun getAndInsertDiagnosisMaster(): ResponseMapper<List<DiagnosisMasterResponse>> {
+        val map = mutableMapOf<String, String>()
+        if (preferenceRepository.getLastDiagnosisMasterSyncDate() != 0L) map[LAST_UPDATED] =
+            String.format(
+                GREATER_THAN_BUILDER,
+                preferenceRepository.getLastDiagnosisMasterSyncDate().toTimeStampDate()
+            )
+
+        return ApiResponseConverter.convert(
+            diagnosisApiService.getDiagnosisMaster(map)
+        ).run {
+            when (this) {
+                is ApiEndResponse -> {
+                    preferenceRepository.setLastDiagnosisMasterSyncDate(Date().time)
+                    insertDiagnosisMasterList(body)
+                    this
+                }
+
+                else -> this
+            }
+        }
+    }
+
     override suspend fun getMedicineTime(): ResponseMapper<List<MedicineTimeResponse>> {
         val map = mutableMapOf<String, String>()
         if (preferenceRepository.getLastMedicineDosageInstructionSyncDate() != 0L) map[LAST_UPDATED] =
@@ -518,7 +542,7 @@ class SyncRepositoryImpl @Inject constructor(
         )
 
         ApiResponseConverter.convert(
-            diagnosisService.getListData(
+            diagnosisApiService.getListData(
                 EndPoints.DIAGNOSIS, map
             ), true
         ).run {
@@ -733,7 +757,7 @@ class SyncRepositoryImpl @Inject constructor(
         ).let { listOfGenericEntity ->
             if (listOfGenericEntity.isEmpty()) ApiEmptyResponse()
             else ApiResponseConverter.convert(
-                diagnosisService.createData(
+                diagnosisApiService.createData(
                     EndPoints.DIAGNOSIS,
                     listOfGenericEntity.map {
                         it.payload.fromJson<LinkedTreeMap<*, *>>()

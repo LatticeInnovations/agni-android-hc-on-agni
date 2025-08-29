@@ -108,6 +108,10 @@ interface PreferenceRepository {
     fun setLastSyncExamination(long: Long)
     fun getLastSyncExamination(): Long
 
+    /** Last Diagnosis Master Sync Date */
+    fun setLastDiagnosisMasterSyncDate(long: Long)
+    fun getLastDiagnosisMasterSyncDate(): Long
+
     /** RoomDB EncryptionKey */
     fun setRoomDBEncryptionKey(encryptionKey: String)
     fun getRoomDBEncryptionKey(): String

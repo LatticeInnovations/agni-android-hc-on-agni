@@ -22,8 +22,6 @@ import com.heartcare.agni.data.server.api.PatientApiService
 import com.heartcare.agni.data.server.api.PrescriptionApiService
 import com.heartcare.agni.data.server.api.ScheduleAndAppointmentApiService
 import com.heartcare.agni.data.server.api.VitalApiService
-import com.heartcare.agni.data.server.repository.diagnosismaster.DiagnosisMasterRepository
-import com.heartcare.agni.data.server.repository.diagnosismaster.DiagnosisMasterRepositoryImpl
 import com.heartcare.agni.data.server.repository.sync.SyncRepository
 import com.heartcare.agni.data.server.repository.sync.SyncRepositoryImpl
 import com.heartcare.agni.service.sync.SyncService
@@ -83,8 +81,6 @@ class FhirApp : Application() {
     internal val syncService get() = _syncService
     val sessionExpireFlow = MutableLiveData<Map<String, Any>>(emptyMap())
 
-    private lateinit var _diagnosisMasterRepository: DiagnosisMasterRepository
-    private val diagnosisMasterRepository get() = _diagnosisMasterRepository
     internal var syncWorkerStatus = MutableLiveData<WorkerStatus>()
     private val isSyncing = AtomicBoolean(false)
 
@@ -137,10 +133,6 @@ class FhirApp : Application() {
             fhirAppDatabase.getAppointmentDao()
         )
 
-        _diagnosisMasterRepository = DiagnosisMasterRepositoryImpl(
-            diagnosisApiService,
-            fhirAppDatabase.getDiagnosisDao()
-        )
         if (!this::_workRequestBuilder.isInitialized) {
             _workRequestBuilder = WorkRequestBuilders(this)
         }
@@ -151,8 +143,7 @@ class FhirApp : Application() {
                     this,
                     syncRepository,
                     genericRepository,
-                    preferenceRepository,
-                    diagnosisMasterRepository = diagnosisMasterRepository
+                    preferenceRepository
                 )
         }
     }

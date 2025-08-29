@@ -15,7 +15,7 @@ import retrofit2.http.QueryMap
 interface DiagnosisApiService {
 
     @GET("diagnosis/list?name=diagnosisList")
-    suspend fun getDiagnosis(): Response<BaseResponse<List<DiagnosisMasterResponse>>>
+    suspend fun getDiagnosisMaster(@QueryMap(encoded = true) map: Map<String, String>?): Response<BaseResponse<List<DiagnosisMasterResponse>>>
 
     @GET("{endPoint}")
     suspend fun getListData(

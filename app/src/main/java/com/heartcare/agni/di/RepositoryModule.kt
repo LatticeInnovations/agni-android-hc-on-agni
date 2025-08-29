@@ -48,8 +48,6 @@ import com.heartcare.agni.data.local.repository.vital.VitalRepository
 import com.heartcare.agni.data.local.repository.vital.VitalRepositoryImpl
 import com.heartcare.agni.data.server.repository.authentication.AuthenticationRepository
 import com.heartcare.agni.data.server.repository.authentication.AuthenticationRepositoryImpl
-import com.heartcare.agni.data.server.repository.diagnosismaster.DiagnosisMasterRepository
-import com.heartcare.agni.data.server.repository.diagnosismaster.DiagnosisMasterRepositoryImpl
 import com.heartcare.agni.data.server.repository.sync.SyncRepository
 import com.heartcare.agni.data.server.repository.sync.SyncRepositoryImpl
 import dagger.Binds
@@ -121,10 +119,6 @@ abstract class RepositoryModule {
     @Binds
     @ViewModelScoped
     abstract fun provideVitalRepository(vitalRepositoryImpl: VitalRepositoryImpl): VitalRepository
-
-    @Binds
-    @ViewModelScoped
-    abstract fun provideDiagnosisMasterRepository(diagnosisMasterRepositoryImpl: DiagnosisMasterRepositoryImpl): DiagnosisMasterRepository
 
     @Binds
     @ViewModelScoped

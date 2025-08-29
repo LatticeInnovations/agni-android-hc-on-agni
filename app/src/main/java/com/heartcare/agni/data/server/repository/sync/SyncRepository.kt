@@ -3,6 +3,7 @@ package com.heartcare.agni.data.server.repository.sync
 import com.heartcare.agni.data.server.model.allergy.AllergyResponse
 import com.heartcare.agni.data.server.model.create.CreateResponse
 import com.heartcare.agni.data.server.model.cvd.CVDResponse
+import com.heartcare.agni.data.server.model.diagnosis.DiagnosisMasterResponse
 import com.heartcare.agni.data.server.model.examination.ExaminationMasterResponse
 import com.heartcare.agni.data.server.model.examination.ExaminationResponse
 import com.heartcare.agni.data.server.model.family.FamilyHistoryResponse
@@ -32,6 +33,7 @@ interface SyncRepository {
     suspend fun getAndInsertMedication(offset: Int): ResponseMapper<List<MedicationResponse>>
     suspend fun getAndInsertInterventionMaster(offset: Int): ResponseMapper<List<InterventionMasterResponse>>
     suspend fun getAndInsertExaminationMaster(offset: Int): ResponseMapper<List<ExaminationMasterResponse>>
+    suspend fun getAndInsertDiagnosisMaster(): ResponseMapper<List<DiagnosisMasterResponse>>
     suspend fun getMedicineTime(): ResponseMapper<List<MedicineTimeResponse>>
     suspend fun getAndInsertSchedule(offset: Int): ResponseMapper<List<ScheduleResponse>>
     suspend fun getAndInsertAppointment(offset: Int): ResponseMapper<List<AppointmentResponse>>
