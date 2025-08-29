@@ -16,8 +16,6 @@ import com.heartcare.agni.data.server.model.historymedication.HistoryMedicationR
 import com.heartcare.agni.data.server.model.intervention.InterventionResponse
 import com.heartcare.agni.data.server.model.patient.PatientLastUpdatedResponse
 import com.heartcare.agni.data.server.model.patient.PatientResponse
-import com.heartcare.agni.data.server.model.prescription.photo.PrescriptionPhotoPatch
-import com.heartcare.agni.data.server.model.prescription.photo.PrescriptionPhotoResponse
 import com.heartcare.agni.data.server.model.prescription.prescriptionresponse.PrescriptionResponse
 import com.heartcare.agni.data.server.model.priordx.PriorDxResponse
 import com.heartcare.agni.data.server.model.risk.RiskFactorResponse
@@ -67,31 +65,10 @@ class GenericRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun insertPhotoPrescription(
-        prescriptionPhotoResponse: PrescriptionPhotoResponse,
-        uuid: String
-    ): Long {
-        return genericDao.getGenericEntityById(
-            patientId = prescriptionPhotoResponse.prescriptionId,
-            genericTypeEnum = GenericTypeEnum.PRESCRIPTION_PHOTO_RESPONSE,
-            syncType = SyncType.POST
-        ).let { prescriptionGenericEntity ->
-            insertPrescriptionPhotoGenericEntity(
-                prescriptionPhotoResponse,
-                prescriptionGenericEntity,
-                uuid
-            )
-        }
-    }
-
     override suspend fun updatePrescriptionFhirId() {
         genericDao.getNotSyncedData(GenericTypeEnum.PRESCRIPTION)
             .forEach { prescriptionGenericEntity ->
                 updateFormPrescriptionFhirIdInGenericEntity(prescriptionGenericEntity)
-            }
-        genericDao.getNotSyncedData(GenericTypeEnum.PRESCRIPTION_PHOTO_RESPONSE)
-            .forEach { prescriptionGenericEntity ->
-                updatePhotoPrescriptionFhirIdInGenericEntity(prescriptionGenericEntity)
             }
     }
 
@@ -376,25 +353,6 @@ class GenericRepositoryImpl @Inject constructor(
                 patientFhirId,
                 appointmentFhirId,
                 uuid
-            )
-        }
-    }
-
-    override suspend fun insertOrUpdatePhotoPrescriptionPatch(
-        prescriptionFhirId: String,
-        prescriptionPhotoPatch: PrescriptionPhotoPatch,
-        uuid: String
-    ): Long {
-        return genericDao.getGenericEntityById(
-            prescriptionFhirId,
-            GenericTypeEnum.PRESCRIPTION_PHOTO_RESPONSE,
-            SyncType.PATCH
-        ).let { prescriptionGenericEntity ->
-            insertOrUpdatePhotoPrescriptionGenericEntityPatch(
-                prescriptionFhirId = prescriptionFhirId,
-                prescriptionGenericEntity = prescriptionGenericEntity,
-                prescriptionPhotoPatch = prescriptionPhotoPatch,
-                uuid = uuid
             )
         }
     }

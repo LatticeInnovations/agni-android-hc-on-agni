@@ -14,7 +14,6 @@ import com.heartcare.agni.data.server.model.patient.PatientLastUpdatedResponse
 import com.heartcare.agni.data.server.model.patient.PatientResponse
 import com.heartcare.agni.data.server.model.prescription.medication.MedicationResponse
 import com.heartcare.agni.data.server.model.prescription.medication.MedicineTimeResponse
-import com.heartcare.agni.data.server.model.prescription.photo.PrescriptionPhotoResponse
 import com.heartcare.agni.data.server.model.prescription.prescriptionresponse.PrescriptionResponse
 import com.heartcare.agni.data.server.model.priordx.PriorDxResponse
 import com.heartcare.agni.data.server.model.risk.RiskFactorResponse
@@ -29,7 +28,6 @@ interface SyncRepository {
 
     suspend fun getAndInsertListPatientData(offset: Int): ResponseMapper<List<PatientResponse>>
     suspend fun getAndInsertPatientDataById(id: String): ResponseMapper<List<PatientResponse>>
-    suspend fun getAndInsertPhotoPrescription(patientId: String?): ResponseMapper<List<PrescriptionPhotoResponse>>
     suspend fun getAndInsertFormPrescription(patientId: String?): ResponseMapper<List<PrescriptionResponse>>
     suspend fun getAndInsertMedication(offset: Int): ResponseMapper<List<MedicationResponse>>
     suspend fun getAndInsertInterventionMaster(offset: Int): ResponseMapper<List<InterventionMasterResponse>>
@@ -54,7 +52,6 @@ interface SyncRepository {
     //POST
     suspend fun sendPersonPostData(): ResponseMapper<List<CreateResponse>>
     suspend fun sendFormPrescriptionPostData(): ResponseMapper<List<CreateResponse>>
-    suspend fun sendPhotoPrescriptionPostData(): ResponseMapper<List<CreateResponse>>
     suspend fun sendSchedulePostData(): ResponseMapper<List<CreateResponse>>
     suspend fun sendAppointmentPostData(): ResponseMapper<List<CreateResponse>>
     suspend fun sendPatientLastUpdatePostData(): ResponseMapper<List<CreateResponse>>
@@ -73,13 +70,9 @@ interface SyncRepository {
     //PATCH
     suspend fun sendPersonPatchData(): ResponseMapper<List<CreateResponse>>
     suspend fun sendAppointmentPatchData(): ResponseMapper<List<CreateResponse>>
-    suspend fun sendPrescriptionPhotoPatchData(): ResponseMapper<List<CreateResponse>>
     suspend fun sendCVDPatchData(): ResponseMapper<List<CreateResponse>>
     suspend fun sendVitalPatchData(): ResponseMapper<List<CreateResponse>>
     suspend fun sendPrescriptionPutData(): ResponseMapper<List<CreateResponse>>
     suspend fun sentInterventionPutData(): ResponseMapper<List<CreateResponse>>
     suspend fun sentExaminationPutData(): ResponseMapper<List<CreateResponse>>
-
-    //DELETE
-    suspend fun deletePrescriptionPhoto(): ResponseMapper<List<CreateResponse>>
 }

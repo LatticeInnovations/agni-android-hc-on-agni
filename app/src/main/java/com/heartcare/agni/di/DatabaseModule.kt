@@ -5,10 +5,8 @@ import com.heartcare.agni.data.local.roomdb.FhirAppDatabase
 import com.heartcare.agni.data.local.roomdb.dao.AllergyDao
 import com.heartcare.agni.data.local.roomdb.dao.AppointmentDao
 import com.heartcare.agni.data.local.roomdb.dao.CVDDao
-import com.heartcare.agni.data.local.roomdb.dao.DownloadedFileDao
 import com.heartcare.agni.data.local.roomdb.dao.ExaminationDao
 import com.heartcare.agni.data.local.roomdb.dao.FamilyHistoryDao
-import com.heartcare.agni.data.local.roomdb.dao.FileUploadDao
 import com.heartcare.agni.data.local.roomdb.dao.GenericDao
 import com.heartcare.agni.data.local.roomdb.dao.HistoryMedicationDao
 import com.heartcare.agni.data.local.roomdb.dao.IdentifierDao
@@ -99,18 +97,6 @@ object DatabaseModule {
     @Provides
     fun providePatientLastUpdatedDao(fhirAppDatabase: FhirAppDatabase): PatientLastUpdatedDao {
         return fhirAppDatabase.getPatientLastUpdatedDao()
-    }
-
-    @Singleton
-    @Provides
-    fun provideFileUploadDao(appDatabase: FhirAppDatabase): FileUploadDao {
-        return appDatabase.getFileUploadDao()
-    }
-
-    @Singleton
-    @Provides
-    fun provideDownloadedFileDao(appDatabase: FhirAppDatabase): DownloadedFileDao {
-        return appDatabase.getDownloadedFileDao()
     }
 
     @Singleton

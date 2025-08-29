@@ -5,12 +5,11 @@ import com.heartcare.agni.data.local.enums.PrescriptionType
 import com.heartcare.agni.data.local.model.InterventionItem
 import com.heartcare.agni.data.local.model.InterventionResponseLocal
 import com.heartcare.agni.data.local.model.appointment.AppointmentResponseLocal
+import com.heartcare.agni.data.local.model.diagnosis.DiagnosisData
 import com.heartcare.agni.data.local.model.examination.ExaminationItem
 import com.heartcare.agni.data.local.model.examination.ExaminationResponseLocal
 import com.heartcare.agni.data.local.model.prescription.MedicationLocal
-import com.heartcare.agni.data.local.model.prescription.PrescriptionPhotoResponseLocal
 import com.heartcare.agni.data.local.model.prescription.PrescriptionResponseLocal
-import com.heartcare.agni.data.local.model.diagnosis.DiagnosisData
 import com.heartcare.agni.data.local.roomdb.dao.AppointmentDao
 import com.heartcare.agni.data.local.roomdb.dao.ExaminationDao
 import com.heartcare.agni.data.local.roomdb.dao.InterventionDao
@@ -21,6 +20,9 @@ import com.heartcare.agni.data.local.roomdb.dao.ScheduleDao
 import com.heartcare.agni.data.local.roomdb.entities.allergy.AllergyEntity
 import com.heartcare.agni.data.local.roomdb.entities.appointment.AppointmentEntity
 import com.heartcare.agni.data.local.roomdb.entities.cvd.CVDEntity
+import com.heartcare.agni.data.local.roomdb.entities.diagnosis.DiagnosisEntity
+import com.heartcare.agni.data.local.roomdb.entities.diagnosis.DiagnosisLocal
+import com.heartcare.agni.data.local.roomdb.entities.diagnosis.DiagnosisMasterEntity
 import com.heartcare.agni.data.local.roomdb.entities.examination.ExaminationEntity
 import com.heartcare.agni.data.local.roomdb.entities.examination.ExaminationMasterEntity
 import com.heartcare.agni.data.local.roomdb.entities.family.FamilyHistoryEntity
@@ -39,8 +41,6 @@ import com.heartcare.agni.data.local.roomdb.entities.patient.PermanentAddressEnt
 import com.heartcare.agni.data.local.roomdb.entities.prescription.PrescriptionAndMedicineRelation
 import com.heartcare.agni.data.local.roomdb.entities.prescription.PrescriptionDirectionsEntity
 import com.heartcare.agni.data.local.roomdb.entities.prescription.PrescriptionEntity
-import com.heartcare.agni.data.local.roomdb.entities.prescription.photo.PrescriptionAndFileEntity
-import com.heartcare.agni.data.local.roomdb.entities.prescription.photo.PrescriptionPhotoEntity
 import com.heartcare.agni.data.local.roomdb.entities.priordx.PriorDxEntity
 import com.heartcare.agni.data.local.roomdb.entities.risk.AlcoholEntity
 import com.heartcare.agni.data.local.roomdb.entities.risk.FatAndOilEntity
@@ -52,9 +52,6 @@ import com.heartcare.agni.data.local.roomdb.entities.risk.SaltEntity
 import com.heartcare.agni.data.local.roomdb.entities.risk.SugarEntity
 import com.heartcare.agni.data.local.roomdb.entities.risk.TobaccoEntity
 import com.heartcare.agni.data.local.roomdb.entities.schedule.ScheduleEntity
-import com.heartcare.agni.data.local.roomdb.entities.diagnosis.DiagnosisMasterEntity
-import com.heartcare.agni.data.local.roomdb.entities.diagnosis.DiagnosisEntity
-import com.heartcare.agni.data.local.roomdb.entities.diagnosis.DiagnosisLocal
 import com.heartcare.agni.data.local.roomdb.entities.tobacco.TobaccoCessationEntity
 import com.heartcare.agni.data.local.roomdb.entities.vitals.BloodGlucoseMeasurement
 import com.heartcare.agni.data.local.roomdb.entities.vitals.Measurement
@@ -62,6 +59,8 @@ import com.heartcare.agni.data.local.roomdb.entities.vitals.VitalEntity
 import com.heartcare.agni.data.local.roomdb.views.PrescriptionDirectionAndMedicineView
 import com.heartcare.agni.data.server.model.allergy.AllergyResponse
 import com.heartcare.agni.data.server.model.cvd.CVDResponse
+import com.heartcare.agni.data.server.model.diagnosis.DiagnosisMasterResponse
+import com.heartcare.agni.data.server.model.diagnosis.DiagnosisResponse
 import com.heartcare.agni.data.server.model.examination.ExaminationMasterResponse
 import com.heartcare.agni.data.server.model.examination.ExaminationResponse
 import com.heartcare.agni.data.server.model.family.FamilyHistoryResponse
@@ -77,8 +76,6 @@ import com.heartcare.agni.data.server.model.patient.PatientLastUpdatedResponse
 import com.heartcare.agni.data.server.model.patient.PatientResponse
 import com.heartcare.agni.data.server.model.prescription.medication.MedicationResponse
 import com.heartcare.agni.data.server.model.prescription.medication.MedicineTimeResponse
-import com.heartcare.agni.data.server.model.prescription.photo.File
-import com.heartcare.agni.data.server.model.prescription.photo.PrescriptionPhotoResponse
 import com.heartcare.agni.data.server.model.prescription.prescriptionresponse.PrescriptionResponse
 import com.heartcare.agni.data.server.model.priordx.PriorDxResponse
 import com.heartcare.agni.data.server.model.risk.AlcoholResponse
@@ -93,8 +90,6 @@ import com.heartcare.agni.data.server.model.risk.TobaccoResponse
 import com.heartcare.agni.data.server.model.scheduleandappointment.Slot
 import com.heartcare.agni.data.server.model.scheduleandappointment.appointment.AppointmentResponse
 import com.heartcare.agni.data.server.model.scheduleandappointment.schedule.ScheduleResponse
-import com.heartcare.agni.data.server.model.diagnosis.DiagnosisMasterResponse
-import com.heartcare.agni.data.server.model.diagnosis.DiagnosisResponse
 import com.heartcare.agni.data.server.model.tobacco.TobaccoCessationResponse
 import com.heartcare.agni.data.server.model.vitals.UnitValue
 import com.heartcare.agni.data.server.model.vitals.VitalResponse
@@ -234,22 +229,6 @@ internal suspend fun PrescriptionResponse.toPrescriptionEntity(
     )
 }
 
-
-internal suspend fun PrescriptionPhotoResponse.toPrescriptionEntity(
-    patientDao: PatientDao,
-): PrescriptionEntity {
-    return PrescriptionEntity(
-        id = prescriptionId,
-        prescriptionDate = generatedOn,
-        patientId = patientDao.getPatientIdByFhirId(patientFhirId)!!,
-        appointmentId = appointmentUuid,
-        patientFhirId = patientFhirId,
-        prescriptionFhirId = prescriptionFhirId,
-        prescriptionType = PrescriptionType.PHOTO.type
-    )
-}
-
-
 internal fun PrescriptionResponseLocal.toPrescriptionEntity(): PrescriptionEntity {
     return PrescriptionEntity(
         id = prescriptionId,
@@ -259,18 +238,6 @@ internal fun PrescriptionResponseLocal.toPrescriptionEntity(): PrescriptionEntit
         patientFhirId = patientFhirId,
         prescriptionFhirId = prescriptionFhirId,
         prescriptionType = PrescriptionType.FORM.type
-    )
-}
-
-internal fun PrescriptionPhotoResponseLocal.toPrescriptionEntity(): PrescriptionEntity {
-    return PrescriptionEntity(
-        id = prescriptionId,
-        prescriptionDate = generatedOn,
-        patientId = patientId,
-        appointmentId = appointmentId,
-        patientFhirId = patientFhirId,
-        prescriptionFhirId = null,
-        prescriptionType = PrescriptionType.PHOTO.type
     )
 }
 
@@ -298,19 +265,6 @@ internal suspend fun PrescriptionResponse.toListOfPrescriptionDirectionsEntity(m
     }
 }
 
-
-internal fun PrescriptionPhotoResponse.toListOfPrescriptionPhotoEntity(): List<PrescriptionPhotoEntity> {
-    return prescription.map { prescriptionItem ->
-        PrescriptionPhotoEntity(
-            id = prescriptionItem.documentUuid,
-            fileName = prescriptionItem.filename,
-            prescriptionId = prescriptionId,
-            note = prescriptionItem.note,
-            documentFhirId = prescriptionItem.documentFhirId
-        )
-    }
-}
-
 internal fun PrescriptionResponseLocal.toListOfPrescriptionDirectionsEntity(): List<PrescriptionDirectionsEntity> {
     return prescription.map { medication ->
         PrescriptionDirectionsEntity(
@@ -327,18 +281,6 @@ internal fun PrescriptionResponseLocal.toListOfPrescriptionDirectionsEntity(): L
             brandName = medication.brandName,
             doseFormCode = medication.doseFormCode,
             doseForm = medication.doseForm
-        )
-    }
-}
-
-internal fun PrescriptionPhotoResponseLocal.toListOfPrescriptionPhotoEntity(): List<PrescriptionPhotoEntity> {
-    return prescription.map { prescriptionItem ->
-        PrescriptionPhotoEntity(
-            id = prescriptionItem.documentUuid,
-            fileName = prescriptionItem.filename,
-            prescriptionId = prescriptionId,
-            note = prescriptionItem.note,
-            documentFhirId = prescriptionItem.documentFhirId
         )
     }
 }
@@ -525,28 +467,6 @@ internal fun PatientLastUpdatedResponse.toPatientLastUpdatedEntity(): PatientLas
     return PatientLastUpdatedEntity(
         patientId = uuid,
         lastUpdated = timestamp
-    )
-}
-
-
-internal fun PrescriptionAndFileEntity.toPrescriptionPhotoResponseLocal(): PrescriptionPhotoResponseLocal {
-    return PrescriptionPhotoResponseLocal(
-        patientId = prescriptionEntity.patientId,
-        patientFhirId = prescriptionEntity.patientFhirId,
-        appointmentId = prescriptionEntity.appointmentId,
-        generatedOn = prescriptionEntity.prescriptionDate,
-        prescriptionId = prescriptionEntity.id,
-        prescription = prescriptionPhotoEntity.map { it.toFile() },
-        prescriptionFhirId = prescriptionEntity.prescriptionFhirId
-    )
-}
-
-private fun PrescriptionPhotoEntity.toFile(): File {
-    return File(
-        documentUuid = id,
-        documentFhirId = documentFhirId,
-        filename = fileName,
-        note = note ?: ""
     )
 }
 

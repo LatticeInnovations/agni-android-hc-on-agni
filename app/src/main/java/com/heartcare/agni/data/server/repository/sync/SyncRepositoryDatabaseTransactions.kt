@@ -1,14 +1,13 @@
 package com.heartcare.agni.data.server.repository.sync
 
 import com.heartcare.agni.data.local.enums.GenericTypeEnum
-import com.heartcare.agni.data.local.enums.PhotoDeleteEnum
 import com.heartcare.agni.data.local.enums.SyncType
 import com.heartcare.agni.data.local.roomdb.dao.AllergyDao
 import com.heartcare.agni.data.local.roomdb.dao.AppointmentDao
 import com.heartcare.agni.data.local.roomdb.dao.CVDDao
+import com.heartcare.agni.data.local.roomdb.dao.DiagnosisDao
 import com.heartcare.agni.data.local.roomdb.dao.ExaminationDao
 import com.heartcare.agni.data.local.roomdb.dao.FamilyHistoryDao
-import com.heartcare.agni.data.local.roomdb.dao.FileUploadDao
 import com.heartcare.agni.data.local.roomdb.dao.GenericDao
 import com.heartcare.agni.data.local.roomdb.dao.HistoryMedicationDao
 import com.heartcare.agni.data.local.roomdb.dao.InterventionDao
@@ -21,16 +20,15 @@ import com.heartcare.agni.data.local.roomdb.dao.PriorDxDao
 import com.heartcare.agni.data.local.roomdb.dao.RiskFactorDao
 import com.heartcare.agni.data.local.roomdb.dao.RiskPredictionDao
 import com.heartcare.agni.data.local.roomdb.dao.ScheduleDao
-import com.heartcare.agni.data.local.roomdb.dao.DiagnosisDao
 import com.heartcare.agni.data.local.roomdb.dao.TobaccoCessationDao
 import com.heartcare.agni.data.local.roomdb.dao.VitalDao
 import com.heartcare.agni.data.local.roomdb.entities.generic.GenericEntity
 import com.heartcare.agni.data.local.roomdb.entities.patient.IdentifierEntity
 import com.heartcare.agni.data.local.roomdb.entities.prescription.PrescriptionDirectionsEntity
-import com.heartcare.agni.data.local.roomdb.entities.prescription.photo.PrescriptionPhotoEntity
 import com.heartcare.agni.data.server.model.allergy.AllergyResponse
 import com.heartcare.agni.data.server.model.create.CreateResponse
 import com.heartcare.agni.data.server.model.cvd.CVDResponse
+import com.heartcare.agni.data.server.model.diagnosis.DiagnosisResponse
 import com.heartcare.agni.data.server.model.examination.ExaminationMasterResponse
 import com.heartcare.agni.data.server.model.examination.ExaminationResponse
 import com.heartcare.agni.data.server.model.family.FamilyHistoryResponse
@@ -42,13 +40,11 @@ import com.heartcare.agni.data.server.model.patient.PatientLastUpdatedResponse
 import com.heartcare.agni.data.server.model.patient.PatientResponse
 import com.heartcare.agni.data.server.model.prescription.medication.MedicationResponse
 import com.heartcare.agni.data.server.model.prescription.medication.MedicineTimeResponse
-import com.heartcare.agni.data.server.model.prescription.photo.PrescriptionPhotoResponse
 import com.heartcare.agni.data.server.model.prescription.prescriptionresponse.PrescriptionResponse
 import com.heartcare.agni.data.server.model.priordx.PriorDxResponse
 import com.heartcare.agni.data.server.model.risk.RiskFactorResponse
 import com.heartcare.agni.data.server.model.scheduleandappointment.appointment.AppointmentResponse
 import com.heartcare.agni.data.server.model.scheduleandappointment.schedule.ScheduleResponse
-import com.heartcare.agni.data.server.model.diagnosis.DiagnosisResponse
 import com.heartcare.agni.data.server.model.tobacco.TobaccoCessationResponse
 import com.heartcare.agni.data.server.model.vitals.VitalResponse
 import com.heartcare.agni.utils.constants.ErrorConstants
@@ -57,6 +53,7 @@ import com.heartcare.agni.utils.constants.ErrorConstants.DUPLICATE_RECORD
 import com.heartcare.agni.utils.converters.responseconverter.toAllergyEntity
 import com.heartcare.agni.utils.converters.responseconverter.toAppointmentEntity
 import com.heartcare.agni.utils.converters.responseconverter.toCVDEntity
+import com.heartcare.agni.utils.converters.responseconverter.toDiagnosisEntity
 import com.heartcare.agni.utils.converters.responseconverter.toExaminationEntity
 import com.heartcare.agni.utils.converters.responseconverter.toExaminationMasterEntity
 import com.heartcare.agni.utils.converters.responseconverter.toFamilyHistoryEntity
@@ -69,17 +66,14 @@ import com.heartcare.agni.utils.converters.responseconverter.toListOfIdentifierE
 import com.heartcare.agni.utils.converters.responseconverter.toListOfMedicationEntity
 import com.heartcare.agni.utils.converters.responseconverter.toListOfMedicineDirectionsEntity
 import com.heartcare.agni.utils.converters.responseconverter.toListOfPrescriptionDirectionsEntity
-import com.heartcare.agni.utils.converters.responseconverter.toListOfPrescriptionPhotoEntity
 import com.heartcare.agni.utils.converters.responseconverter.toPatientEntity
 import com.heartcare.agni.utils.converters.responseconverter.toPatientLastUpdatedEntity
 import com.heartcare.agni.utils.converters.responseconverter.toPrescriptionEntity
 import com.heartcare.agni.utils.converters.responseconverter.toPriorDxEntity
 import com.heartcare.agni.utils.converters.responseconverter.toRiskFactorEntity
 import com.heartcare.agni.utils.converters.responseconverter.toScheduleEntity
-import com.heartcare.agni.utils.converters.responseconverter.toDiagnosisEntity
 import com.heartcare.agni.utils.converters.responseconverter.toTobaccoCessationEntity
 import com.heartcare.agni.utils.converters.responseconverter.toVitalEntity
-import com.heartcare.agni.utils.file.DeleteFileManager
 import java.util.UUID
 
 open class SyncRepositoryDatabaseTransactions(
@@ -93,8 +87,6 @@ open class SyncRepositoryDatabaseTransactions(
     private val cvdDao: CVDDao,
     private val vitalDao: VitalDao,
     private val diagnosisDao: DiagnosisDao,
-    private val fileUploadDao: FileUploadDao,
-    private val deleteFileManager: DeleteFileManager,
     private val levelsDao: LevelsDao,
     private val riskPredictionDao: RiskPredictionDao,
     private val priorDxDao: PriorDxDao,
@@ -155,59 +147,6 @@ open class SyncRepositoryDatabaseTransactions(
         prescriptionDao.insertPrescriptionMedicines(
             *medicineDirections.toTypedArray()
         )
-    }
-
-    protected suspend fun insertPhotoPrescriptions(body: List<PrescriptionPhotoResponse>) {
-        val savedPhotoPrescription = body.filter { it.status == PhotoDeleteEnum.SAVED.value }
-        prescriptionDao.insertPrescription(
-            *savedPhotoPrescription.map { prescriptionResponse ->
-                prescriptionResponse.toPrescriptionEntity(
-                    patientDao
-                )
-            }.toTypedArray()
-        )
-        val prescriptionPhotos = mutableListOf<PrescriptionPhotoEntity>()
-        savedPhotoPrescription.forEach { prescriptionResponse ->
-            prescriptionPhotos.addAll(
-                prescriptionResponse.toListOfPrescriptionPhotoEntity()
-            )
-        }
-        prescriptionDao.insertPrescriptionPhotos(
-            *prescriptionPhotos.toTypedArray()
-        )
-        val listOfGenericEntity = mutableListOf<GenericEntity>()
-        savedPhotoPrescription.map { prescriptionPhotoResponse ->
-            prescriptionPhotoResponse.prescription.map {
-                it.filename
-            }.forEach { fileName ->
-                listOfGenericEntity.add(
-                    GenericEntity(
-                        id = UUID.randomUUID().toString(),
-                        patientId = prescriptionPhotoResponse.prescriptionId,
-                        payload = fileName,
-                        type = GenericTypeEnum.PRESCRIPTION_PHOTO,
-                        syncType = SyncType.POST
-                    )
-                )
-            }
-        }
-        genericDao.insertGenericEntity(
-            *listOfGenericEntity.toTypedArray()
-        )
-
-        body.filter { it.status == PhotoDeleteEnum.DELETE.value }
-            .map { deletedPhotoPrescription ->
-                fileUploadDao.deleteFile(deletedPhotoPrescription.prescription[0].filename)
-                deleteFileManager.removeFromInternalStorage(deletedPhotoPrescription.prescription[0].filename)
-                prescriptionDao.deletePrescriptionPhoto(deletedPhotoPrescription.toListOfPrescriptionPhotoEntity()[0])
-                    .also {
-                        prescriptionDao.deletePrescriptionEntity(
-                            deletedPhotoPrescription.toPrescriptionEntity(
-                                patientDao
-                            )
-                        )
-                    }
-            }
     }
 
     protected suspend fun insertMedication(body: List<MedicationResponse>) {
@@ -276,30 +215,6 @@ open class SyncRepositoryDatabaseTransactions(
             patientDao.updateFhirId(createResponse.id!!, createResponse.fhirId!!)
         }
         return deleteGenericEntityData(listOfGenericEntities)
-    }
-
-    protected suspend fun insertPhotoPrescriptionFhirId(
-        listOfGenericEntities: List<GenericEntity>,
-        body: List<CreateResponse>
-    ): Int {
-        val idsToDelete = mutableSetOf<String>()
-        idsToDelete.addAll(listOfGenericEntities.map { genericEntity -> genericEntity.id })
-        body.forEach { createResponse ->
-            if (createResponse.error == null) {
-                prescriptionDao.updatePrescriptionFhirId(
-                    createResponse.id!!, createResponse.fhirId!!
-                )
-                createResponse.prescriptionFiles!!.forEach { prescriptionResponse ->
-                    prescriptionDao.updateDocumentFhirId(
-                        prescriptionResponse.documentUuid,
-                        prescriptionResponse.documentfhirId
-                    )
-                }
-            } else {
-                idsToDelete.remove(createResponse.id)
-            }
-        }
-        return deleteGenericEntityByListOfIds(idsToDelete.toList())
     }
 
     protected suspend fun insertPrescriptionAndMedicationRequestFhirId(

@@ -51,6 +51,7 @@ import androidx.navigation.NavController
 import com.heartcare.agni.R
 import com.heartcare.agni.data.server.model.patient.PatientResponse
 import com.heartcare.agni.navigation.Screen
+import com.heartcare.agni.ui.common.AppointmentCompletedDialog
 import com.heartcare.agni.ui.common.CustomDialog
 import com.heartcare.agni.ui.common.Loader
 import com.heartcare.agni.ui.common.ScrollableTabRowComposable
@@ -61,7 +62,6 @@ import com.heartcare.agni.ui.historyandtests.priordx.PriorDxView
 import com.heartcare.agni.ui.historyandtests.risk.view.RiskFactorsView
 import com.heartcare.agni.ui.historyandtests.tobacco.view.TobaccoCessationView
 import com.heartcare.agni.ui.patientlandingscreen.AllSlotsBookedDialog
-import com.heartcare.agni.ui.prescription.photo.view.AppointmentCompletedDialog
 import com.heartcare.agni.ui.theme.Black
 import com.heartcare.agni.ui.theme.White
 import com.heartcare.agni.utils.constants.NavControllerConstants.ALLERGIES_SAVED

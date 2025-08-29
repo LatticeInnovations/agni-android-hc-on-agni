@@ -40,8 +40,6 @@ import com.heartcare.agni.ui.patientprofile.PatientProfile
 import com.heartcare.agni.ui.patientregistration.PatientRegistration
 import com.heartcare.agni.ui.patientregistration.preview.PatientRegistrationPreview
 import com.heartcare.agni.ui.prescription.PrescriptionScreen
-import com.heartcare.agni.ui.prescription.photo.upload.PrescriptionPhotoUploadScreen
-import com.heartcare.agni.ui.prescription.photo.view.PrescriptionPhotoViewScreen
 import com.heartcare.agni.ui.searchpatient.SearchPatient
 import com.heartcare.agni.ui.vitalsscreen.VitalsScreen
 import com.heartcare.agni.ui.vitalsscreen.addvitals.AddVitalsScreen
@@ -70,16 +68,7 @@ fun NavigationAppHost(navController: NavController, startDest: String) {
         composable(Screen.EditAddress.route) { EditPatientAddress(navController = navController) }
         composable(Screen.Appointments.route) { AppointmentsScreen(navController = navController) }
         composable(Screen.ScheduleAppointments.route) { ScheduleAppointments(navController = navController) }
-        composable(Screen.PrescriptionPhotoUploadScreen.route) {
-            PrescriptionPhotoUploadScreen(
-                navController = navController
-            )
-        }
-        composable(Screen.PrescriptionPhotoViewScreen.route) {
-            PrescriptionPhotoViewScreen(
-                navController = navController
-            )
-        }
+
         composable(Screen.CVDRiskAssessmentScreen.route) { CVDRiskAssessmentScreen(navController) }
         composable(Screen.VitalsScreen.route) { VitalsScreen(navController = navController) }
         composable(Screen.AddVitalsScreen.route) { AddVitalsScreen(navController = navController) }

@@ -8,12 +8,12 @@ import com.heartcare.agni.data.local.repository.cvd.chart.RiskPredictionChartRep
 import com.heartcare.agni.data.local.repository.cvd.chart.RiskPredictionChartRepositoryImpl
 import com.heartcare.agni.data.local.repository.cvd.records.CVDAssessmentRepository
 import com.heartcare.agni.data.local.repository.cvd.records.CVDAssessmentRepositoryImpl
+import com.heartcare.agni.data.local.repository.diagnosis.DiagnosisRepository
+import com.heartcare.agni.data.local.repository.diagnosis.DiagnosisRepositoryImpl
 import com.heartcare.agni.data.local.repository.examination.ExaminationRepository
 import com.heartcare.agni.data.local.repository.examination.ExaminationRepositoryImpl
 import com.heartcare.agni.data.local.repository.family.FamilyHistoryRepository
 import com.heartcare.agni.data.local.repository.family.FamilyHistoryRepositoryImpl
-import com.heartcare.agni.data.local.repository.file.DownloadedFileRepository
-import com.heartcare.agni.data.local.repository.file.DownloadedFileRepositoryImpl
 import com.heartcare.agni.data.local.repository.generic.GenericRepository
 import com.heartcare.agni.data.local.repository.generic.GenericRepositoryImpl
 import com.heartcare.agni.data.local.repository.historymedication.HistoryMedicationRepository
@@ -42,16 +42,12 @@ import com.heartcare.agni.data.local.repository.schedule.ScheduleRepository
 import com.heartcare.agni.data.local.repository.schedule.ScheduleRepositoryImpl
 import com.heartcare.agni.data.local.repository.search.SearchRepository
 import com.heartcare.agni.data.local.repository.search.SearchRepositoryImpl
-import com.heartcare.agni.data.local.repository.diagnosis.DiagnosisRepository
-import com.heartcare.agni.data.local.repository.diagnosis.DiagnosisRepositoryImpl
 import com.heartcare.agni.data.local.repository.tobacco.TobaccoCessationRepository
 import com.heartcare.agni.data.local.repository.tobacco.TobaccoCessationRepositoryImpl
 import com.heartcare.agni.data.local.repository.vital.VitalRepository
 import com.heartcare.agni.data.local.repository.vital.VitalRepositoryImpl
 import com.heartcare.agni.data.server.repository.authentication.AuthenticationRepository
 import com.heartcare.agni.data.server.repository.authentication.AuthenticationRepositoryImpl
-import com.heartcare.agni.data.server.repository.file.FileSyncRepository
-import com.heartcare.agni.data.server.repository.file.FileSyncRepositoryImpl
 import com.heartcare.agni.data.server.repository.diagnosismaster.DiagnosisMasterRepository
 import com.heartcare.agni.data.server.repository.diagnosismaster.DiagnosisMasterRepositoryImpl
 import com.heartcare.agni.data.server.repository.sync.SyncRepository
@@ -113,14 +109,6 @@ abstract class RepositoryModule {
     @Binds
     @ViewModelScoped
     abstract fun providePatientLastUpdatedRepository(patientLastUpdatedRepositoryImpl: PatientLastUpdatedRepositoryImpl): PatientLastUpdatedRepository
-
-    @Binds
-    @ViewModelScoped
-    abstract fun provideFileSyncRepository(fileUploadRepositoryImpl: FileSyncRepositoryImpl): FileSyncRepository
-
-    @Binds
-    @ViewModelScoped
-    abstract fun provideDownloadedFileRepository(downloadedFileRepositoryImpl: DownloadedFileRepositoryImpl): DownloadedFileRepository
 
     @Binds
     @ViewModelScoped

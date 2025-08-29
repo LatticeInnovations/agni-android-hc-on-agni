@@ -5,7 +5,6 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
@@ -60,13 +59,13 @@ import com.heartcare.agni.R
 import com.heartcare.agni.data.local.enums.YesNoEnum
 import com.heartcare.agni.data.server.model.cvd.CVDResponse
 import com.heartcare.agni.data.server.model.patient.PatientResponse
+import com.heartcare.agni.ui.common.AppointmentCompletedDialog
 import com.heartcare.agni.ui.common.CustomDialog
 import com.heartcare.agni.ui.common.TabRowComposable
 import com.heartcare.agni.ui.cvd.form.CVDRiskAssessmentForm
 import com.heartcare.agni.ui.cvd.form.DisplayField
 import com.heartcare.agni.ui.cvd.records.CVDRiskAssessmentRecords
 import com.heartcare.agni.ui.patientlandingscreen.AllSlotsBookedDialog
-import com.heartcare.agni.ui.prescription.photo.view.AppointmentCompletedDialog
 import com.heartcare.agni.ui.theme.HighRiskCircle
 import com.heartcare.agni.ui.theme.HighRiskDarkContainer
 import com.heartcare.agni.ui.theme.HighRiskLightContainer

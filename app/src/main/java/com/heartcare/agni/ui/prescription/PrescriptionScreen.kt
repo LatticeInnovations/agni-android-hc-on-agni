@@ -74,7 +74,7 @@ import com.heartcare.agni.ui.common.CustomDialog
 import com.heartcare.agni.ui.common.TabRowComposable
 import com.heartcare.agni.ui.patientlandingscreen.AllSlotsBookedDialog
 import com.heartcare.agni.ui.prescription.filldetails.FillDetailsScreen
-import com.heartcare.agni.ui.prescription.photo.view.AppointmentCompletedDialog
+import com.heartcare.agni.ui.common.AppointmentCompletedDialog
 import com.heartcare.agni.ui.prescription.previousprescription.PreviousPrescriptionsScreen
 import com.heartcare.agni.ui.prescription.previousprescription.saveRePrescription
 import com.heartcare.agni.ui.prescription.quickselect.QuickSelectScreen

@@ -8,7 +8,6 @@ import com.heartcare.agni.data.server.api.AuthenticationApiService
 import com.heartcare.agni.data.server.api.AuthenticationApiServiceWithToken
 import com.heartcare.agni.data.server.api.CVDApiService
 import com.heartcare.agni.data.server.api.ExaminationApiService
-import com.heartcare.agni.data.server.api.FileUploadApiService
 import com.heartcare.agni.data.server.api.LevelsApiService
 import com.heartcare.agni.data.server.api.PatientApiService
 import com.heartcare.agni.data.server.api.PrescriptionApiService
@@ -236,11 +235,6 @@ object NetworkModule {
     @Singleton
     fun provideScheduleApiService(@Named("agni") retrofit: Retrofit): ScheduleAndAppointmentApiService =
         retrofit.create(ScheduleAndAppointmentApiService::class.java)
-
-    @Provides
-    @Singleton
-    fun provideFileUploadApiService(@Named("agni") retrofit: Retrofit): FileUploadApiService =
-        retrofit.create(FileUploadApiService::class.java)
 
     @Provides
     @Singleton

@@ -108,7 +108,6 @@ fun PatientLandingScreen(
     LaunchedEffect(true) {
         viewModel.patient?.id?.let { id ->
             viewModel.getScheduledAppointmentsCount(id)
-            viewModel.getUploadsCount(id)
             viewModel.getLastCVDRisk(id)
         }
     }

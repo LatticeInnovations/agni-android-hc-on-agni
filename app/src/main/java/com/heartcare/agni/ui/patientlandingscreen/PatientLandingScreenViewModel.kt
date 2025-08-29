@@ -14,7 +14,6 @@ import com.heartcare.agni.data.local.repository.appointment.AppointmentRepositor
 import com.heartcare.agni.data.local.repository.cvd.records.CVDAssessmentRepository
 import com.heartcare.agni.data.local.repository.patient.PatientRepository
 import com.heartcare.agni.data.local.repository.preference.PreferenceRepository
-import com.heartcare.agni.data.local.repository.prescription.PrescriptionRepository
 import com.heartcare.agni.data.server.model.patient.PatientResponse
 import com.heartcare.agni.di.dispatcher.IoDispatcher
 import com.heartcare.agni.service.workmanager.utils.Sync
@@ -34,7 +33,6 @@ class PatientLandingScreenViewModel @Inject constructor(
     application: Application,
     private val patientRepository: PatientRepository,
     private val appointmentRepository: AppointmentRepository,
-    private val prescriptionRepository: PrescriptionRepository,
     private val cvdAssessmentRepository: CVDAssessmentRepository,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
     preferenceRepository: PreferenceRepository
@@ -48,7 +46,6 @@ class PatientLandingScreenViewModel @Inject constructor(
 
     var appointmentsCount by mutableIntStateOf(0)
     var pastAppointmentsCount by mutableIntStateOf(0)
-    var uploadsCount by mutableIntStateOf(0)
     var isFabSelected by mutableStateOf(false)
     var showAllSlotsBookedDialog by mutableStateOf(false)
 
@@ -96,12 +93,6 @@ class PatientLandingScreenViewModel @Inject constructor(
                     appointmentResponseLocal.hospitalCode == user.hospitalCode &&
                     appointmentResponseLocal.slot.start.time < Date().toEndOfDay() && appointmentResponseLocal.status != AppointmentStatusEnum.SCHEDULED.value
                 }.size
-        }
-    }
-
-    internal fun getUploadsCount(patientId: String) {
-        viewModelScope.launch(ioDispatcher) {
-            uploadsCount = prescriptionRepository.getLastPhotoPrescription(patientId).size
         }
     }
 

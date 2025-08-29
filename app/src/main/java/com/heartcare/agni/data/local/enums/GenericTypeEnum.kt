@@ -11,8 +11,6 @@ enum class GenericTypeEnum(val number: Int, val value: String) {
     PRESCRIPTION_PHOTO(9, "prescription_photo"),
     CVD(10, "cvd_record"),
     VITAL(11, "VitalPatch"),
-    PRESCRIPTION_PHOTO_RESPONSE(12, "prescription_photo_response"),
-    FHIR_IDS_PRESCRIPTION_PHOTO(13, "FHIR_IDS_PRESCRIPTION_PHOTO"),
     DIAGNOSIS(14, "diagnosis"),
     PRIOR_DX(23, "prior_dx"),
     HISTORY_MEDICATION(24, "history_medication"),

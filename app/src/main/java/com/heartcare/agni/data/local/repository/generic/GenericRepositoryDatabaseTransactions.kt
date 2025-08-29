@@ -18,8 +18,6 @@ import com.heartcare.agni.data.server.model.historymedication.HistoryMedicationR
 import com.heartcare.agni.data.server.model.intervention.InterventionResponse
 import com.heartcare.agni.data.server.model.patient.PatientLastUpdatedResponse
 import com.heartcare.agni.data.server.model.patient.PatientResponse
-import com.heartcare.agni.data.server.model.prescription.photo.PrescriptionPhotoPatch
-import com.heartcare.agni.data.server.model.prescription.photo.PrescriptionPhotoResponse
 import com.heartcare.agni.data.server.model.prescription.prescriptionresponse.PrescriptionResponse
 import com.heartcare.agni.data.server.model.priordx.PriorDxResponse
 import com.heartcare.agni.data.server.model.risk.RiskFactorResponse
@@ -165,26 +163,6 @@ open class GenericRepositoryDatabaseTransactions(
         val existingMap =
             prescriptionGenericEntity.payload.fromJson<MutableMap<String, Any>>()
                 .mapToObject(PrescriptionResponse::class.java)
-        if (existingMap != null) {
-            genericDao.insertGenericEntity(
-                prescriptionGenericEntity.copy(
-                    payload = existingMap.copy(
-                        patientFhirId = if (!existingMap.patientFhirId.isFhirId()) getPatientFhirIdById(
-                            existingMap.patientFhirId
-                        )!! else existingMap.patientFhirId,
-                        appointmentId = if (!existingMap.appointmentId.isFhirId()) getAppointmentFhirIdById(
-                            existingMap.appointmentId
-                        )!! else existingMap.appointmentId
-                    ).toJson()
-                )
-            )
-        }
-    }
-
-    protected suspend fun updatePhotoPrescriptionFhirIdInGenericEntity(prescriptionGenericEntity: GenericEntity) {
-        val existingMap =
-            prescriptionGenericEntity.payload.fromJson<MutableMap<String, Any>>()
-                .mapToObject(PrescriptionPhotoResponse::class.java)
         if (existingMap != null) {
             genericDao.insertGenericEntity(
                 prescriptionGenericEntity.copy(
@@ -781,29 +759,6 @@ open class GenericRepositoryDatabaseTransactions(
         }
     }
 
-    protected suspend fun insertOrUpdatePhotoPrescriptionGenericEntityPatch(
-        prescriptionGenericEntity: GenericEntity?,
-        prescriptionPhotoPatch: PrescriptionPhotoPatch,
-        prescriptionFhirId: String,
-        uuid: String
-    ): Long {
-        return if (prescriptionGenericEntity != null) {
-            genericDao.insertGenericEntity(
-                prescriptionGenericEntity.copy(payload = prescriptionPhotoPatch.toJson())
-            )[0]
-        } else {
-            genericDao.insertGenericEntity(
-                GenericEntity(
-                    id = uuid,
-                    patientId = prescriptionFhirId,
-                    payload = prescriptionPhotoPatch.toJson(),
-                    type = GenericTypeEnum.PRESCRIPTION_PHOTO_RESPONSE,
-                    syncType = SyncType.PATCH
-                )
-            )[0]
-        }
-    }
-
 
     protected suspend fun insertOrUpdateCVDGenericEntityPatch(
         genericEntity: List<GenericEntity>,
@@ -1037,27 +992,5 @@ open class GenericRepositoryDatabaseTransactions(
         }
     }
 
-
-    protected suspend fun insertPrescriptionPhotoGenericEntity(
-        prescriptionPhotoResponse: PrescriptionPhotoResponse,
-        prescriptionPhotoGenericEntity: GenericEntity?,
-        uuid: String
-    ): Long {
-        return if (prescriptionPhotoGenericEntity != null) {
-            genericDao.insertGenericEntity(
-                prescriptionPhotoGenericEntity.copy(payload = prescriptionPhotoResponse.toJson())
-            )[0]
-        } else {
-            genericDao.insertGenericEntity(
-                GenericEntity(
-                    id = uuid,
-                    patientId = prescriptionPhotoResponse.prescriptionId,
-                    payload = prescriptionPhotoResponse.toJson(),
-                    type = GenericTypeEnum.PRESCRIPTION_PHOTO_RESPONSE,
-                    syncType = SyncType.POST
-                )
-            )[0]
-        }
-    }
 
 }

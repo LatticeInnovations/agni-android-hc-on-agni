@@ -46,7 +46,7 @@ import com.heartcare.agni.navigation.Screen
 import com.heartcare.agni.ui.common.CustomDialog
 import com.heartcare.agni.ui.common.ExpandableCard
 import com.heartcare.agni.ui.patientlandingscreen.AllSlotsBookedDialog
-import com.heartcare.agni.ui.prescription.photo.view.AppointmentCompletedDialog
+import com.heartcare.agni.ui.common.AppointmentCompletedDialog
 import com.heartcare.agni.utils.constants.NavControllerConstants.DIAGNOSIS_SAVED
 import com.heartcare.agni.utils.constants.NavControllerConstants.PATIENT
 import kotlinx.coroutines.CoroutineScope

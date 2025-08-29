@@ -4,7 +4,6 @@ object EndPoints {
 
     const val PATIENT = "Patient"
     const val MEDICATION_REQUEST = "Prescription"
-    const val PRESCRIPTION_FILE = "PrescriptionFile"
     const val VITAL = "Vital"
     const val DIAGNOSIS = "diagnosis"
     const val PRIOR_DX = "priorDx"

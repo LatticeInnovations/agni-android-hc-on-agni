@@ -13,6 +13,7 @@ import com.heartcare.agni.data.local.repository.preference.PreferenceRepositoryI
 import com.heartcare.agni.data.local.roomdb.FhirAppDatabase
 import com.heartcare.agni.data.local.sharedpreferences.PreferenceStorage
 import com.heartcare.agni.data.server.api.CVDApiService
+import com.heartcare.agni.data.server.api.DiagnosisApiService
 import com.heartcare.agni.data.server.api.ExaminationApiService
 import com.heartcare.agni.data.server.api.HistoryAndTestsApiService
 import com.heartcare.agni.data.server.api.InterventionApiService
@@ -20,7 +21,6 @@ import com.heartcare.agni.data.server.api.LevelsApiService
 import com.heartcare.agni.data.server.api.PatientApiService
 import com.heartcare.agni.data.server.api.PrescriptionApiService
 import com.heartcare.agni.data.server.api.ScheduleAndAppointmentApiService
-import com.heartcare.agni.data.server.api.DiagnosisApiService
 import com.heartcare.agni.data.server.api.VitalApiService
 import com.heartcare.agni.data.server.repository.diagnosismaster.DiagnosisMasterRepository
 import com.heartcare.agni.data.server.repository.diagnosismaster.DiagnosisMasterRepositoryImpl
@@ -30,7 +30,6 @@ import com.heartcare.agni.service.sync.SyncService
 import com.heartcare.agni.service.workmanager.request.WorkRequestBuilders
 import com.heartcare.agni.utils.converters.gson.DateDeserializer
 import com.heartcare.agni.utils.converters.gson.DateSerializer
-import com.heartcare.agni.utils.file.DeleteFileManager
 import com.heartcare.agni.utils.network.CheckNetwork
 import dagger.hilt.android.HiltAndroidApp
 import timber.log.Timber
@@ -74,9 +73,6 @@ class FhirApp : Application() {
     @Inject
     lateinit var examinationApiService: ExaminationApiService
 
-    @Inject
-    lateinit var deleteFileManager: DeleteFileManager
-
     private lateinit var _syncRepository: SyncRepository
     internal val syncRepository get() = _syncRepository
     private lateinit var _genericRepository: GenericRepository
@@ -90,7 +86,6 @@ class FhirApp : Application() {
     private lateinit var _diagnosisMasterRepository: DiagnosisMasterRepository
     private val diagnosisMasterRepository get() = _diagnosisMasterRepository
     internal var syncWorkerStatus = MutableLiveData<WorkerStatus>()
-    internal var photosWorkerStatus = MutableLiveData<WorkerStatus>()
     private val isSyncing = AtomicBoolean(false)
 
     override fun onCreate() {
@@ -115,7 +110,6 @@ class FhirApp : Application() {
             fhirAppDatabase.getPatientDao(),
             fhirAppDatabase.getGenericDao(),
             preferenceRepository,
-            deleteFileManager,
             fhirAppDatabase.getMedicationDao(),
             fhirAppDatabase.getPrescriptionDao(),
             fhirAppDatabase.getScheduleDao(),
@@ -124,7 +118,6 @@ class FhirApp : Application() {
             fhirAppDatabase.getCVDDao(),
             fhirAppDatabase.getVitalDao(),
             fhirAppDatabase.getDiagnosisDao(),
-            fhirAppDatabase.getFileUploadDao(),
             fhirAppDatabase.getLevelsDao(),
             fhirAppDatabase.getRiskPredictionDao(),
             fhirAppDatabase.getPriorDxDao(),

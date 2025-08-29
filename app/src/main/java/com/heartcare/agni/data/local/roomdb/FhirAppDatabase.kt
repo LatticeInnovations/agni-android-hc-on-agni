@@ -9,10 +9,9 @@ import com.heartcare.agni.BuildConfig
 import com.heartcare.agni.data.local.roomdb.dao.AllergyDao
 import com.heartcare.agni.data.local.roomdb.dao.AppointmentDao
 import com.heartcare.agni.data.local.roomdb.dao.CVDDao
-import com.heartcare.agni.data.local.roomdb.dao.DownloadedFileDao
+import com.heartcare.agni.data.local.roomdb.dao.DiagnosisDao
 import com.heartcare.agni.data.local.roomdb.dao.ExaminationDao
 import com.heartcare.agni.data.local.roomdb.dao.FamilyHistoryDao
-import com.heartcare.agni.data.local.roomdb.dao.FileUploadDao
 import com.heartcare.agni.data.local.roomdb.dao.GenericDao
 import com.heartcare.agni.data.local.roomdb.dao.HistoryMedicationDao
 import com.heartcare.agni.data.local.roomdb.dao.IdentifierDao
@@ -27,18 +26,17 @@ import com.heartcare.agni.data.local.roomdb.dao.RiskFactorDao
 import com.heartcare.agni.data.local.roomdb.dao.RiskPredictionDao
 import com.heartcare.agni.data.local.roomdb.dao.ScheduleDao
 import com.heartcare.agni.data.local.roomdb.dao.SearchDao
-import com.heartcare.agni.data.local.roomdb.dao.DiagnosisDao
 import com.heartcare.agni.data.local.roomdb.dao.TobaccoCessationDao
 import com.heartcare.agni.data.local.roomdb.dao.VitalDao
 import com.heartcare.agni.data.local.roomdb.entities.allergy.AllergyEntity
 import com.heartcare.agni.data.local.roomdb.entities.appointment.AppointmentEntity
 import com.heartcare.agni.data.local.roomdb.entities.cvd.CVDEntity
 import com.heartcare.agni.data.local.roomdb.entities.cvd.RiskPredictionCharts
+import com.heartcare.agni.data.local.roomdb.entities.diagnosis.DiagnosisEntity
+import com.heartcare.agni.data.local.roomdb.entities.diagnosis.DiagnosisMasterEntity
 import com.heartcare.agni.data.local.roomdb.entities.examination.ExaminationEntity
 import com.heartcare.agni.data.local.roomdb.entities.examination.ExaminationMasterEntity
 import com.heartcare.agni.data.local.roomdb.entities.family.FamilyHistoryEntity
-import com.heartcare.agni.data.local.roomdb.entities.file.DownloadedFileEntity
-import com.heartcare.agni.data.local.roomdb.entities.file.FileUploadEntity
 import com.heartcare.agni.data.local.roomdb.entities.generic.GenericEntity
 import com.heartcare.agni.data.local.roomdb.entities.historymedication.HistoryMedicationEntity
 import com.heartcare.agni.data.local.roomdb.entities.intervention.InterventionEntity
@@ -51,14 +49,11 @@ import com.heartcare.agni.data.local.roomdb.entities.patient.PatientEntity
 import com.heartcare.agni.data.local.roomdb.entities.patient.PatientLastUpdatedEntity
 import com.heartcare.agni.data.local.roomdb.entities.prescription.PrescriptionDirectionsEntity
 import com.heartcare.agni.data.local.roomdb.entities.prescription.PrescriptionEntity
-import com.heartcare.agni.data.local.roomdb.entities.prescription.photo.PrescriptionPhotoEntity
 import com.heartcare.agni.data.local.roomdb.entities.priordx.PriorDxEntity
 import com.heartcare.agni.data.local.roomdb.entities.risk.RiskFactorEntity
 import com.heartcare.agni.data.local.roomdb.entities.schedule.ScheduleEntity
-import com.heartcare.agni.data.local.roomdb.entities.search.SearchHistoryEntity
 import com.heartcare.agni.data.local.roomdb.entities.search.SearchEntity
-import com.heartcare.agni.data.local.roomdb.entities.diagnosis.DiagnosisMasterEntity
-import com.heartcare.agni.data.local.roomdb.entities.diagnosis.DiagnosisEntity
+import com.heartcare.agni.data.local.roomdb.entities.search.SearchHistoryEntity
 import com.heartcare.agni.data.local.roomdb.entities.tobacco.TobaccoCessationEntity
 import com.heartcare.agni.data.local.roomdb.entities.vitals.VitalEntity
 import com.heartcare.agni.data.local.roomdb.typeconverters.DiagnosisTypeConverter
@@ -82,9 +77,6 @@ import java.util.UUID
         ScheduleEntity::class,
         AppointmentEntity::class,
         PatientLastUpdatedEntity::class,
-        PrescriptionPhotoEntity::class,
-        FileUploadEntity::class,
-        DownloadedFileEntity::class,
         RiskPredictionCharts::class,
         CVDEntity::class,
         VitalEntity::class,
@@ -119,8 +111,6 @@ abstract class FhirAppDatabase : RoomDatabase() {
     abstract fun getScheduleDao(): ScheduleDao
     abstract fun getAppointmentDao(): AppointmentDao
     abstract fun getPatientLastUpdatedDao(): PatientLastUpdatedDao
-    abstract fun getFileUploadDao(): FileUploadDao
-    abstract fun getDownloadedFileDao(): DownloadedFileDao
     abstract fun getRiskPredictionDao(): RiskPredictionDao
     abstract fun getCVDDao(): CVDDao
     abstract fun getVitalDao(): VitalDao
