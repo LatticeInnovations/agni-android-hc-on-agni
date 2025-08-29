@@ -180,7 +180,7 @@ class SyncRepositoryImpl @Inject constructor(
                 }
             }
         } catch (e: Exception) {
-            Timber.e(e.localizedMessage)
+            Timber.e(e, e.localizedMessage)
             return ApiErrorResponse(
                 statusCode = 0,
                 errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
@@ -208,7 +208,7 @@ class SyncRepositoryImpl @Inject constructor(
                 }
             }
         } catch (e: Exception) {
-            Timber.e(e.localizedMessage)
+            Timber.e(e, e.localizedMessage)
             return ApiErrorResponse(
                 statusCode = 0,
                 errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
@@ -264,7 +264,7 @@ class SyncRepositoryImpl @Inject constructor(
                 }
             }
         } catch (e: Exception) {
-            Timber.e(e.localizedMessage)
+            Timber.e(e, e.localizedMessage)
             ApiErrorResponse(
                 statusCode = 0,
                 errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
@@ -302,7 +302,7 @@ class SyncRepositoryImpl @Inject constructor(
                 }
             }
         } catch (e: Exception) {
-            Timber.e(e.localizedMessage)
+            Timber.e(e, e.localizedMessage)
             ApiErrorResponse(
                 statusCode = 0,
                 errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
@@ -340,7 +340,7 @@ class SyncRepositoryImpl @Inject constructor(
                 }
             }
         } catch (e: Exception) {
-            Timber.e(e.localizedMessage)
+            Timber.e(e, e.localizedMessage)
             ApiErrorResponse(
                 statusCode = 0,
                 errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
@@ -378,7 +378,7 @@ class SyncRepositoryImpl @Inject constructor(
                 }
             }
         } catch (e: Exception) {
-            Timber.e(e.localizedMessage)
+            Timber.e(e, e.localizedMessage)
             ApiErrorResponse(
                 statusCode = 0,
                 errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
@@ -409,7 +409,7 @@ class SyncRepositoryImpl @Inject constructor(
                 }
             }
         } catch (e: Exception) {
-            Timber.e(e.localizedMessage)
+            Timber.e(e, e.localizedMessage)
             ApiErrorResponse(
                 statusCode = 0,
                 errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
@@ -442,7 +442,7 @@ class SyncRepositoryImpl @Inject constructor(
                 }
             }
         } catch (e: Exception) {
-            Timber.e(e.localizedMessage)
+            Timber.e(e, e.localizedMessage)
             ApiErrorResponse(
                 statusCode = 0,
                 errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
@@ -483,7 +483,7 @@ class SyncRepositoryImpl @Inject constructor(
                 }
             }
         } catch (e: Exception) {
-            Timber.e(e.localizedMessage)
+            Timber.e(e, e.localizedMessage)
             ApiErrorResponse(
                 statusCode = 0,
                 errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
@@ -524,7 +524,7 @@ class SyncRepositoryImpl @Inject constructor(
                 }
             }
         } catch (e: Exception) {
-            Timber.e(e.localizedMessage)
+            Timber.e(e, e.localizedMessage)
             ApiErrorResponse(
                 statusCode = 0,
                 errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
@@ -548,7 +548,7 @@ class SyncRepositoryImpl @Inject constructor(
                 }
             }
         } catch (e: Exception) {
-            Timber.e(e.localizedMessage)
+            Timber.e(e, e.localizedMessage)
             ApiErrorResponse(
                 statusCode = 0,
                 errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
@@ -589,7 +589,7 @@ class SyncRepositoryImpl @Inject constructor(
                 }
             }
         } catch (e: Exception) {
-            Timber.e(e.localizedMessage)
+            Timber.e(e, e.localizedMessage)
             ApiErrorResponse(
                 statusCode = 0,
                 errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
@@ -632,7 +632,7 @@ class SyncRepositoryImpl @Inject constructor(
                 }
             }
         } catch (e: Exception) {
-            Timber.e(e.localizedMessage)
+            Timber.e(e, e.localizedMessage)
             ApiErrorResponse(
                 statusCode = 0,
                 errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
@@ -675,7 +675,7 @@ class SyncRepositoryImpl @Inject constructor(
                 }
             }
         } catch (e: Exception) {
-            Timber.e(e.localizedMessage)
+            Timber.e(e, e.localizedMessage)
             return ApiErrorResponse(
                 statusCode = 0,
                 errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
@@ -711,7 +711,7 @@ class SyncRepositoryImpl @Inject constructor(
                 }
             }
         } catch (e: Exception) {
-            Timber.e(e.localizedMessage)
+            Timber.e(e, e.localizedMessage)
             ApiErrorResponse(
                 statusCode = 0,
                 errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
@@ -752,7 +752,7 @@ class SyncRepositoryImpl @Inject constructor(
                 }
             }
         } catch (e: Exception) {
-            Timber.e(e.localizedMessage)
+            Timber.e(e, e.localizedMessage)
             ApiErrorResponse(
                 statusCode = 0,
                 errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
@@ -784,7 +784,7 @@ class SyncRepositoryImpl @Inject constructor(
                 }
             }
         } catch (e: Exception) {
-            Timber.e(e.localizedMessage)
+            Timber.e(e, e.localizedMessage)
             ApiErrorResponse(
                 statusCode = 0,
                 errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
@@ -816,7 +816,7 @@ class SyncRepositoryImpl @Inject constructor(
                 }
             }
         } catch (e: Exception) {
-            Timber.e(e.localizedMessage)
+            Timber.e(e, e.localizedMessage)
             ApiErrorResponse(
                 statusCode = 0,
                 errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
@@ -850,7 +850,7 @@ class SyncRepositoryImpl @Inject constructor(
                 }
             }
         } catch (e: Exception) {
-            Timber.e(e.localizedMessage)
+            Timber.e(e, e.localizedMessage)
             ApiErrorResponse(
                 statusCode = 0,
                 errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
@@ -882,7 +882,7 @@ class SyncRepositoryImpl @Inject constructor(
                 }
             }
         } catch (e: Exception) {
-            Timber.e(e.localizedMessage)
+            Timber.e(e, e.localizedMessage)
             ApiErrorResponse(
                 statusCode = 0,
                 errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
@@ -914,7 +914,7 @@ class SyncRepositoryImpl @Inject constructor(
                 }
             }
         } catch (e: Exception) {
-            Timber.e(e.localizedMessage)
+            Timber.e(e, e.localizedMessage)
             ApiErrorResponse(
                 statusCode = 0,
                 errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
@@ -948,7 +948,7 @@ class SyncRepositoryImpl @Inject constructor(
                 }
             }
         } catch (e: Exception) {
-            Timber.e(e.localizedMessage)
+            Timber.e(e, e.localizedMessage)
             ApiErrorResponse(
                 statusCode = 0,
                 errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
@@ -982,7 +982,7 @@ class SyncRepositoryImpl @Inject constructor(
                 }
             }
         } catch (e: Exception) {
-            Timber.e(e.localizedMessage)
+            Timber.e(e, e.localizedMessage)
             ApiErrorResponse(
                 statusCode = 0,
                 errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
@@ -1016,7 +1016,7 @@ class SyncRepositoryImpl @Inject constructor(
                 }
             }
         } catch (e: Exception) {
-            Timber.e(e.localizedMessage)
+            Timber.e(e, e.localizedMessage)
             ApiErrorResponse(
                 statusCode = 0,
                 errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
@@ -1050,7 +1050,7 @@ class SyncRepositoryImpl @Inject constructor(
                 }
             }
         } catch (e: Exception) {
-            Timber.e(e.localizedMessage)
+            Timber.e(e, e.localizedMessage)
             ApiErrorResponse(
                 statusCode = 0,
                 errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
@@ -1084,7 +1084,7 @@ class SyncRepositoryImpl @Inject constructor(
                 }
             }
         } catch (e: Exception) {
-            Timber.e(e.localizedMessage)
+            Timber.e(e, e.localizedMessage)
             ApiErrorResponse(
                 statusCode = 0,
                 errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
@@ -1118,7 +1118,7 @@ class SyncRepositoryImpl @Inject constructor(
                 }
             }
         } catch (e: Exception) {
-            Timber.e(e.localizedMessage)
+            Timber.e(e, e.localizedMessage)
             ApiErrorResponse(
                 statusCode = 0,
                 errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
@@ -1152,7 +1152,7 @@ class SyncRepositoryImpl @Inject constructor(
                 }
             }
         } catch (e: Exception) {
-            Timber.e(e.localizedMessage)
+            Timber.e(e, e.localizedMessage)
             ApiErrorResponse(
                 statusCode = 0,
                 errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
@@ -1186,7 +1186,7 @@ class SyncRepositoryImpl @Inject constructor(
                 }
             }
         } catch (e: Exception) {
-            Timber.e(e.localizedMessage)
+            Timber.e(e, e.localizedMessage)
             ApiErrorResponse(
                 statusCode = 0,
                 errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
@@ -1220,7 +1220,7 @@ class SyncRepositoryImpl @Inject constructor(
                 }
             }
         } catch (e: Exception) {
-            Timber.e(e.localizedMessage)
+            Timber.e(e, e.localizedMessage)
             ApiErrorResponse(
                 statusCode = 0,
                 errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
@@ -1255,7 +1255,7 @@ class SyncRepositoryImpl @Inject constructor(
                 }
             }
         } catch (e: Exception) {
-            Timber.e(e.localizedMessage)
+            Timber.e(e, e.localizedMessage)
             ApiErrorResponse(
                 statusCode = 0,
                 errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
@@ -1287,7 +1287,7 @@ class SyncRepositoryImpl @Inject constructor(
                 }
             }
         } catch (e: Exception) {
-            Timber.e(e.localizedMessage)
+            Timber.e(e, e.localizedMessage)
             ApiErrorResponse(
                 statusCode = 0,
                 errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
@@ -1326,7 +1326,7 @@ class SyncRepositoryImpl @Inject constructor(
                 }
             }
         } catch (e: Exception) {
-            Timber.e(e.localizedMessage)
+            Timber.e(e, e.localizedMessage)
             ApiErrorResponse(
                 statusCode = 0,
                 errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
@@ -1362,7 +1362,7 @@ class SyncRepositoryImpl @Inject constructor(
                 }
             }
         } catch (e: Exception) {
-            Timber.e(e.localizedMessage)
+            Timber.e(e, e.localizedMessage)
             ApiErrorResponse(
                 statusCode = 0,
                 errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
@@ -1398,7 +1398,7 @@ class SyncRepositoryImpl @Inject constructor(
                 }
             }
         } catch (e: Exception) {
-            Timber.e(e.localizedMessage)
+            Timber.e(e, e.localizedMessage)
             ApiErrorResponse(
                 statusCode = 0,
                 errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
@@ -1442,7 +1442,7 @@ class SyncRepositoryImpl @Inject constructor(
                 }
             }
         } catch (e: Exception) {
-            Timber.e(e.localizedMessage)
+            Timber.e(e, e.localizedMessage)
             ApiErrorResponse(
                 statusCode = 0,
                 errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
@@ -1484,7 +1484,7 @@ class SyncRepositoryImpl @Inject constructor(
                 }
             }
         } catch (e: Exception) {
-            Timber.e(e.localizedMessage)
+            Timber.e(e, e.localizedMessage)
             ApiErrorResponse(
                 statusCode = 0,
                 errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
@@ -1528,7 +1528,7 @@ class SyncRepositoryImpl @Inject constructor(
                 }
             }
         } catch (e: Exception) {
-            Timber.e(e.localizedMessage)
+            Timber.e(e, e.localizedMessage)
             ApiErrorResponse(
                 statusCode = 0,
                 errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
@@ -1570,7 +1570,7 @@ class SyncRepositoryImpl @Inject constructor(
                 }
             }
         } catch (e: Exception) {
-            Timber.e(e.localizedMessage)
+            Timber.e(e, e.localizedMessage)
             ApiErrorResponse(
                 statusCode = 0,
                 errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
@@ -1610,7 +1610,7 @@ class SyncRepositoryImpl @Inject constructor(
                 }
             }
         } catch (e: Exception) {
-            Timber.e(e.localizedMessage)
+            Timber.e(e, e.localizedMessage)
             ApiErrorResponse(
                 statusCode = 0,
                 errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
@@ -1650,7 +1650,7 @@ class SyncRepositoryImpl @Inject constructor(
                 }
             }
         } catch (e: Exception) {
-            Timber.e(e.localizedMessage)
+            Timber.e(e, e.localizedMessage)
             ApiErrorResponse(
                 statusCode = 0,
                 errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
@@ -1692,7 +1692,7 @@ class SyncRepositoryImpl @Inject constructor(
                 }
             }
         } catch (e: Exception) {
-            Timber.e(e.localizedMessage)
+            Timber.e(e, e.localizedMessage)
             ApiErrorResponse(
                 statusCode = 0,
                 errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
@@ -1734,7 +1734,7 @@ class SyncRepositoryImpl @Inject constructor(
                 }
             }
         } catch (e: Exception) {
-            Timber.e(e.localizedMessage)
+            Timber.e(e, e.localizedMessage)
             ApiErrorResponse(
                 statusCode = 0,
                 errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
@@ -1776,7 +1776,7 @@ class SyncRepositoryImpl @Inject constructor(
                 }
             }
         } catch (e: Exception) {
-            Timber.e(e.localizedMessage)
+            Timber.e(e, e.localizedMessage)
             ApiErrorResponse(
                 statusCode = 0,
                 errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG

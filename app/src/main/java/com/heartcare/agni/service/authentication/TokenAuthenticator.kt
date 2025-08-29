@@ -63,7 +63,7 @@ class TokenAuthenticator @Inject constructor(
                     null
                 }
             } catch (e: Exception) {
-                Timber.e(e)
+                Timber.e(e, e.localizedMessage)
                 null
             }
         }

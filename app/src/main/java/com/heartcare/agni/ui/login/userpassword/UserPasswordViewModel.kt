@@ -71,7 +71,7 @@ class UserPasswordViewModel @Inject constructor(
                             preferenceRepository.setRefreshToken(headers[REFRESH_TOKEN]!!)
                             navigate()
                         } catch (e: Exception) {
-                            Timber.e(e)
+                            Timber.e(e, e.localizedMessage)
                             snackBarError = SOMETHING_WENT_WRONG
                         }
                     }

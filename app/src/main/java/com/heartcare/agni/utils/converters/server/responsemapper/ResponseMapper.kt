@@ -35,18 +35,18 @@ sealed class ResponseMapper<out T> {
                             gson.fromJson(response.errorBody()?.string(), collectionType)
                         ApiErrorResponse(response.code(), data.message)
                     } catch (e: JsonSyntaxException) {
-                        Timber.e(e)
+                        Timber.e(e, e.localizedMessage)
                         ApiErrorResponse(0, SERVER_ERROR)
                     }
                 }
             } catch (e: SocketTimeoutException) {
-                Timber.e(e.localizedMessage)
+                Timber.e(e, e.localizedMessage)
                 ApiErrorResponse(
                     statusCode = 0,
                     errorMessage = e.localizedMessage ?: SOCKET_TIMEOUT_EXCEPTION
                 )
             } catch (e: Exception) {
-                Timber.e(e.localizedMessage)
+                Timber.e(e, e.localizedMessage)
                 ApiErrorResponse(
                     statusCode = 0,
                     errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
@@ -98,7 +98,7 @@ sealed class ResponseMapper<out T> {
                     }
                     ApiErrorResponse(response.code(), error?.message ?: "Unknown error")
                 } catch (e: JsonSyntaxException) {
-                    Timber.e(e)
+                    Timber.e(e, e.localizedMessage)
                     ApiErrorResponse(0, SERVER_ERROR)
                 }
             }

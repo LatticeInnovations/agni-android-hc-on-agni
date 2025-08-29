@@ -70,7 +70,7 @@ class MainActivity : BaseActivity() {
         val client = SmsRetriever.getClient(this)
         val task = client.startSmsRetriever()
         task.addOnFailureListener { e ->
-            Timber.e(e.localizedMessage)
+            Timber.e(e, e.localizedMessage)
         }
     }
 
