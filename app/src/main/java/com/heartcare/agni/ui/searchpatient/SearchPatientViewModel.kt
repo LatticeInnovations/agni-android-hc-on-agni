@@ -9,7 +9,6 @@ import com.heartcare.agni.data.local.enums.LastVisit.Companion.getLastVisitList
 import com.heartcare.agni.data.local.enums.LevelsEnum
 import com.heartcare.agni.data.local.repository.levels.LevelRepository
 import com.heartcare.agni.data.server.model.levels.LevelResponse
-import com.heartcare.agni.data.server.model.patient.PatientResponse
 import com.heartcare.agni.di.dispatcher.IoDispatcher
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
@@ -38,8 +37,6 @@ class SearchPatientViewModel @Inject constructor(
         status = ""
     )
 
-    var fromHouseholdMember by mutableStateOf(false)
-    var patientFrom by mutableStateOf<PatientResponse?>(null)
     var patientName by mutableStateOf("")
 
     var gender by mutableStateOf("")

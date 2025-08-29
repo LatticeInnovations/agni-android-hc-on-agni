@@ -14,10 +14,10 @@ import com.heartcare.agni.data.local.repository.patient.lastupdated.PatientLastU
 import com.heartcare.agni.data.local.repository.preference.PreferenceRepository
 import com.heartcare.agni.data.local.repository.schedule.ScheduleRepository
 import com.heartcare.agni.data.local.repository.search.SearchRepository
-import com.heartcare.agni.data.local.repository.symptomsanddiagnosis.SymDiagRepository
-import com.heartcare.agni.data.local.roomdb.entities.symptomsanddiagnosis.SymptomsAndDiagnosisLocal
+import com.heartcare.agni.data.local.repository.diagnosis.DiagnosisRepository
+import com.heartcare.agni.data.local.roomdb.entities.diagnosis.DiagnosisLocal
 import com.heartcare.agni.data.server.model.patient.PatientResponse
-import com.heartcare.agni.data.server.model.symptomsanddiagnosis.SymptomsAndDiagnosisItem
+import com.heartcare.agni.data.server.model.diagnosis.DiagnosisItem
 import com.heartcare.agni.di.dispatcher.IoDispatcher
 import com.heartcare.agni.utils.builders.UUIDBuilder
 import com.heartcare.agni.utils.common.Queries.checkAndUpdateAppointmentStatusToInProgress
@@ -27,7 +27,7 @@ import com.heartcare.agni.utils.converters.responseconverter.SymDiagConverter.sp
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.isToday
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toEndOfDay
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toTodayStartDate
-import com.heartcare.agni.utils.converters.responseconverter.toSymDiagData
+import com.heartcare.agni.utils.converters.responseconverter.toDiagnosisData
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.launch
@@ -36,7 +36,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class AddDiagnosisViewModel @Inject constructor(
-    private val symDiagRepository: SymDiagRepository,
+    private val diagRepository: DiagnosisRepository,
     private val searchRepository: SearchRepository,
     private val appointmentRepository: AppointmentRepository,
     private val preferenceRepository: PreferenceRepository,
@@ -62,19 +62,19 @@ class AddDiagnosisViewModel @Inject constructor(
     var bottomNavExpanded by mutableStateOf(false)
     var clearAllConfirmDialog by mutableStateOf(false)
 
-    var lastDiagnosis by mutableStateOf<SymptomsAndDiagnosisLocal?>(null)
+    var lastDiagnosis by mutableStateOf<DiagnosisLocal?>(null)
     var isTodayDiagnosis by mutableStateOf(false)
 
     init {
         viewModelScope.launch(ioDispatcher) {
             frequentlyDiagnosedList =
-                searchRepository.getRecentSymptomAndDiagnosisSearches(searchTypeEnum = SearchTypeEnum.DIAGNOSIS)
+                searchRepository.getRecentDiagnosisSearches(searchTypeEnum = SearchTypeEnum.DIAGNOSIS)
         }
     }
 
     fun getLastDiagnosis(patientId: String) {
         viewModelScope.launch(ioDispatcher) {
-            lastDiagnosis = symDiagRepository.getPastSymptomsAndDiagnosis(patientId).firstOrNull()
+            lastDiagnosis = diagRepository.getPastDiagnosis(patientId).firstOrNull()
             lastDiagnosis?.let { dx ->
                 if (isToday(dx.createdOn)) {
                     isTodayDiagnosis = true
@@ -107,17 +107,17 @@ class AddDiagnosisViewModel @Inject constructor(
     }
 
     private fun getDiagnosisResponse(
-        symDiagUuid: String = UUIDBuilder.generateUUID(),
+        diagUuid: String = UUIDBuilder.generateUUID(),
         fhirId: String? = null,
         createdOn: Date = Date()
-    ): SymptomsAndDiagnosisLocal {
-        return SymptomsAndDiagnosisLocal(
-            symDiagUuid = symDiagUuid,
+    ): DiagnosisLocal {
+        return DiagnosisLocal(
+            diagnosisUuid = diagUuid,
             appointmentId = appointmentResponseLocal!!.uuid,
-            symDiagFhirId = fhirId,
+            diagnosisFhirId = fhirId,
             createdOn = createdOn,
             diagnosis = selectedDiagnosis.map {
-                SymptomsAndDiagnosisItem(
+                DiagnosisItem(
                     code = it.splitString().first,
                     display = it.splitString().second
                 )
@@ -141,12 +141,12 @@ class AddDiagnosisViewModel @Inject constructor(
             var fhirId: String? = null
             lastDiagnosis?.let {
                 if (isToday(it.createdOn)) {
-                    uuid = it.symDiagUuid
-                    fhirId = it.symDiagFhirId
+                    uuid = it.diagnosisUuid
+                    fhirId = it.diagnosisFhirId
                 }
             }
-            val diagnosisResponseLocal = getDiagnosisResponse(symDiagUuid = uuid, fhirId = fhirId)
-            symDiagRepository.insertSymptomsAndDiagnosis(
+            val diagnosisResponseLocal = getDiagnosisResponse(diagUuid = uuid, fhirId = fhirId)
+            diagRepository.insertDiagnosis(
                 diagnosisResponseLocal
             )
             genericRepository.insertSymDiag(
@@ -154,7 +154,7 @@ class AddDiagnosisViewModel @Inject constructor(
                     appointmentId = appointmentResponseLocal!!.appointmentId
                         ?: appointmentResponseLocal!!.uuid,
                     patientId = patient!!.fhirId ?: patient!!.id
-                ).toSymDiagData()
+                ).toDiagnosisData()
             )
             checkAndUpdateAppointmentStatusToInProgress(
                 inProgressTime = diagnosisResponseLocal.createdOn,
@@ -177,7 +177,7 @@ class AddDiagnosisViewModel @Inject constructor(
 
     private suspend fun insertRecentSearch() {
         selectedDiagnosis.forEach { diagnosis ->
-            searchRepository.insertRecentSymptomAndDiagnosisSearch(
+            searchRepository.insertRecentDiagnosisSearch(
                 searchQuery = diagnosis,
                 searchTypeEnum = SearchTypeEnum.DIAGNOSIS,
                 size = 5

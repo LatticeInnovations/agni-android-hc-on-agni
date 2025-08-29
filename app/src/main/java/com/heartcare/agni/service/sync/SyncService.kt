@@ -1,11 +1,8 @@
 package com.heartcare.agni.service.sync
 
 import android.content.Context
-import com.heartcare.agni.data.local.enums.GenericTypeEnum
 import com.heartcare.agni.data.local.repository.generic.GenericRepository
 import com.heartcare.agni.data.local.repository.preference.PreferenceRepository
-import com.heartcare.agni.data.server.repository.file.FileSyncRepository
-import com.heartcare.agni.data.server.repository.symptomsanddiagnosis.SymptomsAndDiagnosisRepository
 import com.heartcare.agni.data.server.repository.sync.SyncRepository
 import com.heartcare.agni.utils.constants.ErrorConstants
 import com.heartcare.agni.utils.converters.server.responsemapper.ApiEmptyResponse
@@ -19,15 +16,12 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.launch
 
 class SyncService(
     private val context: Context,
     private val syncRepository: SyncRepository,
     private val genericRepository: GenericRepository,
-    private val preferenceRepository: PreferenceRepository,
-    private val fileSyncRepository: FileSyncRepository,
-    private val symptomsAndDiagnosisRepository: SymptomsAndDiagnosisRepository
+    private val preferenceRepository: PreferenceRepository
 ) {
 
     private lateinit var patientDownloadJob: Deferred<ResponseMapper<Any>?>
@@ -73,7 +67,7 @@ class SyncService(
                         downloadLevelsRecord(logout)
                     },
                     async {
-                        getAndInsertDiagnosis()
+                        downloadDiagnosisMasterList(logout)
                     },
                     async {
                         downloadMedicationTiming(logout)
@@ -178,20 +172,12 @@ class SyncService(
         return checkAuthenticationStatus(syncRepository.sendPersonPostData(), logout)?.apply {
             if (this is ApiEmptyResponse) {
                 CoroutineScope(Dispatchers.IO).apply {
-                    launch {
-                        updateFhirIdInRelation(logout)
-                    }
                     patientDownloadJob = async {
                         downloadPatient(logout)
                     }
                 }
             }
         }
-    }
-
-    /** Upload Relation */
-    private suspend fun uploadRelation(logout: (Boolean, String) -> Unit) {
-        checkAuthenticationStatus(syncRepository.sendRelatedPersonPostData(), logout)
     }
 
     /** Upload Schedule */
@@ -207,59 +193,33 @@ class SyncService(
 
     /** Upload Appointment */
     private suspend fun uploadAppointment(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
-        return checkAuthenticationStatus(syncRepository.sendAppointmentPostData(), logout)?.apply {
-            if (this is ApiEmptyResponse) {
+        val response = checkAuthenticationStatus(
+            syncRepository.sendAppointmentPostData(),
+            logout
+        )
+        coroutineScope {
+            if (response is ApiEmptyResponse) {
+                // Run all update jobs concurrently
+                val jobs = listOf(
+                    async { updateFhirIdInCVD(logout) },
+                    async { updateFhirIdInVital(logout) },
+                    async { updateFhirIdInPrescription(logout) },
+                    async { updateFhirIdInDiagnosis(logout) },
+                    async { updateFhirIdInPriorDx(logout) },
+                    async { updateFhirIdInHistoryMedication(logout) },
+                    async { updateFhirIdInFamilyHistory(logout) },
+                    async { updateFhirIdInAllergy(logout) },
+                    async { updateFhirIdInRiskFactors(logout) },
+                    async { updateFhirIdInTobaccoCessation(logout) },
+                    async { updateFhirIdInIntervention(logout) },
+                    async { updateFhirIdInExamination(logout) }
+                )
 
-                updateFhirIdInCVD(logout)
-                CoroutineScope(Dispatchers.IO).launch {
-                    updateFhirIdInVital(logout)
-                }
-                CoroutineScope(Dispatchers.IO).launch {
-                    updateFhirIdInPrescription(logout)
-                }
-                CoroutineScope(Dispatchers.IO).launch {
-                    updateFhirIdInSymDiag(logout)
-                }
-                CoroutineScope(Dispatchers.IO).launch {
-                    updateFhirIdInLabTest(logout)
-                }
-                CoroutineScope(Dispatchers.IO).launch {
-                    updateFhirIdInMedical(logout)
-                }
-                CoroutineScope(Dispatchers.IO).launch {
-                    updateFhirIdInImmunization(logout)
-                }
-                CoroutineScope(Dispatchers.IO).launch {
-                    updateFhirIdInPriorDx(logout)
-                }
-                CoroutineScope(Dispatchers.IO).launch {
-                    updateFhirIdInHistoryMedication(logout)
-                }
-                CoroutineScope(Dispatchers.IO).launch {
-                    updateFhirIdInFamilyHistory(logout)
-                }
-                CoroutineScope(Dispatchers.IO).launch {
-                    updateFhirIdInAllergy(logout)
-                }
-                CoroutineScope(Dispatchers.IO).launch {
-                    updateFhirIdInRiskFactors(logout)
-                }
-                CoroutineScope(Dispatchers.IO).launch {
-                    updateFhirIdInTobaccoCessation(logout)
-                }
-                CoroutineScope(Dispatchers.IO).launch {
-                    updateFhirIdInIntervention(logout)
-                }
-                CoroutineScope(Dispatchers.IO).launch {
-                    updateFhirIdInExamination(logout)
-                }
+                // Wait for all of them to complete
+                jobs.awaitAll()
             }
         }
-    }
-
-    /** Upload Photo Prescription*/
-    private suspend fun uploadPhotoPrescriptionData(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
-        return checkAuthenticationStatus(syncRepository.sendPhotoPrescriptionPostData(), logout)
+        return response
     }
 
     /** Upload Form Prescription*/
@@ -272,49 +232,19 @@ class SyncService(
         return checkAuthenticationStatus(syncRepository.sendPatientLastUpdatePostData(), logout)
     }
 
-    /** Upload Prescription photos */
-    private suspend fun uploadPrescriptionPhoto(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
-        return checkAuthenticationStatus(fileSyncRepository.uploadFile(), logout)
-    }
-
     /** Upload CVD */
     private suspend fun uploadCVD(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
         return checkAuthenticationStatus(syncRepository.sendCVDPostData(), logout)
     }
 
-    /** Upload SymDiag */
-    private suspend fun uploadSymDiag(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
-        return checkAuthenticationStatus(syncRepository.sendSymptomsAndDiagnosisPostData(), logout)
+    /** Upload Diagnosis */
+    private suspend fun uploadDiagnosis(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
+        return checkAuthenticationStatus(syncRepository.sendDiagnosisPostData(), logout)
     }
 
     /** Upload Vital */
     private suspend fun uploadVital(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
         return checkAuthenticationStatus(syncRepository.sendVitalPostData(), logout)
-    }
-
-    /** Upload Photos Data */
-    private suspend fun uploadLabAndMedPhoto(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
-        return checkAuthenticationStatus(fileSyncRepository.uploadFile(), logout)
-    }
-
-    /** Upload LabTest */
-    private suspend fun uploadLabTest(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
-        return checkAuthenticationStatus(syncRepository.sendLabTestPostData(), logout)
-    }
-
-    /** Upload MedicalRecord */
-    private suspend fun uploadMedicalRecord(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
-        return checkAuthenticationStatus(syncRepository.sendMedRecordPostData(), logout)
-    }
-
-    /** Upload Dispense */
-    private suspend fun uploadDispense(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
-        return checkAuthenticationStatus(syncRepository.sendDispensePostData(), logout)
-    }
-
-    /** Upload Immunization */
-    private suspend fun uploadImmunization(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
-        return checkAuthenticationStatus(syncRepository.sendImmunizationPostData(), logout)
     }
 
     /** Upload Prior Dx */
@@ -366,13 +296,8 @@ class SyncService(
      * */
 
     /** Patch Patient */
-    private suspend fun patchPatient(logout: (Boolean, String) -> Unit) {
-        checkAuthenticationStatus(syncRepository.sendPersonPatchData(), logout)
-    }
-
-    /** Patch Relation */
-    private suspend fun patchRelation(logout: (Boolean, String) -> Unit) {
-        checkAuthenticationStatus(syncRepository.sendRelatedPersonPatchData(), logout)
+    private suspend fun patchPatient(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
+        return checkAuthenticationStatus(syncRepository.sendPersonPatchData(), logout)
     }
 
     /** Patch Appointment */
@@ -381,67 +306,33 @@ class SyncService(
     }
 
     /** Patch Prescription */
-    internal suspend fun patchPrescription(logout: (Boolean, String) -> Unit) {
+    internal suspend fun patchPrescription(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
         coroutineScope {
             prescriptionPatchJob = async {
                 checkAuthenticationStatus(syncRepository.sendPrescriptionPutData(), logout)
             }
         }
+        return prescriptionPatchJob.await()
     }
 
     /** Patch Intervention */
-    internal suspend fun patchIntervention(logout: (Boolean, String) -> Unit) {
+    internal suspend fun patchIntervention(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
         coroutineScope {
             interventionPatchJob = async {
                 checkAuthenticationStatus(syncRepository.sentInterventionPutData(), logout)
             }
         }
+        return interventionPatchJob.await()
     }
 
     /** Patch Examination */
-    internal suspend fun patchExamination(logout: (Boolean, String) -> Unit) {
+    internal suspend fun patchExamination(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
         coroutineScope {
             examinationPatchJob = async {
                 checkAuthenticationStatus(syncRepository.sentExaminationPutData(), logout)
             }
         }
-    }
-
-    /** Patch CVD */
-    private suspend fun patchCVD(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
-        return checkAuthenticationStatus(syncRepository.sendCVDPatchData(), logout)
-    }
-
-    /** Patch SymDiag */
-    private suspend fun patchSymDiag(logout: (Boolean, String) -> Unit) {
-        checkAuthenticationStatus(syncRepository.sendSymptomsAndDiagnosisPatchData(), logout)
-    }
-
-    /** Patch LabTest */
-    private suspend fun patchLabTest(logout: (Boolean, String) -> Unit) {
-        checkAuthenticationStatus(syncRepository.sendLabTestPatchData(), logout)
-    }
-
-    /** Patch Medical Record */
-    private suspend fun patchMedRecord(logout: (Boolean, String) -> Unit) {
-        checkAuthenticationStatus(
-            syncRepository.sendMedRecordPatchData(), logout
-        )
-    }
-
-    /** Delete Photo Prescription */
-    private suspend fun deletePhotoPrescription(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
-        return checkAuthenticationStatus(syncRepository.deletePrescriptionPhoto(), logout)
-    }
-
-    /** Delete Photo LabTest */
-    private suspend fun deletePhotoLabTest(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
-        return checkAuthenticationStatus(syncRepository.deleteLabTestPhoto(), logout)
-    }
-
-    /** Delete Photo Medical Record */
-    private suspend fun deletePhotoMedicalRecord(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
-        return checkAuthenticationStatus(syncRepository.deleteMedTestPhoto(), logout)
+        return examinationPatchJob.await()
     }
 
     /**
@@ -460,84 +351,48 @@ class SyncService(
         )
     }
 
-    /** Download Relation */
-    private suspend fun downloadRelation(logout: (Boolean, String) -> Unit) {
-        checkAuthenticationStatus(syncRepository.getAndInsertRelation(), logout)
-    }
-
-    /** Download Immunization And Recommendation */
-    private suspend fun downloadImmunizationAndRecommendation(
-        patientId: String?,
-        logout: (Boolean, String) -> Unit
-    ): ResponseMapper<Any>? {
-        return checkAuthenticationStatus(syncRepository.getAndInsertImmunization(patientId), logout)?.apply {
-            if (this is ApiEmptyResponse || this is ApiEndResponse) {
-                downloadPrescriptionPhoto(logout)
-            }
-        }
-    }
-
     /** Download Schedule */
     private suspend fun downloadSchedule(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
         return checkAuthenticationStatus(syncRepository.getAndInsertSchedule(0), logout)
     }
 
     /** Download Appointment*/
-    private suspend fun downloadAppointment(logout: (Boolean, String) -> Unit) {
-        coroutineScope {
-            awaitAll(
+    private suspend fun downloadAppointment(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? = coroutineScope {
+        val response = checkAuthenticationStatus(
+            syncRepository.getAndInsertAppointment(0),
+            logout
+        )
+        if (response is ApiEmptyResponse || response is ApiEndResponse) {
+            val jobs = listOf(
+                async { downloadPatientLastUpdated(logout) },
+                async { downloadCVD(logout) },
+                async { downloadVitals(logout) },
+                async { downloadPriorDx(logout) },
+                async { downloadHistoryMedication(logout) },
+                async { downloadFamilyHistory(logout) },
+                async { downloadAllergy(logout) },
+                async { downloadRiskFactors(logout) },
+                async { downloadTobaccoCessation(logout) },
+                async { downloadDiagnosis(logout) },
                 async {
-                    checkAuthenticationStatus(syncRepository.getAndInsertAppointment(0), logout)
+                    prescriptionPatchJob.await()
+                    downloadFormPrescription(null, logout)
                 },
-                prescriptionPatchJob
-            ).all { responseMapper ->
-                responseMapper is ApiEmptyResponse || responseMapper is ApiEndResponse
-            }.apply {
-                if (this) {
-                    downloadPatientLastUpdated(logout)
-                    CoroutineScope(Dispatchers.IO).launch {
-                        downloadCVD(logout)
-                    }
-                    CoroutineScope(Dispatchers.IO).launch {
-                        downloadVitals(logout)
-                    }
-                    CoroutineScope(Dispatchers.IO).launch {
-                        downloadPriorDx(logout)
-                    }
-                    CoroutineScope(Dispatchers.IO).launch {
-                        downloadHistoryMedication(logout)
-                    }
-                    CoroutineScope(Dispatchers.IO).launch {
-                        downloadFamilyHistory(logout)
-                    }
-                    CoroutineScope(Dispatchers.IO).launch {
-                        downloadAllergy(logout)
-                    }
-                    CoroutineScope(Dispatchers.IO).launch {
-                        downloadRiskFactors(logout)
-                    }
-                    CoroutineScope(Dispatchers.IO).launch {
-                        downloadTobaccoCessation(logout)
-                    }
-                    CoroutineScope(Dispatchers.IO).launch {
-                        downloadSymDiag(logout)
-                    }
-                    CoroutineScope(Dispatchers.IO).launch {
-                        downloadFormPrescription(null, logout)
-                    }
-                    CoroutineScope(Dispatchers.IO).launch {
-                        interventionMasterDownloadJob.await()
-                        interventionPatchJob.await()
-                        downloadIntervention(logout)
-                    }
-                    CoroutineScope(Dispatchers.IO).launch {
-                        examinationMasterDownloadJob.await()
-                        examinationPatchJob.await()
-                        downloadExamination(logout)
-                    }
+                async {
+                    interventionMasterDownloadJob.await()
+                    interventionPatchJob.await()
+                    downloadIntervention(logout)
+                },
+                async {
+                    examinationMasterDownloadJob.await()
+                    examinationPatchJob.await()
+                    downloadExamination(logout)
                 }
-            }
+            )
+            jobs.awaitAll()
         }
+
+        response
     }
 
     /** Download Form Prescription*/
@@ -551,65 +406,49 @@ class SyncService(
         )
     }
 
-    /** Download Photo Prescription*/
-    internal suspend fun downloadPhotoPrescription(
-        patientId: String?,
-        logout: (Boolean, String) -> Unit
-    ): ResponseMapper<Any>? {
-        return checkAuthenticationStatus(
-            syncRepository.getAndInsertPhotoPrescription(patientId),
-            logout
-        )
-            ?.apply {
-            if (this is ApiEmptyResponse || this is ApiEndResponse) {
-                // TODO: Remove immunization syncing for heart care
-                // downloadImmunizationAndRecommendation(patientId, logout)
-            }
-        }
-    }
-
     /** Download Medication */
-    internal suspend fun downloadMedication(logout: (Boolean, String) -> Unit) {
-        checkAuthenticationStatus(syncRepository.getAndInsertMedication(0), logout)
+    internal suspend fun downloadMedication(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
+        return checkAuthenticationStatus(syncRepository.getAndInsertMedication(0), logout)
     }
 
     /** Download Intervention Master */
-    internal suspend fun downloadInterventionMasterList(logout: (Boolean, String) -> Unit) {
+    internal suspend fun downloadInterventionMasterList(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
         coroutineScope {
             interventionMasterDownloadJob = async {
                 checkAuthenticationStatus(syncRepository.getAndInsertInterventionMaster(0), logout)
             }
         }
+        return interventionMasterDownloadJob.await()
     }
 
     /** Download Test and Examinations Master */
-    internal suspend fun downloadExaminationMasterList(logout: (Boolean, String) -> Unit) {
+    internal suspend fun downloadExaminationMasterList(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
         coroutineScope {
             examinationMasterDownloadJob = async {
                 checkAuthenticationStatus(syncRepository.getAndInsertExaminationMaster(0), logout)
             }
         }
+        return examinationMasterDownloadJob.await()
+    }
+
+    /** Download Diagnosis Master */
+    internal suspend fun downloadDiagnosisMasterList(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
+        return checkAuthenticationStatus(syncRepository.getAndInsertDiagnosisMaster(), logout)
     }
 
     /** Download Medication Timing */
-    private suspend fun downloadMedicationTiming(logout: (Boolean, String) -> Unit) {
-        if (preferenceRepository.getLastMedicineDosageInstructionSyncDate() == 0L) {
+    private suspend fun downloadMedicationTiming(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
+        return if (preferenceRepository.getLastMedicineDosageInstructionSyncDate() == 0L) {
             checkAuthenticationStatus(syncRepository.getMedicineTime(), logout)
-        }
-    }
-
-    private suspend fun downloadVaccineManufacturer(logout: (Boolean, String) -> Unit) {
-        checkAuthenticationStatus(syncRepository.getAndInsertManufacturer(), logout)
+        } else null
     }
 
     /** Download Patient Last Updated */
-    private suspend fun downloadPatientLastUpdated(logout: (Boolean, String) -> Unit) {
-        checkAuthenticationStatus(syncRepository.getAndInsertPatientLastUpdatedData(), logout)
-    }
-
-    /** Download Patient Last Updated */
-    private suspend fun downloadPrescriptionPhoto(logout: (Boolean, String) -> Unit) {
-        fileSyncRepository.startDownload(GenericTypeEnum.PRESCRIPTION_PHOTO, logout)
+    private suspend fun downloadPatientLastUpdated(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
+        return checkAuthenticationStatus(
+            syncRepository.getAndInsertPatientLastUpdatedData(),
+            logout
+        )
     }
 
     /** Download CVD*/
@@ -617,10 +456,10 @@ class SyncService(
         return checkAuthenticationStatus(syncRepository.getAndInsertCVD(0), logout)
     }
 
-    /** Download SymptomsDiag*/
-    private suspend fun downloadSymDiag(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
+    /** Download Diagnosis*/
+    private suspend fun downloadDiagnosis(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
         return checkAuthenticationStatus(
-            syncRepository.getAndInsertListSymptomsAndDiagnosisData(0),
+            syncRepository.getAndInsertListDiagnosisData(0),
             logout
         )
     }
@@ -630,104 +469,52 @@ class SyncService(
         return checkAuthenticationStatus(syncRepository.getAndInsertListVitalData(0), logout)
     }
 
-    /** Download Lab And Medical Record Photo */
-    private suspend fun downloadLabAndMedicalRecordPhoto(logout: (Boolean, String) -> Unit) {
-        coroutineScope {
-            awaitAll(async {
-                downloadLabTest(logout)
-            }, async {
-                downloadMedicalRecord(logout)
-            }).all { responseMapper ->
-                responseMapper is ApiEndResponse
-            }.apply {
-                if (this) {
-                    fileSyncRepository.startDownload(GenericTypeEnum.PHOTO_DOWNLOAD, logout)
-                }
-            }
-        }
-    }
-
-    /** Download LabTest*/
-    private suspend fun downloadLabTest(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
-        return checkAuthenticationStatus(
-            syncRepository.getAndInsertListLabTestData(0),
-            logout
-        )
-    }
-
-    /** Download MedicalRecord*/
-    private suspend fun downloadMedicalRecord(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
-        return checkAuthenticationStatus(
-            syncRepository.getAndInsertListMedicalRecordData(0),
-            logout
-        )
-    }
-
-    /** Download Dispense*/
-    internal suspend fun downloadDispense(
-        patientId: String?,
-        logout: (Boolean, String) -> Unit
-    ): ResponseMapper<Any>? {
-        return checkAuthenticationStatus(
-            syncRepository.getAndInsertDispense(patientId),
-            logout
-        )
-    }
-
-    /** Download OTC Dispense*/
-    internal suspend fun downloadOTC(
-        patientId: String?,
-        logout: (Boolean, String) -> Unit
-    ): ResponseMapper<Any>? {
-        return checkAuthenticationStatus(
-            syncRepository.getAndInsertOTC(patientId),
-            logout
-        )
-    }
-
     /** Download Levels Data */
-    private suspend fun downloadLevelsRecord(logout: (Boolean, String) -> Unit) {
-        checkAuthenticationStatus(syncRepository.getAndInsertLevelsData(0), logout)
+    private suspend fun downloadLevelsRecord(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
+        return checkAuthenticationStatus(syncRepository.getAndInsertLevelsData(0), logout)
     }
 
     /** Download Prior Dx Data */
-    private suspend fun downloadPriorDx(logout: (Boolean, String) -> Unit) {
-        checkAuthenticationStatus(syncRepository.getAndInsertPriorDxData(0), logout)
+    private suspend fun downloadPriorDx(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
+        return checkAuthenticationStatus(syncRepository.getAndInsertPriorDxData(0), logout)
     }
 
     /** Download History Medication Data */
-    private suspend fun downloadHistoryMedication(logout: (Boolean, String) -> Unit) {
-        checkAuthenticationStatus(syncRepository.getAndInsertHistoryMedicationData(0), logout)
+    private suspend fun downloadHistoryMedication(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
+        return checkAuthenticationStatus(
+            syncRepository.getAndInsertHistoryMedicationData(0),
+            logout
+        )
     }
 
     /** Download Family History Data */
-    private suspend fun downloadFamilyHistory(logout: (Boolean, String) -> Unit) {
-        checkAuthenticationStatus(syncRepository.getAndInsertFamilyHistoryData(0), logout)
+    private suspend fun downloadFamilyHistory(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
+        return checkAuthenticationStatus(syncRepository.getAndInsertFamilyHistoryData(0), logout)
     }
 
     /** Download Allergy Data */
-    private suspend fun downloadAllergy(logout: (Boolean, String) -> Unit) {
-        checkAuthenticationStatus(syncRepository.getAndInsertAllergyData(0), logout)
+    private suspend fun downloadAllergy(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
+        return checkAuthenticationStatus(syncRepository.getAndInsertAllergyData(0), logout)
     }
 
     /** Download Risk Factors Data */
-    private suspend fun downloadRiskFactors(logout: (Boolean, String) -> Unit) {
-        checkAuthenticationStatus(syncRepository.getAndInsertRiskFactorData(0), logout)
+    private suspend fun downloadRiskFactors(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
+        return checkAuthenticationStatus(syncRepository.getAndInsertRiskFactorData(0), logout)
     }
 
     /** Download Tobacco Cessation Data */
-    private suspend fun downloadTobaccoCessation(logout: (Boolean, String) -> Unit) {
-        checkAuthenticationStatus(syncRepository.getAndInsertTobaccoCessationData(0), logout)
+    private suspend fun downloadTobaccoCessation(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
+        return checkAuthenticationStatus(syncRepository.getAndInsertTobaccoCessationData(0), logout)
     }
 
     /** Download Intervention Data */
-    private suspend fun downloadIntervention(logout: (Boolean, String) -> Unit) {
-        checkAuthenticationStatus(syncRepository.getAndInsertInterventionsData(0), logout)
+    private suspend fun downloadIntervention(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
+        return checkAuthenticationStatus(syncRepository.getAndInsertInterventionsData(0), logout)
     }
 
     /** Download Examination Data */
-    private suspend fun downloadExamination(logout: (Boolean, String) -> Unit) {
-        checkAuthenticationStatus(syncRepository.getAndInsertExaminationData(0), logout)
+    private suspend fun downloadExamination(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
+        return checkAuthenticationStatus(syncRepository.getAndInsertExaminationData(0), logout)
     }
 
     /**
@@ -737,13 +524,6 @@ class SyncService(
      *
      *
      * */
-
-    /** Update Patient FHIR ID in Relation */
-    private suspend fun updateFhirIdInRelation(logout: (Boolean, String) -> Unit) {
-        genericRepository.updateRelationFhirId()
-        /** Start Relation Worker */
-        uploadRelation(logout)
-    }
 
     /** Update Schedule and Patient FHIR ID in Appointment */
     private suspend fun updateFhirIdsInAppointment(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
@@ -769,40 +549,19 @@ class SyncService(
     /** Update Appointment FHIR ID in CVD */
     private suspend fun updateFhirIdInCVD(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
         genericRepository.updateCVDFhirIds()
-        /** Upload Prescription */
         return uploadCVD(logout)
     }
 
+    /** Update Appointment FHIR ID in Vitals */
     private suspend fun updateFhirIdInVital(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
         genericRepository.updateVitalFhirId()
         return uploadVital(logout)
     }
 
-    private suspend fun updateFhirIdInSymDiag(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
-        genericRepository.updateSymDiagFhirId()
-        return uploadSymDiag(logout)
-    }
-
-    private suspend fun updateFhirIdInLabTest(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
-        genericRepository.updateLabTestFhirId()
-        return uploadLabTest(logout)
-    }
-
-    private suspend fun updateFhirIdInMedical(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
-        genericRepository.updateMedRecordFhirId()
-        return uploadMedicalRecord(logout)
-    }
-
-    /** Update Appointment FHIR ID in Dispense */
-    private suspend fun updateFhirIdInDispense(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
-        genericRepository.updateDispenseFhirId()
-        /** Upload Dispense */
-        return uploadDispense(logout)
-    }
-
-    private suspend fun updateFhirIdInImmunization(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
-        genericRepository.updateImmunizationFhirId()
-        return uploadImmunization(logout)
+    /** Update Appointment FHIR ID in Diagnosis */
+    private suspend fun updateFhirIdInDiagnosis(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
+        genericRepository.updateDiagnosisFhirId()
+        return uploadDiagnosis(logout)
     }
 
     /** Update FHIR ID in Prior Dx */
@@ -865,12 +624,6 @@ class SyncService(
             null
         } else {
             responseMapper
-        }
-    }
-
-    private suspend fun getAndInsertDiagnosis() {
-        if (symptomsAndDiagnosisRepository.getDiagnosis().isEmpty()) {
-            symptomsAndDiagnosisRepository.insertDiagnosis()
         }
     }
 }

@@ -14,19 +14,6 @@ interface PreferenceStorage {
     /** M-Pin */
     var pin: String
 
-    /** Auth Token */
-    var token: String
-
-    /** User Data */
-    var userFhirId: String
-    var userName: String
-    var userMobile: Long
-    var userEmail: String
-    var userRoleId: String
-    var userRole: String
-    var organizationFhirId: String
-    var organization: String
-
     /** Room DB Encryption Key */
     var roomDBEncryptionKey: String
 
@@ -34,7 +21,6 @@ interface PreferenceStorage {
     var syncStatus: String
     var lastSyncTime: Long
     var lastPatientSyncTime: Long
-    var lastRelationSyncTime: Long
     var lastPrescriptionSyncTime: Long
     var lastMedicationSyncTime: Long
     var lastMedicineDosageInstructionSyncTime: Long
@@ -43,12 +29,7 @@ interface PreferenceStorage {
     var lastCVDSyncTime: Long
     var lastVitalSyncTime: Long
 
-    var lastSymptomsSyncTime: Long
-
-    var lastLabTestSyncTime: Long
-    var lastMedicalRecordSyncTime: Long
-
-    var lastSyncManufacturerRecord: Long
+    var lastDiagnosisSyncTime: Long
 
     var lastSyncLevelRecord: Long
     var lastSyncPriorDxRecord: Long
@@ -61,6 +42,7 @@ interface PreferenceStorage {
     var lastSyncIntervention: Long
     var lastSyncExaminationMaster: Long
     var lastSyncExamination: Long
+    var lastSyncDiagnosisMaster: Long
 
     fun clear()
 }

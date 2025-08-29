@@ -7,10 +7,9 @@ val Primary10 = Color(0xFF21005D)
 val Primary20 = Color(0xFF381E72)
 val Primary30 = Color(0xFF4F378B)
 val Primary40 = Color(0xFF6750A4)
-val Primary70 = Color(0xFFB69DF8)
+
 val Primary80 = Color(0xFFD0BCFF)
 val Primary90 = Color(0xFFEADDFF)
-val Primary95 = Color(0xFFF6EDFF)
 val Primary100 = Color(0xFFFFFFFF)
 
 // secondary colors
@@ -18,7 +17,6 @@ val Secondary10 = Color(0xFF1D192B)
 val Secondary20 = Color(0xFF332D41)
 val Secondary30 = Color(0xFF4A4458)
 val Secondary40 = Color(0xFF625B71)
-val Secondary60 = Color(0xFF958DA5)
 val Secondary80 = Color(0xFFCCC2DC)
 val Secondary90 = Color(0xFFE8DEF8)
 val Secondary100 = Color(0xFFFFFFFF)
@@ -48,13 +46,11 @@ val Neutral90 = Color(0xFFE6E1E5)
 val Neutral99 = Color(0xFFFFFBFE)
 
 // neutral-variant
-val NeutralVariant10 = Color(0xFF1D1A22)
 val NeutralVariant30 = Color(0xFF49454F)
 val NeutralVariant50 = Color(0xFF79747E)
 val NeutralVariant60 = Color(0xFF938F99)
 val NeutralVariant80 = Color(0xFFCAC4D0)
 val NeutralVariant90 = Color(0xFFE7E0EC)
-val NeutralVariant95 = Color(0xFFF4EFF4)
 
 val Green = Color(0xFF1B7B12)
 val WalkInContainer = Color(0x1F3286E9)
@@ -69,8 +65,6 @@ val InProgressContainer = Color(0x1FDDC912)
 val InProgressLabel = Color(0xFF8B7504)
 val CompletedContainer = Color(0x1FDDC912)
 val CompletedLabel = Color(0xFF148F27)
-val FutureScheduledContainer = Color(0x1FD86F0E)
-val FutureScheduledLabel = Color(0xFFD86F0E)
 val NoShowContainer = Color(0xFFE6E1E5)
 val NoShowLabel = Color(0xFF79747E)
 
@@ -95,10 +89,6 @@ val VitalLabel = Color(0xFFCB4470)
 
 val White = Color(0xFFFFFFFF)
 val Black = Color(0xFF000000)
-
-val PartiallyDispensed = Color(0xFFD86F0E)
-val FullyDispensed = Color(0xFF148F27)
-val OTC = Color(0xFF004C4C)
 
 val TakenContainer = Color(0xFFE2FFE7)
 val MissedContainer = Color(0xFFFFF8C3)

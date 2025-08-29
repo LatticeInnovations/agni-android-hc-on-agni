@@ -10,8 +10,6 @@ import com.heartcare.agni.data.local.enums.PrescriptionType
 import com.heartcare.agni.data.local.roomdb.entities.prescription.PrescriptionAndMedicineRelation
 import com.heartcare.agni.data.local.roomdb.entities.prescription.PrescriptionDirectionsEntity
 import com.heartcare.agni.data.local.roomdb.entities.prescription.PrescriptionEntity
-import com.heartcare.agni.data.local.roomdb.entities.prescription.photo.PrescriptionAndFileEntity
-import com.heartcare.agni.data.local.roomdb.entities.prescription.photo.PrescriptionPhotoEntity
 
 @Dao
 interface PrescriptionDao {
@@ -25,22 +23,11 @@ interface PrescriptionDao {
     suspend fun insertPrescriptionMedicines(vararg prescriptionDirectionsEntity: PrescriptionDirectionsEntity): List<Long>
 
     @Transaction
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertPrescriptionPhotos(vararg prescriptionPhotoEntity: PrescriptionPhotoEntity): List<Long>
-
-    @Transaction
     @Query("SELECT * FROM PrescriptionEntity prescription WHERE patientId = :patientId AND prescriptionType=:prescriptionType ORDER BY prescription.prescriptionDate DESC")
     suspend fun getPastPrescriptions(
         patientId: String,
         prescriptionType: String = PrescriptionType.FORM.type
     ): List<PrescriptionAndMedicineRelation>
-
-    @Transaction
-    @Query("SELECT * FROM PrescriptionEntity WHERE patientId=:patientId AND prescriptionType=:prescriptionType ")
-    suspend fun getPastPhotoPrescriptions(
-        patientId: String,
-        prescriptionType: String = PrescriptionType.PHOTO.type
-    ): List<PrescriptionAndFileEntity>
 
     @Transaction
     @Query("UPDATE PrescriptionEntity SET prescriptionFhirId = :prescriptionFhirId WHERE id = :prescriptionId")
@@ -50,35 +37,12 @@ interface PrescriptionDao {
     @Query("SELECT * FROM PrescriptionEntity WHERE appointmentId = :appointmentId")
     suspend fun getPrescriptionByAppointmentId(appointmentId: String): List<PrescriptionAndMedicineRelation>
 
-    @Transaction
-    @Query("SELECT * FROM PrescriptionEntity WHERE appointmentId = :appointmentId")
-    suspend fun getPrescriptionPhotoByAppointmentId(appointmentId: String): List<PrescriptionAndFileEntity>
-
-    @Transaction
-    @Query("SELECT * FROM PrescriptionEntity WHERE prescriptionDate BETWEEN :startDate AND :endDate AND patientId=:patientId")
-    suspend fun getPrescriptionPhotoByDate(
-        patientId: String,
-        startDate: Long,
-        endDate: Long
-    ): List<PrescriptionAndFileEntity>
-
-    @Transaction
-    @Query("SELECT * FROM PrescriptionEntity WHERE id=:prescriptionId")
-    suspend fun getPrescriptionPhotoById(prescriptionId: String): PrescriptionAndFileEntity
-
-    @Delete
-    suspend fun deletePrescriptionPhoto(prescriptionPhotoEntity: PrescriptionPhotoEntity): Int
-
     @Delete
     suspend fun deletePrescriptionEntity(prescriptionEntity: PrescriptionEntity): Int
 
     @Transaction
     @Query("UPDATE PrescriptionDirectionsEntity SET medReqFhirId = :medReqFhirId WHERE id = :medReqUuid")
     suspend fun updateMedReqFhirId(medReqUuid: String, medReqFhirId: String)
-
-    @Transaction
-    @Query("UPDATE PrescriptionPhotoEntity SET documentFhirId = :documentFhirId WHERE id = :documentUuid")
-    suspend fun updateDocumentFhirId(documentUuid: String, documentFhirId: String)
 
     @Transaction
     @Query("SELECT * FROM PrescriptionEntity WHERE id IN (:prescriptionId)")

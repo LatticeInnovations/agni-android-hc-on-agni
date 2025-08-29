@@ -4,34 +4,26 @@ import com.heartcare.agni.data.local.enums.GenericTypeEnum
 import com.heartcare.agni.data.local.enums.SyncType
 import com.heartcare.agni.data.local.model.patch.AppointmentPatchRequest
 import com.heartcare.agni.data.local.model.patch.ChangeRequest
-import com.heartcare.agni.data.local.model.symdiag.SymptomsAndDiagnosisData
+import com.heartcare.agni.data.local.model.diagnosis.DiagnosisData
 import com.heartcare.agni.data.local.roomdb.dao.AppointmentDao
 import com.heartcare.agni.data.local.roomdb.dao.GenericDao
 import com.heartcare.agni.data.local.roomdb.dao.PatientDao
-import com.heartcare.agni.data.local.roomdb.dao.PrescriptionDao
 import com.heartcare.agni.data.local.roomdb.dao.ScheduleDao
 import com.heartcare.agni.data.local.roomdb.entities.generic.GenericEntity
 import com.heartcare.agni.data.server.model.allergy.AllergyResponse
 import com.heartcare.agni.data.server.model.cvd.CVDResponse
-import com.heartcare.agni.data.server.model.dispense.request.MedicineDispenseRequest
 import com.heartcare.agni.data.server.model.examination.ExaminationResponse
 import com.heartcare.agni.data.server.model.family.FamilyHistoryResponse
 import com.heartcare.agni.data.server.model.historymedication.HistoryMedicationResponse
 import com.heartcare.agni.data.server.model.intervention.InterventionResponse
-import com.heartcare.agni.data.server.model.labormed.labtest.LabTestRequest
-import com.heartcare.agni.data.server.model.labormed.medicalrecord.MedicalRecordRequest
 import com.heartcare.agni.data.server.model.patient.PatientLastUpdatedResponse
 import com.heartcare.agni.data.server.model.patient.PatientResponse
-import com.heartcare.agni.data.server.model.prescription.photo.PrescriptionPhotoPatch
-import com.heartcare.agni.data.server.model.prescription.photo.PrescriptionPhotoResponse
 import com.heartcare.agni.data.server.model.prescription.prescriptionresponse.PrescriptionResponse
 import com.heartcare.agni.data.server.model.priordx.PriorDxResponse
-import com.heartcare.agni.data.server.model.relatedperson.RelatedPersonResponse
 import com.heartcare.agni.data.server.model.risk.RiskFactorResponse
 import com.heartcare.agni.data.server.model.scheduleandappointment.appointment.AppointmentResponse
 import com.heartcare.agni.data.server.model.scheduleandappointment.schedule.ScheduleResponse
 import com.heartcare.agni.data.server.model.tobacco.TobaccoCessationResponse
-import com.heartcare.agni.data.server.model.vaccination.ImmunizationResponse
 import com.heartcare.agni.data.server.model.vitals.VitalResponse
 import com.heartcare.agni.utils.builders.GenericEntityPatchBuilder.processPatch
 import com.heartcare.agni.utils.constants.Id
@@ -48,8 +40,7 @@ open class GenericRepositoryDatabaseTransactions(
     private val genericDao: GenericDao,
     private val patientDao: PatientDao,
     private val scheduleDao: ScheduleDao,
-    private val appointmentDao: AppointmentDao,
-    private val prescriptionDao: PrescriptionDao
+    private val appointmentDao: AppointmentDao
 ) {
 
     protected suspend fun insertPatientGenericEntity(
@@ -168,85 +159,10 @@ open class GenericRepositoryDatabaseTransactions(
         }
     }
 
-    protected suspend fun insertRelationGenericEntity(
-        relationGenericEntity: GenericEntity?,
-        relatedPersonResponse: RelatedPersonResponse,
-        uuid: String,
-        patientId: String
-    ): Long {
-        return relationGenericEntity?.payload?.fromJson<MutableMap<String, Any>>()?.mapToObject(
-            RelatedPersonResponse::class.java
-        )?.let { existingRelatedPersonResponse ->
-            val updatedRelationList = existingRelatedPersonResponse.relationship.toMutableList()
-                .apply { addAll(relatedPersonResponse.relationship) }
-            genericDao.insertGenericEntity(
-                GenericEntity(
-                    id = relationGenericEntity.id,
-                    patientId = relationGenericEntity.patientId,
-                    payload = existingRelatedPersonResponse.copy(relationship = updatedRelationList)
-                        .toJson(),
-                    type = GenericTypeEnum.RELATION,
-                    syncType = SyncType.POST
-                )
-            )[0]
-        } ?: genericDao.insertGenericEntity(
-            GenericEntity(
-                id = uuid,
-                patientId = patientId,
-                payload = relatedPersonResponse.toJson(),
-                type = GenericTypeEnum.RELATION,
-                syncType = SyncType.POST
-            )
-        )[0]
-    }
-
-    protected suspend fun updateRelationFhirIdInGenericEntity(relationGenericEntity: GenericEntity) {
-        val existingMap = relationGenericEntity.payload.fromJson<MutableMap<String, Any>>()
-            .mapToObject(RelatedPersonResponse::class.java)
-        if (existingMap != null) {
-            genericDao.insertGenericEntity(
-                relationGenericEntity.copy(
-                    payload = existingMap.copy(
-                        id = if (existingMap.id.isFhirId()) existingMap.id else getPatientFhirIdById(
-                            existingMap.id
-                        )!!,
-                        relationship = existingMap.relationship.map { relationship ->
-                            relationship.copy(
-                                relativeId = if (relationship.relativeId.isFhirId()) relationship.relativeId else getPatientFhirIdById(
-                                    relationship.relativeId
-                                )!!
-                            )
-                        }
-                    ).toJson()
-                )
-            )
-        }
-    }
-
     protected suspend fun updateFormPrescriptionFhirIdInGenericEntity(prescriptionGenericEntity: GenericEntity) {
         val existingMap =
             prescriptionGenericEntity.payload.fromJson<MutableMap<String, Any>>()
                 .mapToObject(PrescriptionResponse::class.java)
-        if (existingMap != null) {
-            genericDao.insertGenericEntity(
-                prescriptionGenericEntity.copy(
-                    payload = existingMap.copy(
-                        patientFhirId = if (!existingMap.patientFhirId.isFhirId()) getPatientFhirIdById(
-                            existingMap.patientFhirId
-                        )!! else existingMap.patientFhirId,
-                        appointmentId = if (!existingMap.appointmentId.isFhirId()) getAppointmentFhirIdById(
-                            existingMap.appointmentId
-                        )!! else existingMap.appointmentId
-                    ).toJson()
-                )
-            )
-        }
-    }
-
-    protected suspend fun updatePhotoPrescriptionFhirIdInGenericEntity(prescriptionGenericEntity: GenericEntity) {
-        val existingMap =
-            prescriptionGenericEntity.payload.fromJson<MutableMap<String, Any>>()
-                .mapToObject(PrescriptionPhotoResponse::class.java)
         if (existingMap != null) {
             genericDao.insertGenericEntity(
                 prescriptionGenericEntity.copy(
@@ -351,7 +267,7 @@ open class GenericRepositoryDatabaseTransactions(
     }
 
     protected suspend fun insertSymDiagGenericEntity(
-        local: SymptomsAndDiagnosisData,
+        local: DiagnosisData,
         genericEntity: GenericEntity?,
         uuid: String
     ): Long {
@@ -362,31 +278,9 @@ open class GenericRepositoryDatabaseTransactions(
         } else {
             genericDao.insertGenericEntity(
                 GenericEntity(
-                    id = uuid, patientId = local.symDiagUuid,
+                    id = uuid, patientId = local.diagnosisUuid,
                     payload = local.toJson(),
-                    type = GenericTypeEnum.SYMPTOMS_DIAGNOSIS,
-                    syncType = SyncType.POST
-                )
-            )[0]
-        }
-    }
-
-    protected suspend fun insertDispenseGenericEntity(
-        medicineDispenseRequest: MedicineDispenseRequest,
-        patientGenericEntity: GenericEntity?,
-        uuid: String
-    ): Long {
-        return if (patientGenericEntity != null) {
-            genericDao.insertGenericEntity(
-                patientGenericEntity.copy(payload = medicineDispenseRequest.toJson())
-            )[0]
-        } else {
-            genericDao.insertGenericEntity(
-                GenericEntity(
-                    id = uuid,
-                    patientId = medicineDispenseRequest.dispenseId,
-                    payload = medicineDispenseRequest.toJson(),
-                    type = GenericTypeEnum.DISPENSE,
+                    type = GenericTypeEnum.DIAGNOSIS,
                     syncType = SyncType.POST
                 )
             )[0]
@@ -623,55 +517,15 @@ open class GenericRepositoryDatabaseTransactions(
         }
     }
 
-    protected suspend fun updateSymDiagFhirIdInGenericEntity(genericEntity: GenericEntity) {
+    protected suspend fun updateDiagnosisFhirIdInGenericEntity(genericEntity: GenericEntity) {
         val existingMap =
             genericEntity.payload.fromJson<MutableMap<String, Any>>()
-                .mapToObject(SymptomsAndDiagnosisData::class.java)
+                .mapToObject(DiagnosisData::class.java)
         if (existingMap != null) {
             genericDao.insertGenericEntity(
                 genericEntity.copy(
                     payload = existingMap.copy(
                         patientId = if (!existingMap.patientId!!.isFhirId()) getPatientFhirIdById(
-                            existingMap.patientId
-                        )!! else existingMap.patientId,
-                        appointmentId = if (!existingMap.appointmentId.isFhirId()) getAppointmentFhirIdById(
-                            existingMap.appointmentId
-                        )!! else existingMap.appointmentId
-                    ).toJson()
-                )
-            )
-        }
-    }
-
-    protected suspend fun updateLabTestFhirIdInGenericEntity(genericEntity: GenericEntity) {
-        val existingMap =
-            genericEntity.payload.fromJson<MutableMap<String, Any>>()
-                .mapToObject(LabTestRequest::class.java)
-        if (existingMap != null) {
-            genericDao.insertGenericEntity(
-                genericEntity.copy(
-                    payload = existingMap.copy(
-                        patientId = if (!existingMap.patientId.isFhirId()) getPatientFhirIdById(
-                            existingMap.patientId
-                        )!! else existingMap.patientId,
-                        appointmentId = if (!existingMap.appointmentId.isFhirId()) getAppointmentFhirIdById(
-                            existingMap.appointmentId
-                        )!! else existingMap.appointmentId
-                    ).toJson()
-                )
-            )
-        }
-    }
-
-    protected suspend fun updateMedicalRecordFhirIdInGenericEntity(prescriptionGenericEntity: GenericEntity) {
-        val existingMap =
-            prescriptionGenericEntity.payload.fromJson<MutableMap<String, Any>>()
-                .mapToObject(MedicalRecordRequest::class.java)
-        if (existingMap != null) {
-            genericDao.insertGenericEntity(
-                prescriptionGenericEntity.copy(
-                    payload = existingMap.copy(
-                        patientId = if (!existingMap.patientId.isFhirId()) getPatientFhirIdById(
                             existingMap.patientId
                         )!! else existingMap.patientId,
                         appointmentId = if (!existingMap.appointmentId.isFhirId()) getAppointmentFhirIdById(
@@ -704,57 +558,6 @@ open class GenericRepositoryDatabaseTransactions(
         }
     }
 
-
-    protected suspend fun updateDispenseFhirIdInGenericEntity(dispenseGenericEntity: GenericEntity) {
-        val existingMap =
-            dispenseGenericEntity.payload.fromJson<MutableMap<String, Any>>()
-                .mapToObject(MedicineDispenseRequest::class.java)
-        if (existingMap != null) {
-            genericDao.insertGenericEntity(
-                dispenseGenericEntity.copy(
-                    payload = existingMap.copy(
-                        patientId = if (!existingMap.patientId.isFhirId()) getPatientFhirIdById(
-                            existingMap.patientId
-                        )!! else existingMap.patientId,
-                        prescriptionFhirId = if (!existingMap.prescriptionFhirId.isNullOrBlank() && !existingMap.prescriptionFhirId.isFhirId()) getPrescriptionFhirIdById(
-                            existingMap.prescriptionFhirId
-                        )!! else existingMap.prescriptionFhirId,
-                        medicineDispensedList = existingMap.medicineDispensedList.map { medicine ->
-                            medicine.copy(
-                                medReqFhirId = if (!medicine.medReqFhirId.isNullOrBlank() && !medicine.medReqFhirId.isFhirId()) getMedReqFhirIdById(
-                                    medicine.medReqFhirId
-                                )!!
-                                else medicine.medReqFhirId
-                            )
-                        },
-                        appointmentId = if (!existingMap.appointmentId.isFhirId()) getAppointmentFhirIdById(
-                            existingMap.appointmentId
-                        )!! else existingMap.appointmentId
-                    ).toJson()
-                )
-            )
-        }
-    }
-
-    protected suspend fun updateImmunizationFhirIdInGenericEntity(immunizationGenericEntity: GenericEntity) {
-        val existingMap = immunizationGenericEntity.payload.fromJson<MutableMap<String, Any>>()
-            .mapToObject(ImmunizationResponse::class.java)
-
-        if (existingMap != null) {
-            genericDao.insertGenericEntity(
-                immunizationGenericEntity.copy(
-                    payload = existingMap.copy(
-                        patientId = if (!existingMap.patientId.isFhirId()) getPatientFhirIdById(
-                            existingMap.patientId
-                        )!! else existingMap.patientId,
-                        appointmentId = if (!existingMap.appointmentId.isFhirId()) getAppointmentFhirIdById(
-                            existingMap.appointmentId
-                        )!! else existingMap.appointmentId
-                    ).toJson()
-                )
-            )
-        }
-    }
 
     protected suspend fun updatePriorDxFhirIdInGenericEntity(priorDxGenericEntity: GenericEntity) {
         val existingMap = priorDxGenericEntity.payload.fromJson<MutableMap<String, Any>>()
@@ -956,29 +759,6 @@ open class GenericRepositoryDatabaseTransactions(
         }
     }
 
-    protected suspend fun insertOrUpdatePhotoPrescriptionGenericEntityPatch(
-        prescriptionGenericEntity: GenericEntity?,
-        prescriptionPhotoPatch: PrescriptionPhotoPatch,
-        prescriptionFhirId: String,
-        uuid: String
-    ): Long {
-        return if (prescriptionGenericEntity != null) {
-            genericDao.insertGenericEntity(
-                prescriptionGenericEntity.copy(payload = prescriptionPhotoPatch.toJson())
-            )[0]
-        } else {
-            genericDao.insertGenericEntity(
-                GenericEntity(
-                    id = uuid,
-                    patientId = prescriptionFhirId,
-                    payload = prescriptionPhotoPatch.toJson(),
-                    type = GenericTypeEnum.PRESCRIPTION_PHOTO_RESPONSE,
-                    syncType = SyncType.PATCH
-                )
-            )[0]
-        }
-    }
-
 
     protected suspend fun insertOrUpdateCVDGenericEntityPatch(
         genericEntity: List<GenericEntity>,
@@ -1060,7 +840,7 @@ open class GenericRepositoryDatabaseTransactions(
                         mutableMap[Id.ID] = fhirId
                         mutableMap
                     }.toJson(),
-                    type = GenericTypeEnum.SYMPTOMS_DIAGNOSIS,
+                    type = GenericTypeEnum.DIAGNOSIS,
                     syncType = SyncType.PATCH
                 )
             )[0]
@@ -1190,14 +970,6 @@ open class GenericRepositoryDatabaseTransactions(
         return appointmentDao.getAppointmentById(appointmentId)[0].appointmentFhirId
     }
 
-    private suspend fun getPrescriptionFhirIdById(prescriptionId: String): String? {
-        return prescriptionDao.getPrescriptionById(prescriptionId)[0].prescriptionFhirId
-    }
-
-    private suspend fun getMedReqFhirIdById(medReqUuid: String): String? {
-        return prescriptionDao.getMedReqById(medReqUuid)[0].medReqFhirId
-    }
-
     protected suspend fun insertPatientLastUpdatedGenericEntity(
         patientLastUpdatedResponse: PatientLastUpdatedResponse,
         patientLastUpdatedGenericEntity: GenericEntity?,
@@ -1221,95 +993,4 @@ open class GenericRepositoryDatabaseTransactions(
     }
 
 
-    protected suspend fun insertPrescriptionPhotoGenericEntity(
-        prescriptionPhotoResponse: PrescriptionPhotoResponse,
-        prescriptionPhotoGenericEntity: GenericEntity?,
-        uuid: String
-    ): Long {
-        return if (prescriptionPhotoGenericEntity != null) {
-            genericDao.insertGenericEntity(
-                prescriptionPhotoGenericEntity.copy(payload = prescriptionPhotoResponse.toJson())
-            )[0]
-        } else {
-            genericDao.insertGenericEntity(
-                GenericEntity(
-                    id = uuid,
-                    patientId = prescriptionPhotoResponse.prescriptionId,
-                    payload = prescriptionPhotoResponse.toJson(),
-                    type = GenericTypeEnum.PRESCRIPTION_PHOTO_RESPONSE,
-                    syncType = SyncType.POST
-                )
-            )[0]
-        }
-    }
-
-    protected suspend fun insertLabTestPhotoGenericEntity(
-        map: Map<String, Any>,
-        labTestId: String,
-        photoGenericEntity: GenericEntity?,
-        uuid: String,
-        typeEnum: GenericTypeEnum
-    ): Long {
-        return if (photoGenericEntity != null) {
-            genericDao.insertGenericEntity(
-                photoGenericEntity.copy(payload = map.toJson())
-            )[0]
-        } else {
-            genericDao.insertGenericEntity(
-                GenericEntity(
-                    id = uuid,
-                    patientId = labTestId,
-                    payload = map.toJson(),
-                    type = typeEnum,
-                    syncType = SyncType.POST
-                )
-            )[0]
-        }
-    }
-
-    protected suspend fun insertOrUpdatePhotoLabTestGenericEntityPatch(
-        prescriptionGenericEntity: GenericEntity?,
-        map: Map<String, Any>,
-        prescriptionFhirId: String,
-        uuid: String,
-        typeEnum: GenericTypeEnum
-    ): Long {
-        return if (prescriptionGenericEntity != null) {
-            genericDao.insertGenericEntity(
-                prescriptionGenericEntity.copy(payload = map.toJson())
-            )[0]
-        } else {
-            genericDao.insertGenericEntity(
-                GenericEntity(
-                    id = uuid,
-                    patientId = prescriptionFhirId,
-                    payload = map.toJson(),
-                    type = typeEnum,
-                    syncType = SyncType.PATCH
-                )
-            )[0]
-        }
-    }
-
-    protected suspend fun insertImmunizationGenericEntity(
-        immunizationResponse: ImmunizationResponse,
-        immunizationGenericEntity: GenericEntity?,
-        uuid: String
-    ): Long {
-        return if (immunizationGenericEntity != null) {
-            genericDao.insertGenericEntity(
-                immunizationGenericEntity.copy(payload = immunizationResponse.toJson())
-            )[0]
-        } else {
-            genericDao.insertGenericEntity(
-                GenericEntity(
-                    id = uuid,
-                    patientId = immunizationResponse.immunizationUuid,
-                    payload = immunizationResponse.toJson(),
-                    type = GenericTypeEnum.IMMUNIZATION,
-                    syncType = SyncType.POST
-                )
-            )[0]
-        }
-    }
 }

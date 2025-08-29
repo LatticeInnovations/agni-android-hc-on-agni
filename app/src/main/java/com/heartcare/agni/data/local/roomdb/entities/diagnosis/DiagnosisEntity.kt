@@ -1,0 +1,32 @@
+package com.heartcare.agni.data.local.roomdb.entities.diagnosis
+
+import androidx.annotation.Keep
+import androidx.room.Entity
+import androidx.room.ForeignKey
+import androidx.room.Index
+import androidx.room.PrimaryKey
+import com.heartcare.agni.data.server.model.diagnosis.DiagnosisItem
+import com.heartcare.agni.data.local.roomdb.entities.patient.PatientEntity
+import java.util.Date
+
+@Entity(
+    indices = [Index("fhirId"), Index("appointmentId"), Index("patientId")],
+    foreignKeys = [ForeignKey(
+        entity = PatientEntity::class,
+        parentColumns = arrayOf("id"),
+        childColumns = arrayOf("patientId")
+    )]
+)
+@Keep
+data class DiagnosisEntity(
+    @PrimaryKey
+    val diagnosisUuid: String,
+    val appointmentId: String,
+    val fhirId: String?,
+    val createdOn: Date,
+    val diagnosis: List<DiagnosisItem>,
+    val symptoms: List<DiagnosisItem>,
+    val practitionerName: String,
+    val patientId: String,
+    val progressNote: String?
+)

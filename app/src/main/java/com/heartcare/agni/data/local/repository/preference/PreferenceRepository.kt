@@ -32,10 +32,6 @@ interface PreferenceRepository {
     fun setLastSyncPatient(long: Long)
     fun getLastSyncPatient(): Long
 
-    /** Last Sync Relation */
-    fun setLastSyncRelation(long: Long)
-    fun getLastSyncRelation(): Long
-
     /** Last Sync Prescription */
     fun setLastSyncPrescription(long: Long)
     fun getLastSyncPrescription(): Long
@@ -64,21 +60,9 @@ interface PreferenceRepository {
     fun setLastSyncVital(long: Long)
     fun getLastSyncVital(): Long
 
-    /** Last Sync Symptoms And Diagnosis */
-    fun setLastSyncSymDiag(long: Long)
-    fun getLastSyncSymDiag(): Long
-
-    /** Last Sync Lab Test */
-    fun setLastSyncLabTest(long: Long)
-    fun getLastSyncLabTest(): Long
-
-    /** Last Sync Medical Record */
-    fun setLastSyncMedicalRecord(long: Long)
-    fun getLastSyncMedicalRecord(): Long
-
-    /** Last Sync Manufacturer Record */
-    fun setLastSyncManufacturerRecord(long: Long)
-    fun getLastSyncManufacturerRecord(): Long
+    /** Last Sync Diagnosis */
+    fun setLastSyncDiagnosis(long: Long)
+    fun getLastSyncDiagnosis(): Long
 
     /** Last Level Data */
     fun setLastSyncLevelRecord(long: Long)
@@ -124,34 +108,13 @@ interface PreferenceRepository {
     fun setLastSyncExamination(long: Long)
     fun getLastSyncExamination(): Long
 
-    /** User Data */
-    fun setUserFhirId(userFhirId: String)
-    fun getUserFhirId(): String
-    fun setUserName(userName: String)
-    fun getUserName(): String
-    fun setUserMobile(userMobile: Long)
-    fun getUserMobile(): Long
-    fun setUserEmail(userEmail: String)
-    fun getUserEmail(): String
-    fun setUserRoleId(userRoleId: String)
-    fun getUserRoleId(): String
-    fun setUserRole(userRole: String)
-    fun getUserRole(): String
-    fun setOrganizationFhirId(organizationFhirId: String)
-    fun getOrganizationFhirId(): String
-    fun setOrganization(organization: String)
-    fun getOrganization(): String
-
-    /** Authentication Token */
-    fun setAuthenticationToken(authToken: String)
-    fun getAuthenticationToken(): String
+    /** Last Diagnosis Master Sync Date */
+    fun setLastDiagnosisMasterSyncDate(long: Long)
+    fun getLastDiagnosisMasterSyncDate(): Long
 
     /** RoomDB EncryptionKey */
     fun setRoomDBEncryptionKey(encryptionKey: String)
     fun getRoomDBEncryptionKey(): String
-
-    /** Reset Authentication Token */
-    fun resetAuthenticationToken()
 
     /** Clear preferences */
     fun clearPreferences()

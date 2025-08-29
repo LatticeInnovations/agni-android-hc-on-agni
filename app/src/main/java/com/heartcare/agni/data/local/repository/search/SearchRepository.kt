@@ -7,12 +7,10 @@ import com.heartcare.agni.data.local.model.search.SearchParameters
 import com.heartcare.agni.data.local.roomdb.entities.patient.PatientAndIdentifierEntity
 import com.heartcare.agni.data.server.model.examination.ExaminationMasterResponse
 import com.heartcare.agni.data.server.model.intervention.InterventionMasterResponse
-import com.heartcare.agni.data.server.model.patient.PatientAddressResponse
 import com.heartcare.agni.data.server.model.patient.PatientResponse
 import com.heartcare.agni.data.server.model.prescription.medication.MedicationResponse
 import kotlinx.coroutines.flow.Flow
 import java.util.Date
-import java.util.LinkedList
 
 interface SearchRepository {
 
@@ -52,25 +50,11 @@ interface SearchRepository {
     suspend fun insertRecentTestExaminationSearch(searchQuery: String, date: Date = Date()): Long
     suspend fun getRecentTestExaminationSearches(): List<String>
 
-    /** Get Suggested Members */
-    suspend fun getSuggestedMembers(
-        patientId: String,
-        searchParameters: SearchParameters,
-        returnList: (LinkedList<PatientResponse>) -> Unit
-    )
-
-    suspend fun getFiveSuggestedMembers(
-        patientId: String,
-        address: PatientAddressResponse
-    ): List<PatientResponse>
-
     suspend fun getSearchList(): List<PatientAndIdentifierEntity>
 
-    /** Recent Symptoms Search*/
-    suspend fun insertRecentSymptomAndDiagnosisSearch(searchQuery: String, searchTypeEnum: SearchTypeEnum, size:Int, date: Date = Date()): Long
-    suspend fun getRecentSymptomAndDiagnosisSearches(searchTypeEnum: SearchTypeEnum): List<String>
-
-    suspend fun searchSymptoms(searchQuery: String, gender:String?): List<String>
+    /** Recent Diagnosis Search*/
+    suspend fun insertRecentDiagnosisSearch(searchQuery: String, searchTypeEnum: SearchTypeEnum, size:Int, date: Date = Date()): Long
+    suspend fun getRecentDiagnosisSearches(searchTypeEnum: SearchTypeEnum): List<String>
     suspend fun searchDiagnosis(searchQuery: String): List<String>
 
     suspend fun searchIntervention(searchQuery: String): List<InterventionMasterResponse>

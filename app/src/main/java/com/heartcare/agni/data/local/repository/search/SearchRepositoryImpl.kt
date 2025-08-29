@@ -4,18 +4,15 @@ import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.map
-import com.heartcare.agni.data.local.enums.GenderEnum
 import com.heartcare.agni.data.local.enums.SearchTypeEnum
 import com.heartcare.agni.data.local.model.pagination.PaginationResponse
 import com.heartcare.agni.data.local.model.search.SearchParameters
-import com.heartcare.agni.data.local.roomdb.dao.RelationDao
 import com.heartcare.agni.data.local.roomdb.dao.SearchDao
 import com.heartcare.agni.data.local.roomdb.entities.patient.PatientAndIdentifierEntity
 import com.heartcare.agni.data.local.roomdb.entities.search.SearchHistoryEntity
-import com.heartcare.agni.data.local.roomdb.entities.search.SymDiagSearchEntity
+import com.heartcare.agni.data.local.roomdb.entities.search.SearchEntity
 import com.heartcare.agni.data.server.model.examination.ExaminationMasterResponse
 import com.heartcare.agni.data.server.model.intervention.InterventionMasterResponse
-import com.heartcare.agni.data.server.model.patient.PatientAddressResponse
 import com.heartcare.agni.data.server.model.patient.PatientResponse
 import com.heartcare.agni.data.server.model.prescription.medication.MedicationResponse
 import com.heartcare.agni.utils.constants.Paging.PAGE_SIZE
@@ -28,16 +25,13 @@ import com.heartcare.agni.utils.search.Search.getFuzzySearchInterventionList
 import com.heartcare.agni.utils.search.Search.getFuzzySearchList
 import com.heartcare.agni.utils.search.Search.getFuzzySearchListByQuery
 import com.heartcare.agni.utils.search.Search.getFuzzySearchMedication
-import com.heartcare.agni.utils.search.Search.getFuzzySearchSymptomsList
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import java.util.Date
-import java.util.LinkedList
 import javax.inject.Inject
 
 class SearchRepositoryImpl @Inject constructor(
-    private val searchDao: SearchDao,
-    private val relationDao: RelationDao
+    private val searchDao: SearchDao
 ) : SearchRepository {
 
     @Volatile
@@ -264,64 +258,12 @@ class SearchRepositoryImpl @Inject constructor(
         return searchDao.getRecentSearches(SearchTypeEnum.TEST_EXAMINATION)
     }
 
-    override suspend fun getSuggestedMembers(
-        patientId: String,
-        searchParameters: SearchParameters,
-        returnList: (LinkedList<PatientResponse>) -> Unit
-    ) {
-        val linkedList = LinkedList<PatientResponse>()
-        val existingMembers = relationDao.getAllRelationOfPatient(patientId)
-            .map { relationEntity -> relationEntity.toId }.toMutableSet().apply { add(patientId) }
-        getFuzzySearchList(
-            getSearchList(),
-            searchParameters,
-            90
-        ).filter {
-            !existingMembers.contains(it.patientEntity.id)
-        }.map { patientAndIdentifierEntity ->
-            linkedList.add(patientAndIdentifierEntity.toPatientResponse())
-        }
-        returnList(
-            linkedList
-        )
-    }
-
-    override suspend fun getFiveSuggestedMembers(
-        patientId: String,
-        address: PatientAddressResponse
-    ): List<PatientResponse> {
-        val suggestionsList = listOf<PatientResponse>()
-        /*** Household member feature is not included
-        getSuggestedMembers(
-            patientId, SearchParameters(
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                address.village,
-                address.areaCouncil,
-                address.island,
-                address.province,
-                address.postalCode,
-                address.addressLine2
-            )
-        ) { list ->
-            suggestionsList = if (list.size > 5) {
-                list.subList(0, 5)
-            } else list
-        }
-        ***/
-        return suggestionsList
-    }
-
-    override suspend fun insertRecentSymptomAndDiagnosisSearch(
+    override suspend fun insertRecentDiagnosisSearch(
         searchQuery: String, searchTypeEnum: SearchTypeEnum, size: Int, date: Date
     ): Long {
-        val symDiagSearchEntity = searchDao.getSearchByQuery(searchQuery)
+        val diagnosisSearchEntity = searchDao.getSearchByQuery(searchQuery)
         return insertSearch(
-            symDiagSearchEntity = symDiagSearchEntity,
+            diagnosisSearchEntity = diagnosisSearchEntity,
             searchTypeEnum = searchTypeEnum,
             date = date,
             searchQuery = searchQuery
@@ -330,14 +272,14 @@ class SearchRepositoryImpl @Inject constructor(
     }
 
     private suspend fun insertSearch(
-        symDiagSearchEntity: SymDiagSearchEntity?,
+        diagnosisSearchEntity: SearchEntity?,
         searchTypeEnum: SearchTypeEnum,
         date: Date,
         searchQuery: String
     ): Long {
-        return if (symDiagSearchEntity == null) {
+        return if (diagnosisSearchEntity == null) {
             searchDao.insertOrUpdateSearch(
-                SymDiagSearchEntity(
+                SearchEntity(
                     searchQuery = searchQuery,
                     date = date,
                     searchCount = 1,
@@ -346,30 +288,19 @@ class SearchRepositoryImpl @Inject constructor(
             )
         } else {
             searchDao.updateSearch(
-                searchQuery = symDiagSearchEntity.searchQuery,
-                searchCount = symDiagSearchEntity.searchCount + 1
+                searchQuery = diagnosisSearchEntity.searchQuery,
+                searchCount = diagnosisSearchEntity.searchCount + 1
             ).toLong()
         }
 
     }
 
-    override suspend fun getRecentSymptomAndDiagnosisSearches(searchTypeEnum: SearchTypeEnum): List<String> {
+    override suspend fun getRecentDiagnosisSearches(searchTypeEnum: SearchTypeEnum): List<String> {
         return searchDao.getMostFrequentSearches(searchTypeEnum)
     }
 
-    override suspend fun searchSymptoms(searchQuery: String, gender: String?): List<String> {
-        val symptoms = if (gender != GenderEnum.OTHER.value) {
-            searchDao.getSymptoms().filter { it.gender == null || it.gender == gender }
-                .map { it.display }
-        } else {
-            searchDao.getSymptoms().map { it.display }
-        }
-        return getFuzzySearchSymptomsList(searchQuery, symptoms, 60)
-
-    }
-
     override suspend fun searchDiagnosis(searchQuery: String): List<String> {
-        return getFuzzySearchDiagnosisList(searchQuery, searchDao.getDiagnosis(), 70)
+        return getFuzzySearchDiagnosisList(searchQuery, searchDao.getDiagnosisMasterList(), 70)
     }
 
     override suspend fun searchIntervention(searchQuery: String): List<InterventionMasterResponse> {

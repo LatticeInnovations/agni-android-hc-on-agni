@@ -58,12 +58,6 @@ class PreferenceRepositoryImpl @Inject constructor(private val preferenceStorage
 
     override fun getLastSyncPatient() = preferenceStorage.lastPatientSyncTime
 
-    override fun setLastSyncRelation(long: Long) {
-        preferenceStorage.lastRelationSyncTime = long
-    }
-
-    override fun getLastSyncRelation() = preferenceStorage.lastRelationSyncTime
-
     override fun setLastSyncPrescription(long: Long) {
         preferenceStorage.lastPrescriptionSyncTime = long
     }
@@ -104,30 +98,11 @@ class PreferenceRepositoryImpl @Inject constructor(private val preferenceStorage
     }
     override fun getLastSyncVital() = preferenceStorage.lastVitalSyncTime
 
-    override fun setLastSyncSymDiag(long: Long) {
-        preferenceStorage.lastSymptomsSyncTime = long
+    override fun setLastSyncDiagnosis(long: Long) {
+        preferenceStorage.lastDiagnosisSyncTime = long
     }
 
-    override fun getLastSyncSymDiag() = preferenceStorage.lastSymptomsSyncTime
-
-    override fun setLastSyncLabTest(long: Long) {
-        preferenceStorage.lastLabTestSyncTime = long
-    }
-
-    override fun getLastSyncLabTest() = preferenceStorage.lastLabTestSyncTime
-
-
-    override fun setLastSyncMedicalRecord(long: Long) {
-        preferenceStorage.lastMedicalRecordSyncTime = long
-    }
-
-    override fun getLastSyncMedicalRecord() = preferenceStorage.lastMedicalRecordSyncTime
-
-    override fun setLastSyncManufacturerRecord(long: Long) {
-        preferenceStorage.lastSyncManufacturerRecord = long
-    }
-
-    override fun getLastSyncManufacturerRecord() = preferenceStorage.lastSyncManufacturerRecord
+    override fun getLastSyncDiagnosis() = preferenceStorage.lastDiagnosisSyncTime
 
     override fun setLastSyncLevelRecord(long: Long) {
         preferenceStorage.lastSyncLevelRecord = long
@@ -195,72 +170,20 @@ class PreferenceRepositoryImpl @Inject constructor(private val preferenceStorage
 
     override fun getLastSyncExamination(): Long = preferenceStorage.lastSyncExamination
 
+    override fun setLastDiagnosisMasterSyncDate(long: Long) {
+        preferenceStorage.lastSyncDiagnosisMaster = long
+    }
+
+    override fun getLastDiagnosisMasterSyncDate(): Long = preferenceStorage.lastSyncDiagnosisMaster
+
     override fun getLastMedicineDosageInstructionSyncDate() =
         preferenceStorage.lastMedicineDosageInstructionSyncTime
-
-    override fun setUserFhirId(userFhirId: String) {
-        preferenceStorage.userFhirId = userFhirId
-    }
-
-    override fun getUserFhirId() = preferenceStorage.userFhirId
-
-    override fun setUserName(userName: String) {
-        preferenceStorage.userName = userName
-    }
-
-    override fun getUserName() = preferenceStorage.userName
-
-    override fun setUserMobile(userMobile: Long) {
-        preferenceStorage.userMobile = userMobile
-    }
-
-    override fun getUserMobile() = preferenceStorage.userMobile
-
-    override fun setUserEmail(userEmail: String) {
-        preferenceStorage.userEmail = userEmail
-    }
-
-    override fun getUserEmail() = preferenceStorage.userEmail
-
-    override fun setUserRoleId(userRoleId: String) {
-        preferenceStorage.userRoleId = userRoleId
-    }
-
-    override fun getUserRoleId() = preferenceStorage.userRoleId
-
-    override fun setUserRole(userRole: String) {
-        preferenceStorage.userRole = userRole
-    }
-
-    override fun getUserRole() = preferenceStorage.userRole
-
-    override fun setOrganizationFhirId(organizationFhirId: String) {
-        preferenceStorage.organizationFhirId = organizationFhirId
-    }
-
-    override fun getOrganizationFhirId() = preferenceStorage.organizationFhirId
-
-    override fun setOrganization(organization: String) {
-        preferenceStorage.organization = organization
-    }
-
-    override fun getOrganization() = preferenceStorage.organization
-
-    override fun setAuthenticationToken(authToken: String) {
-        preferenceStorage.token = authToken
-    }
-
-    override fun getAuthenticationToken() = preferenceStorage.token
 
     override fun setRoomDBEncryptionKey(encryptionKey: String) {
         preferenceStorage.roomDBEncryptionKey = encryptionKey
     }
 
     override fun getRoomDBEncryptionKey() = preferenceStorage.roomDBEncryptionKey
-
-    override fun resetAuthenticationToken() {
-        preferenceStorage.token = ""
-    }
 
     override fun clearPreferences() {
         val roomDBEncryptionKey = preferenceStorage.roomDBEncryptionKey

@@ -5,33 +5,25 @@ import com.heartcare.agni.data.local.roomdb.FhirAppDatabase
 import com.heartcare.agni.data.local.roomdb.dao.AllergyDao
 import com.heartcare.agni.data.local.roomdb.dao.AppointmentDao
 import com.heartcare.agni.data.local.roomdb.dao.CVDDao
-import com.heartcare.agni.data.local.roomdb.dao.DispenseDao
-import com.heartcare.agni.data.local.roomdb.dao.DownloadedFileDao
 import com.heartcare.agni.data.local.roomdb.dao.ExaminationDao
 import com.heartcare.agni.data.local.roomdb.dao.FamilyHistoryDao
-import com.heartcare.agni.data.local.roomdb.dao.FileUploadDao
 import com.heartcare.agni.data.local.roomdb.dao.GenericDao
 import com.heartcare.agni.data.local.roomdb.dao.HistoryMedicationDao
 import com.heartcare.agni.data.local.roomdb.dao.IdentifierDao
 import com.heartcare.agni.data.local.roomdb.dao.InterventionDao
-import com.heartcare.agni.data.local.roomdb.dao.LabTestAndMedDao
 import com.heartcare.agni.data.local.roomdb.dao.LevelsDao
 import com.heartcare.agni.data.local.roomdb.dao.MedicationDao
 import com.heartcare.agni.data.local.roomdb.dao.PatientDao
 import com.heartcare.agni.data.local.roomdb.dao.PatientLastUpdatedDao
 import com.heartcare.agni.data.local.roomdb.dao.PrescriptionDao
 import com.heartcare.agni.data.local.roomdb.dao.PriorDxDao
-import com.heartcare.agni.data.local.roomdb.dao.RelationDao
 import com.heartcare.agni.data.local.roomdb.dao.RiskFactorDao
 import com.heartcare.agni.data.local.roomdb.dao.RiskPredictionDao
 import com.heartcare.agni.data.local.roomdb.dao.ScheduleDao
 import com.heartcare.agni.data.local.roomdb.dao.SearchDao
-import com.heartcare.agni.data.local.roomdb.dao.VitalDao
-import com.heartcare.agni.data.local.roomdb.dao.SymptomsAndDiagnosisDao
+import com.heartcare.agni.data.local.roomdb.dao.DiagnosisDao
 import com.heartcare.agni.data.local.roomdb.dao.TobaccoCessationDao
-import com.heartcare.agni.data.local.roomdb.dao.vaccincation.ImmunizationDao
-import com.heartcare.agni.data.local.roomdb.dao.vaccincation.ImmunizationRecommendationDao
-import com.heartcare.agni.data.local.roomdb.dao.vaccincation.ManufacturerDao
+import com.heartcare.agni.data.local.roomdb.dao.VitalDao
 import com.heartcare.agni.data.local.sharedpreferences.PreferenceStorage
 import dagger.Module
 import dagger.Provides
@@ -73,12 +65,6 @@ object DatabaseModule {
 
     @Singleton
     @Provides
-    fun provideRelationDao(fhirAppDatabase: FhirAppDatabase): RelationDao {
-        return fhirAppDatabase.getRelationDao()
-    }
-
-    @Singleton
-    @Provides
     fun provideSearchDao(fhirAppDatabase: FhirAppDatabase): SearchDao {
         return fhirAppDatabase.getSearchDao()
     }
@@ -115,18 +101,6 @@ object DatabaseModule {
 
     @Singleton
     @Provides
-    fun provideFileUploadDao(appDatabase: FhirAppDatabase): FileUploadDao {
-        return appDatabase.getFileUploadDao()
-    }
-
-    @Singleton
-    @Provides
-    fun provideDownloadedFileDao(appDatabase: FhirAppDatabase): DownloadedFileDao {
-        return appDatabase.getDownloadedFileDao()
-    }
-
-    @Singleton
-    @Provides
     fun provideRiskPredictionDao(appDatabase: FhirAppDatabase): RiskPredictionDao {
         return appDatabase.getRiskPredictionDao()
     }
@@ -144,37 +118,8 @@ object DatabaseModule {
 
     @Singleton
     @Provides
-    fun provideSymptomsAndDiagnosisDao(fhirAppDatabase: FhirAppDatabase): SymptomsAndDiagnosisDao {
-        return fhirAppDatabase.getSymptomsAndDiagnosisDao()
-    }
-    @Singleton
-    @Provides
-    fun provideLabTestAndMedDao(fhirAppDatabase: FhirAppDatabase): LabTestAndMedDao {
-        return fhirAppDatabase.getLabTestAndMedDao()
-    }
-
-    @Singleton
-    @Provides
-    fun provideDispenseDao(fhirAppDatabase: FhirAppDatabase): DispenseDao {
-        return fhirAppDatabase.getDispenseDao()
-    }
-
-    @Singleton
-    @Provides
-    fun provideImmunizationDao(fhirAppDatabase: FhirAppDatabase): ImmunizationDao {
-        return fhirAppDatabase.getImmunizationDao()
-    }
-
-    @Singleton
-    @Provides
-    fun provideImmunizationRecommendationDao(fhirAppDatabase: FhirAppDatabase): ImmunizationRecommendationDao {
-        return fhirAppDatabase.getImmunizationRecommendationDao()
-    }
-
-    @Singleton
-    @Provides
-    fun provideManufacturerDao(fhirAppDatabase: FhirAppDatabase): ManufacturerDao {
-        return fhirAppDatabase.getManufacturerDao()
+    fun provideDiagnosisDao(fhirAppDatabase: FhirAppDatabase): DiagnosisDao {
+        return fhirAppDatabase.getDiagnosisDao()
     }
 
     @Singleton

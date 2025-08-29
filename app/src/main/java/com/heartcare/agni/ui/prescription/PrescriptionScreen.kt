@@ -74,7 +74,7 @@ import com.heartcare.agni.ui.common.CustomDialog
 import com.heartcare.agni.ui.common.TabRowComposable
 import com.heartcare.agni.ui.patientlandingscreen.AllSlotsBookedDialog
 import com.heartcare.agni.ui.prescription.filldetails.FillDetailsScreen
-import com.heartcare.agni.ui.prescription.photo.view.AppointmentCompletedDialog
+import com.heartcare.agni.ui.common.AppointmentCompletedDialog
 import com.heartcare.agni.ui.prescription.previousprescription.PreviousPrescriptionsScreen
 import com.heartcare.agni.ui.prescription.previousprescription.saveRePrescription
 import com.heartcare.agni.ui.prescription.quickselect.QuickSelectScreen
@@ -575,7 +575,7 @@ fun SelectedCompoundCard(
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                medication.medication.brandName?.let {
+                medication.medication.brandName?.ifBlank { null }?.let {
                     Text(
                         text = stringResource(R.string.brand_name, it),
                         style = MaterialTheme.typography.bodyMedium,

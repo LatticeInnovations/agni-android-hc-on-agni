@@ -14,8 +14,6 @@ import com.heartcare.agni.data.local.repository.appointment.AppointmentRepositor
 import com.heartcare.agni.data.local.repository.cvd.records.CVDAssessmentRepository
 import com.heartcare.agni.data.local.repository.patient.PatientRepository
 import com.heartcare.agni.data.local.repository.preference.PreferenceRepository
-import com.heartcare.agni.data.local.repository.prescription.PrescriptionRepository
-import com.heartcare.agni.data.local.repository.vaccination.ImmunizationRecommendationRepository
 import com.heartcare.agni.data.server.model.patient.PatientResponse
 import com.heartcare.agni.di.dispatcher.IoDispatcher
 import com.heartcare.agni.service.workmanager.utils.Sync
@@ -27,7 +25,6 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import okhttp3.internal.filterList
 import java.util.Date
 import javax.inject.Inject
 
@@ -36,9 +33,7 @@ class PatientLandingScreenViewModel @Inject constructor(
     application: Application,
     private val patientRepository: PatientRepository,
     private val appointmentRepository: AppointmentRepository,
-    private val prescriptionRepository: PrescriptionRepository,
     private val cvdAssessmentRepository: CVDAssessmentRepository,
-    private val immunizationRecommendationRepository: ImmunizationRecommendationRepository,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
     preferenceRepository: PreferenceRepository
 ) : BaseAndroidViewModel(application) {
@@ -51,7 +46,6 @@ class PatientLandingScreenViewModel @Inject constructor(
 
     var appointmentsCount by mutableIntStateOf(0)
     var pastAppointmentsCount by mutableIntStateOf(0)
-    var uploadsCount by mutableIntStateOf(0)
     var isFabSelected by mutableStateOf(false)
     var showAllSlotsBookedDialog by mutableStateOf(false)
 
@@ -61,10 +55,6 @@ class PatientLandingScreenViewModel @Inject constructor(
     var cvdRisk by mutableStateOf("")
 
     var selectedIndex by mutableIntStateOf(0)
-
-    var upcomingVaccine by mutableIntStateOf(0)
-    var missedVaccine by mutableIntStateOf(0)
-    var takenVaccine by mutableIntStateOf(0)
 
     private suspend fun syncData() {
         Sync.getWorkerInfo<TriggerWorkerPeriodicImpl>(getApplication<FhirApp>().applicationContext)
@@ -106,26 +96,9 @@ class PatientLandingScreenViewModel @Inject constructor(
         }
     }
 
-    internal fun getUploadsCount(patientId: String) {
-        viewModelScope.launch(ioDispatcher) {
-            uploadsCount = prescriptionRepository.getLastPhotoPrescription(patientId).size
-        }
-    }
-
     internal fun getLastCVDRisk(patientId: String) {
         viewModelScope.launch(ioDispatcher) {
             cvdRisk = (cvdAssessmentRepository.getCVDRecord(patientId).firstOrNull()?.risk ?: "").toString()
-        }
-    }
-
-    internal fun getImmunizationRecommendationList(
-        patientId: String
-    ) {
-        viewModelScope.launch(ioDispatcher) {
-            val immunizationRecommendationList = immunizationRecommendationRepository.getImmunizationRecommendation(patientId)
-            missedVaccine = immunizationRecommendationList.filterList { vaccineStartDate < Date(Date().toTodayStartDate()) && takenOn == null }.sortedBy { it.vaccineStartDate }.size
-            takenVaccine = immunizationRecommendationList.filterList { takenOn != null }.sortedByDescending { it.takenOn }.size
-            upcomingVaccine = immunizationRecommendationList.size - missedVaccine - takenVaccine
         }
     }
 }

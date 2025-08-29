@@ -5,7 +5,7 @@ import com.heartcare.agni.data.local.model.search.SearchParameters
 import com.heartcare.agni.data.local.roomdb.entities.examination.ExaminationMasterEntity
 import com.heartcare.agni.data.local.roomdb.entities.intervention.InterventionMasterEntity
 import com.heartcare.agni.data.local.roomdb.entities.patient.PatientAndIdentifierEntity
-import com.heartcare.agni.data.local.roomdb.entities.symptomsanddiagnosis.DiagnosisEntity
+import com.heartcare.agni.data.local.roomdb.entities.diagnosis.DiagnosisMasterEntity
 import com.heartcare.agni.data.server.model.examination.ExaminationMasterResponse
 import com.heartcare.agni.data.server.model.intervention.InterventionMasterResponse
 import com.heartcare.agni.data.server.model.prescription.medication.MedicationResponse
@@ -136,23 +136,13 @@ object Search {
 
     internal fun getFuzzySearchDiagnosisList(
         searchQuery: String,
-        diagnosisList: List<DiagnosisEntity>,
+        diagnosisList: List<DiagnosisMasterEntity>,
         matchingRatio: Int
     ): List<String> {
         return diagnosisList.filter { diagnosis ->
             FuzzySearch.weightedRatio(searchQuery.lowercase(), diagnosis.display.lowercase()) > matchingRatio
                     || FuzzySearch.weightedRatio(searchQuery.lowercase(), diagnosis.code.lowercase()) > matchingRatio
         }.map { "${it.code}, ${it.display}" }
-    }
-
-    internal fun getFuzzySearchSymptomsList(
-        searchQuery: String,
-        symptomsList: List<String>,
-        matchingRatio: Int
-    ): List<String> {
-        return symptomsList.filter { symptoms ->
-            FuzzySearch.partialRatio(searchQuery, symptoms) > matchingRatio
-        }
     }
 
     internal fun getFuzzySearchInterventionList(

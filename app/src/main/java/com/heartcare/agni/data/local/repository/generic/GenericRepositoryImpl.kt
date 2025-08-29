@@ -2,36 +2,29 @@ package com.heartcare.agni.data.local.repository.generic
 
 import com.heartcare.agni.data.local.enums.GenericTypeEnum
 import com.heartcare.agni.data.local.enums.SyncType
-import com.heartcare.agni.data.local.model.symdiag.SymptomsAndDiagnosisData
+import com.heartcare.agni.data.local.model.diagnosis.DiagnosisData
 import com.heartcare.agni.data.local.roomdb.dao.AppointmentDao
 import com.heartcare.agni.data.local.roomdb.dao.GenericDao
 import com.heartcare.agni.data.local.roomdb.dao.PatientDao
-import com.heartcare.agni.data.local.roomdb.dao.PrescriptionDao
 import com.heartcare.agni.data.local.roomdb.dao.ScheduleDao
 import com.heartcare.agni.data.local.roomdb.entities.generic.GenericEntity
 import com.heartcare.agni.data.server.model.allergy.AllergyResponse
 import com.heartcare.agni.data.server.model.cvd.CVDResponse
-import com.heartcare.agni.data.server.model.dispense.request.MedicineDispenseRequest
 import com.heartcare.agni.data.server.model.examination.ExaminationResponse
 import com.heartcare.agni.data.server.model.family.FamilyHistoryResponse
 import com.heartcare.agni.data.server.model.historymedication.HistoryMedicationResponse
 import com.heartcare.agni.data.server.model.intervention.InterventionResponse
 import com.heartcare.agni.data.server.model.patient.PatientLastUpdatedResponse
 import com.heartcare.agni.data.server.model.patient.PatientResponse
-import com.heartcare.agni.data.server.model.prescription.photo.PrescriptionPhotoPatch
-import com.heartcare.agni.data.server.model.prescription.photo.PrescriptionPhotoResponse
 import com.heartcare.agni.data.server.model.prescription.prescriptionresponse.PrescriptionResponse
 import com.heartcare.agni.data.server.model.priordx.PriorDxResponse
-import com.heartcare.agni.data.server.model.relatedperson.RelatedPersonResponse
 import com.heartcare.agni.data.server.model.risk.RiskFactorResponse
 import com.heartcare.agni.data.server.model.scheduleandappointment.appointment.AppointmentResponse
 import com.heartcare.agni.data.server.model.scheduleandappointment.schedule.ScheduleResponse
 import com.heartcare.agni.data.server.model.tobacco.TobaccoCessationResponse
-import com.heartcare.agni.data.server.model.vaccination.ImmunizationResponse
 import com.heartcare.agni.data.server.model.vitals.VitalResponse
 import com.heartcare.agni.utils.builders.UUIDBuilder
 import com.heartcare.agni.utils.converters.responseconverter.GsonConverters.toJson
-import timber.log.Timber
 import javax.inject.Inject
 
 /**
@@ -45,10 +38,9 @@ class GenericRepositoryImpl @Inject constructor(
     private val genericDao: GenericDao,
     patientDao: PatientDao,
     scheduleDao: ScheduleDao,
-    appointmentDao: AppointmentDao,
-    prescriptionDao: PrescriptionDao
+    appointmentDao: AppointmentDao
 ) : GenericRepository,
-    GenericRepositoryDatabaseTransactions(genericDao, patientDao, scheduleDao, appointmentDao, prescriptionDao) {
+    GenericRepositoryDatabaseTransactions(genericDao, patientDao, scheduleDao, appointmentDao) {
 
     override suspend fun insertPatient(patientResponse: PatientResponse, uuid: String): Long {
         return genericDao.getGenericEntityById(
@@ -57,31 +49,6 @@ class GenericRepositoryImpl @Inject constructor(
             syncType = SyncType.POST
         ).let { patientGenericEntity ->
             insertPatientGenericEntity(patientResponse, patientGenericEntity, uuid)
-        }
-    }
-
-    override suspend fun insertRelation(
-        patientId: String,
-        relatedPersonResponse: RelatedPersonResponse,
-        uuid: String
-    ): Long {
-        return genericDao.getGenericEntityById(
-            patientId = patientId,
-            genericTypeEnum = GenericTypeEnum.RELATION,
-            syncType = SyncType.POST
-        ).let { relationGenericEntity ->
-            insertRelationGenericEntity(
-                relationGenericEntity,
-                relatedPersonResponse,
-                uuid,
-                patientId
-            )
-        }
-    }
-
-    override suspend fun updateRelationFhirId() {
-        genericDao.getNotSyncedData(GenericTypeEnum.RELATION).forEach { relationGenericEntity ->
-            updateRelationFhirIdInGenericEntity(relationGenericEntity)
         }
     }
 
@@ -98,31 +65,10 @@ class GenericRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun insertPhotoPrescription(
-        prescriptionPhotoResponse: PrescriptionPhotoResponse,
-        uuid: String
-    ): Long {
-        return genericDao.getGenericEntityById(
-            patientId = prescriptionPhotoResponse.prescriptionId,
-            genericTypeEnum = GenericTypeEnum.PRESCRIPTION_PHOTO_RESPONSE,
-            syncType = SyncType.POST
-        ).let { prescriptionGenericEntity ->
-            insertPrescriptionPhotoGenericEntity(
-                prescriptionPhotoResponse,
-                prescriptionGenericEntity,
-                uuid
-            )
-        }
-    }
-
     override suspend fun updatePrescriptionFhirId() {
         genericDao.getNotSyncedData(GenericTypeEnum.PRESCRIPTION)
             .forEach { prescriptionGenericEntity ->
                 updateFormPrescriptionFhirIdInGenericEntity(prescriptionGenericEntity)
-            }
-        genericDao.getNotSyncedData(GenericTypeEnum.PRESCRIPTION_PHOTO_RESPONSE)
-            .forEach { prescriptionGenericEntity ->
-                updatePhotoPrescriptionFhirIdInGenericEntity(prescriptionGenericEntity)
             }
     }
 
@@ -162,37 +108,10 @@ class GenericRepositoryImpl @Inject constructor(
                 updateVitalFhirIdInGenericEntity(vitalGenericEntity)
             }
     }
-    override suspend fun updateSymDiagFhirId() {
-        genericDao.getNotSyncedData(GenericTypeEnum.SYMPTOMS_DIAGNOSIS)
-            .forEach { symDiagGenericEntity ->
-                updateSymDiagFhirIdInGenericEntity(symDiagGenericEntity)
-            }
-    }
-    override suspend fun updateLabTestFhirId() {
-        genericDao.getNotSyncedData(GenericTypeEnum.LAB_TEST)
-            .forEach { genericEntity ->
-                updateLabTestFhirIdInGenericEntity(genericEntity)
-            }
-    }
-
-    override suspend fun updateMedRecordFhirId() {
-        genericDao.getNotSyncedData(GenericTypeEnum.MEDICAL_RECORD)
-            .forEach { genericEntity ->
-                updateMedicalRecordFhirIdInGenericEntity(genericEntity)
-            }
-    }
-
-    override suspend fun updateDispenseFhirId() {
-        genericDao.getNotSyncedData(GenericTypeEnum.DISPENSE)
-            .forEach { dispenseGenericEntity ->
-                updateDispenseFhirIdInGenericEntity(dispenseGenericEntity)
-            }
-    }
-
-    override suspend fun updateImmunizationFhirId() {
-        genericDao.getNotSyncedData(GenericTypeEnum.IMMUNIZATION)
-            .forEach { immunizationGenericEntity ->
-                updateImmunizationFhirIdInGenericEntity(immunizationGenericEntity)
+    override suspend fun updateDiagnosisFhirId() {
+        genericDao.getNotSyncedData(GenericTypeEnum.DIAGNOSIS)
+            .forEach { diagnosisGenericEntity ->
+                updateDiagnosisFhirIdInGenericEntity(diagnosisGenericEntity)
             }
     }
 
@@ -278,26 +197,13 @@ class GenericRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun insertSymDiag(local: SymptomsAndDiagnosisData, uuid: String): Long {
+    override suspend fun insertSymDiag(local: DiagnosisData, uuid: String): Long {
         return genericDao.getGenericEntityById(
-            patientId = local.symDiagUuid,
-            genericTypeEnum = GenericTypeEnum.SYMPTOMS_DIAGNOSIS,
+            patientId = local.diagnosisUuid,
+            genericTypeEnum = GenericTypeEnum.DIAGNOSIS,
             syncType = SyncType.POST
         ).let {
             insertSymDiagGenericEntity(local, it, uuid)
-        }
-    }
-
-    override suspend fun insertDispense(
-        medicineDispenseRequest: MedicineDispenseRequest,
-        uuid: String
-    ): Long {
-        return genericDao.getGenericEntityById(
-            patientId = medicineDispenseRequest.dispenseId,
-            genericTypeEnum = GenericTypeEnum.DISPENSE,
-            syncType = SyncType.POST
-        ).let { dispenseGenericEntity ->
-            insertDispenseGenericEntity(medicineDispenseRequest, dispenseGenericEntity, uuid)
         }
     }
 
@@ -451,61 +357,6 @@ class GenericRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun insertOrUpdatePhotoPrescriptionPatch(
-        prescriptionFhirId: String,
-        prescriptionPhotoPatch: PrescriptionPhotoPatch,
-        uuid: String
-    ): Long {
-        return genericDao.getGenericEntityById(
-            prescriptionFhirId,
-            GenericTypeEnum.PRESCRIPTION_PHOTO_RESPONSE,
-            SyncType.PATCH
-        ).let { prescriptionGenericEntity ->
-            insertOrUpdatePhotoPrescriptionGenericEntityPatch(
-                prescriptionFhirId = prescriptionFhirId,
-                prescriptionGenericEntity = prescriptionGenericEntity,
-                prescriptionPhotoPatch = prescriptionPhotoPatch,
-                uuid = uuid
-            )
-        }
-    }
-
-    override suspend fun insertOrUpdateCVDPatch(
-        cvdFhirId: String,
-        map: Map<String, Any>,
-        uuid: String
-    ): Long {
-        return genericDao.getSameTypeGenericEntityPayload(
-            GenericTypeEnum.CVD,
-            SyncType.PATCH
-        ).let { genericEntities ->
-            insertOrUpdateCVDGenericEntityPatch(genericEntities, cvdFhirId, map, uuid)
-        }
-    }
-    override suspend fun insertOrUpdateSymDiagPatchEntity(
-        fhirId: String,
-        map: Map<String, Any>,
-        uuid: String
-    ): Long {
-        return genericDao.getGenericEntityById(
-            patientId = fhirId,
-            genericTypeEnum = GenericTypeEnum.SYMPTOMS_DIAGNOSIS,
-            syncType = SyncType.PATCH
-        ).let { genericEntity ->
-            insertSymDiagGenericEntityPatch(genericEntity, fhirId, map, uuid)
-        }
-    }
-
-    override suspend fun insertOrUpdateVitalPatchEntity(
-        vitalFhirId: String, map: Map<String, Any>, uuid: String
-    ): Long {
-        return genericDao.getSameTypeGenericEntityPayload(
-            genericTypeEnum = GenericTypeEnum.VITAL,
-            syncType = SyncType.PATCH
-        ).let { genericEntity ->
-            insertVitalGenericEntityPatch(genericEntity, vitalFhirId, map, uuid)
-        }
-    }
     override suspend fun insertPatientLastUpdated(
         patientLastUpdatedResponse: PatientLastUpdatedResponse,
         uuid: String
@@ -541,63 +392,6 @@ class GenericRepositoryImpl @Inject constructor(
                 syncType = syncType
             )
         )[0]
-    }
-
-    override suspend fun insertPhotoLabTestAndMedRecord(
-        map: Map<String, Any>,
-        patientId: String,
-        uuid: String,
-        labTestId:String,
-        typeEnum: GenericTypeEnum
-    ): Long {
-        Timber.d("LAB: $labTestId")
-        return genericDao.getGenericEntityById(
-            patientId = labTestId,
-            genericTypeEnum = typeEnum,
-            syncType = SyncType.POST
-        ).let { genericEntity ->
-            insertLabTestPhotoGenericEntity(
-                map = map,
-                labTestId = labTestId,
-                photoGenericEntity = genericEntity,
-                uuid = uuid, typeEnum = typeEnum
-            )
-        }
-    }
-    
-    override suspend fun insertOrUpdatePhotoLabTestAndMedPatch(
-        fhirId: String,
-        map: Map<String, Any>,
-        uuid: String,
-        typeEnum: GenericTypeEnum
-    ): Long {
-        return genericDao.getGenericEntityById(
-            fhirId,
-            typeEnum,
-            SyncType.PATCH
-        ).let { prescriptionGenericEntity ->
-            insertOrUpdatePhotoLabTestGenericEntityPatch(
-                prescriptionFhirId = fhirId,
-                prescriptionGenericEntity = prescriptionGenericEntity,
-                map = map,
-                uuid = uuid,
-                typeEnum = typeEnum
-            )
-        }
-
-    }
-
-    override suspend fun insertImmunization(
-        immunizationResponse: ImmunizationResponse,
-        uuid: String
-    ): Long {
-        return genericDao.getGenericEntityById(
-            patientId = immunizationResponse.immunizationUuid,
-            genericTypeEnum = GenericTypeEnum.IMMUNIZATION,
-            syncType = SyncType.POST
-        ).let { immunizationGenericEntity ->
-            insertImmunizationGenericEntity(immunizationResponse, immunizationGenericEntity, uuid)
-        }
     }
 
     override suspend fun insertOrUpdatePrescriptionPut(

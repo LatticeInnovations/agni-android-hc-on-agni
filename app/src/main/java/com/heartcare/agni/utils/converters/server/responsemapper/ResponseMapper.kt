@@ -6,8 +6,11 @@ import com.google.gson.reflect.TypeToken
 import com.heartcare.agni.base.server.BaseResponse
 import com.heartcare.agni.data.server.model.authentication.ErrorResponse
 import com.heartcare.agni.utils.constants.ErrorConstants.SERVER_ERROR
+import com.heartcare.agni.utils.constants.ErrorConstants.SOCKET_TIMEOUT_EXCEPTION
+import com.heartcare.agni.utils.constants.ErrorConstants.SOMETHING_WENT_WRONG
 import retrofit2.Response
 import timber.log.Timber
+import java.net.SocketTimeoutException
 
 sealed class ResponseMapper<out T> {
 
@@ -21,19 +24,33 @@ sealed class ResponseMapper<out T> {
             response: Response<BaseResponse<T>>,
             paginated: Boolean
         ): ResponseMapper<T> {
-            return if (response.isSuccessful) {
-                mapData(response, paginated)
-            } else {
-                val gson = GsonBuilder().setPrettyPrinting().create()
-                val collectionType = object : TypeToken<BaseResponse<T?>>() {}.type
-                try {
-                    val data: BaseResponse<Any?> =
-                        gson.fromJson(response.errorBody()?.string(), collectionType)
-                    ApiErrorResponse(response.code(), data.message)
-                } catch (e: JsonSyntaxException) {
-                    Timber.e(e)
-                    ApiErrorResponse(0, SERVER_ERROR)
+            return try {
+                if (response.isSuccessful) {
+                    mapData(response, paginated)
+                } else {
+                    val gson = GsonBuilder().setPrettyPrinting().create()
+                    val collectionType = object : TypeToken<BaseResponse<T?>>() {}.type
+                    try {
+                        val data: BaseResponse<Any?> =
+                            gson.fromJson(response.errorBody()?.string(), collectionType)
+                        ApiErrorResponse(response.code(), data.message)
+                    } catch (e: JsonSyntaxException) {
+                        Timber.e(e, e.localizedMessage)
+                        ApiErrorResponse(0, SERVER_ERROR)
+                    }
                 }
+            } catch (e: SocketTimeoutException) {
+                Timber.e(e, e.localizedMessage)
+                ApiErrorResponse(
+                    statusCode = 0,
+                    errorMessage = e.localizedMessage ?: SOCKET_TIMEOUT_EXCEPTION
+                )
+            } catch (e: Exception) {
+                Timber.e(e, e.localizedMessage)
+                ApiErrorResponse(
+                    statusCode = 0,
+                    errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
+                )
             }
         }
 
@@ -81,7 +98,7 @@ sealed class ResponseMapper<out T> {
                     }
                     ApiErrorResponse(response.code(), error?.message ?: "Unknown error")
                 } catch (e: JsonSyntaxException) {
-                    Timber.e(e)
+                    Timber.e(e, e.localizedMessage)
                     ApiErrorResponse(0, SERVER_ERROR)
                 }
             }

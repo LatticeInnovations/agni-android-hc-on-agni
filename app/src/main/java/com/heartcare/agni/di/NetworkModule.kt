@@ -7,19 +7,14 @@ import com.heartcare.agni.data.local.sharedpreferences.PreferenceStorage
 import com.heartcare.agni.data.server.api.AuthenticationApiService
 import com.heartcare.agni.data.server.api.AuthenticationApiServiceWithToken
 import com.heartcare.agni.data.server.api.CVDApiService
-import com.heartcare.agni.data.server.api.DispenseApiService
 import com.heartcare.agni.data.server.api.ExaminationApiService
-import com.heartcare.agni.data.server.api.FileUploadApiService
-import com.heartcare.agni.data.server.api.LabTestAndMedRecordService
 import com.heartcare.agni.data.server.api.LevelsApiService
 import com.heartcare.agni.data.server.api.PatientApiService
 import com.heartcare.agni.data.server.api.PrescriptionApiService
 import com.heartcare.agni.data.server.api.HistoryAndTestsApiService
 import com.heartcare.agni.data.server.api.InterventionApiService
 import com.heartcare.agni.data.server.api.ScheduleAndAppointmentApiService
-import com.heartcare.agni.data.server.api.SignUpApiService
-import com.heartcare.agni.data.server.api.SymptomsAndDiagnosisService
-import com.heartcare.agni.data.server.api.VaccinationApiService
+import com.heartcare.agni.data.server.api.DiagnosisApiService
 import com.heartcare.agni.data.server.api.VitalApiService
 import com.heartcare.agni.service.authentication.TokenAuthenticator
 import com.heartcare.agni.utils.constants.AuthenticationConstants.AUTHORIZATION
@@ -43,9 +38,12 @@ import java.net.SocketTimeoutException
 import java.util.concurrent.TimeUnit
 import javax.inject.Named
 import javax.inject.Singleton
+
 @Module
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
+
+    const val CONTENT_TYPE = "application/json"
 
     // ---------------------- AUTH CLIENTS ----------------------
 
@@ -73,7 +71,7 @@ object NetworkModule {
         return OkHttpClient.Builder()
             .addInterceptor { chain ->
                 val requestBuilder = chain.request().newBuilder()
-                    .addHeader("Content-Type", "application/json")
+                    .addHeader("Content-Type", CONTENT_TYPE)
 
                 if (preferenceStorage.accessToken.isNotBlank()) {
                     requestBuilder.addHeader(AUTHORIZATION, preferenceStorage.accessToken)
@@ -151,7 +149,7 @@ object NetworkModule {
             .addInterceptor { chain ->
                 val originalRequest = chain.request()
                 val requestBuilder = originalRequest.newBuilder()
-                    .addHeader("Content-Type", "application/json")
+                    .addHeader("Content-Type", CONTENT_TYPE)
 
                 val url = originalRequest.url.toString()
 
@@ -186,7 +184,7 @@ object NetworkModule {
                                 put("status", 0)
                                 put("message", errorMsg)
                             }.toString().toByteArray()
-                                .toResponseBody("application/json".toMediaType())
+                                .toResponseBody(CONTENT_TYPE.toMediaType())
                         )
                         .build()
                 }
@@ -242,16 +240,6 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideFileUploadApiService(@Named("agni") retrofit: Retrofit): FileUploadApiService =
-        retrofit.create(FileUploadApiService::class.java)
-
-    @Provides
-    @Singleton
-    fun provideSignUpApiService(@Named("heart_care") retrofit: Retrofit): SignUpApiService =
-        retrofit.create(SignUpApiService::class.java)
-
-    @Provides
-    @Singleton
     fun provideCVDApiService(@Named("agni") retrofit: Retrofit): CVDApiService =
         retrofit.create(CVDApiService::class.java)
 
@@ -262,23 +250,8 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideSymptomsAndDiagnosisService(@Named("agni") retrofit: Retrofit): SymptomsAndDiagnosisService =
-        retrofit.create(SymptomsAndDiagnosisService::class.java)
-
-    @Provides
-    @Singleton
-    fun provideLabAndMedRecordService(@Named("agni") retrofit: Retrofit): LabTestAndMedRecordService =
-        retrofit.create(LabTestAndMedRecordService::class.java)
-
-    @Provides
-    @Singleton
-    fun provideDispenseApiService(@Named("agni") retrofit: Retrofit): DispenseApiService =
-        retrofit.create(DispenseApiService::class.java)
-
-    @Provides
-    @Singleton
-    fun provideVaccinationApiService(@Named("agni") retrofit: Retrofit): VaccinationApiService =
-        retrofit.create(VaccinationApiService::class.java)
+    fun provideSymptomsAndDiagnosisService(@Named("agni") retrofit: Retrofit): DiagnosisApiService =
+        retrofit.create(DiagnosisApiService::class.java)
 
     @Provides
     @Singleton

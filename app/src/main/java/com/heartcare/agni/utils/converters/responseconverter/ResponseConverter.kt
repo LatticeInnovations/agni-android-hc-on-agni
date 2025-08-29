@@ -1,35 +1,28 @@
 package com.heartcare.agni.utils.converters.responseconverter
 
 import com.heartcare.agni.data.local.enums.IdentifierIgnoreEnum
-import com.heartcare.agni.data.local.enums.PhotoDeleteEnum
 import com.heartcare.agni.data.local.enums.PrescriptionType
-import com.heartcare.agni.data.local.enums.RelationEnum
 import com.heartcare.agni.data.local.model.InterventionItem
 import com.heartcare.agni.data.local.model.InterventionResponseLocal
 import com.heartcare.agni.data.local.model.appointment.AppointmentResponseLocal
+import com.heartcare.agni.data.local.model.diagnosis.DiagnosisData
 import com.heartcare.agni.data.local.model.examination.ExaminationItem
 import com.heartcare.agni.data.local.model.examination.ExaminationResponseLocal
-import com.heartcare.agni.data.local.model.labtest.LabTestLocal
-import com.heartcare.agni.data.local.model.labtest.LabTestPhotoResponseLocal
 import com.heartcare.agni.data.local.model.prescription.MedicationLocal
-import com.heartcare.agni.data.local.model.prescription.PrescriptionPhotoResponseLocal
 import com.heartcare.agni.data.local.model.prescription.PrescriptionResponseLocal
-import com.heartcare.agni.data.local.model.relation.Relation
-import com.heartcare.agni.data.local.model.symdiag.SymptomsAndDiagnosisData
 import com.heartcare.agni.data.local.roomdb.dao.AppointmentDao
 import com.heartcare.agni.data.local.roomdb.dao.ExaminationDao
 import com.heartcare.agni.data.local.roomdb.dao.InterventionDao
 import com.heartcare.agni.data.local.roomdb.dao.MedicationDao
 import com.heartcare.agni.data.local.roomdb.dao.PatientDao
-import com.heartcare.agni.data.local.roomdb.dao.PrescriptionDao
 import com.heartcare.agni.data.local.roomdb.dao.RiskPredictionDao
 import com.heartcare.agni.data.local.roomdb.dao.ScheduleDao
 import com.heartcare.agni.data.local.roomdb.entities.allergy.AllergyEntity
 import com.heartcare.agni.data.local.roomdb.entities.appointment.AppointmentEntity
 import com.heartcare.agni.data.local.roomdb.entities.cvd.CVDEntity
-import com.heartcare.agni.data.local.roomdb.entities.dispense.DispenseDataEntity
-import com.heartcare.agni.data.local.roomdb.entities.dispense.DispensePrescriptionEntity
-import com.heartcare.agni.data.local.roomdb.entities.dispense.MedicineDispenseListEntity
+import com.heartcare.agni.data.local.roomdb.entities.diagnosis.DiagnosisEntity
+import com.heartcare.agni.data.local.roomdb.entities.diagnosis.DiagnosisLocal
+import com.heartcare.agni.data.local.roomdb.entities.diagnosis.DiagnosisMasterEntity
 import com.heartcare.agni.data.local.roomdb.entities.examination.ExaminationEntity
 import com.heartcare.agni.data.local.roomdb.entities.examination.ExaminationMasterEntity
 import com.heartcare.agni.data.local.roomdb.entities.family.FamilyHistoryEntity
@@ -37,9 +30,6 @@ import com.heartcare.agni.data.local.roomdb.entities.generic.GenericEntity
 import com.heartcare.agni.data.local.roomdb.entities.historymedication.HistoryMedicationEntity
 import com.heartcare.agni.data.local.roomdb.entities.intervention.InterventionEntity
 import com.heartcare.agni.data.local.roomdb.entities.intervention.InterventionMasterEntity
-import com.heartcare.agni.data.local.roomdb.entities.labtestandmedrecord.LabTestAndMedEntity
-import com.heartcare.agni.data.local.roomdb.entities.labtestandmedrecord.photo.LabTestAndFileEntity
-import com.heartcare.agni.data.local.roomdb.entities.labtestandmedrecord.photo.LabTestAndMedPhotoEntity
 import com.heartcare.agni.data.local.roomdb.entities.levels.LevelEntity
 import com.heartcare.agni.data.local.roomdb.entities.medication.MedicationEntity
 import com.heartcare.agni.data.local.roomdb.entities.medication.MedicineTimingEntity
@@ -51,10 +41,7 @@ import com.heartcare.agni.data.local.roomdb.entities.patient.PermanentAddressEnt
 import com.heartcare.agni.data.local.roomdb.entities.prescription.PrescriptionAndMedicineRelation
 import com.heartcare.agni.data.local.roomdb.entities.prescription.PrescriptionDirectionsEntity
 import com.heartcare.agni.data.local.roomdb.entities.prescription.PrescriptionEntity
-import com.heartcare.agni.data.local.roomdb.entities.prescription.photo.PrescriptionAndFileEntity
-import com.heartcare.agni.data.local.roomdb.entities.prescription.photo.PrescriptionPhotoEntity
 import com.heartcare.agni.data.local.roomdb.entities.priordx.PriorDxEntity
-import com.heartcare.agni.data.local.roomdb.entities.relation.RelationEntity
 import com.heartcare.agni.data.local.roomdb.entities.risk.AlcoholEntity
 import com.heartcare.agni.data.local.roomdb.entities.risk.FatAndOilEntity
 import com.heartcare.agni.data.local.roomdb.entities.risk.FruitsVegetablesEntity
@@ -65,32 +52,21 @@ import com.heartcare.agni.data.local.roomdb.entities.risk.SaltEntity
 import com.heartcare.agni.data.local.roomdb.entities.risk.SugarEntity
 import com.heartcare.agni.data.local.roomdb.entities.risk.TobaccoEntity
 import com.heartcare.agni.data.local.roomdb.entities.schedule.ScheduleEntity
-import com.heartcare.agni.data.local.roomdb.entities.symptomsanddiagnosis.DiagnosisEntity
-import com.heartcare.agni.data.local.roomdb.entities.symptomsanddiagnosis.SymptomAndDiagnosisEntity
-import com.heartcare.agni.data.local.roomdb.entities.symptomsanddiagnosis.SymptomsAndDiagnosisLocal
-import com.heartcare.agni.data.local.roomdb.entities.symptomsanddiagnosis.SymptomsEntity
 import com.heartcare.agni.data.local.roomdb.entities.tobacco.TobaccoCessationEntity
 import com.heartcare.agni.data.local.roomdb.entities.vitals.BloodGlucoseMeasurement
 import com.heartcare.agni.data.local.roomdb.entities.vitals.Measurement
 import com.heartcare.agni.data.local.roomdb.entities.vitals.VitalEntity
 import com.heartcare.agni.data.local.roomdb.views.PrescriptionDirectionAndMedicineView
-import com.heartcare.agni.data.server.api.PatientApiService
-import com.heartcare.agni.data.server.constants.EndPoints.PATIENT
-import com.heartcare.agni.data.server.constants.QueryParameters
 import com.heartcare.agni.data.server.model.allergy.AllergyResponse
 import com.heartcare.agni.data.server.model.cvd.CVDResponse
-import com.heartcare.agni.data.server.model.dispense.response.DispenseData
-import com.heartcare.agni.data.server.model.dispense.response.MedicineDispenseResponse
+import com.heartcare.agni.data.server.model.diagnosis.DiagnosisMasterResponse
+import com.heartcare.agni.data.server.model.diagnosis.DiagnosisResponse
 import com.heartcare.agni.data.server.model.examination.ExaminationMasterResponse
 import com.heartcare.agni.data.server.model.examination.ExaminationResponse
 import com.heartcare.agni.data.server.model.family.FamilyHistoryResponse
 import com.heartcare.agni.data.server.model.historymedication.HistoryMedicationResponse
 import com.heartcare.agni.data.server.model.intervention.InterventionMasterResponse
 import com.heartcare.agni.data.server.model.intervention.InterventionResponse
-import com.heartcare.agni.data.server.model.labormed.labtest.DiagnosticReport
-import com.heartcare.agni.data.server.model.labormed.labtest.LabTestResponse
-import com.heartcare.agni.data.server.model.labormed.medicalrecord.MedicalRecord
-import com.heartcare.agni.data.server.model.labormed.medicalrecord.MedicalRecordResponse
 import com.heartcare.agni.data.server.model.levels.LevelResponse
 import com.heartcare.agni.data.server.model.patient.GeneralPractitioner
 import com.heartcare.agni.data.server.model.patient.ManagingOrganization
@@ -100,11 +76,8 @@ import com.heartcare.agni.data.server.model.patient.PatientLastUpdatedResponse
 import com.heartcare.agni.data.server.model.patient.PatientResponse
 import com.heartcare.agni.data.server.model.prescription.medication.MedicationResponse
 import com.heartcare.agni.data.server.model.prescription.medication.MedicineTimeResponse
-import com.heartcare.agni.data.server.model.prescription.photo.File
-import com.heartcare.agni.data.server.model.prescription.photo.PrescriptionPhotoResponse
 import com.heartcare.agni.data.server.model.prescription.prescriptionresponse.PrescriptionResponse
 import com.heartcare.agni.data.server.model.priordx.PriorDxResponse
-import com.heartcare.agni.data.server.model.relatedperson.Relationship
 import com.heartcare.agni.data.server.model.risk.AlcoholResponse
 import com.heartcare.agni.data.server.model.risk.FatAndOilResponse
 import com.heartcare.agni.data.server.model.risk.FruitsVegetablesResponse
@@ -117,23 +90,13 @@ import com.heartcare.agni.data.server.model.risk.TobaccoResponse
 import com.heartcare.agni.data.server.model.scheduleandappointment.Slot
 import com.heartcare.agni.data.server.model.scheduleandappointment.appointment.AppointmentResponse
 import com.heartcare.agni.data.server.model.scheduleandappointment.schedule.ScheduleResponse
-import com.heartcare.agni.data.server.model.symptomsanddiagnosis.Diagnosis
-import com.heartcare.agni.data.server.model.symptomsanddiagnosis.SymptomsAndDiagnosisResponse
-import com.heartcare.agni.data.server.model.symptomsanddiagnosis.SymptomsItem
 import com.heartcare.agni.data.server.model.tobacco.TobaccoCessationResponse
 import com.heartcare.agni.data.server.model.vitals.UnitValue
 import com.heartcare.agni.data.server.model.vitals.VitalResponse
-import com.heartcare.agni.utils.builders.UUIDBuilder
-import com.heartcare.agni.utils.converters.responseconverter.RelationConverter.getInverseRelation
-import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.convertStringToDate
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toAge
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toPatientDate
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toTimeInMilli
-import com.heartcare.agni.utils.converters.server.responsemapper.ApiEndResponse
-import com.heartcare.agni.utils.converters.server.responsemapper.ApiResponseConverter
-import timber.log.Timber
 import java.util.Date
-import java.util.UUID
 
 fun PatientResponse.toPatientEntity(): PatientEntity {
     return PatientEntity(
@@ -244,75 +207,8 @@ fun PermanentAddressEntity.toPatientAddressResponse(): PatientAddressResponse {
     )
 }
 
-fun RelationEntity.toReverseRelation(
-    patientDao: PatientDao,
-    inverseRelationEntity: (RelationEntity) -> Unit
-) {
-    getInverseRelation(this, patientDao) { relationEnum ->
-        inverseRelationEntity(
-            RelationEntity(
-                id = UUIDBuilder.generateUUID(),
-                toId = fromId,
-                fromId = toId,
-                relation = relationEnum
-            )
-        )
-    }
-}
-
 fun List<GenericEntity>.toListOfId(): List<String> {
     return this.map { it.id }
-}
-
-fun Relation.toRelationEntity(): RelationEntity {
-    return RelationEntity(
-        id = UUIDBuilder.generateUUID(),
-        fromId = patientId,
-        toId = relativeId,
-        relation = RelationEnum.fromString(relation)
-    )
-}
-
-fun RelationEntity.toRelation(): Relation {
-    return Relation(
-        patientId = fromId, relativeId = toId, relation = relation.value
-    )
-}
-
-internal suspend fun Relationship.toRelationEntity(
-    fromFhirId: String,
-    patientDao: PatientDao,
-    patientApiService: PatientApiService
-): RelationEntity {
-    return RelationEntity(
-        id = UUIDBuilder.generateUUID(),
-        fromId = patientDao.getPatientIdByFhirId(fromFhirId)!!,
-        toId = patientDao.getPatientIdByFhirId(relativeId) ?: getRelativeId(
-            fromFhirId,
-            patientApiService
-        ),
-        relation = RelationEnum.fromString(patientIs)
-    )
-}
-
-private suspend fun getRelativeId(
-    relativeFhirId: String,
-    patientApiService: PatientApiService
-): String {
-    var relativeId = ""
-    ApiResponseConverter.convert(
-        patientApiService.getListData(
-            PATIENT,
-            mapOf(Pair(QueryParameters.ID, relativeFhirId))
-        )
-    ).apply {
-        if (this is ApiEndResponse) {
-            body.map {
-                relativeId = it.id
-            }
-        }
-    }
-    return relativeId
 }
 
 internal fun <T> List<T>.toNoBracketAndNoSpaceString(): String {
@@ -333,22 +229,6 @@ internal suspend fun PrescriptionResponse.toPrescriptionEntity(
     )
 }
 
-
-internal suspend fun PrescriptionPhotoResponse.toPrescriptionEntity(
-    patientDao: PatientDao,
-): PrescriptionEntity {
-    return PrescriptionEntity(
-        id = prescriptionId,
-        prescriptionDate = generatedOn,
-        patientId = patientDao.getPatientIdByFhirId(patientFhirId)!!,
-        appointmentId = appointmentUuid,
-        patientFhirId = patientFhirId,
-        prescriptionFhirId = prescriptionFhirId,
-        prescriptionType = PrescriptionType.PHOTO.type
-    )
-}
-
-
 internal fun PrescriptionResponseLocal.toPrescriptionEntity(): PrescriptionEntity {
     return PrescriptionEntity(
         id = prescriptionId,
@@ -358,18 +238,6 @@ internal fun PrescriptionResponseLocal.toPrescriptionEntity(): PrescriptionEntit
         patientFhirId = patientFhirId,
         prescriptionFhirId = prescriptionFhirId,
         prescriptionType = PrescriptionType.FORM.type
-    )
-}
-
-internal fun PrescriptionPhotoResponseLocal.toPrescriptionEntity(): PrescriptionEntity {
-    return PrescriptionEntity(
-        id = prescriptionId,
-        prescriptionDate = generatedOn,
-        patientId = patientId,
-        appointmentId = appointmentId,
-        patientFhirId = patientFhirId,
-        prescriptionFhirId = null,
-        prescriptionType = PrescriptionType.PHOTO.type
     )
 }
 
@@ -397,19 +265,6 @@ internal suspend fun PrescriptionResponse.toListOfPrescriptionDirectionsEntity(m
     }
 }
 
-
-internal fun PrescriptionPhotoResponse.toListOfPrescriptionPhotoEntity(): List<PrescriptionPhotoEntity> {
-    return prescription.map { prescriptionItem ->
-        PrescriptionPhotoEntity(
-            id = prescriptionItem.documentUuid,
-            fileName = prescriptionItem.filename,
-            prescriptionId = prescriptionId,
-            note = prescriptionItem.note,
-            documentFhirId = prescriptionItem.documentFhirId
-        )
-    }
-}
-
 internal fun PrescriptionResponseLocal.toListOfPrescriptionDirectionsEntity(): List<PrescriptionDirectionsEntity> {
     return prescription.map { medication ->
         PrescriptionDirectionsEntity(
@@ -426,18 +281,6 @@ internal fun PrescriptionResponseLocal.toListOfPrescriptionDirectionsEntity(): L
             brandName = medication.brandName,
             doseFormCode = medication.doseFormCode,
             doseForm = medication.doseForm
-        )
-    }
-}
-
-internal fun PrescriptionPhotoResponseLocal.toListOfPrescriptionPhotoEntity(): List<PrescriptionPhotoEntity> {
-    return prescription.map { prescriptionItem ->
-        PrescriptionPhotoEntity(
-            id = prescriptionItem.documentUuid,
-            fileName = prescriptionItem.filename,
-            prescriptionId = prescriptionId,
-            note = prescriptionItem.note,
-            documentFhirId = prescriptionItem.documentFhirId
         )
     }
 }
@@ -620,74 +463,11 @@ internal fun PrescriptionDirectionAndMedicineView.toMedicationLocal(): Medicatio
     )
 }
 
-internal fun PatientLastUpdatedEntity.toPatientLastUpdatedResponse(): PatientLastUpdatedResponse {
-    return PatientLastUpdatedResponse(
-        uuid = patientId,
-        timestamp = lastUpdated
-    )
-}
-
 internal fun PatientLastUpdatedResponse.toPatientLastUpdatedEntity(): PatientLastUpdatedEntity {
     return PatientLastUpdatedEntity(
         patientId = uuid,
         lastUpdated = timestamp
     )
-}
-
-internal suspend fun PrescriptionAndFileEntity.toPrescriptionPhotoResponse(
-    appointmentDao: AppointmentDao
-): PrescriptionPhotoResponse {
-    return PrescriptionPhotoResponse(
-        patientFhirId = prescriptionEntity.patientFhirId ?: prescriptionEntity.patientId,
-        appointmentId = appointmentDao.getFhirIdByAppointmentId(prescriptionEntity.appointmentId)
-            ?: prescriptionEntity.appointmentId,
-        generatedOn = prescriptionEntity.prescriptionDate,
-        prescriptionId = prescriptionEntity.id,
-        prescription = prescriptionPhotoEntity.map { prescriptionPhotoEntity ->
-            File(
-                documentUuid = prescriptionPhotoEntity.id,
-                documentFhirId = prescriptionPhotoEntity.documentFhirId,
-                filename = prescriptionPhotoEntity.fileName,
-                note = prescriptionPhotoEntity.note ?: ""
-            )
-        },
-        appointmentUuid = prescriptionEntity.appointmentId,
-        prescriptionFhirId = prescriptionEntity.prescriptionFhirId,
-        status = null
-    )
-}
-
-
-internal fun PrescriptionAndFileEntity.toPrescriptionPhotoResponseLocal(): PrescriptionPhotoResponseLocal {
-    return PrescriptionPhotoResponseLocal(
-        patientId = prescriptionEntity.patientId,
-        patientFhirId = prescriptionEntity.patientFhirId,
-        appointmentId = prescriptionEntity.appointmentId,
-        generatedOn = prescriptionEntity.prescriptionDate,
-        prescriptionId = prescriptionEntity.id,
-        prescription = prescriptionPhotoEntity.map { it.toFile() },
-        prescriptionFhirId = prescriptionEntity.prescriptionFhirId
-    )
-}
-
-private fun PrescriptionPhotoEntity.toFile(): File {
-    return File(
-        documentUuid = id,
-        documentFhirId = documentFhirId,
-        filename = fileName,
-        note = note ?: ""
-    )
-}
-
-internal fun PrescriptionAndFileEntity.toFilesList(): List<File> {
-    return prescriptionPhotoEntity.map {
-        File(
-            documentUuid = it.id,
-            documentFhirId = it.documentFhirId,
-            filename = it.fileName,
-            note = it.note ?: ""
-        )
-    }
 }
 
 internal fun CVDResponse.toCVDEntity(): CVDEntity {
@@ -906,38 +686,26 @@ internal suspend fun VitalResponse.toVitalEntity(
     )
 }
 
-internal fun SymptomsItem.toSymptomsEntity(): SymptomsEntity {
-    return SymptomsEntity(
-        id = UUID.randomUUID().toString(), code = code, display = display,
-        type = type,
-        gender = gender
-    )
-}
-
-internal fun Diagnosis.toDiagnosisEntity(): DiagnosisEntity {
-    return DiagnosisEntity(
+internal fun DiagnosisMasterResponse.toDiagnosisMasterEntity(): DiagnosisMasterEntity {
+    return DiagnosisMasterEntity(
         id = diagnosisId,
         code = code,
         display = display
     )
 }
 
-internal fun SymptomsEntity.toSymptoms(): SymptomsItem {
-    return SymptomsItem(code = code, display = display, type = type, gender = gender)
-}
-
-internal fun DiagnosisEntity.toDiagnosis(): Diagnosis {
-    return Diagnosis(
+internal fun DiagnosisMasterEntity.toDiagnosisMasterResponse(): DiagnosisMasterResponse {
+    return DiagnosisMasterResponse(
         diagnosisId = id,
         code = code,
         display = display
     )
 }
 
-internal fun SymptomsAndDiagnosisLocal.toSymptomsAndDiagnosisEntity(): SymptomAndDiagnosisEntity {
-    return SymptomAndDiagnosisEntity(
-        symDiagUuid = symDiagUuid,
-        appointmentId = appointmentId, fhirId = symDiagFhirId,
+internal fun DiagnosisLocal.toDiagnosisEntity(): DiagnosisEntity {
+    return DiagnosisEntity(
+        diagnosisUuid = diagnosisUuid,
+        appointmentId = appointmentId, fhirId = diagnosisFhirId,
         createdOn = createdOn,
         diagnosis = diagnosis,
         symptoms = symptoms,
@@ -947,10 +715,10 @@ internal fun SymptomsAndDiagnosisLocal.toSymptomsAndDiagnosisEntity(): SymptomAn
     )
 }
 
-internal fun SymptomAndDiagnosisEntity.toSymptomsAndDiagnosisLocal(): SymptomsAndDiagnosisLocal {
-    return SymptomsAndDiagnosisLocal(
-        symDiagUuid = symDiagUuid,
-        appointmentId = appointmentId, symDiagFhirId = fhirId,
+internal fun DiagnosisEntity.toDiagnosisLocal(): DiagnosisLocal {
+    return DiagnosisLocal(
+        diagnosisUuid = diagnosisUuid,
+        appointmentId = appointmentId, diagnosisFhirId = fhirId,
         createdOn = createdOn,
         diagnosis = diagnosis,
         symptoms = symptoms,
@@ -961,14 +729,14 @@ internal fun SymptomAndDiagnosisEntity.toSymptomsAndDiagnosisLocal(): SymptomsAn
 }
 
 
-internal suspend fun SymptomsAndDiagnosisResponse.toSymptomsAndDiagnosisEntity(
+internal suspend fun DiagnosisResponse.toDiagnosisEntity(
     studentDao: PatientDao,
     appointmentDao: AppointmentDao
-): SymptomAndDiagnosisEntity {
-    return SymptomAndDiagnosisEntity(
-        symDiagUuid = symDiagUuid,
+): DiagnosisEntity {
+    return DiagnosisEntity(
+        diagnosisUuid = diagnosisUuid,
         appointmentId = appointmentDao.getAppointmentIdByFhirId(appointmentId),
-        fhirId = symDiagFhirId,
+        fhirId = diagnosisFhirId,
         createdOn = createdOn,
         diagnosis = diagnosis,
         symptoms = symptoms,
@@ -978,162 +746,14 @@ internal suspend fun SymptomsAndDiagnosisResponse.toSymptomsAndDiagnosisEntity(
     )
 }
 
-internal fun SymptomsAndDiagnosisLocal.toSymDiagData(): SymptomsAndDiagnosisData {
-    return SymptomsAndDiagnosisData(
-        symDiagUuid = symDiagUuid,
+internal fun DiagnosisLocal.toDiagnosisData(): DiagnosisData {
+    return DiagnosisData(
+        diagnosisUuid = diagnosisUuid,
         appointmentId = appointmentId,
         createdOn = createdOn,
         diagnosis = diagnosis.map { it.code },
         symptoms = symptoms.map { it.code }.ifEmpty { null },
         patientId = patientId
-    )
-}
-
-internal fun LabTestAndFileEntity.toFilesList(): List<File> {
-    return labTestAndMedPhotoEntity.map {
-        File(
-            filename = it.fileName, note = it.note ?: "", documentFhirId = "", documentUuid = ""
-        )
-    }
-}
-
-
-internal suspend fun LabTestAndFileEntity.toLabTestPhotoResponseLocal(
-    appointmentDao: AppointmentDao
-): LabTestPhotoResponseLocal {
-    return LabTestPhotoResponseLocal(
-        labTestId = labTestAndMedEntity.id,
-        appointmentId = appointmentDao.getFhirIdByAppointmentId(labTestAndMedEntity.appointmentId)
-            ?: labTestAndMedEntity.appointmentId,
-        patientId = labTestAndMedEntity.patientId,
-        labTestFhirId = labTestAndMedEntity.labTestFhirId,
-        createdOn = labTestAndMedEntity.createdOn,
-        labTests = labTestAndMedPhotoEntity.map { labTestAndMedPhotoEntity ->
-            File(
-                labTestAndMedPhotoEntity.id,
-                labTestAndMedPhotoEntity.fhirId,
-                labTestAndMedPhotoEntity.fileName,
-                labTestAndMedPhotoEntity.note ?: ""
-            )
-        })
-}
-
-internal suspend fun DiagnosticReport.toLabTestPhotoResponseLocal(
-    labTestResponse: LabTestResponse,
-    appointmentDao: AppointmentDao,
-    studentDao: PatientDao
-): LabTestLocal {
-    return LabTestLocal(
-        labTestId = diagnosticUuid,
-        appointmentId = appointmentDao.getAppointmentIdByFhirId(labTestResponse.appointmentId),
-        patientId = studentDao.getPatientIdByFhirId(labTestResponse.patientId)!!,
-        labTestFhirId = diagnosticReportFhirId,
-        createdOn = createdOn.convertStringToDate()
-    )
-}
-
-internal suspend fun MedicalRecord.toMedRecordPhotoResponseLocal(
-    medicalRecordResponse: MedicalRecordResponse,
-    appointmentDao: AppointmentDao,
-    studentDao: PatientDao
-): LabTestLocal {
-    return LabTestLocal(
-        labTestId = medicalReportUuid,
-        appointmentId = appointmentDao.getAppointmentIdByFhirId(medicalRecordResponse.appointmentId),
-        patientId = studentDao.getPatientIdByFhirId(medicalRecordResponse.patientId)!!,
-        labTestFhirId = medicalRecordFhirId,
-        createdOn = createdOn.convertStringToDate()
-    )
-}
-
-internal fun LabTestResponse.toListOfLabTestPhotoEntity(
-): List<LabTestAndMedPhotoEntity> {
-    val list: MutableList<LabTestAndMedPhotoEntity> = mutableListOf()
-    val fileNameSet: MutableSet<String> = mutableSetOf()
-
-    diagnosticReport.filter { it.status == PhotoDeleteEnum.SAVED.value }.map { diagnosticReport ->
-        diagnosticReport.documents.map {
-            if (!fileNameSet.contains(it.filename)) {
-
-                list.add(
-                    LabTestAndMedPhotoEntity(
-                        id = it.labDocumentUuid,
-                        labTestId = diagnosticReport.diagnosticUuid,
-                        fileName = it.filename, note = it.note, fhirId = it.labDocumentfhirId
-                    )
-                )
-                fileNameSet.add(it.filename)
-
-            }
-        }
-    }
-    return list
-}
-
-internal fun MedicalRecordResponse.toListOfLabTestAndMedPhotoEntity(
-): List<LabTestAndMedPhotoEntity> {
-    val list: MutableList<LabTestAndMedPhotoEntity> = mutableListOf()
-    val fileNameSet: MutableSet<String> = mutableSetOf() // Set to track unique file names
-
-    medicalRecord.filter { it.status == PhotoDeleteEnum.SAVED.value }.map { diagnosticReport ->
-        diagnosticReport.documents.map {
-            if (!fileNameSet.contains(it.filename)) { // Check if fileName is not already in the set
-                list.add(
-                    LabTestAndMedPhotoEntity(
-                        id = it.medicalDocumentUuid,
-                        labTestId = diagnosticReport.medicalReportUuid,
-                        fileName = it.filename, note = it.note, fhirId = it.medicalDocumentfhirId
-                    )
-                )
-                fileNameSet.add(it.filename) // Add the fileName to the set
-            }
-        }
-    }
-    return list
-}
-
-internal fun LabTestPhotoResponseLocal.toLabTestAndMedEntity(type: String): LabTestAndMedEntity {
-    return LabTestAndMedEntity(
-        id = labTestId,
-        appointmentId = appointmentId,
-        labTestFhirId = labTestFhirId,
-        patientId = patientId,
-        createdOn = createdOn,
-        type = type
-
-    )
-}
-
-internal fun LabTestPhotoResponseLocal.toListOfLabTestPhotoEntity(): List<LabTestAndMedPhotoEntity> {
-    return labTests.map { labTestItem ->
-        LabTestAndMedPhotoEntity(
-            id = labTestItem.documentUuid,
-            fileName = labTestItem.filename,
-            labTestId = labTestId, note = labTestItem.note, fhirId = labTestItem.documentFhirId
-        )
-    }
-}
-
-internal fun LabTestAndMedEntity.toLabTestLocal(): LabTestLocal {
-    return LabTestLocal(
-        labTestId = id,
-        appointmentId = appointmentId,
-        patientId = patientId,
-        labTestFhirId = labTestFhirId,
-        createdOn = createdOn
-
-    )
-}
-
-internal fun LabTestLocal.toLabTestEntity(type: String): LabTestAndMedEntity {
-    return LabTestAndMedEntity(
-        id = labTestId,
-        appointmentId = appointmentId,
-        patientId = patientId,
-        labTestFhirId = labTestFhirId,
-        createdOn = createdOn,
-        type = type
-
     )
 }
 
@@ -1179,61 +799,6 @@ internal fun MedicationEntity.toMedicationResponse(): MedicationResponse {
         categoryName = categoryName,
         brandList = brandList
     )
-}
-
-internal suspend fun MedicineDispenseResponse.toDispensePrescriptionEntity(
-    patientDao: PatientDao,
-    prescriptionDao: PrescriptionDao
-): DispensePrescriptionEntity {
-    return DispensePrescriptionEntity(
-        patientId = patientDao.getPatientIdByFhirId(this.patientId)!!,
-        prescriptionId = prescriptionDao.getPrescriptionIdByFhirId(this.prescriptionFhirId),
-        status = this.status
-    )
-}
-
-internal suspend fun DispenseData.toListOfDispenseDataEntity(
-    patientDao: PatientDao,
-    prescriptionDao: PrescriptionDao,
-    appointmentDao: AppointmentDao,
-    prescriptionFhirId: String?
-): DispenseDataEntity {
-    return DispenseDataEntity(
-        dispenseId = this.dispenseId,
-        dispenseFhirId = this.dispenseFhirId,
-        generatedOn = this.generatedOn,
-        note = this.note,
-        patientId = patientDao.getPatientIdByFhirId(this.patientId)!!,
-        prescriptionId = if (prescriptionFhirId.isNullOrBlank()) null else prescriptionDao.getPrescriptionIdByFhirId(
-            prescriptionFhirId
-        ),
-        appointmentId = if (this.appointmentId.isNullOrBlank()) null else appointmentDao.getAppointmentIdByFhirId(
-            this.appointmentId
-        )
-    )
-}
-
-internal suspend fun DispenseData.toListOfMedicineDispenseListEntity(
-    patientDao: PatientDao
-): List<MedicineDispenseListEntity> {
-    return this.medicineDispensedList.map {
-        MedicineDispenseListEntity(
-            medDispenseUuid = it.medDispenseUuid,
-            medDispenseFhirId = it.medDispenseFhirId,
-            dispenseId = this.dispenseId,
-            patientId = patientDao.getPatientIdByFhirId(it.patientId)!!,
-            category = it.category,
-            qtyDispensed = it.qtyDispensed,
-            qtyPrescribed = it.prescriptionData?.qtyPrescribed ?: it.qtyDispensed,
-            date = it.date,
-            isModified = it.isModified,
-            modificationType = it.modificationType,
-            medNote = it.medNote,
-            dispensedMedFhirId = it.dispensedMedication.medFhirId,
-            prescribedMedFhirId = it.prescriptionData?.medFhirId ?: it.medFhirId,
-            prescribedMedReqId = it.prescriptionData?.medReqFhirId
-        )
-    }
 }
 
 internal fun LevelResponse.toLevelEntity(): LevelEntity {
@@ -1789,7 +1354,6 @@ fun ExaminationMasterEntity.toExaminationMasterResponse(): ExaminationMasterResp
 }
 
 fun ExaminationResponse.toExaminationEntity(): ExaminationEntity{
-    Timber.d("manseeyyy examination $this")
     return ExaminationEntity(
         uuid = uuid!!,
         fhirId = fhirId,
