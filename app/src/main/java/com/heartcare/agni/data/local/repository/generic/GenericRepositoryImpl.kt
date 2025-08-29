@@ -108,10 +108,10 @@ class GenericRepositoryImpl @Inject constructor(
                 updateVitalFhirIdInGenericEntity(vitalGenericEntity)
             }
     }
-    override suspend fun updateSymDiagFhirId() {
+    override suspend fun updateDiagnosisFhirId() {
         genericDao.getNotSyncedData(GenericTypeEnum.DIAGNOSIS)
-            .forEach { diagGenericEntity ->
-                updateSymDiagFhirIdInGenericEntity(diagGenericEntity)
+            .forEach { diagnosisGenericEntity ->
+                updateDiagnosisFhirIdInGenericEntity(diagnosisGenericEntity)
             }
     }
 

@@ -517,7 +517,7 @@ open class GenericRepositoryDatabaseTransactions(
         }
     }
 
-    protected suspend fun updateSymDiagFhirIdInGenericEntity(genericEntity: GenericEntity) {
+    protected suspend fun updateDiagnosisFhirIdInGenericEntity(genericEntity: GenericEntity) {
         val existingMap =
             genericEntity.payload.fromJson<MutableMap<String, Any>>()
                 .mapToObject(DiagnosisData::class.java)

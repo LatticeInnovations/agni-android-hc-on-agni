@@ -105,7 +105,7 @@ interface GenericRepository {
 
     suspend fun updateCVDFhirIds()
     suspend fun updateVitalFhirId()
-    suspend fun updateSymDiagFhirId()
+    suspend fun updateDiagnosisFhirId()
     suspend fun updatePriorDxFhirId()
     suspend fun updateHistoryMedicationFhirId()
     suspend fun updateFamilyHistoryFhirId()
