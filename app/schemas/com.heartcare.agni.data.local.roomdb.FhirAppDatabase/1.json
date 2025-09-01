@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "1f1129f5f5b9430d8fa8165a73d9b0df",
+    "identityHash": "1a5b7cb6b8c6b1e640ddab3f3aa532a1",
     "entities": [
       {
         "tableName": "PatientEntity",
@@ -2947,6 +2947,60 @@
             ]
           }
         ]
+      },
+      {
+        "tableName": "HealthFacilityEntity",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`healthFacilityId` TEXT NOT NULL, `code` TEXT NOT NULL, `heartcareId` TEXT, `islandId` TEXT NOT NULL, `name` TEXT NOT NULL, PRIMARY KEY(`healthFacilityId`), FOREIGN KEY(`islandId`) REFERENCES `LevelEntity`(`fhirId`) ON UPDATE NO ACTION ON DELETE NO ACTION )",
+        "fields": [
+          {
+            "fieldPath": "healthFacilityId",
+            "columnName": "healthFacilityId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "code",
+            "columnName": "code",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "heartcareId",
+            "columnName": "heartcareId",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "islandId",
+            "columnName": "islandId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "healthFacilityId"
+          ]
+        },
+        "foreignKeys": [
+          {
+            "table": "LevelEntity",
+            "onDelete": "NO ACTION",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "islandId"
+            ],
+            "referencedColumns": [
+              "fhirId"
+            ]
+          }
+        ]
       }
     ],
     "views": [
@@ -2957,7 +3011,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '1f1129f5f5b9430d8fa8165a73d9b0df')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '1a5b7cb6b8c6b1e640ddab3f3aa532a1')"
     ]
   }
 }

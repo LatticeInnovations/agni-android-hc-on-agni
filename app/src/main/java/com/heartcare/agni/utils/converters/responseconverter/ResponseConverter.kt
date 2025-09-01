@@ -27,6 +27,7 @@ import com.heartcare.agni.data.local.roomdb.entities.examination.ExaminationEnti
 import com.heartcare.agni.data.local.roomdb.entities.examination.ExaminationMasterEntity
 import com.heartcare.agni.data.local.roomdb.entities.family.FamilyHistoryEntity
 import com.heartcare.agni.data.local.roomdb.entities.generic.GenericEntity
+import com.heartcare.agni.data.local.roomdb.entities.healthfacility.HealthFacilityEntity
 import com.heartcare.agni.data.local.roomdb.entities.historymedication.HistoryMedicationEntity
 import com.heartcare.agni.data.local.roomdb.entities.intervention.InterventionEntity
 import com.heartcare.agni.data.local.roomdb.entities.intervention.InterventionMasterEntity
@@ -65,6 +66,7 @@ import com.heartcare.agni.data.server.model.diagnosis.DiagnosisResponse
 import com.heartcare.agni.data.server.model.examination.ExaminationMasterResponse
 import com.heartcare.agni.data.server.model.examination.ExaminationResponse
 import com.heartcare.agni.data.server.model.family.FamilyHistoryResponse
+import com.heartcare.agni.data.server.model.healthfacility.HealthFacilityResponse
 import com.heartcare.agni.data.server.model.historymedication.HistoryMedicationResponse
 import com.heartcare.agni.data.server.model.intervention.InterventionMasterResponse
 import com.heartcare.agni.data.server.model.intervention.InterventionResponse
@@ -1435,5 +1437,25 @@ fun ReferralEntity.toReferralResponse(): ReferralResponse {
         practitionerName = practitionerName,
         healthFacilityId = healthFacilityId,
         note = note,
+    )
+}
+
+fun HealthFacilityResponse.toHealthFacilityEntity(): HealthFacilityEntity {
+    return HealthFacilityEntity(
+        healthFacilityId = healthFacilityId,
+        code = code,
+        heartcareId = heartcareId,
+        islandId = islandId,
+        name = name
+    )
+}
+
+fun HealthFacilityEntity.toHealthFacilityResponse(): HealthFacilityResponse {
+    return HealthFacilityResponse(
+        code = code,
+        healthFacilityId = healthFacilityId,
+        heartcareId = heartcareId,
+        islandId = islandId,
+        name = name
     )
 }
