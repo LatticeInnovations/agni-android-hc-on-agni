@@ -21,6 +21,7 @@ import com.heartcare.agni.data.server.model.risk.RiskFactorResponse
 import com.heartcare.agni.data.server.model.scheduleandappointment.appointment.AppointmentResponse
 import com.heartcare.agni.data.server.model.scheduleandappointment.schedule.ScheduleResponse
 import com.heartcare.agni.data.server.model.diagnosis.DiagnosisResponse
+import com.heartcare.agni.data.server.model.healthfacility.HealthFacilityResponse
 import com.heartcare.agni.data.server.model.tobacco.TobaccoCessationResponse
 import com.heartcare.agni.data.server.model.vitals.VitalResponse
 import com.heartcare.agni.utils.converters.server.responsemapper.ResponseMapper
@@ -42,6 +43,7 @@ interface SyncRepository {
     suspend fun getAndInsertListVitalData(offset: Int): ResponseMapper<List<VitalResponse>>
     suspend fun getAndInsertListDiagnosisData(offset: Int): ResponseMapper<List<DiagnosisResponse>>
     suspend fun getAndInsertLevelsData(offset: Int): ResponseMapper<List<LevelResponse>>
+    suspend fun getAndInsertHealthFacilityData(offset: Int): ResponseMapper<List<HealthFacilityResponse>>
     suspend fun getAndInsertPriorDxData(offset: Int): ResponseMapper<List<PriorDxResponse>>
     suspend fun getAndInsertHistoryMedicationData(offset: Int): ResponseMapper<List<HistoryMedicationResponse>>
     suspend fun getAndInsertFamilyHistoryData(offset: Int): ResponseMapper<List<FamilyHistoryResponse>>

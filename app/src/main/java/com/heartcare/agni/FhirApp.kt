@@ -20,6 +20,7 @@ import com.heartcare.agni.data.server.api.InterventionApiService
 import com.heartcare.agni.data.server.api.LevelsApiService
 import com.heartcare.agni.data.server.api.PatientApiService
 import com.heartcare.agni.data.server.api.PrescriptionApiService
+import com.heartcare.agni.data.server.api.ReferralApiService
 import com.heartcare.agni.data.server.api.ScheduleAndAppointmentApiService
 import com.heartcare.agni.data.server.api.VitalApiService
 import com.heartcare.agni.data.server.repository.sync.SyncRepository
@@ -71,6 +72,9 @@ class FhirApp : Application() {
     @Inject
     lateinit var examinationApiService: ExaminationApiService
 
+    @Inject
+    lateinit var referralApiService: ReferralApiService
+
     private lateinit var _syncRepository: SyncRepository
     internal val syncRepository get() = _syncRepository
     private lateinit var _genericRepository: GenericRepository
@@ -103,6 +107,7 @@ class FhirApp : Application() {
             historyAndTestsApiService,
             interventionApiService,
             examinationApiService,
+            referralApiService,
             fhirAppDatabase.getPatientDao(),
             fhirAppDatabase.getGenericDao(),
             preferenceRepository,
@@ -123,7 +128,8 @@ class FhirApp : Application() {
             fhirAppDatabase.getRiskFactorDao(),
             fhirAppDatabase.getTobaccoCessationDao(),
             fhirAppDatabase.getInterventionDao(),
-            fhirAppDatabase.getExaminationDao()
+            fhirAppDatabase.getExaminationDao(),
+            fhirAppDatabase.getHealthFacilityDao()
         )
 
         _genericRepository = GenericRepositoryImpl(

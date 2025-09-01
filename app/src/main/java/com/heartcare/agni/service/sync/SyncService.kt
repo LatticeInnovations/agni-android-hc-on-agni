@@ -471,7 +471,20 @@ class SyncService(
 
     /** Download Levels Data */
     private suspend fun downloadLevelsRecord(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
-        return checkAuthenticationStatus(syncRepository.getAndInsertLevelsData(0), logout)
+        val response = checkAuthenticationStatus(
+            syncRepository.getAndInsertLevelsData(0),
+            logout
+        )
+
+        return when (response) {
+            is ApiEmptyResponse, is ApiEndResponse -> downloadHealthFacility(logout)
+            else -> response
+        }
+    }
+
+    /** Download Health Facility Data */
+    private suspend fun downloadHealthFacility(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
+        return checkAuthenticationStatus(syncRepository.getAndInsertHealthFacilityData(0), logout)
     }
 
     /** Download Prior Dx Data */

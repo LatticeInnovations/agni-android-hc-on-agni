@@ -43,6 +43,7 @@ interface PreferenceStorage {
     var lastSyncExaminationMaster: Long
     var lastSyncExamination: Long
     var lastSyncDiagnosisMaster: Long
+    var lastSyncHealthFacility: Long
 
     fun clear()
 }

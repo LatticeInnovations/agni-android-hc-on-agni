@@ -12,6 +12,7 @@ import com.heartcare.agni.data.local.roomdb.dao.DiagnosisDao
 import com.heartcare.agni.data.local.roomdb.dao.ExaminationDao
 import com.heartcare.agni.data.local.roomdb.dao.FamilyHistoryDao
 import com.heartcare.agni.data.local.roomdb.dao.GenericDao
+import com.heartcare.agni.data.local.roomdb.dao.HealthFacilityDao
 import com.heartcare.agni.data.local.roomdb.dao.HistoryMedicationDao
 import com.heartcare.agni.data.local.roomdb.dao.InterventionDao
 import com.heartcare.agni.data.local.roomdb.dao.LevelsDao
@@ -33,6 +34,7 @@ import com.heartcare.agni.data.server.api.InterventionApiService
 import com.heartcare.agni.data.server.api.LevelsApiService
 import com.heartcare.agni.data.server.api.PatientApiService
 import com.heartcare.agni.data.server.api.PrescriptionApiService
+import com.heartcare.agni.data.server.api.ReferralApiService
 import com.heartcare.agni.data.server.api.ScheduleAndAppointmentApiService
 import com.heartcare.agni.data.server.api.VitalApiService
 import com.heartcare.agni.data.server.constants.ConstantValues.COUNT_VALUE
@@ -57,6 +59,7 @@ import com.heartcare.agni.data.server.model.diagnosis.DiagnosisResponse
 import com.heartcare.agni.data.server.model.examination.ExaminationMasterResponse
 import com.heartcare.agni.data.server.model.examination.ExaminationResponse
 import com.heartcare.agni.data.server.model.family.FamilyHistoryResponse
+import com.heartcare.agni.data.server.model.healthfacility.HealthFacilityResponse
 import com.heartcare.agni.data.server.model.historymedication.HistoryMedicationResponse
 import com.heartcare.agni.data.server.model.intervention.InterventionMasterResponse
 import com.heartcare.agni.data.server.model.intervention.InterventionResponse
@@ -99,6 +102,7 @@ class SyncRepositoryImpl @Inject constructor(
     private val historyAndTestsApiService: HistoryAndTestsApiService,
     private val interventionApiService: InterventionApiService,
     private val examinationApiService: ExaminationApiService,
+    private val referralApiService: ReferralApiService,
     patientDao: PatientDao,
     private val genericDao: GenericDao,
     private val preferenceRepository: PreferenceRepository,
@@ -119,7 +123,8 @@ class SyncRepositoryImpl @Inject constructor(
     riskFactorDao: RiskFactorDao,
     tobaccoCessationDao: TobaccoCessationDao,
     interventionDao: InterventionDao,
-    examinationDao: ExaminationDao
+    examinationDao: ExaminationDao,
+    healthFacilityDao: HealthFacilityDao
 ) : SyncRepository, SyncRepositoryDatabaseTransactions(
     patientDao,
     genericDao,
@@ -140,7 +145,8 @@ class SyncRepositoryImpl @Inject constructor(
     riskFactorDao,
     tobaccoCessationDao,
     interventionDao,
-    examinationDao
+    examinationDao,
+    healthFacilityDao
 ) {
 
     override suspend fun getAndInsertListPatientData(
@@ -1435,6 +1441,47 @@ class SyncRepositoryImpl @Inject constructor(
                     is ApiEndResponse -> {
                         preferenceRepository.setLastSyncLevelRecord(Date().time)
                         insertLevels(body)
+                        this
+                    }
+
+                    else -> this
+                }
+            }
+        } catch (e: Exception) {
+            Timber.e(e, e.localizedMessage)
+            ApiErrorResponse(
+                statusCode = 0,
+                errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
+            )
+        }
+    }
+
+    override suspend fun getAndInsertHealthFacilityData(offset: Int): ResponseMapper<List<HealthFacilityResponse>> {
+        val map = mutableMapOf<String, String>()
+        map[COUNT] = "$COUNT_VALUE"
+        map[OFFSET] = offset.toString()
+        if (preferenceRepository.getLastSyncHealthFacility() != 0L) map[LAST_UPDATED] =
+            String.format(
+                GREATER_THAN_BUILDER,
+                preferenceRepository.getLastSyncHealthFacility().toTimeStampDate()
+            )
+
+        return try {
+            ApiResponseConverter.convert(
+                referralApiService.getHealthFacility(
+                    map
+                ), true
+            ).run {
+                when (this) {
+                    is ApiContinueResponse -> {
+                        insertHealthFacility(body)
+                        //Call for next batch data
+                        getAndInsertHealthFacilityData(offset + COUNT_VALUE)
+                    }
+
+                    is ApiEndResponse -> {
+                        insertHealthFacility(body)
+                        preferenceRepository.setLastSyncHealthFacility(Date().time)
                         this
                     }
 

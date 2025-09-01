@@ -9,6 +9,7 @@ import com.heartcare.agni.data.local.roomdb.dao.DiagnosisDao
 import com.heartcare.agni.data.local.roomdb.dao.ExaminationDao
 import com.heartcare.agni.data.local.roomdb.dao.FamilyHistoryDao
 import com.heartcare.agni.data.local.roomdb.dao.GenericDao
+import com.heartcare.agni.data.local.roomdb.dao.HealthFacilityDao
 import com.heartcare.agni.data.local.roomdb.dao.HistoryMedicationDao
 import com.heartcare.agni.data.local.roomdb.dao.InterventionDao
 import com.heartcare.agni.data.local.roomdb.dao.LevelsDao
@@ -33,6 +34,7 @@ import com.heartcare.agni.data.server.model.diagnosis.DiagnosisResponse
 import com.heartcare.agni.data.server.model.examination.ExaminationMasterResponse
 import com.heartcare.agni.data.server.model.examination.ExaminationResponse
 import com.heartcare.agni.data.server.model.family.FamilyHistoryResponse
+import com.heartcare.agni.data.server.model.healthfacility.HealthFacilityResponse
 import com.heartcare.agni.data.server.model.historymedication.HistoryMedicationResponse
 import com.heartcare.agni.data.server.model.intervention.InterventionMasterResponse
 import com.heartcare.agni.data.server.model.intervention.InterventionResponse
@@ -59,6 +61,7 @@ import com.heartcare.agni.utils.converters.responseconverter.toDiagnosisMasterEn
 import com.heartcare.agni.utils.converters.responseconverter.toExaminationEntity
 import com.heartcare.agni.utils.converters.responseconverter.toExaminationMasterEntity
 import com.heartcare.agni.utils.converters.responseconverter.toFamilyHistoryEntity
+import com.heartcare.agni.utils.converters.responseconverter.toHealthFacilityEntity
 import com.heartcare.agni.utils.converters.responseconverter.toHistoryMedicationEntity
 import com.heartcare.agni.utils.converters.responseconverter.toInterventionEntity
 import com.heartcare.agni.utils.converters.responseconverter.toInterventionMasterEntity
@@ -98,7 +101,8 @@ open class SyncRepositoryDatabaseTransactions(
     private val riskFactorDao: RiskFactorDao,
     private val tobaccoCessationDao: TobaccoCessationDao,
     private val interventionDao: InterventionDao,
-    private val examinationDao: ExaminationDao
+    private val examinationDao: ExaminationDao,
+    private val healthFacilityDao: HealthFacilityDao
 ) {
 
 
@@ -567,6 +571,12 @@ open class SyncRepositoryDatabaseTransactions(
     protected suspend fun insertLevels(body: List<LevelResponse>) {
         levelsDao.insertLevelEntity(
             *body.map { it.toLevelEntity() }.toTypedArray()
+        )
+    }
+
+    protected suspend fun insertHealthFacility(body: List<HealthFacilityResponse>) {
+        healthFacilityDao.insertHealthFacility(
+            *body.map { it.toHealthFacilityEntity() }.toTypedArray()
         )
     }
 
