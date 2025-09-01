@@ -503,4 +503,9 @@ object TimeConverter {
 
         return this.time + offset
     }
+
+    fun Date.toMMMddyyyy(): String {
+        val sdf = SimpleDateFormat("MMM-dd-yyyy", Locale.getDefault())
+        return sdf.format(this)
+    }
 }

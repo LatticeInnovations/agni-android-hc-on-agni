@@ -435,4 +435,11 @@
     <string name="recent_referral">Recent referrals</string>
     <string name="add_referral">Add referral</string>
     <string name="update_referral">Update referral</string>
+    <string name="view_referral">View Referral</string>
+    <string name="referring_detail">Referring detail</string>
+    <string name="physician_colon">Physician:</string>
+    <string name="facility_colon">Facility:</string>
+    <string name="date_colon">Date:</string>
+    <string name="referral_facility">Referral facility</string>
+    <string name="notes_colon">Notes: %s</string>
 </resources>

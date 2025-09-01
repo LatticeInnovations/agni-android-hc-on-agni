@@ -42,6 +42,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.heartcare.agni.R
 import com.heartcare.agni.data.server.model.patient.PatientResponse
+import com.heartcare.agni.navigation.Screen
 import com.heartcare.agni.ui.common.AppointmentCompletedDialog
 import com.heartcare.agni.ui.common.CardWithRightArrow
 import com.heartcare.agni.ui.common.CustomDialog
@@ -92,7 +93,7 @@ fun ReferralScreen(
                 modifier = Modifier
                     .padding(paddingValues)
             ) {
-                ReferralScreenContent(viewModel)
+                ReferralScreenContent(viewModel, navController)
             }
         },
         bottomBar = {
@@ -135,7 +136,8 @@ private fun HandleLaunchedEffect(
 
 @Composable
 private fun ReferralScreenContent(
-    viewModel: ReferralViewModel
+    viewModel: ReferralViewModel,
+    navController: NavController
 ) {
     if (viewModel.referralList.isEmpty()) {
         Column(
@@ -171,6 +173,7 @@ private fun ReferralScreenContent(
                         practitionerName = "Dr. Anamika Sood",
                         onClick = {
                             // navigate to view referral
+                            navController.navigate(Screen.ViewReferralScreen.route)
                         }
                     )
                 }

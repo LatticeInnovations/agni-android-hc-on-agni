@@ -41,6 +41,7 @@ import com.heartcare.agni.ui.patientregistration.PatientRegistration
 import com.heartcare.agni.ui.patientregistration.preview.PatientRegistrationPreview
 import com.heartcare.agni.ui.prescription.PrescriptionScreen
 import com.heartcare.agni.ui.referral.ReferralScreen
+import com.heartcare.agni.ui.referral.view.ViewReferralScreen
 import com.heartcare.agni.ui.searchpatient.SearchPatient
 import com.heartcare.agni.ui.vitalsscreen.VitalsScreen
 import com.heartcare.agni.ui.vitalsscreen.addvitals.AddVitalsScreen
@@ -119,5 +120,20 @@ fun NavigationAppHost(navController: NavController, startDest: String) {
         composable(Screen.TestExaminationScreen.route) { TestExaminationScreen(navController = navController) }
         composable(Screen.AddTestExaminationScreen.route) { AddTestExaminationScreen(navController = navController) }
         composable(Screen.ReferralScreen.route) { ReferralScreen(navController = navController) }
+        composable(
+            route = Screen.ViewReferralScreen.route,
+            enterTransition = {
+                slideInVertically(
+                    initialOffsetY = { it },
+                    animationSpec = tween(300)
+                )
+            },
+            exitTransition = {
+                slideOutVertically(
+                    targetOffsetY = { it },
+                    animationSpec = tween(500)
+                )
+            }
+        ) { ViewReferralScreen(navController = navController) }
     }
 }
