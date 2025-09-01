@@ -442,4 +442,7 @@
     <string name="date_colon">Date:</string>
     <string name="referral_facility">Referral facility</string>
     <string name="notes_colon">Notes: %s</string>
+    <string name="health_facility_mandatory">Health facility*</string>
+    <string name="health_facility_required">Health facility required</string>
+    <string name="add_notes">Add notes</string>
 </resources>

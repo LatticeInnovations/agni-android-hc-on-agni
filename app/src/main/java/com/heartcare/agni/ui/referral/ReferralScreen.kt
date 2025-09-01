@@ -216,7 +216,7 @@ private fun ReferralBottomBar(
                                         PATIENT,
                                         viewModel.patient
                                     )
-                                    //navController.navigate(Screen.AddReferralScreen.route)
+                                    navController.navigate(Screen.AddReferralScreen.route)
                                 }
                             }
 
@@ -298,7 +298,7 @@ private fun AddToQueueDialog(
                                 PATIENT,
                                 viewModel.patient
                             )
-                            //navController.navigate(Screen.AddReferralScreen.route)
+                            navController.navigate(Screen.AddReferralScreen.route)
                         }
                     }
                 )
@@ -315,7 +315,7 @@ private fun AddToQueueDialog(
                                     PATIENT,
                                     viewModel.patient
                                 )
-                                //navController.navigate(Screen.AddReferralScreen.route)
+                                navController.navigate(Screen.AddReferralScreen.route)
                             }
                         }
                     )
