@@ -36,6 +36,8 @@ import com.heartcare.agni.data.local.repository.prescription.PrescriptionReposit
 import com.heartcare.agni.data.local.repository.prescription.PrescriptionRepositoryImpl
 import com.heartcare.agni.data.local.repository.priordx.PriorDxRepository
 import com.heartcare.agni.data.local.repository.priordx.PriorDxRepositoryImpl
+import com.heartcare.agni.data.local.repository.referral.ReferralRepository
+import com.heartcare.agni.data.local.repository.referral.ReferralRepositoryImpl
 import com.heartcare.agni.data.local.repository.risk.RiskFactorRepository
 import com.heartcare.agni.data.local.repository.risk.RiskFactorRepositoryImpl
 import com.heartcare.agni.data.local.repository.schedule.ScheduleRepository
@@ -159,4 +161,8 @@ abstract class RepositoryModule {
     @Binds
     @ViewModelScoped
     abstract fun provideExaminationRepository(examinationRepositoryImpl: ExaminationRepositoryImpl): ExaminationRepository
+
+    @Binds
+    @ViewModelScoped
+    abstract fun provideReferralRepository(referralRepositoryImpl: ReferralRepositoryImpl): ReferralRepository
 }

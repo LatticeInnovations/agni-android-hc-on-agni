@@ -42,6 +42,7 @@ import com.heartcare.agni.data.local.roomdb.entities.prescription.PrescriptionAn
 import com.heartcare.agni.data.local.roomdb.entities.prescription.PrescriptionDirectionsEntity
 import com.heartcare.agni.data.local.roomdb.entities.prescription.PrescriptionEntity
 import com.heartcare.agni.data.local.roomdb.entities.priordx.PriorDxEntity
+import com.heartcare.agni.data.local.roomdb.entities.referral.ReferralEntity
 import com.heartcare.agni.data.local.roomdb.entities.risk.AlcoholEntity
 import com.heartcare.agni.data.local.roomdb.entities.risk.FatAndOilEntity
 import com.heartcare.agni.data.local.roomdb.entities.risk.FruitsVegetablesEntity
@@ -78,6 +79,7 @@ import com.heartcare.agni.data.server.model.prescription.medication.MedicationRe
 import com.heartcare.agni.data.server.model.prescription.medication.MedicineTimeResponse
 import com.heartcare.agni.data.server.model.prescription.prescriptionresponse.PrescriptionResponse
 import com.heartcare.agni.data.server.model.priordx.PriorDxResponse
+import com.heartcare.agni.data.server.model.referral.ReferralResponse
 import com.heartcare.agni.data.server.model.risk.AlcoholResponse
 import com.heartcare.agni.data.server.model.risk.FatAndOilResponse
 import com.heartcare.agni.data.server.model.risk.FruitsVegetablesResponse
@@ -1395,5 +1397,43 @@ suspend fun ExaminationEntity.toExaminationResponseLocal(
                 display = examination.name
             )
         }
+    )
+}
+
+fun ReferralResponse.toReferralEntity(): ReferralEntity{
+    return ReferralEntity(
+        uuid = uuid,
+        fhirId = fhirId,
+        appUpdatedDate = appUpdatedDate,
+        appointmentId = appointmentId,
+        patientId = patientId,
+        practitionerId = practitionerId!!,
+        practitionerName = practitionerName!!,
+        healthFacilityId = healthFacilityId,
+        note = note,
+    )
+}
+
+suspend fun ReferralResponse.toReferralEntity(
+    patientDao: PatientDao,
+    appointmentDao: AppointmentDao
+): ReferralEntity {
+    return this.toReferralEntity().copy(
+        appointmentId = appointmentDao.getAppointmentIdByFhirId(appointmentId),
+        patientId = patientDao.getPatientIdByFhirId(patientId)!!
+    )
+}
+
+fun ReferralEntity.toReferralResponse(): ReferralResponse {
+    return ReferralResponse(
+        uuid = uuid,
+        fhirId = fhirId,
+        appUpdatedDate = appUpdatedDate,
+        appointmentId = appointmentId,
+        patientId = patientId,
+        practitionerId = practitionerId,
+        practitionerName = practitionerName,
+        healthFacilityId = healthFacilityId,
+        note = note,
     )
 }
