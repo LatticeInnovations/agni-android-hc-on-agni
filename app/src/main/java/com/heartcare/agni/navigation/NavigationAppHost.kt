@@ -40,6 +40,7 @@ import com.heartcare.agni.ui.patientprofile.PatientProfile
 import com.heartcare.agni.ui.patientregistration.PatientRegistration
 import com.heartcare.agni.ui.patientregistration.preview.PatientRegistrationPreview
 import com.heartcare.agni.ui.prescription.PrescriptionScreen
+import com.heartcare.agni.ui.referral.ReferralScreen
 import com.heartcare.agni.ui.searchpatient.SearchPatient
 import com.heartcare.agni.ui.vitalsscreen.VitalsScreen
 import com.heartcare.agni.ui.vitalsscreen.addvitals.AddVitalsScreen
@@ -117,5 +118,6 @@ fun NavigationAppHost(navController: NavController, startDest: String) {
         composable(Screen.AddInterventionScreen.route) { AddInterventionScreen(navController = navController) }
         composable(Screen.TestExaminationScreen.route) { TestExaminationScreen(navController = navController) }
         composable(Screen.AddTestExaminationScreen.route) { AddTestExaminationScreen(navController = navController) }
+        composable(Screen.ReferralScreen.route) { ReferralScreen(navController = navController) }
     }
 }
