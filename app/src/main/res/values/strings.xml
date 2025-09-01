@@ -430,4 +430,9 @@
     <string name="test_and_examinations_updated"><![CDATA[Test & examinations updated!]]></string>
     <string name="brand_name">Brand - %s</string>
     <string name="referrals">Referrals</string>
+    <string name="referral_added_successfully">Referral added successfully!</string>
+    <string name="referral_updated_successfully">Referral updated successfully!</string>
+    <string name="recent_referral">Recent referrals</string>
+    <string name="add_referral">Add referral</string>
+    <string name="update_referral">Update referral</string>
 </resources>
