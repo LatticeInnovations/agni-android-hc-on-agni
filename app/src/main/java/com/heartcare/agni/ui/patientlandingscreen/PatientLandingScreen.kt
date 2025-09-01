@@ -241,6 +241,19 @@ private fun CardComposableList(
         if (viewModel.user.accountGroupId != UserRoleEnum.PHARMACIST.code) {
             CardComposable(
                 viewModel = viewModel,
+                label = stringResource(id = R.string.referrals),
+                icon = R.drawable.north_east,
+                subText = null,
+                onClick = {
+                    navController.currentBackStackEntry?.savedStateHandle?.set(
+                        PATIENT,
+                        viewModel.patient
+                    )
+                    navController.navigate(Screen.ReferralScreen.route)
+                }
+            )
+            CardComposable(
+                viewModel = viewModel,
                 label = stringResource(id = R.string.history_taking_and_tests),
                 icon = R.drawable.overview,
                 subText = null,

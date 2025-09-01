@@ -429,4 +429,20 @@
     <string name="test_and_examinations_saved"><![CDATA[Test & examinations saved!]]></string>
     <string name="test_and_examinations_updated"><![CDATA[Test & examinations updated!]]></string>
     <string name="brand_name">Brand - %s</string>
+    <string name="referrals">Referrals</string>
+    <string name="referral_added_successfully">Referral added successfully!</string>
+    <string name="referral_updated_successfully">Referral updated successfully!</string>
+    <string name="recent_referral">Recent referrals</string>
+    <string name="add_referral">Add referral</string>
+    <string name="update_referral">Update referral</string>
+    <string name="view_referral">View Referral</string>
+    <string name="referring_detail">Referring detail</string>
+    <string name="physician_colon">Physician:</string>
+    <string name="facility_colon">Facility:</string>
+    <string name="date_colon">Date:</string>
+    <string name="referral_facility">Referral facility</string>
+    <string name="notes_colon">Notes: %s</string>
+    <string name="health_facility_mandatory">Health facility*</string>
+    <string name="health_facility_required">Health facility required</string>
+    <string name="add_notes">Add notes</string>
 </resources>

@@ -159,6 +159,7 @@ private fun ItemRow(item: String, isBulleted: Boolean) {
 @Composable
 fun CardWithRightArrow(
     date: Date,
+    practitionerName: String? = null,
     onClick: () -> Unit
 ) {
     Column(
@@ -169,14 +170,25 @@ fun CardWithRightArrow(
         )
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 22.dp),
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 20.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = date.toPrescriptionDate(),
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurface
-            )
+            Column(
+                verticalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                Text(
+                    text = date.toPrescriptionDate(),
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                practitionerName?.let {
+                    Text(
+                        text = it,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
             Spacer(modifier = Modifier.weight(1f))
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,

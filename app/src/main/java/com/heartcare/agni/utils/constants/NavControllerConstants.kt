@@ -27,4 +27,5 @@ object NavControllerConstants {
     const val DIAGNOSIS_SAVED = "diagnosis_saved"
     const val INTERVENTIONS_SAVED = "interventions_saved"
     const val TEST_EXAMINATION_SAVED = "test_examination_saved"
+    const val REFERRAL_SAVED = "referral_saved"
 }
