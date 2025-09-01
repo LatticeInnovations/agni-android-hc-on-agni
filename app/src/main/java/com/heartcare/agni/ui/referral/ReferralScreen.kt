@@ -48,10 +48,10 @@ import com.heartcare.agni.ui.common.CardWithRightArrow
 import com.heartcare.agni.ui.common.CustomDialog
 import com.heartcare.agni.ui.patientlandingscreen.AllSlotsBookedDialog
 import com.heartcare.agni.utils.constants.NavControllerConstants.PATIENT
+import com.heartcare.agni.utils.constants.NavControllerConstants.REFERRAL
 import com.heartcare.agni.utils.constants.NavControllerConstants.REFERRAL_SAVED
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import java.util.Date
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -117,12 +117,14 @@ private fun HandleLaunchedEffect(
                 PATIENT
             )?.let {
                 viewModel.patient = it
+                viewModel.getReferralRecords(it.id)
             }
             viewModel.getAppointmentInfo(callback = {})
             viewModel.isLaunched = true
         }
         navController.currentBackStackEntry?.savedStateHandle?.let { handle ->
             if (handle.remove<Boolean>(REFERRAL_SAVED) == true) {
+                viewModel.getReferralRecords(viewModel.patient!!.id)
                 snackBarHostState.showSnackbar(
                     context.getString(
                         if (viewModel.todayReferral == null) R.string.referral_added_successfully
@@ -169,10 +171,14 @@ private fun ReferralScreenContent(
                 )
                 viewModel.referralList.forEach { referral ->
                     CardWithRightArrow(
-                        date = Date(),
-                        practitionerName = "Dr. Anamika Sood",
+                        date = referral.appUpdatedDate,
+                        practitionerName = referral.practitionerName,
                         onClick = {
                             // navigate to view referral
+                            navController.currentBackStackEntry?.savedStateHandle?.set(
+                                REFERRAL,
+                                referral
+                            )
                             navController.navigate(Screen.ViewReferralScreen.route)
                         }
                     )

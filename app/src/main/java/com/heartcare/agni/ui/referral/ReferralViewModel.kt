@@ -11,10 +11,13 @@ import com.heartcare.agni.data.local.repository.appointment.AppointmentRepositor
 import com.heartcare.agni.data.local.repository.generic.GenericRepository
 import com.heartcare.agni.data.local.repository.patient.lastupdated.PatientLastUpdatedRepository
 import com.heartcare.agni.data.local.repository.preference.PreferenceRepository
+import com.heartcare.agni.data.local.repository.referral.ReferralRepository
 import com.heartcare.agni.data.local.repository.schedule.ScheduleRepository
 import com.heartcare.agni.data.server.model.patient.PatientResponse
+import com.heartcare.agni.data.server.model.referral.ReferralResponse
 import com.heartcare.agni.di.dispatcher.IoDispatcher
 import com.heartcare.agni.utils.common.Queries
+import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.isToday
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toEndOfDay
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toTodayStartDate
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -25,6 +28,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ReferralViewModel @Inject constructor(
+    private val referralRepository: ReferralRepository,
     private val appointmentRepository: AppointmentRepository,
     private val preferenceRepository: PreferenceRepository,
     private val genericRepository: GenericRepository,
@@ -46,8 +50,8 @@ class ReferralViewModel @Inject constructor(
     var isAppointmentCompleted by mutableStateOf(false)
     var existsInOtherHospital by mutableStateOf(false)
 
-    var referralList by mutableStateOf(listOf<String>("", ""))
-    var todayReferral by mutableStateOf<String?>(null)
+    var referralList by mutableStateOf(listOf<ReferralResponse>())
+    var todayReferral by mutableStateOf<ReferralResponse?>(null)
 
     fun getAppointmentInfo(
         callback: () -> Unit
@@ -129,6 +133,14 @@ class ReferralViewModel @Inject constructor(
                 patientLastUpdatedRepository,
                 updated
             )
+        }
+    }
+
+    fun getReferralRecords(patientId: String) {
+        viewModelScope.launch(ioDispatcher) {
+            referralList = referralRepository.getReferralRecords(patientId).also {
+                todayReferral = it.firstOrNull { referral -> isToday(referral.appUpdatedDate) }
+            }
         }
     }
 }
