@@ -1238,6 +1238,40 @@ class SyncRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun sendReferralPostData(): ResponseMapper<List<CreateResponse>> {
+        return try {
+            genericDao.getSameTypeGenericEntityPayload(
+                genericTypeEnum = GenericTypeEnum.REFERRAL,
+                syncType = SyncType.POST
+            ).let { listOfGenericEntity ->
+                if (listOfGenericEntity.isEmpty()) ApiEmptyResponse()
+                else {
+                    ApiResponseConverter.convert(
+                        referralApiService.postReferral(
+                            listOfGenericEntity.map {
+                                it.payload.fromJson<LinkedTreeMap<*, *>>()
+                                    .mapToObject(ReferralResponse::class.java)!!
+                            }
+                        )
+                    ).apply {
+                        if (this is ApiEndResponse) {
+                            insertReferralFhirIds(body, listOfGenericEntity)
+                                .apply {
+                                    if (this > 0) sendReferralPostData()
+                                }
+                        }
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            Timber.e(e, e.localizedMessage)
+            ApiErrorResponse(
+                statusCode = 0,
+                errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
+            )
+        }
+    }
+
     override suspend fun sendPersonPatchData(): ResponseMapper<List<CreateResponse>> {
         return try {
             genericDao.getSameTypeGenericEntityPayload(

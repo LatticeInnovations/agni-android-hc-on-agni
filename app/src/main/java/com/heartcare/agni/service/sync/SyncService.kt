@@ -212,7 +212,8 @@ class SyncService(
                     async { updateFhirIdInRiskFactors(logout) },
                     async { updateFhirIdInTobaccoCessation(logout) },
                     async { updateFhirIdInIntervention(logout) },
-                    async { updateFhirIdInExamination(logout) }
+                    async { updateFhirIdInExamination(logout) },
+                    async { updateFhirIdInReferral(logout) }
                 )
 
                 // Wait for all of them to complete
@@ -285,6 +286,11 @@ class SyncService(
     /** Upload Examination */
     private suspend fun uploadExamination(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
         return checkAuthenticationStatus(syncRepository.sendExaminationPostData(), logout)
+    }
+
+    /** Upload Referral */
+    private suspend fun uploadReferral(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
+        return checkAuthenticationStatus(syncRepository.sendReferralPostData(), logout)
     }
 
     /**
@@ -629,6 +635,12 @@ class SyncService(
     private suspend fun updateFhirIdInExamination(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
         genericRepository.updateExaminationFhirId()
         return uploadExamination(logout)
+    }
+
+    /** Update FHIR ID in Referral */
+    private suspend fun updateFhirIdInReferral(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
+        genericRepository.updateReferralFhirId()
+        return uploadReferral(logout)
     }
 
     /** Check Session Expiry and Authorization */
