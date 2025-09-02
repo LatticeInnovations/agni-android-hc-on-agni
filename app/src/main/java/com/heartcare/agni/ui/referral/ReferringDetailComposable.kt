@@ -23,7 +23,11 @@ import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toMMM
 import java.util.Date
 
 @Composable
-fun ReferringDetailComposable() {
+fun ReferringDetailComposable(
+    physician: String,
+    facility: String,
+    date: Date = Date()
+) {
     Surface(
         shape = RoundedCornerShape(12.dp),
         border = BorderStroke(
@@ -44,15 +48,15 @@ fun ReferringDetailComposable() {
             )
             DetailRow(
                 label = stringResource(R.string.physician_colon),
-                detail = "Dr. Anamika Sood"
+                detail = physician
             )
             DetailRow(
                 label = stringResource(R.string.facility_colon),
-                detail = "Qaet Vaes | Vanua Lava"
+                detail = facility
             )
             DetailRow(
                 label = stringResource(R.string.date_colon),
-                detail = Date().toMMMddyyyy()
+                detail = date.toMMMddyyyy()
             )
         }
     }

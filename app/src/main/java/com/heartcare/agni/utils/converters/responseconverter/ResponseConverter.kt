@@ -1459,3 +1459,16 @@ fun HealthFacilityEntity.toHealthFacilityResponse(): HealthFacilityResponse {
         name = name
     )
 }
+
+fun HealthFacilityEntity.toLevelResponse(): LevelResponse {
+    return LevelResponse(
+        fhirId = healthFacilityId,
+        code = code,
+        levelType = "health-facility",
+        name = name,
+        population = null,
+        precedingLevelId = islandId,
+        secondaryName = null,
+        status = "active"
+    )
+}

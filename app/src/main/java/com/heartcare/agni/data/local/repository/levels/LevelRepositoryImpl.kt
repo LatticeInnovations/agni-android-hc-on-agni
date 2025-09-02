@@ -25,4 +25,8 @@ class LevelRepositoryImpl @Inject constructor(
     override suspend fun getLevelByFhirId(fhirId: String): LevelResponse {
         return levelsDao.getLevelByFhirId(fhirId).toLevelResponse()
     }
+
+    override suspend fun getLevelListByFhirIds(vararg fhirId: String): List<LevelResponse> {
+        return levelsDao.getLevelListByFhirIds(*fhirId).map { it.toLevelResponse() }
+    }
 }

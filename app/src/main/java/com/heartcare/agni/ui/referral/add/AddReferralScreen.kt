@@ -37,11 +37,11 @@ import androidx.navigation.NavController
 import com.heartcare.agni.R
 import com.heartcare.agni.data.server.model.patient.PatientResponse
 import com.heartcare.agni.ui.common.CustomTextFieldWithLength
-import com.heartcare.agni.ui.common.DropdownComposable
 import com.heartcare.agni.ui.patientregistration.step3.LevelDropDownComposable
 import com.heartcare.agni.ui.referral.ReferringDetailComposable
 import com.heartcare.agni.utils.constants.NavControllerConstants.PATIENT
 import com.heartcare.agni.utils.constants.NavControllerConstants.REFERRAL_SAVED
+import com.heartcare.agni.utils.converters.responseconverter.NameConverter.getFullName
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -57,6 +57,7 @@ fun AddReferralScreen(
             navController.previousBackStackEntry?.savedStateHandle?.get<PatientResponse>(PATIENT)
                 ?.let {
                     viewModel.patient = it
+                    viewModel.getListAndRecords(it.id)
                 }
             viewModel.isLaunched = true
         }
@@ -96,7 +97,13 @@ fun AddReferralScreen(
                     modifier = Modifier.padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    ReferringDetailComposable()
+                    ReferringDetailComposable(
+                        physician = getFullName(
+                            viewModel.user.firstName,
+                            viewModel.user.lastName
+                        ),
+                        facility = "${viewModel.user.hospitalName} | ${viewModel.user.levelThreeName}"
+                    )
                     LevelDropDownComposable(
                         value = viewModel.province?.name ?: "",
                         updateValue = {
@@ -139,14 +146,16 @@ fun AddReferralScreen(
                         isEnabled = viewModel.areaCouncil != null
                     )
 
-                    DropdownComposable(
-                        value = viewModel.heathFacility,
-                        updateValue = { viewModel.heathFacility = it },
-                        label = stringResource(R.string.health_facility_mandatory),
+                    LevelDropDownComposable(
+                        value = viewModel.heathFacility?.name ?: "",
+                        updateValue = {
+                            viewModel.heathFacility = it
+                        },
+                        label = stringResource(id = R.string.health_facility_mandatory),
                         dropdownList = viewModel.heathFacilityList,
                         errorText = stringResource(R.string.health_facility_required),
                         isMandatory = true,
-                        dropdownWeight = 0.9f
+                        isEnabled = viewModel.island != null
                     )
 
                     CustomTextFieldWithLength(
@@ -176,12 +185,14 @@ fun AddReferralScreen(
             ) {
                 Button(
                     onClick = {
-                        coroutineScope.launch {
-                            navController.previousBackStackEntry?.savedStateHandle?.set(
-                                REFERRAL_SAVED,
-                                true
-                            )
-                            navController.navigateUp()
+                        viewModel.addReferral {
+                            coroutineScope.launch {
+                                navController.previousBackStackEntry?.savedStateHandle?.set(
+                                    REFERRAL_SAVED,
+                                    true
+                                )
+                                navController.navigateUp()
+                            }
                         }
                     },
                     modifier = Modifier.fillMaxWidth(),
@@ -204,9 +215,9 @@ private fun resetAreaCouncilHierarchy(viewModel: AddReferralViewModel) {
 
 private fun resetIslandHierarchy(viewModel: AddReferralViewModel) {
     viewModel.island = null
-    viewModel.heathFacility = ""
+    resetHealthFacility(viewModel)
 }
 
 private fun resetHealthFacility(viewModel: AddReferralViewModel) {
-    viewModel.heathFacility = ""
+    viewModel.heathFacility = null
 }

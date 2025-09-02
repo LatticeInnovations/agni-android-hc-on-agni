@@ -70,7 +70,10 @@ fun ViewReferralScreen(
                     modifier = Modifier.padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    ReferringDetailComposable()
+                    ReferringDetailComposable(
+                        physician = "Dr. Anamika Sood",
+                        facility = "Qaet Vaes | Vanua Lava",
+                    )
                     ReferralFacilityComposable()
                 }
             }

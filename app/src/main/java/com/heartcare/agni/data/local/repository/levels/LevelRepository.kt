@@ -7,4 +7,5 @@ interface LevelRepository {
     suspend fun getLevels(levelType: String, precedingId: String? = null): List<LevelResponse>
     suspend fun getLevelNameFromFhirId(fhirId: String): String
     suspend fun getLevelByFhirId(fhirId: String): LevelResponse
+    suspend fun getLevelListByFhirIds(vararg fhirId: String): List<LevelResponse>
 }
