@@ -32,6 +32,7 @@ class SyncService(
     private lateinit var examinationPatchJob: Deferred<ResponseMapper<Any>?>
     private lateinit var interventionMasterDownloadJob: Deferred<ResponseMapper<Any>?>
     private lateinit var examinationMasterDownloadJob: Deferred<ResponseMapper<Any>?>
+    private lateinit var healthFacilityDownloadJob: Deferred<ResponseMapper<Any>?>
 
     /**
      *
@@ -212,7 +213,8 @@ class SyncService(
                     async { updateFhirIdInRiskFactors(logout) },
                     async { updateFhirIdInTobaccoCessation(logout) },
                     async { updateFhirIdInIntervention(logout) },
-                    async { updateFhirIdInExamination(logout) }
+                    async { updateFhirIdInExamination(logout) },
+                    async { updateFhirIdInReferral(logout) }
                 )
 
                 // Wait for all of them to complete
@@ -287,6 +289,11 @@ class SyncService(
         return checkAuthenticationStatus(syncRepository.sendExaminationPostData(), logout)
     }
 
+    /** Upload Referral */
+    private suspend fun uploadReferral(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
+        return checkAuthenticationStatus(syncRepository.sendReferralPostData(), logout)
+    }
+
     /**
      *
      *
@@ -357,43 +364,45 @@ class SyncService(
     }
 
     /** Download Appointment*/
-    private suspend fun downloadAppointment(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? = coroutineScope {
-        val response = checkAuthenticationStatus(
-            syncRepository.getAndInsertAppointment(0),
-            logout
-        )
-        if (response is ApiEmptyResponse || response is ApiEndResponse) {
-            val jobs = listOf(
-                async { downloadPatientLastUpdated(logout) },
-                async { downloadCVD(logout) },
-                async { downloadVitals(logout) },
-                async { downloadPriorDx(logout) },
-                async { downloadHistoryMedication(logout) },
-                async { downloadFamilyHistory(logout) },
-                async { downloadAllergy(logout) },
-                async { downloadRiskFactors(logout) },
-                async { downloadTobaccoCessation(logout) },
-                async { downloadDiagnosis(logout) },
-                async {
-                    prescriptionPatchJob.await()
-                    downloadFormPrescription(null, logout)
-                },
-                async {
-                    interventionMasterDownloadJob.await()
-                    interventionPatchJob.await()
-                    downloadIntervention(logout)
-                },
-                async {
-                    examinationMasterDownloadJob.await()
-                    examinationPatchJob.await()
-                    downloadExamination(logout)
-                }
+    private suspend fun downloadAppointment(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? =
+        coroutineScope {
+            val response = checkAuthenticationStatus(
+                syncRepository.getAndInsertAppointment(0),
+                logout
             )
-            jobs.awaitAll()
-        }
+            if (response is ApiEmptyResponse || response is ApiEndResponse) {
+                val jobs = listOf(
+                    async { downloadPatientLastUpdated(logout) },
+                    async { downloadCVD(logout) },
+                    async { downloadVitals(logout) },
+                    async { downloadPriorDx(logout) },
+                    async { downloadHistoryMedication(logout) },
+                    async { downloadFamilyHistory(logout) },
+                    async { downloadAllergy(logout) },
+                    async { downloadRiskFactors(logout) },
+                    async { downloadTobaccoCessation(logout) },
+                    async { downloadDiagnosis(logout) },
+                    async {
+                        prescriptionPatchJob.await()
+                        downloadFormPrescription(null, logout)
+                    },
+                    async {
+                        interventionMasterDownloadJob.await()
+                        interventionPatchJob.await()
+                        downloadIntervention(logout)
+                    },
+                    async {
+                        examinationMasterDownloadJob.await()
+                        examinationPatchJob.await()
+                        downloadExamination(logout)
+                    },
+                    async { downloadReferral(logout) },
+                )
+                jobs.awaitAll()
+            }
 
-        response
-    }
+            response
+        }
 
     /** Download Form Prescription*/
     internal suspend fun downloadFormPrescription(
@@ -471,7 +480,25 @@ class SyncService(
 
     /** Download Levels Data */
     private suspend fun downloadLevelsRecord(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
-        return checkAuthenticationStatus(syncRepository.getAndInsertLevelsData(0), logout)
+        val response = checkAuthenticationStatus(
+            syncRepository.getAndInsertLevelsData(0),
+            logout
+        )
+
+        return when (response) {
+            is ApiEmptyResponse, is ApiEndResponse -> downloadHealthFacility(logout)
+            else -> response
+        }
+    }
+
+    /** Download Health Facility Data */
+    private suspend fun downloadHealthFacility(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
+        coroutineScope {
+            healthFacilityDownloadJob = async {
+                checkAuthenticationStatus(syncRepository.getAndInsertHealthFacilityData(0), logout)
+            }
+        }
+        return healthFacilityDownloadJob.await()
     }
 
     /** Download Prior Dx Data */
@@ -515,6 +542,18 @@ class SyncService(
     /** Download Examination Data */
     private suspend fun downloadExamination(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
         return checkAuthenticationStatus(syncRepository.getAndInsertExaminationData(0), logout)
+    }
+
+    /** Download Referral Data */
+    private suspend fun downloadReferral(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
+        val response = healthFacilityDownloadJob.await()
+        return when (response) {
+            is ApiEndResponse, is ApiEmptyResponse -> {
+                checkAuthenticationStatus(syncRepository.getAndInsertReferralData(0), logout)
+            }
+
+            else -> response
+        }
     }
 
     /**
@@ -610,6 +649,12 @@ class SyncService(
     private suspend fun updateFhirIdInExamination(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
         genericRepository.updateExaminationFhirId()
         return uploadExamination(logout)
+    }
+
+    /** Update FHIR ID in Referral */
+    private suspend fun updateFhirIdInReferral(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
+        genericRepository.updateReferralFhirId()
+        return uploadReferral(logout)
     }
 
     /** Check Session Expiry and Authorization */

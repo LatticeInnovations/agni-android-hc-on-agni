@@ -18,4 +18,7 @@ interface LevelsDao {
 
     @Query("SELECT * FROM LevelEntity WHERE fhirId=:fhirId")
     suspend fun getLevelByFhirId(fhirId: String): LevelEntity
+
+    @Query("SELECT * FROM LevelEntity WHERE fhirId in (:fhirId)")
+    suspend fun getLevelListByFhirIds(vararg fhirId: String): List<LevelEntity>
 }

@@ -23,63 +23,88 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.heartcare.agni.R
+import com.heartcare.agni.data.server.model.referral.ReferralResponse
 import com.heartcare.agni.ui.referral.ReferringDetailComposable
 import com.heartcare.agni.ui.theme.Black
 import com.heartcare.agni.ui.theme.White
+import com.heartcare.agni.utils.constants.NavControllerConstants.REFERRAL
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ViewReferralScreen(
-    navController: NavController
+    navController: NavController,
+    viewModel: ViewReferralViewModel = hiltViewModel()
 ) {
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                modifier = Modifier.fillMaxWidth(),
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(8.dp)
-                ),
-                title = {
-                    Text(
-                        text = stringResource(id = R.string.view_referral),
-                        style = MaterialTheme.typography.titleLarge,
-                        modifier = Modifier.testTag("HEADING_TAG")
-                    )
-                },
-                actions = {
-                    IconButton(onClick = { navController.navigateUp() }) {
-                        Icon(Icons.Default.Clear, contentDescription = "CLEAR_ICON")
-                    }
-                }
-            )
-        },
-        content = { paddingValues ->
-            Column(
-                modifier = Modifier
-                    .padding(paddingValues)
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
-            ) {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    ReferringDetailComposable()
-                    ReferralFacilityComposable()
-                }
+    navController.previousBackStackEntry?.savedStateHandle?.get<ReferralResponse>(
+        REFERRAL
+    )?.let { referral ->
+        LaunchedEffect(viewModel.isLaunched) {
+            if (!viewModel.isLaunched) {
+                viewModel.getDetails(referral)
+                viewModel.isLaunched = true
             }
         }
-    )
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(8.dp)
+                    ),
+                    title = {
+                        Text(
+                            text = stringResource(id = R.string.view_referral),
+                            style = MaterialTheme.typography.titleLarge,
+                            modifier = Modifier.testTag("HEADING_TAG")
+                        )
+                    },
+                    actions = {
+                        IconButton(onClick = { navController.navigateUp() }) {
+                            Icon(Icons.Default.Clear, contentDescription = "CLEAR_ICON")
+                        }
+                    }
+                )
+            },
+            content = { paddingValues ->
+                Column(
+                    modifier = Modifier
+                        .padding(paddingValues)
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState())
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        ReferringDetailComposable(
+                            physician = referral.practitionerName!!,
+                            facility = viewModel.sourceFacilityName,
+                            date = referral.appUpdatedDate
+                        )
+                        ReferralFacilityComposable(
+                            facilityName = viewModel.referredFacilityName,
+                            note = referral.note
+                        )
+                    }
+                }
+            }
+        )
+    }
 }
 
 @Composable
-private fun ReferralFacilityComposable() {
+private fun ReferralFacilityComposable(
+    facilityName: String,
+    note: String?
+) {
     Surface(
         shape = RoundedCornerShape(12.dp),
         border = BorderStroke(
@@ -89,7 +114,9 @@ private fun ReferralFacilityComposable() {
         color = if (isSystemInDarkTheme()) Black else White
     ) {
         Column(
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Text(
@@ -98,14 +125,12 @@ private fun ReferralFacilityComposable() {
                 color = MaterialTheme.colorScheme.onSurface
             )
             Text(
-                text = "V8G, Anabrou, Port Vila, Vanuatu\n" +
-                        "North West Malekula, Port Vila, Efafe\n" +
-                        "Shefa",
+                text = facilityName,
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Text(
-                text = stringResource(R.string.notes_colon, "This is a placeholder note for testing purposes."),
+                text = stringResource(R.string.notes_colon, note ?: "--"),
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )

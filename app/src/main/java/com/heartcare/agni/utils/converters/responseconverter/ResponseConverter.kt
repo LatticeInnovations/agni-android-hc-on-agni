@@ -27,6 +27,7 @@ import com.heartcare.agni.data.local.roomdb.entities.examination.ExaminationEnti
 import com.heartcare.agni.data.local.roomdb.entities.examination.ExaminationMasterEntity
 import com.heartcare.agni.data.local.roomdb.entities.family.FamilyHistoryEntity
 import com.heartcare.agni.data.local.roomdb.entities.generic.GenericEntity
+import com.heartcare.agni.data.local.roomdb.entities.healthfacility.HealthFacilityEntity
 import com.heartcare.agni.data.local.roomdb.entities.historymedication.HistoryMedicationEntity
 import com.heartcare.agni.data.local.roomdb.entities.intervention.InterventionEntity
 import com.heartcare.agni.data.local.roomdb.entities.intervention.InterventionMasterEntity
@@ -42,6 +43,7 @@ import com.heartcare.agni.data.local.roomdb.entities.prescription.PrescriptionAn
 import com.heartcare.agni.data.local.roomdb.entities.prescription.PrescriptionDirectionsEntity
 import com.heartcare.agni.data.local.roomdb.entities.prescription.PrescriptionEntity
 import com.heartcare.agni.data.local.roomdb.entities.priordx.PriorDxEntity
+import com.heartcare.agni.data.local.roomdb.entities.referral.ReferralEntity
 import com.heartcare.agni.data.local.roomdb.entities.risk.AlcoholEntity
 import com.heartcare.agni.data.local.roomdb.entities.risk.FatAndOilEntity
 import com.heartcare.agni.data.local.roomdb.entities.risk.FruitsVegetablesEntity
@@ -64,6 +66,7 @@ import com.heartcare.agni.data.server.model.diagnosis.DiagnosisResponse
 import com.heartcare.agni.data.server.model.examination.ExaminationMasterResponse
 import com.heartcare.agni.data.server.model.examination.ExaminationResponse
 import com.heartcare.agni.data.server.model.family.FamilyHistoryResponse
+import com.heartcare.agni.data.server.model.healthfacility.HealthFacilityResponse
 import com.heartcare.agni.data.server.model.historymedication.HistoryMedicationResponse
 import com.heartcare.agni.data.server.model.intervention.InterventionMasterResponse
 import com.heartcare.agni.data.server.model.intervention.InterventionResponse
@@ -78,6 +81,7 @@ import com.heartcare.agni.data.server.model.prescription.medication.MedicationRe
 import com.heartcare.agni.data.server.model.prescription.medication.MedicineTimeResponse
 import com.heartcare.agni.data.server.model.prescription.prescriptionresponse.PrescriptionResponse
 import com.heartcare.agni.data.server.model.priordx.PriorDxResponse
+import com.heartcare.agni.data.server.model.referral.ReferralResponse
 import com.heartcare.agni.data.server.model.risk.AlcoholResponse
 import com.heartcare.agni.data.server.model.risk.FatAndOilResponse
 import com.heartcare.agni.data.server.model.risk.FruitsVegetablesResponse
@@ -1395,5 +1399,80 @@ suspend fun ExaminationEntity.toExaminationResponseLocal(
                 display = examination.name
             )
         }
+    )
+}
+
+fun ReferralResponse.toReferralEntity(): ReferralEntity{
+    return ReferralEntity(
+        uuid = uuid,
+        fhirId = fhirId,
+        appUpdatedDate = appUpdatedDate,
+        appointmentId = appointmentId,
+        patientId = patientId,
+        practitionerId = practitionerId!!,
+        practitionerName = practitionerName!!,
+        healthFacilityId = healthFacilityId,
+        note = note,
+        sourceHealthFacilityId = sourceHealthFacilityId!!,
+        sourceIslandId = sourceIslandId!!,
+    )
+}
+
+suspend fun ReferralResponse.toReferralEntity(
+    patientDao: PatientDao,
+    appointmentDao: AppointmentDao
+): ReferralEntity {
+    return this.toReferralEntity().copy(
+        appointmentId = appointmentDao.getAppointmentIdByFhirId(appointmentId),
+        patientId = patientDao.getPatientIdByFhirId(patientId)!!
+    )
+}
+
+fun ReferralEntity.toReferralResponse(): ReferralResponse {
+    return ReferralResponse(
+        uuid = uuid,
+        fhirId = fhirId,
+        appUpdatedDate = appUpdatedDate,
+        appointmentId = appointmentId,
+        patientId = patientId,
+        practitionerId = practitionerId,
+        practitionerName = practitionerName,
+        healthFacilityId = healthFacilityId,
+        note = note,
+        sourceHealthFacilityId = sourceHealthFacilityId,
+        sourceIslandId = sourceIslandId
+    )
+}
+
+fun HealthFacilityResponse.toHealthFacilityEntity(): HealthFacilityEntity {
+    return HealthFacilityEntity(
+        healthFacilityId = healthFacilityId,
+        code = code,
+        heartcareId = heartcareId,
+        islandId = islandId,
+        name = name
+    )
+}
+
+fun HealthFacilityEntity.toHealthFacilityResponse(): HealthFacilityResponse {
+    return HealthFacilityResponse(
+        code = code,
+        healthFacilityId = healthFacilityId,
+        heartcareId = heartcareId,
+        islandId = islandId,
+        name = name
+    )
+}
+
+fun HealthFacilityEntity.toLevelResponse(): LevelResponse {
+    return LevelResponse(
+        fhirId = healthFacilityId,
+        code = code,
+        levelType = "health-facility",
+        name = name,
+        population = null,
+        precedingLevelId = islandId,
+        secondaryName = null,
+        status = "active"
     )
 }

@@ -3,7 +3,6 @@ package com.heartcare.agni.data.local.repository.generic
 import com.heartcare.agni.data.local.enums.GenericTypeEnum
 import com.heartcare.agni.data.local.enums.SyncType
 import com.heartcare.agni.data.local.model.patch.AppointmentPatchRequest
-import com.heartcare.agni.data.local.model.patch.ChangeRequest
 import com.heartcare.agni.data.local.model.diagnosis.DiagnosisData
 import com.heartcare.agni.data.local.roomdb.dao.AppointmentDao
 import com.heartcare.agni.data.local.roomdb.dao.GenericDao
@@ -20,13 +19,12 @@ import com.heartcare.agni.data.server.model.patient.PatientLastUpdatedResponse
 import com.heartcare.agni.data.server.model.patient.PatientResponse
 import com.heartcare.agni.data.server.model.prescription.prescriptionresponse.PrescriptionResponse
 import com.heartcare.agni.data.server.model.priordx.PriorDxResponse
+import com.heartcare.agni.data.server.model.referral.ReferralResponse
 import com.heartcare.agni.data.server.model.risk.RiskFactorResponse
 import com.heartcare.agni.data.server.model.scheduleandappointment.appointment.AppointmentResponse
 import com.heartcare.agni.data.server.model.scheduleandappointment.schedule.ScheduleResponse
 import com.heartcare.agni.data.server.model.tobacco.TobaccoCessationResponse
 import com.heartcare.agni.data.server.model.vitals.VitalResponse
-import com.heartcare.agni.utils.builders.GenericEntityPatchBuilder.processPatch
-import com.heartcare.agni.utils.constants.Id
 import com.heartcare.agni.utils.constants.Id.APPOINTMENT_ID
 import com.heartcare.agni.utils.constants.Id.APP_UPDATED_DATE
 import com.heartcare.agni.utils.constants.Id.PATIENT_ID
@@ -463,6 +461,28 @@ open class GenericRepositoryDatabaseTransactions(
         }
     }
 
+    protected suspend fun insertReferralGenericEntity(
+        referralGenericEntity: GenericEntity?,
+        referralResponse: ReferralResponse,
+        uuid: String
+    ): Long {
+        return if (referralGenericEntity != null) {
+            genericDao.insertGenericEntity(
+                referralGenericEntity.copy(payload = referralResponse.toJson())
+            )[0]
+        } else {
+            genericDao.insertGenericEntity(
+                GenericEntity(
+                    id = uuid,
+                    patientId = referralResponse.uuid,
+                    payload = referralResponse.toJson(),
+                    type = GenericTypeEnum.REFERRAL,
+                    syncType = SyncType.POST
+                )
+            )[0]
+        }
+    }
+
     protected suspend fun updateAppointmentFhirIdInGenericEntity(appointmentGenericEntity: GenericEntity) {
         val existingMap = appointmentGenericEntity.payload.fromJson<MutableMap<String, Any>>()
             .mapToObject(AppointmentResponse::class.java)
@@ -719,6 +739,26 @@ open class GenericRepositoryDatabaseTransactions(
         }
     }
 
+    protected suspend fun updateReferralFhirIdInGenericEntity(referralGenericEntity: GenericEntity) {
+        val existingMap = referralGenericEntity.payload.fromJson<MutableMap<String, Any>>()
+            .mapToObject(ReferralResponse::class.java)
+
+        if (existingMap != null) {
+            genericDao.insertGenericEntity(
+                referralGenericEntity.copy(
+                    payload = existingMap.copy(
+                        patientId = if (!existingMap.patientId.isFhirId()) getPatientFhirIdById(
+                            existingMap.patientId
+                        )!! else existingMap.patientId,
+                        appointmentId = if (!existingMap.appointmentId.isFhirId()) getAppointmentFhirIdById(
+                            existingMap.appointmentId
+                        )!! else existingMap.appointmentId
+                    ).toJson()
+                )
+            )
+        }
+    }
+
     protected suspend fun insertOrUpdateAppointmentGenericEntityPatch(
         appointmentGenericEntity: GenericEntity?,
         map: Map<String, Any>,
@@ -759,178 +799,6 @@ open class GenericRepositoryDatabaseTransactions(
         }
     }
 
-
-    protected suspend fun insertOrUpdateCVDGenericEntityPatch(
-        genericEntity: List<GenericEntity>,
-        cvdFhirId: String,
-        map: Map<String, Any>,
-        uuid: String
-    ): Long {
-        var recordUpdated = false
-        var lastInsertedId: Long = 0
-
-        // Loop through existing records
-        genericEntity.forEach { entity ->
-            val existingMap = entity.payload.fromJson<MutableMap<String, Any>>()
-
-            // Check if the "cvdFhirId" and "key" in the existing map match the new map
-            if (existingMap["cvdFhirId"] == map["cvdFhirId"] && existingMap["key"] == map["key"]) {
-
-                // If it matches, update the existing map's component with new values, except for "operation"
-                val existingComponent =
-                    existingMap["component"] as? MutableMap<String, Any> ?: mutableMapOf()
-
-                map["component"]?.let { newComponent ->
-                    if (newComponent is Map<*, *>) {
-                        newComponent.forEach { (key, value) ->
-                            if (key == "operation" && existingComponent["operation"] == "add") {
-                                // Skip updating "operation" if it's already "add"
-                                return@forEach
-                            }
-                            // Update other component keys
-                            existingComponent[key as String] = value as Any
-                        }
-                    }
-                }
-
-                // Update the existing map with the modified component
-                existingMap["component"] = existingComponent
-
-                // Update the existing record in the DB
-                lastInsertedId = genericDao.insertGenericEntity(
-                    entity.copy(payload = existingMap.toJson())
-                )[0]
-                recordUpdated = true  // Mark that an update has occurred
-            }
-        }
-
-        // If no record was updated (i.e., "Height" was not found), insert a new record
-        if (!recordUpdated) {
-            lastInsertedId = genericDao.insertGenericEntity(
-                GenericEntity(
-                    id = uuid,
-                    patientId = cvdFhirId,
-                    payload = map.toJson(),
-                    type = GenericTypeEnum.CVD,
-                    syncType = SyncType.PATCH
-                )
-            )[0]
-        }
-
-        return lastInsertedId
-    }
-
-    protected suspend fun insertSymDiagGenericEntityPatch(
-        genericEntity: GenericEntity?,
-        fhirId: String,
-        map: Map<String, Any>,
-        uuid: String
-    ): Long {
-        return if (genericEntity != null) {
-            genericDao.insertGenericEntity(
-                genericEntity.copy(payload = map.toJson())
-            )[0]
-        } else {
-            /** Insert Freshly Patch data */
-            genericDao.insertGenericEntity(
-                GenericEntity(
-                    id = uuid,
-                    patientId = fhirId,
-                    payload = map.toMutableMap().let { mutableMap ->
-                        mutableMap[Id.ID] = fhirId
-                        mutableMap
-                    }.toJson(),
-                    type = GenericTypeEnum.DIAGNOSIS,
-                    syncType = SyncType.PATCH
-                )
-            )[0]
-        }
-    }
-
-
-    protected suspend fun insertVitalGenericEntityPatch(
-        genericEntity: List<GenericEntity>,
-        vitalFhirId: String,
-        map: Map<String, Any>,
-        uuid: String
-    ): Long {
-        var recordUpdated = false
-        var lastInsertedId: Long = 0
-
-        // Loop through existing records
-        genericEntity.forEach { entity ->
-            val existingMap = entity.payload.fromJson<MutableMap<String, Any>>()
-
-            // Check if the "vitalFhirId" and "key" in the existing map match the new map
-            if (existingMap["vitalFhirId"] == map["vitalFhirId"] && existingMap["key"] == map["key"]) {
-
-                // If it matches, update the existing map's component with new values, except for "operation"
-                val existingComponent =
-                    existingMap["component"] as? MutableMap<String, Any> ?: mutableMapOf()
-
-                map["component"]?.let { newComponent ->
-                    if (newComponent is Map<*, *>) {
-                        newComponent.forEach { (key, value) ->
-                            if (key == "operation" && existingComponent["operation"] == "add") {
-                                // Skip updating "operation" if it's already "add"
-                                return@forEach
-                            }
-                            // Update other component keys
-                            existingComponent[key as String] = value as Any
-                        }
-                    }
-                }
-
-                // Update the existing map with the modified component
-                existingMap["component"] = existingComponent
-
-                // Update the existing record in the DB
-                lastInsertedId = genericDao.insertGenericEntity(
-                    entity.copy(payload = existingMap.toJson())
-                )[0]
-                recordUpdated = true  // Mark that an update has occurred
-            }
-        }
-
-        // If no record was updated (i.e., "Height" was not found), insert a new record
-        if (!recordUpdated) {
-            lastInsertedId = genericDao.insertGenericEntity(
-                GenericEntity(
-                    id = uuid,
-                    patientId = vitalFhirId,
-                    payload = map.toJson(),
-                    type = GenericTypeEnum.VITAL,
-                    syncType = SyncType.PATCH
-                )
-            )[0]
-        }
-
-        return lastInsertedId
-    }
-
-
-    private fun processPatientPatch(
-        mapEntry: Map.Entry<String, Any>,
-        existingMap: MutableMap<String, Any>
-    ) {
-        if (mapEntry.value is List<*>) {
-            /** Get Processed Data for List Change Request */
-            val processPatchData = processPatch(
-                existingMap,
-                mapEntry,
-                ((mapEntry.value as List<*>).filterIsInstance<ChangeRequest>())
-            )
-            /** Check for data is empty */
-            if (processPatchData.isNotEmpty()) {
-                existingMap[mapEntry.key] = processPatchData
-            } else {
-                /** If empty remove that key from map */
-                existingMap.remove(mapEntry.key)
-            }
-        } else {
-            processPatch(existingMap, mapEntry)
-        }
-    }
 
     protected suspend fun insertPatientGenericEntityPatch(
         patientGenericPatchEntity: GenericEntity?,

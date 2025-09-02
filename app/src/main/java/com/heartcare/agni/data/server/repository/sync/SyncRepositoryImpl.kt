@@ -12,6 +12,7 @@ import com.heartcare.agni.data.local.roomdb.dao.DiagnosisDao
 import com.heartcare.agni.data.local.roomdb.dao.ExaminationDao
 import com.heartcare.agni.data.local.roomdb.dao.FamilyHistoryDao
 import com.heartcare.agni.data.local.roomdb.dao.GenericDao
+import com.heartcare.agni.data.local.roomdb.dao.HealthFacilityDao
 import com.heartcare.agni.data.local.roomdb.dao.HistoryMedicationDao
 import com.heartcare.agni.data.local.roomdb.dao.InterventionDao
 import com.heartcare.agni.data.local.roomdb.dao.LevelsDao
@@ -20,6 +21,7 @@ import com.heartcare.agni.data.local.roomdb.dao.PatientDao
 import com.heartcare.agni.data.local.roomdb.dao.PatientLastUpdatedDao
 import com.heartcare.agni.data.local.roomdb.dao.PrescriptionDao
 import com.heartcare.agni.data.local.roomdb.dao.PriorDxDao
+import com.heartcare.agni.data.local.roomdb.dao.ReferralDao
 import com.heartcare.agni.data.local.roomdb.dao.RiskFactorDao
 import com.heartcare.agni.data.local.roomdb.dao.RiskPredictionDao
 import com.heartcare.agni.data.local.roomdb.dao.ScheduleDao
@@ -33,6 +35,7 @@ import com.heartcare.agni.data.server.api.InterventionApiService
 import com.heartcare.agni.data.server.api.LevelsApiService
 import com.heartcare.agni.data.server.api.PatientApiService
 import com.heartcare.agni.data.server.api.PrescriptionApiService
+import com.heartcare.agni.data.server.api.ReferralApiService
 import com.heartcare.agni.data.server.api.ScheduleAndAppointmentApiService
 import com.heartcare.agni.data.server.api.VitalApiService
 import com.heartcare.agni.data.server.constants.ConstantValues.COUNT_VALUE
@@ -57,6 +60,7 @@ import com.heartcare.agni.data.server.model.diagnosis.DiagnosisResponse
 import com.heartcare.agni.data.server.model.examination.ExaminationMasterResponse
 import com.heartcare.agni.data.server.model.examination.ExaminationResponse
 import com.heartcare.agni.data.server.model.family.FamilyHistoryResponse
+import com.heartcare.agni.data.server.model.healthfacility.HealthFacilityResponse
 import com.heartcare.agni.data.server.model.historymedication.HistoryMedicationResponse
 import com.heartcare.agni.data.server.model.intervention.InterventionMasterResponse
 import com.heartcare.agni.data.server.model.intervention.InterventionResponse
@@ -67,6 +71,7 @@ import com.heartcare.agni.data.server.model.prescription.medication.MedicationRe
 import com.heartcare.agni.data.server.model.prescription.medication.MedicineTimeResponse
 import com.heartcare.agni.data.server.model.prescription.prescriptionresponse.PrescriptionResponse
 import com.heartcare.agni.data.server.model.priordx.PriorDxResponse
+import com.heartcare.agni.data.server.model.referral.ReferralResponse
 import com.heartcare.agni.data.server.model.risk.RiskFactorResponse
 import com.heartcare.agni.data.server.model.scheduleandappointment.appointment.AppointmentResponse
 import com.heartcare.agni.data.server.model.scheduleandappointment.schedule.ScheduleResponse
@@ -99,6 +104,7 @@ class SyncRepositoryImpl @Inject constructor(
     private val historyAndTestsApiService: HistoryAndTestsApiService,
     private val interventionApiService: InterventionApiService,
     private val examinationApiService: ExaminationApiService,
+    private val referralApiService: ReferralApiService,
     patientDao: PatientDao,
     private val genericDao: GenericDao,
     private val preferenceRepository: PreferenceRepository,
@@ -119,7 +125,9 @@ class SyncRepositoryImpl @Inject constructor(
     riskFactorDao: RiskFactorDao,
     tobaccoCessationDao: TobaccoCessationDao,
     interventionDao: InterventionDao,
-    examinationDao: ExaminationDao
+    examinationDao: ExaminationDao,
+    healthFacilityDao: HealthFacilityDao,
+    referralDao: ReferralDao
 ) : SyncRepository, SyncRepositoryDatabaseTransactions(
     patientDao,
     genericDao,
@@ -140,7 +148,9 @@ class SyncRepositoryImpl @Inject constructor(
     riskFactorDao,
     tobaccoCessationDao,
     interventionDao,
-    examinationDao
+    examinationDao,
+    healthFacilityDao,
+    referralDao
 ) {
 
     override suspend fun getAndInsertListPatientData(
@@ -169,10 +179,10 @@ class SyncRepositoryImpl @Inject constructor(
                     }
 
                     is ApiEndResponse -> {
-                        //Set Last Update Time
-                        preferenceRepository.setLastSyncPatient(Date().time)
                         //Insert Patient
                         insertPatient(body)
+                        //Set Last Update Time
+                        preferenceRepository.setLastSyncPatient(Date().time)
                         this
                     }
 
@@ -293,8 +303,8 @@ class SyncRepositoryImpl @Inject constructor(
                     }
 
                     is ApiEndResponse -> {
-                        preferenceRepository.setLastMedicationSyncDate(Date().time)
                         insertMedication(body)
+                        preferenceRepository.setLastMedicationSyncDate(Date().time)
                         this
                     }
 
@@ -331,8 +341,8 @@ class SyncRepositoryImpl @Inject constructor(
                     }
 
                     is ApiEndResponse -> {
-                        preferenceRepository.setLastInterventionMasterSyncDate(Date().time)
                         insertInterventionMasterList(body)
+                        preferenceRepository.setLastInterventionMasterSyncDate(Date().time)
                         this
                     }
 
@@ -369,8 +379,8 @@ class SyncRepositoryImpl @Inject constructor(
                     }
 
                     is ApiEndResponse -> {
-                        preferenceRepository.setLastExaminationMasterSyncDate(Date().time)
                         insertExaminationMasterList(body)
+                        preferenceRepository.setLastExaminationMasterSyncDate(Date().time)
                         this
                     }
 
@@ -400,8 +410,8 @@ class SyncRepositoryImpl @Inject constructor(
             ).run {
                 when (this) {
                     is ApiEndResponse -> {
-                        preferenceRepository.setLastDiagnosisMasterSyncDate(Date().time)
                         insertDiagnosisMasterList(body)
+                        preferenceRepository.setLastDiagnosisMasterSyncDate(Date().time)
                         this
                     }
 
@@ -433,8 +443,8 @@ class SyncRepositoryImpl @Inject constructor(
             ).run {
                 when (this) {
                     is ApiEndResponse -> {
-                        preferenceRepository.setLastMedicineDosageInstructionSyncDate(Date().time)
                         insertMedicationTiming(body)
+                        preferenceRepository.setLastMedicineDosageInstructionSyncDate(Date().time)
                         this
                     }
 
@@ -474,8 +484,8 @@ class SyncRepositoryImpl @Inject constructor(
                     }
 
                     is ApiEndResponse -> {
-                        preferenceRepository.setLastSyncSchedule(Date().time)
                         insertSchedule(body)
+                        preferenceRepository.setLastSyncSchedule(Date().time)
                         this
                     }
 
@@ -515,8 +525,8 @@ class SyncRepositoryImpl @Inject constructor(
                     }
 
                     is ApiEndResponse -> {
-                        preferenceRepository.setLastSyncAppointment(Date().time)
                         insertAppointment(body)
+                        preferenceRepository.setLastSyncAppointment(Date().time)
                         this
                     }
 
@@ -580,8 +590,8 @@ class SyncRepositoryImpl @Inject constructor(
                     }
 
                     is ApiEndResponse -> {
-                        preferenceRepository.setLastSyncCVD(Date().time)
                         insertCVD(body)
+                        preferenceRepository.setLastSyncCVD(Date().time)
                         this
                     }
 
@@ -621,10 +631,9 @@ class SyncRepositoryImpl @Inject constructor(
                     }
 
                     is ApiEndResponse -> {
+                        insertVital(body)
                         //Set Last Update Time
                         preferenceRepository.setLastSyncVital(Date().time)
-                        //Insert Patient
-                        insertVital(body)
                         this
                     }
 
@@ -664,10 +673,9 @@ class SyncRepositoryImpl @Inject constructor(
                     }
 
                     is ApiEndResponse -> {
+                        insertSymDiag(body)
                         //Set Last Update Time
                         preferenceRepository.setLastSyncDiagnosis(Date().time)
-                        //Insert Patient
-                        insertSymDiag(body)
                         this
                     }
 
@@ -1228,6 +1236,40 @@ class SyncRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun sendReferralPostData(): ResponseMapper<List<CreateResponse>> {
+        return try {
+            genericDao.getSameTypeGenericEntityPayload(
+                genericTypeEnum = GenericTypeEnum.REFERRAL,
+                syncType = SyncType.POST
+            ).let { listOfGenericEntity ->
+                if (listOfGenericEntity.isEmpty()) ApiEmptyResponse()
+                else {
+                    ApiResponseConverter.convert(
+                        referralApiService.postReferral(
+                            listOfGenericEntity.map {
+                                it.payload.fromJson<LinkedTreeMap<*, *>>()
+                                    .mapToObject(ReferralResponse::class.java)!!
+                            }
+                        )
+                    ).apply {
+                        if (this is ApiEndResponse) {
+                            insertReferralFhirIds(body, listOfGenericEntity)
+                                .apply {
+                                    if (this > 0) sendReferralPostData()
+                                }
+                        }
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            Timber.e(e, e.localizedMessage)
+            ApiErrorResponse(
+                statusCode = 0,
+                errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
+            )
+        }
+    }
+
     override suspend fun sendPersonPatchData(): ResponseMapper<List<CreateResponse>> {
         return try {
             genericDao.getSameTypeGenericEntityPayload(
@@ -1435,6 +1477,47 @@ class SyncRepositoryImpl @Inject constructor(
                     is ApiEndResponse -> {
                         preferenceRepository.setLastSyncLevelRecord(Date().time)
                         insertLevels(body)
+                        this
+                    }
+
+                    else -> this
+                }
+            }
+        } catch (e: Exception) {
+            Timber.e(e, e.localizedMessage)
+            ApiErrorResponse(
+                statusCode = 0,
+                errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
+            )
+        }
+    }
+
+    override suspend fun getAndInsertHealthFacilityData(offset: Int): ResponseMapper<List<HealthFacilityResponse>> {
+        val map = mutableMapOf<String, String>()
+        map[COUNT] = "$COUNT_VALUE"
+        map[OFFSET] = offset.toString()
+        if (preferenceRepository.getLastSyncHealthFacility() != 0L) map[LAST_UPDATED] =
+            String.format(
+                GREATER_THAN_BUILDER,
+                preferenceRepository.getLastSyncHealthFacility().toTimeStampDate()
+            )
+
+        return try {
+            ApiResponseConverter.convert(
+                referralApiService.getHealthFacility(
+                    map
+                ), true
+            ).run {
+                when (this) {
+                    is ApiContinueResponse -> {
+                        insertHealthFacility(body)
+                        //Call for next batch data
+                        getAndInsertHealthFacilityData(offset + COUNT_VALUE)
+                    }
+
+                    is ApiEndResponse -> {
+                        insertHealthFacility(body)
+                        preferenceRepository.setLastSyncHealthFacility(Date().time)
                         this
                     }
 
@@ -1769,6 +1852,48 @@ class SyncRepositoryImpl @Inject constructor(
                     is ApiEndResponse -> {
                         preferenceRepository.setLastSyncExamination(Date().time)
                         insertExamination(body)
+                        this
+                    }
+
+                    else -> this
+                }
+            }
+        } catch (e: Exception) {
+            Timber.e(e, e.localizedMessage)
+            ApiErrorResponse(
+                statusCode = 0,
+                errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
+            )
+        }
+    }
+
+    override suspend fun getAndInsertReferralData(
+        offset: Int
+    ): ResponseMapper<List<ReferralResponse>> {
+        val map = mutableMapOf<String, String>()
+        map[COUNT] = COUNT_VALUE.toString()
+        map[OFFSET] = offset.toString()
+        map[SORT] = "-$ID"
+        if (preferenceRepository.getLastSyncReferral() != 0L) map[LAST_UPDATED] = String.format(
+            GREATER_THAN_BUILDER, preferenceRepository.getLastSyncReferral().toTimeStampDate()
+        )
+
+        return try {
+            ApiResponseConverter.convert(
+                referralApiService.getReferrals(
+                    map
+                ), true
+            ).run {
+                when (this) {
+                    is ApiContinueResponse -> {
+                        insertReferral(body)
+                        //Call for next batch data
+                        getAndInsertReferralData(offset + COUNT_VALUE)
+                    }
+
+                    is ApiEndResponse -> {
+                        insertReferral(body)
+                        preferenceRepository.setLastSyncReferral(Date().time)
                         this
                     }
 

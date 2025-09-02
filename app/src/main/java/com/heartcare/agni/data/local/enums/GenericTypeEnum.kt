@@ -18,5 +18,6 @@ enum class GenericTypeEnum(val number: Int, val value: String) {
     RISK_FACTOR(15, "risk_factor"),
     TOBACCO_CESSATION(16, "tobacco_cessation"),
     INTERVENTION(17, "intervention"),
-    EXAMINATION(18, "examination");
+    EXAMINATION(18, "examination"),
+    REFERRAL(19, "referral");
 }

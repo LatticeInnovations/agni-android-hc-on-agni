@@ -18,6 +18,7 @@ import com.heartcare.agni.data.server.model.patient.PatientLastUpdatedResponse
 import com.heartcare.agni.data.server.model.patient.PatientResponse
 import com.heartcare.agni.data.server.model.prescription.prescriptionresponse.PrescriptionResponse
 import com.heartcare.agni.data.server.model.priordx.PriorDxResponse
+import com.heartcare.agni.data.server.model.referral.ReferralResponse
 import com.heartcare.agni.data.server.model.risk.RiskFactorResponse
 import com.heartcare.agni.data.server.model.scheduleandappointment.appointment.AppointmentResponse
 import com.heartcare.agni.data.server.model.scheduleandappointment.schedule.ScheduleResponse
@@ -171,6 +172,13 @@ class GenericRepositoryImpl @Inject constructor(
             }
     }
 
+    override suspend fun updateReferralFhirId() {
+        genericDao.getNotSyncedData(GenericTypeEnum.REFERRAL)
+            .forEach { referralGenericEntity ->
+                updateReferralFhirIdInGenericEntity(referralGenericEntity)
+            }
+    }
+
     override suspend fun insertAppointment(
         appointmentResponse: AppointmentResponse,
         uuid: String
@@ -305,6 +313,19 @@ class GenericRepositoryImpl @Inject constructor(
             syncType = SyncType.POST
         ).let { examinationGenericEntity ->
             insertExaminationGenericEntity(examinationGenericEntity, examinationResponse, uuid)
+        }
+    }
+
+    override suspend fun insertReferralRecord(
+        referralResponse: ReferralResponse,
+        uuid: String
+    ): Long {
+        return genericDao.getGenericEntityById(
+            patientId = referralResponse.uuid,
+            genericTypeEnum = GenericTypeEnum.REFERRAL,
+            syncType = SyncType.POST
+        ).let { referralGenericEntity ->
+            insertReferralGenericEntity(referralGenericEntity, referralResponse, uuid)
         }
     }
 

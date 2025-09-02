@@ -13,6 +13,7 @@ import com.heartcare.agni.data.local.roomdb.dao.DiagnosisDao
 import com.heartcare.agni.data.local.roomdb.dao.ExaminationDao
 import com.heartcare.agni.data.local.roomdb.dao.FamilyHistoryDao
 import com.heartcare.agni.data.local.roomdb.dao.GenericDao
+import com.heartcare.agni.data.local.roomdb.dao.HealthFacilityDao
 import com.heartcare.agni.data.local.roomdb.dao.HistoryMedicationDao
 import com.heartcare.agni.data.local.roomdb.dao.IdentifierDao
 import com.heartcare.agni.data.local.roomdb.dao.InterventionDao
@@ -22,6 +23,7 @@ import com.heartcare.agni.data.local.roomdb.dao.PatientDao
 import com.heartcare.agni.data.local.roomdb.dao.PatientLastUpdatedDao
 import com.heartcare.agni.data.local.roomdb.dao.PrescriptionDao
 import com.heartcare.agni.data.local.roomdb.dao.PriorDxDao
+import com.heartcare.agni.data.local.roomdb.dao.ReferralDao
 import com.heartcare.agni.data.local.roomdb.dao.RiskFactorDao
 import com.heartcare.agni.data.local.roomdb.dao.RiskPredictionDao
 import com.heartcare.agni.data.local.roomdb.dao.ScheduleDao
@@ -38,6 +40,7 @@ import com.heartcare.agni.data.local.roomdb.entities.examination.ExaminationEnti
 import com.heartcare.agni.data.local.roomdb.entities.examination.ExaminationMasterEntity
 import com.heartcare.agni.data.local.roomdb.entities.family.FamilyHistoryEntity
 import com.heartcare.agni.data.local.roomdb.entities.generic.GenericEntity
+import com.heartcare.agni.data.local.roomdb.entities.healthfacility.HealthFacilityEntity
 import com.heartcare.agni.data.local.roomdb.entities.historymedication.HistoryMedicationEntity
 import com.heartcare.agni.data.local.roomdb.entities.intervention.InterventionEntity
 import com.heartcare.agni.data.local.roomdb.entities.intervention.InterventionMasterEntity
@@ -50,6 +53,7 @@ import com.heartcare.agni.data.local.roomdb.entities.patient.PatientLastUpdatedE
 import com.heartcare.agni.data.local.roomdb.entities.prescription.PrescriptionDirectionsEntity
 import com.heartcare.agni.data.local.roomdb.entities.prescription.PrescriptionEntity
 import com.heartcare.agni.data.local.roomdb.entities.priordx.PriorDxEntity
+import com.heartcare.agni.data.local.roomdb.entities.referral.ReferralEntity
 import com.heartcare.agni.data.local.roomdb.entities.risk.RiskFactorEntity
 import com.heartcare.agni.data.local.roomdb.entities.schedule.ScheduleEntity
 import com.heartcare.agni.data.local.roomdb.entities.search.SearchEntity
@@ -93,7 +97,9 @@ import java.util.UUID
         InterventionMasterEntity::class,
         InterventionEntity::class,
         ExaminationMasterEntity::class,
-        ExaminationEntity::class
+        ExaminationEntity::class,
+        ReferralEntity::class,
+        HealthFacilityEntity::class
     ],
     views = [PrescriptionDirectionAndMedicineView::class],
     version = 1,
@@ -124,6 +130,8 @@ abstract class FhirAppDatabase : RoomDatabase() {
     abstract fun getTobaccoCessationDao(): TobaccoCessationDao
     abstract fun getInterventionDao(): InterventionDao
     abstract fun getExaminationDao(): ExaminationDao
+    abstract fun getReferralDao(): ReferralDao
+    abstract fun getHealthFacilityDao(): HealthFacilityDao
 
     companion object {
         @Volatile

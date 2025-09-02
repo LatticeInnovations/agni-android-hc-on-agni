@@ -14,4 +14,5 @@ object EndPoints {
     const val TOBACCO_CESSATION = "tobaccoCessation"
     const val INTERVENTION = "intervention"
     const val EXAMINATION = "examination"
+    const val REFERRAL = "referral"
 }
