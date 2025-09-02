@@ -179,10 +179,10 @@ class SyncRepositoryImpl @Inject constructor(
                     }
 
                     is ApiEndResponse -> {
-                        //Set Last Update Time
-                        preferenceRepository.setLastSyncPatient(Date().time)
                         //Insert Patient
                         insertPatient(body)
+                        //Set Last Update Time
+                        preferenceRepository.setLastSyncPatient(Date().time)
                         this
                     }
 
@@ -303,8 +303,8 @@ class SyncRepositoryImpl @Inject constructor(
                     }
 
                     is ApiEndResponse -> {
-                        preferenceRepository.setLastMedicationSyncDate(Date().time)
                         insertMedication(body)
+                        preferenceRepository.setLastMedicationSyncDate(Date().time)
                         this
                     }
 
@@ -341,8 +341,8 @@ class SyncRepositoryImpl @Inject constructor(
                     }
 
                     is ApiEndResponse -> {
-                        preferenceRepository.setLastInterventionMasterSyncDate(Date().time)
                         insertInterventionMasterList(body)
+                        preferenceRepository.setLastInterventionMasterSyncDate(Date().time)
                         this
                     }
 
@@ -379,8 +379,8 @@ class SyncRepositoryImpl @Inject constructor(
                     }
 
                     is ApiEndResponse -> {
-                        preferenceRepository.setLastExaminationMasterSyncDate(Date().time)
                         insertExaminationMasterList(body)
+                        preferenceRepository.setLastExaminationMasterSyncDate(Date().time)
                         this
                     }
 
@@ -410,8 +410,8 @@ class SyncRepositoryImpl @Inject constructor(
             ).run {
                 when (this) {
                     is ApiEndResponse -> {
-                        preferenceRepository.setLastDiagnosisMasterSyncDate(Date().time)
                         insertDiagnosisMasterList(body)
+                        preferenceRepository.setLastDiagnosisMasterSyncDate(Date().time)
                         this
                     }
 
@@ -443,8 +443,8 @@ class SyncRepositoryImpl @Inject constructor(
             ).run {
                 when (this) {
                     is ApiEndResponse -> {
-                        preferenceRepository.setLastMedicineDosageInstructionSyncDate(Date().time)
                         insertMedicationTiming(body)
+                        preferenceRepository.setLastMedicineDosageInstructionSyncDate(Date().time)
                         this
                     }
 
@@ -484,8 +484,8 @@ class SyncRepositoryImpl @Inject constructor(
                     }
 
                     is ApiEndResponse -> {
-                        preferenceRepository.setLastSyncSchedule(Date().time)
                         insertSchedule(body)
+                        preferenceRepository.setLastSyncSchedule(Date().time)
                         this
                     }
 
@@ -525,8 +525,8 @@ class SyncRepositoryImpl @Inject constructor(
                     }
 
                     is ApiEndResponse -> {
-                        preferenceRepository.setLastSyncAppointment(Date().time)
                         insertAppointment(body)
+                        preferenceRepository.setLastSyncAppointment(Date().time)
                         this
                     }
 
@@ -590,8 +590,8 @@ class SyncRepositoryImpl @Inject constructor(
                     }
 
                     is ApiEndResponse -> {
-                        preferenceRepository.setLastSyncCVD(Date().time)
                         insertCVD(body)
+                        preferenceRepository.setLastSyncCVD(Date().time)
                         this
                     }
 
@@ -631,10 +631,9 @@ class SyncRepositoryImpl @Inject constructor(
                     }
 
                     is ApiEndResponse -> {
+                        insertVital(body)
                         //Set Last Update Time
                         preferenceRepository.setLastSyncVital(Date().time)
-                        //Insert Patient
-                        insertVital(body)
                         this
                     }
 
@@ -674,10 +673,9 @@ class SyncRepositoryImpl @Inject constructor(
                     }
 
                     is ApiEndResponse -> {
+                        insertSymDiag(body)
                         //Set Last Update Time
                         preferenceRepository.setLastSyncDiagnosis(Date().time)
-                        //Insert Patient
-                        insertSymDiag(body)
                         this
                     }
 
