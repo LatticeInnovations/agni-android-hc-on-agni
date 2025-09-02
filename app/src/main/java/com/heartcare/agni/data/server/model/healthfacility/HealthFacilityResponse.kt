@@ -6,7 +6,7 @@ import androidx.annotation.Keep
 data class HealthFacilityResponse(
     val code: String,
     val healthFacilityId: String,
-    val heartcareId: String?,
+    val heartcareId: String,
     val islandId: String,
     val name: String
 )

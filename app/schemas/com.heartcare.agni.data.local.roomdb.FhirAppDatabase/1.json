@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "dd8163dc764eef32ffc23fbc64a468cf",
+    "identityHash": "af45f573ded9a1fd03bb1daaee75d35d",
     "entities": [
       {
         "tableName": "PatientEntity",
@@ -2841,7 +2841,7 @@
       },
       {
         "tableName": "ReferralEntity",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`uuid` TEXT NOT NULL, `fhirId` TEXT, `appUpdatedDate` INTEGER NOT NULL, `appointmentId` TEXT NOT NULL, `healthFacilityId` TEXT NOT NULL, `note` TEXT, `patientId` TEXT NOT NULL, `practitionerId` TEXT NOT NULL, `practitionerName` TEXT NOT NULL, PRIMARY KEY(`uuid`), FOREIGN KEY(`patientId`) REFERENCES `PatientEntity`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION , FOREIGN KEY(`appointmentId`) REFERENCES `AppointmentEntity`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`uuid` TEXT NOT NULL, `fhirId` TEXT, `appUpdatedDate` INTEGER NOT NULL, `appointmentId` TEXT NOT NULL, `healthFacilityId` TEXT NOT NULL, `note` TEXT, `patientId` TEXT NOT NULL, `practitionerId` TEXT NOT NULL, `practitionerName` TEXT NOT NULL, `sourceHealthFacilityId` TEXT NOT NULL, `sourceIslandId` TEXT NOT NULL, PRIMARY KEY(`uuid`), FOREIGN KEY(`patientId`) REFERENCES `PatientEntity`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION , FOREIGN KEY(`appointmentId`) REFERENCES `AppointmentEntity`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION )",
         "fields": [
           {
             "fieldPath": "uuid",
@@ -2892,6 +2892,18 @@
           {
             "fieldPath": "practitionerName",
             "columnName": "practitionerName",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sourceHealthFacilityId",
+            "columnName": "sourceHealthFacilityId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sourceIslandId",
+            "columnName": "sourceIslandId",
             "affinity": "TEXT",
             "notNull": true
           }
@@ -2949,7 +2961,7 @@
       },
       {
         "tableName": "HealthFacilityEntity",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`healthFacilityId` TEXT NOT NULL, `code` TEXT NOT NULL, `heartcareId` TEXT, `islandId` TEXT NOT NULL, `name` TEXT NOT NULL, PRIMARY KEY(`healthFacilityId`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`healthFacilityId` TEXT NOT NULL, `code` TEXT NOT NULL, `heartcareId` TEXT NOT NULL, `islandId` TEXT NOT NULL, `name` TEXT NOT NULL, PRIMARY KEY(`healthFacilityId`))",
         "fields": [
           {
             "fieldPath": "healthFacilityId",
@@ -2966,7 +2978,8 @@
           {
             "fieldPath": "heartcareId",
             "columnName": "heartcareId",
-            "affinity": "TEXT"
+            "affinity": "TEXT",
+            "notNull": true
           },
           {
             "fieldPath": "islandId",
@@ -2997,7 +3010,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'dd8163dc764eef32ffc23fbc64a468cf')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'af45f573ded9a1fd03bb1daaee75d35d')"
     ]
   }
 }

@@ -1413,6 +1413,8 @@ fun ReferralResponse.toReferralEntity(): ReferralEntity{
         practitionerName = practitionerName!!,
         healthFacilityId = healthFacilityId,
         note = note,
+        sourceHealthFacilityId = sourceHealthFacilityId!!,
+        sourceIslandId = sourceIslandId!!,
     )
 }
 
@@ -1437,6 +1439,8 @@ fun ReferralEntity.toReferralResponse(): ReferralResponse {
         practitionerName = practitionerName,
         healthFacilityId = healthFacilityId,
         note = note,
+        sourceHealthFacilityId = sourceHealthFacilityId,
+        sourceIslandId = sourceIslandId
     )
 }
 

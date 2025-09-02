@@ -34,5 +34,7 @@ data class ReferralEntity(
     val note: String?,
     val patientId: String,
     val practitionerId: String,
-    val practitionerName: String
+    val practitionerName: String,
+    val sourceHealthFacilityId: String,
+    val sourceIslandId: String
 )

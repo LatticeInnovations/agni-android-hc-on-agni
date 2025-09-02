@@ -143,7 +143,9 @@ class AddReferralViewModel @Inject constructor(
             practitionerName = null,
             appUpdatedDate = Date(),
             healthFacilityId = heathFacility!!.fhirId,
-            note = note.trim().ifBlank { null }
+            note = note.trim().ifBlank { null },
+            sourceHealthFacilityId = null,
+            sourceIslandId = null
         )
     }
 
@@ -159,6 +161,7 @@ class AddReferralViewModel @Inject constructor(
                 fhirId = it.fhirId
             }
             val referralResponse = getReferralResponse(uuid)
+            val sourceHealthFacility = healthFacilityRepository.getHealthFacilityList().first { it.heartcareId == user.hospitalId.toString() }
             referralRepository.insertReferral(
                 referralResponse.copy(
                     appointmentId = appointmentResponseLocal!!.uuid,
@@ -168,7 +171,9 @@ class AddReferralViewModel @Inject constructor(
                         user.lastName
                     ),
                     practitionerId = user.fhirId,
-                    fhirId = fhirId
+                    fhirId = fhirId,
+                    sourceHealthFacilityId = sourceHealthFacility.healthFacilityId,
+                    sourceIslandId = sourceHealthFacility.islandId
                 )
             )
             genericRepository.insertReferralRecord(referralResponse)
