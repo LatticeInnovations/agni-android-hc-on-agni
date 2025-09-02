@@ -32,6 +32,7 @@ class SyncService(
     private lateinit var examinationPatchJob: Deferred<ResponseMapper<Any>?>
     private lateinit var interventionMasterDownloadJob: Deferred<ResponseMapper<Any>?>
     private lateinit var examinationMasterDownloadJob: Deferred<ResponseMapper<Any>?>
+    private lateinit var healthFacilityDownloadJob: Deferred<ResponseMapper<Any>?>
 
     /**
      *
@@ -363,44 +364,45 @@ class SyncService(
     }
 
     /** Download Appointment*/
-    private suspend fun downloadAppointment(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? = coroutineScope {
-        val response = checkAuthenticationStatus(
-            syncRepository.getAndInsertAppointment(0),
-            logout
-        )
-        if (response is ApiEmptyResponse || response is ApiEndResponse) {
-            val jobs = listOf(
-                async { downloadPatientLastUpdated(logout) },
-                async { downloadCVD(logout) },
-                async { downloadVitals(logout) },
-                async { downloadPriorDx(logout) },
-                async { downloadHistoryMedication(logout) },
-                async { downloadFamilyHistory(logout) },
-                async { downloadAllergy(logout) },
-                async { downloadRiskFactors(logout) },
-                async { downloadTobaccoCessation(logout) },
-                async { downloadDiagnosis(logout) },
-                async {
-                    prescriptionPatchJob.await()
-                    downloadFormPrescription(null, logout)
-                },
-                async {
-                    interventionMasterDownloadJob.await()
-                    interventionPatchJob.await()
-                    downloadIntervention(logout)
-                },
-                async {
-                    examinationMasterDownloadJob.await()
-                    examinationPatchJob.await()
-                    downloadExamination(logout)
-                },
-                async { downloadReferral(logout) },
+    private suspend fun downloadAppointment(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? =
+        coroutineScope {
+            val response = checkAuthenticationStatus(
+                syncRepository.getAndInsertAppointment(0),
+                logout
             )
-            jobs.awaitAll()
-        }
+            if (response is ApiEmptyResponse || response is ApiEndResponse) {
+                val jobs = listOf(
+                    async { downloadPatientLastUpdated(logout) },
+                    async { downloadCVD(logout) },
+                    async { downloadVitals(logout) },
+                    async { downloadPriorDx(logout) },
+                    async { downloadHistoryMedication(logout) },
+                    async { downloadFamilyHistory(logout) },
+                    async { downloadAllergy(logout) },
+                    async { downloadRiskFactors(logout) },
+                    async { downloadTobaccoCessation(logout) },
+                    async { downloadDiagnosis(logout) },
+                    async {
+                        prescriptionPatchJob.await()
+                        downloadFormPrescription(null, logout)
+                    },
+                    async {
+                        interventionMasterDownloadJob.await()
+                        interventionPatchJob.await()
+                        downloadIntervention(logout)
+                    },
+                    async {
+                        examinationMasterDownloadJob.await()
+                        examinationPatchJob.await()
+                        downloadExamination(logout)
+                    },
+                    async { downloadReferral(logout) },
+                )
+                jobs.awaitAll()
+            }
 
-        response
-    }
+            response
+        }
 
     /** Download Form Prescription*/
     internal suspend fun downloadFormPrescription(
@@ -491,7 +493,12 @@ class SyncService(
 
     /** Download Health Facility Data */
     private suspend fun downloadHealthFacility(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
-        return checkAuthenticationStatus(syncRepository.getAndInsertHealthFacilityData(0), logout)
+        coroutineScope {
+            healthFacilityDownloadJob = async {
+                checkAuthenticationStatus(syncRepository.getAndInsertHealthFacilityData(0), logout)
+            }
+        }
+        return healthFacilityDownloadJob.await()
     }
 
     /** Download Prior Dx Data */
@@ -539,7 +546,14 @@ class SyncService(
 
     /** Download Referral Data */
     private suspend fun downloadReferral(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
-        return checkAuthenticationStatus(syncRepository.getAndInsertReferralData(0), logout)
+        val response = healthFacilityDownloadJob.await()
+        return when (response) {
+            is ApiEndResponse, is ApiEmptyResponse -> {
+                checkAuthenticationStatus(syncRepository.getAndInsertReferralData(0), logout)
+            }
+
+            else -> response
+        }
     }
 
     /**
