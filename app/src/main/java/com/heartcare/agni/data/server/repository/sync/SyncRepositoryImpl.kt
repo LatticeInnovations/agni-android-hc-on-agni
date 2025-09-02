@@ -21,6 +21,7 @@ import com.heartcare.agni.data.local.roomdb.dao.PatientDao
 import com.heartcare.agni.data.local.roomdb.dao.PatientLastUpdatedDao
 import com.heartcare.agni.data.local.roomdb.dao.PrescriptionDao
 import com.heartcare.agni.data.local.roomdb.dao.PriorDxDao
+import com.heartcare.agni.data.local.roomdb.dao.ReferralDao
 import com.heartcare.agni.data.local.roomdb.dao.RiskFactorDao
 import com.heartcare.agni.data.local.roomdb.dao.RiskPredictionDao
 import com.heartcare.agni.data.local.roomdb.dao.ScheduleDao
@@ -70,6 +71,7 @@ import com.heartcare.agni.data.server.model.prescription.medication.MedicationRe
 import com.heartcare.agni.data.server.model.prescription.medication.MedicineTimeResponse
 import com.heartcare.agni.data.server.model.prescription.prescriptionresponse.PrescriptionResponse
 import com.heartcare.agni.data.server.model.priordx.PriorDxResponse
+import com.heartcare.agni.data.server.model.referral.ReferralResponse
 import com.heartcare.agni.data.server.model.risk.RiskFactorResponse
 import com.heartcare.agni.data.server.model.scheduleandappointment.appointment.AppointmentResponse
 import com.heartcare.agni.data.server.model.scheduleandappointment.schedule.ScheduleResponse
@@ -124,7 +126,8 @@ class SyncRepositoryImpl @Inject constructor(
     tobaccoCessationDao: TobaccoCessationDao,
     interventionDao: InterventionDao,
     examinationDao: ExaminationDao,
-    healthFacilityDao: HealthFacilityDao
+    healthFacilityDao: HealthFacilityDao,
+    referralDao: ReferralDao
 ) : SyncRepository, SyncRepositoryDatabaseTransactions(
     patientDao,
     genericDao,
@@ -146,7 +149,8 @@ class SyncRepositoryImpl @Inject constructor(
     tobaccoCessationDao,
     interventionDao,
     examinationDao,
-    healthFacilityDao
+    healthFacilityDao,
+    referralDao
 ) {
 
     override suspend fun getAndInsertListPatientData(
@@ -1816,6 +1820,48 @@ class SyncRepositoryImpl @Inject constructor(
                     is ApiEndResponse -> {
                         preferenceRepository.setLastSyncExamination(Date().time)
                         insertExamination(body)
+                        this
+                    }
+
+                    else -> this
+                }
+            }
+        } catch (e: Exception) {
+            Timber.e(e, e.localizedMessage)
+            ApiErrorResponse(
+                statusCode = 0,
+                errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
+            )
+        }
+    }
+
+    override suspend fun getAndInsertReferralData(
+        offset: Int
+    ): ResponseMapper<List<ReferralResponse>> {
+        val map = mutableMapOf<String, String>()
+        map[COUNT] = COUNT_VALUE.toString()
+        map[OFFSET] = offset.toString()
+        map[SORT] = "-$ID"
+        if (preferenceRepository.getLastSyncReferral() != 0L) map[LAST_UPDATED] = String.format(
+            GREATER_THAN_BUILDER, preferenceRepository.getLastSyncReferral().toTimeStampDate()
+        )
+
+        return try {
+            ApiResponseConverter.convert(
+                referralApiService.getReferrals(
+                    map
+                ), true
+            ).run {
+                when (this) {
+                    is ApiContinueResponse -> {
+                        insertReferral(body)
+                        //Call for next batch data
+                        getAndInsertReferralData(offset + COUNT_VALUE)
+                    }
+
+                    is ApiEndResponse -> {
+                        insertReferral(body)
+                        preferenceRepository.setLastSyncReferral(Date().time)
                         this
                     }
 

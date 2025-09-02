@@ -116,6 +116,10 @@ interface PreferenceRepository {
     fun setLastSyncHealthFacility(long: Long)
     fun getLastSyncHealthFacility(): Long
 
+    /** Last Referral Sync Date */
+    fun setLastSyncReferral(long: Long)
+    fun getLastSyncReferral(): Long
+
     /** RoomDB EncryptionKey */
     fun setRoomDBEncryptionKey(encryptionKey: String)
     fun getRoomDBEncryptionKey(): String

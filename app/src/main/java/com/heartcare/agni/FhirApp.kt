@@ -129,7 +129,8 @@ class FhirApp : Application() {
             fhirAppDatabase.getTobaccoCessationDao(),
             fhirAppDatabase.getInterventionDao(),
             fhirAppDatabase.getExaminationDao(),
-            fhirAppDatabase.getHealthFacilityDao()
+            fhirAppDatabase.getHealthFacilityDao(),
+            fhirAppDatabase.getReferralDao()
         )
 
         _genericRepository = GenericRepositoryImpl(

@@ -387,7 +387,8 @@ class SyncService(
                     examinationMasterDownloadJob.await()
                     examinationPatchJob.await()
                     downloadExamination(logout)
-                }
+                },
+                async { downloadReferral(logout) },
             )
             jobs.awaitAll()
         }
@@ -528,6 +529,11 @@ class SyncService(
     /** Download Examination Data */
     private suspend fun downloadExamination(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
         return checkAuthenticationStatus(syncRepository.getAndInsertExaminationData(0), logout)
+    }
+
+    /** Download Referral Data */
+    private suspend fun downloadReferral(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
+        return checkAuthenticationStatus(syncRepository.getAndInsertReferralData(0), logout)
     }
 
     /**

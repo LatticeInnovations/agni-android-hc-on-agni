@@ -18,6 +18,7 @@ import com.heartcare.agni.data.local.roomdb.dao.PatientDao
 import com.heartcare.agni.data.local.roomdb.dao.PatientLastUpdatedDao
 import com.heartcare.agni.data.local.roomdb.dao.PrescriptionDao
 import com.heartcare.agni.data.local.roomdb.dao.PriorDxDao
+import com.heartcare.agni.data.local.roomdb.dao.ReferralDao
 import com.heartcare.agni.data.local.roomdb.dao.RiskFactorDao
 import com.heartcare.agni.data.local.roomdb.dao.RiskPredictionDao
 import com.heartcare.agni.data.local.roomdb.dao.ScheduleDao
@@ -45,6 +46,7 @@ import com.heartcare.agni.data.server.model.prescription.medication.MedicationRe
 import com.heartcare.agni.data.server.model.prescription.medication.MedicineTimeResponse
 import com.heartcare.agni.data.server.model.prescription.prescriptionresponse.PrescriptionResponse
 import com.heartcare.agni.data.server.model.priordx.PriorDxResponse
+import com.heartcare.agni.data.server.model.referral.ReferralResponse
 import com.heartcare.agni.data.server.model.risk.RiskFactorResponse
 import com.heartcare.agni.data.server.model.scheduleandappointment.appointment.AppointmentResponse
 import com.heartcare.agni.data.server.model.scheduleandappointment.schedule.ScheduleResponse
@@ -75,6 +77,7 @@ import com.heartcare.agni.utils.converters.responseconverter.toPatientEntity
 import com.heartcare.agni.utils.converters.responseconverter.toPatientLastUpdatedEntity
 import com.heartcare.agni.utils.converters.responseconverter.toPrescriptionEntity
 import com.heartcare.agni.utils.converters.responseconverter.toPriorDxEntity
+import com.heartcare.agni.utils.converters.responseconverter.toReferralEntity
 import com.heartcare.agni.utils.converters.responseconverter.toRiskFactorEntity
 import com.heartcare.agni.utils.converters.responseconverter.toScheduleEntity
 import com.heartcare.agni.utils.converters.responseconverter.toTobaccoCessationEntity
@@ -102,7 +105,8 @@ open class SyncRepositoryDatabaseTransactions(
     private val tobaccoCessationDao: TobaccoCessationDao,
     private val interventionDao: InterventionDao,
     private val examinationDao: ExaminationDao,
-    private val healthFacilityDao: HealthFacilityDao
+    private val healthFacilityDao: HealthFacilityDao,
+    private val referralDao: ReferralDao
 ) {
 
 
@@ -625,6 +629,12 @@ open class SyncRepositoryDatabaseTransactions(
     protected suspend fun insertExamination(body: List<ExaminationResponse>) {
         examinationDao.insertExamination(
             *body.map { it.toExaminationEntity(patientDao, appointmentDao) }.toTypedArray()
+        )
+    }
+
+    protected suspend fun insertReferral(body: List<ReferralResponse>) {
+        referralDao.insertReferralRecord(
+            *body.map { it.toReferralEntity(patientDao, appointmentDao) }.toTypedArray()
         )
     }
 }
