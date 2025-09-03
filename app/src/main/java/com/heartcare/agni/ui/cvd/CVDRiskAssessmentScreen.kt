@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
@@ -22,7 +23,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Clear
@@ -52,7 +55,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusManager
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -420,12 +425,17 @@ private fun RecordsFullDetailsComposable(
     record: CVDResponse,
     onClick: () -> Unit
 ) {
+    val windowInfo = LocalWindowInfo.current
+    val density = LocalDensity.current
+    val screenHeight = with(density) { windowInfo.containerSize.height.toDp() }
+
     ModalBottomSheet(
         onDismissRequest = {
             onClick()
         },
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
         modifier = Modifier
+            .heightIn(max = screenHeight * 0.8f)
             .navigationBarsPadding(),
         dragHandle = null
     ) {
@@ -444,7 +454,9 @@ private fun RecordsFullDetailsComposable(
                 color = MaterialTheme.colorScheme.outlineVariant
             )
             Column(
-                modifier = Modifier.padding(16.dp),
+                modifier = Modifier
+                    .verticalScroll(rememberScrollState()).
+                    padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 DisplayField(
@@ -478,30 +490,56 @@ private fun RecordsFullDetailsComposable(
                     else if (record.heightFt != null || record.heightInch != null) "${record.heightFt} ft ${record.heightInch ?: 0} in"
                     else stringResource(R.string.dash)
                 )
+
+                ExtraInfoComposable(
+                    label = stringResource(R.string.action),
+                    info = "Lifestyle counselling, measure BP and blood glucose",
+                    containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(8.dp)
+                )
+
+                ExtraInfoComposable(
+                    label = stringResource(R.string.medication_guidance),
+                    info = "Start antihypertensive if BP>=140/90 mmHg, consider statin if the patient has diabetes or multiple risk factors",
+                    containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(8.dp)
+                )
+
                 if (!record.chiefComplaint.isNullOrBlank()) {
-                    Surface(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(8.dp),
-                        color = MaterialTheme.colorScheme.primaryContainer
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(12.dp),
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Text(
-                                text = stringResource(R.string.chief_complaint),
-                                style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            Text(
-                                text = record.chiefComplaint,
-                                style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
+                    ExtraInfoComposable(
+                        label = stringResource(R.string.chief_complaint),
+                        info = record.chiefComplaint,
+                        containerColor = MaterialTheme.colorScheme.primaryContainer
+                    )
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun ExtraInfoComposable(
+    label: String,
+    info: String,
+    containerColor: Color
+) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(8.dp),
+        color = containerColor
+    ) {
+        Column(
+            modifier = Modifier.padding(12.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Text(
+                text = info,
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }
