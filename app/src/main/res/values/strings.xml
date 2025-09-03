@@ -445,4 +445,8 @@
     <string name="health_facility_mandatory">Health facility*</string>
     <string name="health_facility_required">Health facility required</string>
     <string name="add_notes">Add notes</string>
+    <string name="action_colon">Action:</string>
+    <string name="medication_guidance_colon">Medication guidance:</string>
+    <string name="action">Action</string>
+    <string name="medication_guidance">Medication guidance</string>
 </resources>

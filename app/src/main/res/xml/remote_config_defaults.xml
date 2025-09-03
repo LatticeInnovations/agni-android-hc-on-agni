@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<defaultsMap>
+    <entry>
+        <key>risk_predictor_config_v1</key>
+        <value>
+            {
+            "lt_10": {
+            "action": "Provide lifestyle counseling on diet, exercise, and tobacco cessation.",
+            "medicationGuidance": "Do not prescribe medicines unless BP>160/100 mmHg or diabetes.",
+            "appointmentDays": 365,
+            "requiresReferral": false
+            },
+            "10_19": {
+            "action": "Lifestyle counselling, measure BP and blood glucose.",
+            "medicationGuidance": "Start antihypertensive if BP>=140/90 mmHg, consider statin if diabetes or multiple risk factors.",
+            "appointmentDays": 180,
+            "requiresReferral": true
+            },
+            "20_29": {
+            "action": "Strong lifestyle counselling and explain health implications. Provide risk summary to patient over email, screenshot.",
+            "medicationGuidance": "Start statin therapy and initiate antihypertensives if BP>=130/80 mmHg.",
+            "appointmentDays": 90,
+            "requiresReferral": true
+            },
+            "gte_30": {
+            "action": "Notify nearest NCD by phone or email, counselling and emergency advice for symptoms (e.g., chest pain).",
+            "medicationGuidance": "Mandatory statin therapy followed by antihypertensive medicine. Consider aspirin if not contraindicated.",
+            "appointmentDays": 180,
+            "requiresReferral": true
+            }
+            }
+        </value>
+    </entry>
+</defaultsMap>

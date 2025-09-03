@@ -1,5 +1,6 @@
 package com.heartcare.agni.ui.cvd
 
+import android.content.Context
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInVertically
@@ -14,13 +15,17 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Clear
@@ -47,9 +52,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusManager
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -78,9 +86,9 @@ import com.heartcare.agni.ui.theme.ModerateRiskLightContainer
 import com.heartcare.agni.ui.theme.VeryHighRiskCircle
 import com.heartcare.agni.ui.theme.VeryHighRiskDarkContainer
 import com.heartcare.agni.ui.theme.VeryHighRiskLightContainer
-import com.heartcare.agni.ui.theme.VeryVeryHighRiskCircle
 import com.heartcare.agni.utils.constants.NavControllerConstants.PATIENT
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toddMMMyyyy
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -89,17 +97,6 @@ fun CVDRiskAssessmentScreen(
     navController: NavController,
     viewModel: CVDRiskAssessmentViewModel = hiltViewModel()
 ) {
-    LaunchedEffect(viewModel.isLaunched) {
-        if (!viewModel.isLaunched) {
-            viewModel.patient =
-                navController.previousBackStackEntry?.savedStateHandle?.get<PatientResponse>(
-                    PATIENT
-                )
-            viewModel.getTodayCVDAssessment()
-            viewModel.getAppointmentInfo(callback = {})
-            viewModel.isLaunched = true
-        }
-    }
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val snackBarHostState = remember { SnackbarHostState() }
@@ -111,14 +108,9 @@ fun CVDRiskAssessmentScreen(
     }
     val focusManager = LocalFocusManager.current
 
-    BackHandler {
-        if (viewModel.selectedRecord != null) viewModel.selectedRecord = null
-        else if (pagerState.currentPage == 1) {
-            scope.launch {
-                pagerState.animateScrollToPage(0)
-            }
-        } else navController.navigateUp()
-    }
+    HandleLaunchedEffect(viewModel, navController)
+
+    AddBackHandler(viewModel, navController, pagerState, scope)
 
     Scaffold(
         modifier = Modifier
@@ -168,216 +160,242 @@ fun CVDRiskAssessmentScreen(
             }
         },
         bottomBar = {
-            if (pagerState.currentPage == 0) {
-                Column {
-                    AnimatedVisibility(
-                        viewModel.riskPercentage.isNotBlank(),
-                        enter = slideInVertically(initialOffsetY = { it }),
-                        exit = slideOutVertically(targetOffsetY = { it })
-                    ) {
-                        if (viewModel.riskPercentage.isNotBlank()) {
-                            Surface(
-                                modifier = Modifier.fillMaxWidth(),
-                                color = getContainerColor(viewModel.riskPercentage.toInt()),
-                                shape = RoundedCornerShape(topEnd = 10.dp, topStart = 10.dp)
-                            ) {
-                                Column(
-                                    modifier = Modifier.padding(
-                                        horizontal = 20.dp,
-                                        vertical = 24.dp
-                                    ),
-                                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                                ) {
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(10.dp),
-                                        modifier = Modifier.padding(start = 6.dp)
-                                    ) {
-                                        Canvas(modifier = Modifier.size(12.dp), onDraw = {
-                                            drawCircle(
-                                                color = getCircleColor(
-                                                    viewModel.riskPercentage.toIntOrNull() ?: 0
-                                                )
-                                            )
-                                        })
-                                        Text(
-                                            text = stringResource(
-                                                R.string.percentage,
-                                                viewModel.riskPercentage
-                                            ),
-                                            style = MaterialTheme.typography.headlineSmall,
-                                            color = MaterialTheme.colorScheme.onSurface
-                                        )
-                                    }
-                                    Text(
-                                        text = stringResource(R.string.risk_info),
-                                        style = MaterialTheme.typography.bodyLarge,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
-                            }
-                        }
-                    }
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 8.dp, horizontal = 16.dp)
-                            .navigationBarsPadding(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Button(
-                            onClick = {
-                                viewModel.getRisk()
-                            },
-                            modifier = Modifier
-                                .weight(1f),
-                            enabled = viewModel.ifFormValid() && viewModel.riskPercentage.isBlank()
-                        ) {
-                            Text(text = stringResource(R.string.predict))
-                        }
-                        if (viewModel.riskPercentage.isNotBlank()) {
-                            Button(
-                                onClick = {
-                                    viewModel.checkIfCVDExistsForScreenDate(
-                                        exists = {
-                                            if (it) {
-                                                scope.launch {
-                                                    snackBarHostState.showSnackbar(
-                                                        context.getString(R.string.appointment_exists_on_screening_date)
-                                                    )
-                                                }
-                                            } else {
-                                                viewModel.getAppointmentInfo(
-                                                    callback = {
-                                                        if (viewModel.existsInOtherHospital) {
-                                                            scope.launch {
-                                                                snackBarHostState.showSnackbar(
-                                                                    context.getString(
-                                                                        R.string.appointment_exists_in_other_hospital
-                                                                    )
-                                                                )
-                                                            }
-                                                        } else if (viewModel.ifAllSlotsBooked) {
-                                                            viewModel.showAllSlotsBookedDialog = true
-                                                        } else {
-                                                            if (viewModel.canAddAssessment) {
-                                                                viewModel.saveCVDRecord(
-                                                                    saved = {
-                                                                        scope.launch {
-                                                                            focusManager.clearFocus()
-                                                                            pagerState.animateScrollToPage(1)
-                                                                            snackBarHostState.showSnackbar(
-                                                                                message = context.getString(R.string.assessment_record_saved)
-                                                                            )
-                                                                        }
-                                                                    }
-                                                                )
-                                                            } else if (viewModel.isAppointmentCompleted) {
-                                                                viewModel.showAppointmentCompletedDialog = true
-                                                            } else {
-                                                                viewModel.showAddToQueueDialog = true
-                                                            }
-                                                        }
-                                                    }
-                                                )
-                                            }
-                                        }
-                                    )
-                                },
-                                modifier = Modifier
-                                    .weight(1f)
-                            ) {
-                                Text(text = stringResource(R.string.save))
-                            }
-                        }
-                    }
-                }
-            }
+            CVDBottomAppBar(viewModel, focusManager, scope, pagerState, snackBarHostState, context)
         }
     )
     if (viewModel.selectedRecord != null) {
         RecordsFullDetailsComposable(
+            viewModel = viewModel,
             record = viewModel.selectedRecord!!,
             onClick = {
                 viewModel.selectedRecord = null
             }
         )
     }
+    Dialogs(viewModel, scope, pagerState, snackBarHostState, context)
+}
 
-    if (viewModel.showAddToQueueDialog) {
-        CustomDialog(
-            title = if (viewModel.appointment != null) stringResource(id = R.string.patient_arrived_question) else stringResource(
-                id = R.string.add_to_queue_question
-            ),
-            text = stringResource(id = R.string.add_to_queue_assessment_dialog_description),
-            dismissBtnText = stringResource(id = R.string.dismiss),
-            confirmBtnText = if (viewModel.appointment != null) stringResource(id = R.string.mark_arrived) else stringResource(
-                id = R.string.add_to_queue
-            ),
-            dismiss = { viewModel.showAddToQueueDialog = false },
-            confirm = {
-                if (viewModel.appointment != null) {
-                    viewModel.updateStatusToArrived(
-                        viewModel.patient!!,
-                        viewModel.appointment!!,
-                        updated = {
-                            viewModel.showAddToQueueDialog = false
-                            viewModel.saveCVDRecord(
-                                saved = {
-                                    scope.launch {
-                                        pagerState.animateScrollToPage(1)
-                                        snackBarHostState.showSnackbar(
-                                            message = context.getString(R.string.assessment_record_saved)
-                                        )
-                                    }
-                                }
+@Composable
+private fun HandleLaunchedEffect(
+    viewModel: CVDRiskAssessmentViewModel,
+    navController: NavController
+) {
+    LaunchedEffect(viewModel.isLaunched) {
+        if (!viewModel.isLaunched) {
+            viewModel.patient =
+                navController.previousBackStackEntry?.savedStateHandle?.get<PatientResponse>(
+                    PATIENT
+                )
+            viewModel.getTodayCVDAssessment()
+            viewModel.getAppointmentInfo(callback = {})
+            viewModel.isLaunched = true
+        }
+    }
+}
+
+@Composable
+private fun AddBackHandler(
+    viewModel: CVDRiskAssessmentViewModel,
+    navController: NavController,
+    pagerState: PagerState,
+    scope: CoroutineScope
+) {
+    BackHandler {
+        if (viewModel.selectedRecord != null) viewModel.selectedRecord = null
+        else if (pagerState.currentPage == 1) {
+            scope.launch {
+                pagerState.animateScrollToPage(0)
+            }
+        } else navController.navigateUp()
+    }
+}
+
+@Composable
+private fun CVDBottomAppBar(
+    viewModel: CVDRiskAssessmentViewModel,
+    focusManager: FocusManager,
+    scope: CoroutineScope,
+    pagerState: PagerState,
+    snackBarHostState: SnackbarHostState,
+    context: Context
+) {
+    if (pagerState.currentPage == 0) {
+        Column {
+            AnimatedVisibility(
+                viewModel.riskPercentage.isNotBlank(),
+                enter = slideInVertically(initialOffsetY = { it }),
+                exit = slideOutVertically(targetOffsetY = { it })
+            ) {
+                RiskPercentageInfoComposable(viewModel)
+            }
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp, horizontal = 16.dp)
+                    .navigationBarsPadding(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Button(
+                    onClick = {
+                        focusManager.clearFocus()
+                        viewModel.getRisk()
+                    },
+                    modifier = Modifier
+                        .weight(1f),
+                    enabled = viewModel.ifFormValid() && viewModel.riskPercentage.isBlank()
+                ) {
+                    Text(text = stringResource(R.string.predict))
+                }
+                if (viewModel.riskPercentage.isNotBlank()) {
+                    Button(
+                        onClick = {
+                            handleSaveButtonClick(
+                                viewModel,
+                                focusManager,
+                                scope,
+                                pagerState,
+                                snackBarHostState,
+                                context
                             )
-                        }
+                        },
+                        modifier = Modifier
+                            .weight(1f)
+                    ) {
+                        Text(text = stringResource(R.string.save))
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun RiskPercentageInfoComposable(
+    viewModel: CVDRiskAssessmentViewModel
+) {
+    if (viewModel.riskPercentage.isNotBlank()) {
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            color = getContainerColor(viewModel.riskPercentage.toInt()),
+            shape = RoundedCornerShape(topEnd = 10.dp, topStart = 10.dp)
+        ) {
+            Column(
+                modifier = Modifier.padding(
+                    horizontal = 20.dp,
+                    vertical = 24.dp
+                ),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        modifier = Modifier.padding(start = 6.dp)
+                    ) {
+                        Canvas(modifier = Modifier.size(12.dp), onDraw = {
+                            drawCircle(
+                                color = getCircleColor(
+                                    viewModel.riskPercentage.toIntOrNull() ?: 0
+                                )
+                            )
+                        })
+                        Text(
+                            text = stringResource(
+                                R.string.percentage,
+                                viewModel.riskPercentage
+                            ),
+                            style = MaterialTheme.typography.headlineSmall,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                    Text(
+                        text = stringResource(R.string.risk_info),
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                } else {
-                    if (viewModel.ifAllSlotsBooked) {
-                        viewModel.showAllSlotsBookedDialog = true
-                    } else {
-                        viewModel.addPatientToQueue(
-                            viewModel.patient!!,
-                            addedToQueue = {
-                                viewModel.showAddToQueueDialog = false
+                }
+                ActionMedicationInfo(
+                    label = stringResource(R.string.action_colon),
+                    info = viewModel.getRiskItem(viewModel.riskPercentage.toInt()).action
+                )
+                ActionMedicationInfo(
+                    label = stringResource(R.string.medication_guidance_colon),
+                    info = viewModel.getRiskItem(viewModel.riskPercentage.toInt()).medicationGuidance
+                )
+            }
+        }
+    }
+}
+
+private fun handleSaveButtonClick(
+    viewModel: CVDRiskAssessmentViewModel,
+    focusManager: FocusManager,
+    scope: CoroutineScope,
+    pagerState: PagerState,
+    snackBarHostState: SnackbarHostState,
+    context: Context
+) {
+    viewModel.checkIfCVDExistsForScreenDate(
+        exists = {
+            if (it) {
+                scope.launch {
+                    snackBarHostState.showSnackbar(
+                        context.getString(R.string.appointment_exists_on_screening_date)
+                    )
+                }
+            } else {
+                viewModel.getAppointmentInfo(
+                    callback = {
+                        when {
+                            viewModel.existsInOtherHospital -> {
+                                scope.launch {
+                                    snackBarHostState.showSnackbar(
+                                        context.getString(
+                                            R.string.appointment_exists_in_other_hospital
+                                        )
+                                    )
+                                }
+                            }
+
+                            viewModel.ifAllSlotsBooked -> viewModel.showAllSlotsBookedDialog = true
+
+                            viewModel.canAddAssessment -> {
                                 viewModel.saveCVDRecord(
                                     saved = {
                                         scope.launch {
-                                            pagerState.animateScrollToPage(1)
+                                            focusManager.clearFocus()
+                                            pagerState.animateScrollToPage(
+                                                1
+                                            )
                                             snackBarHostState.showSnackbar(
-                                                message = context.getString(R.string.assessment_record_saved)
+                                                message = context.getString(
+                                                    R.string.assessment_record_saved
+                                                )
                                             )
                                         }
                                     }
                                 )
                             }
-                        )
+
+                            viewModel.isAppointmentCompleted -> viewModel.showAppointmentCompletedDialog = true
+
+                            else -> viewModel.showAddToQueueDialog = true
+                        }
                     }
-                }
+                )
             }
-        )
-    }
-    if (viewModel.ifAllSlotsBooked) {
-        AllSlotsBookedDialog {
-            viewModel.showAllSlotsBookedDialog = false
         }
-    }
-    if (viewModel.showAppointmentCompletedDialog) {
-        AppointmentCompletedDialog {
-            viewModel.showAppointmentCompletedDialog = false
-        }
-    }
+    )
 }
 
 private fun getCircleColor(riskPercentage: Int): Color {
     return when {
-        riskPercentage < 5 -> LowRiskCircle
-        riskPercentage in 5..9 -> ModerateRiskCircle
-        riskPercentage in 10..19 -> HighRiskCircle
-        riskPercentage in 20..29 -> VeryHighRiskCircle
-        else -> VeryVeryHighRiskCircle
+        riskPercentage < 10 -> LowRiskCircle
+        riskPercentage in 10..19 -> ModerateRiskCircle
+        riskPercentage in 20..29 -> HighRiskCircle
+        else -> VeryHighRiskCircle
     }
 }
 
@@ -385,16 +403,16 @@ private fun getCircleColor(riskPercentage: Int): Color {
 private fun getContainerColor(riskPercentage: Int): Color {
     return when (isSystemInDarkTheme()) {
         true -> when {
-            riskPercentage < 5 -> LowRiskDarkContainer
-            riskPercentage in 5..9 -> ModerateRiskDarkContainer
-            riskPercentage in 10..19 -> HighRiskDarkContainer
+            riskPercentage < 10 -> LowRiskDarkContainer
+            riskPercentage in 10..19 -> ModerateRiskDarkContainer
+            riskPercentage in 20..29 -> HighRiskDarkContainer
             else -> VeryHighRiskDarkContainer
         }
 
         false -> when {
-            riskPercentage < 5 -> LowRiskLightContainer
-            riskPercentage in 5..9 -> ModerateRiskLightContainer
-            riskPercentage in 10..19 -> HighRiskLightContainer
+            riskPercentage < 10 -> LowRiskLightContainer
+            riskPercentage in 10..19 -> ModerateRiskLightContainer
+            riskPercentage in 20..29 -> HighRiskLightContainer
             else -> VeryHighRiskLightContainer
         }
     }
@@ -403,15 +421,21 @@ private fun getContainerColor(riskPercentage: Int): Color {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun RecordsFullDetailsComposable(
+    viewModel: CVDRiskAssessmentViewModel,
     record: CVDResponse,
     onClick: () -> Unit
 ) {
+    val windowInfo = LocalWindowInfo.current
+    val density = LocalDensity.current
+    val screenHeight = with(density) { windowInfo.containerSize.height.toDp() }
+
     ModalBottomSheet(
         onDismissRequest = {
             onClick()
         },
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
         modifier = Modifier
+            .heightIn(max = screenHeight * 0.8f)
             .navigationBarsPadding(),
         dragHandle = null
     ) {
@@ -430,7 +454,9 @@ private fun RecordsFullDetailsComposable(
                 color = MaterialTheme.colorScheme.outlineVariant
             )
             Column(
-                modifier = Modifier.padding(16.dp),
+                modifier = Modifier
+                    .verticalScroll(rememberScrollState()).
+                    padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 DisplayField(
@@ -464,30 +490,56 @@ private fun RecordsFullDetailsComposable(
                     else if (record.heightFt != null || record.heightInch != null) "${record.heightFt} ft ${record.heightInch ?: 0} in"
                     else stringResource(R.string.dash)
                 )
+
+                ExtraInfoComposable(
+                    label = stringResource(R.string.action),
+                    info = viewModel.getRiskItem(record.risk).action,
+                    containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(8.dp)
+                )
+
+                ExtraInfoComposable(
+                    label = stringResource(R.string.medication_guidance),
+                    info = viewModel.getRiskItem(record.risk).medicationGuidance,
+                    containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(8.dp)
+                )
+
                 if (!record.chiefComplaint.isNullOrBlank()) {
-                    Surface(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(8.dp),
-                        color = MaterialTheme.colorScheme.primaryContainer
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(12.dp),
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Text(
-                                text = stringResource(R.string.chief_complaint),
-                                style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            Text(
-                                text = record.chiefComplaint,
-                                style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
+                    ExtraInfoComposable(
+                        label = stringResource(R.string.chief_complaint),
+                        info = record.chiefComplaint,
+                        containerColor = MaterialTheme.colorScheme.primaryContainer
+                    )
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun ExtraInfoComposable(
+    label: String,
+    info: String,
+    containerColor: Color
+) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(8.dp),
+        color = containerColor
+    ) {
+        Column(
+            modifier = Modifier.padding(12.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Text(
+                text = info,
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }
@@ -534,4 +586,111 @@ private fun CVDRiskRow(record: CVDResponse, onClick: () -> Unit) {
             Icon(Icons.Default.Clear, Icons.Default.Clear.name)
         }
     }
+}
+
+@Composable
+private fun ActionMedicationInfo(
+    label: String,
+    info: String
+) {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.outline
+        )
+        Text(
+            text = info,
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+}
+
+@Composable
+private fun Dialogs(
+    viewModel: CVDRiskAssessmentViewModel,
+    scope: CoroutineScope,
+    pagerState: PagerState,
+    snackBarHostState: SnackbarHostState,
+    context: Context
+) {
+    if (viewModel.showAddToQueueDialog) {
+        AddToQueueComposable(viewModel, scope, pagerState, snackBarHostState, context)
+    }
+    if (viewModel.ifAllSlotsBooked) {
+        AllSlotsBookedDialog {
+            viewModel.showAllSlotsBookedDialog = false
+        }
+    }
+    if (viewModel.showAppointmentCompletedDialog) {
+        AppointmentCompletedDialog {
+            viewModel.showAppointmentCompletedDialog = false
+        }
+    }
+}
+
+@Composable
+private fun AddToQueueComposable(
+    viewModel: CVDRiskAssessmentViewModel,
+    scope: CoroutineScope,
+    pagerState: PagerState,
+    snackBarHostState: SnackbarHostState,
+    context: Context
+) {
+    CustomDialog(
+        title = if (viewModel.appointment != null) stringResource(id = R.string.patient_arrived_question) else stringResource(
+            id = R.string.add_to_queue_question
+        ),
+        text = stringResource(id = R.string.add_to_queue_assessment_dialog_description),
+        dismissBtnText = stringResource(id = R.string.dismiss),
+        confirmBtnText = if (viewModel.appointment != null) stringResource(id = R.string.mark_arrived) else stringResource(
+            id = R.string.add_to_queue
+        ),
+        dismiss = { viewModel.showAddToQueueDialog = false },
+        confirm = {
+            if (viewModel.appointment != null) {
+                viewModel.updateStatusToArrived(
+                    viewModel.patient!!,
+                    viewModel.appointment!!,
+                    updated = {
+                        viewModel.showAddToQueueDialog = false
+                        viewModel.saveCVDRecord(
+                            saved = {
+                                scope.launch {
+                                    pagerState.animateScrollToPage(1)
+                                    snackBarHostState.showSnackbar(
+                                        message = context.getString(R.string.assessment_record_saved)
+                                    )
+                                }
+                            }
+                        )
+                    }
+                )
+            } else {
+                if (viewModel.ifAllSlotsBooked) {
+                    viewModel.showAllSlotsBookedDialog = true
+                } else {
+                    viewModel.addPatientToQueue(
+                        viewModel.patient!!,
+                        addedToQueue = {
+                            viewModel.showAddToQueueDialog = false
+                            viewModel.saveCVDRecord(
+                                saved = {
+                                    scope.launch {
+                                        pagerState.animateScrollToPage(1)
+                                        snackBarHostState.showSnackbar(
+                                            message = context.getString(R.string.assessment_record_saved)
+                                        )
+                                    }
+                                }
+                            )
+                        }
+                    )
+                }
+            }
+        }
+    )
 }
