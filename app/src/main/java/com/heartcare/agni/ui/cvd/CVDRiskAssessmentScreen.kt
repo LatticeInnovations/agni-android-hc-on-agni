@@ -165,6 +165,7 @@ fun CVDRiskAssessmentScreen(
     )
     if (viewModel.selectedRecord != null) {
         RecordsFullDetailsComposable(
+            viewModel = viewModel,
             record = viewModel.selectedRecord!!,
             onClick = {
                 viewModel.selectedRecord = null
@@ -317,11 +318,11 @@ private fun RiskPercentageInfoComposable(
                 }
                 ActionMedicationInfo(
                     label = stringResource(R.string.action_colon),
-                    info = "lifestyle counseling on diet, exercise, and tobacco cessation."
+                    info = viewModel.getRiskItem(viewModel.riskPercentage.toInt()).action
                 )
                 ActionMedicationInfo(
                     label = stringResource(R.string.medication_guidance_colon),
-                    info = "Do not prescribe medicines unless BP>160/100 mmHg or diabetes."
+                    info = viewModel.getRiskItem(viewModel.riskPercentage.toInt()).medicationGuidance
                 )
             }
         }
@@ -420,6 +421,7 @@ private fun getContainerColor(riskPercentage: Int): Color {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun RecordsFullDetailsComposable(
+    viewModel: CVDRiskAssessmentViewModel,
     record: CVDResponse,
     onClick: () -> Unit
 ) {
@@ -491,13 +493,13 @@ private fun RecordsFullDetailsComposable(
 
                 ExtraInfoComposable(
                     label = stringResource(R.string.action),
-                    info = "Lifestyle counselling, measure BP and blood glucose",
+                    info = viewModel.getRiskItem(record.risk).action,
                     containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(8.dp)
                 )
 
                 ExtraInfoComposable(
                     label = stringResource(R.string.medication_guidance),
-                    info = "Start antihypertensive if BP>=140/90 mmHg, consider statin if the patient has diabetes or multiple risk factors",
+                    info = viewModel.getRiskItem(record.risk).medicationGuidance,
                     containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(8.dp)
                 )
 
