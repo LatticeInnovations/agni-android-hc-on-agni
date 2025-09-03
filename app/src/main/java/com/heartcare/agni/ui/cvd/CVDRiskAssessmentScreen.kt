@@ -86,7 +86,6 @@ import com.heartcare.agni.ui.theme.ModerateRiskLightContainer
 import com.heartcare.agni.ui.theme.VeryHighRiskCircle
 import com.heartcare.agni.ui.theme.VeryHighRiskDarkContainer
 import com.heartcare.agni.ui.theme.VeryHighRiskLightContainer
-import com.heartcare.agni.ui.theme.VeryVeryHighRiskCircle
 import com.heartcare.agni.utils.constants.NavControllerConstants.PATIENT
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toddMMMyyyy
 import kotlinx.coroutines.CoroutineScope
@@ -392,11 +391,10 @@ private fun handleSaveButtonClick(
 
 private fun getCircleColor(riskPercentage: Int): Color {
     return when {
-        riskPercentage < 5 -> LowRiskCircle
-        riskPercentage in 5..9 -> ModerateRiskCircle
-        riskPercentage in 10..19 -> HighRiskCircle
-        riskPercentage in 20..29 -> VeryHighRiskCircle
-        else -> VeryVeryHighRiskCircle
+        riskPercentage < 10 -> LowRiskCircle
+        riskPercentage in 10..19 -> ModerateRiskCircle
+        riskPercentage in 20..29 -> HighRiskCircle
+        else -> VeryHighRiskCircle
     }
 }
 
@@ -404,16 +402,16 @@ private fun getCircleColor(riskPercentage: Int): Color {
 private fun getContainerColor(riskPercentage: Int): Color {
     return when (isSystemInDarkTheme()) {
         true -> when {
-            riskPercentage < 5 -> LowRiskDarkContainer
-            riskPercentage in 5..9 -> ModerateRiskDarkContainer
-            riskPercentage in 10..19 -> HighRiskDarkContainer
+            riskPercentage < 10 -> LowRiskDarkContainer
+            riskPercentage in 10..19 -> ModerateRiskDarkContainer
+            riskPercentage in 20..29 -> HighRiskDarkContainer
             else -> VeryHighRiskDarkContainer
         }
 
         false -> when {
-            riskPercentage < 5 -> LowRiskLightContainer
-            riskPercentage in 5..9 -> ModerateRiskLightContainer
-            riskPercentage in 10..19 -> HighRiskLightContainer
+            riskPercentage < 10 -> LowRiskLightContainer
+            riskPercentage in 10..19 -> ModerateRiskLightContainer
+            riskPercentage in 20..29 -> HighRiskLightContainer
             else -> VeryHighRiskLightContainer
         }
     }
