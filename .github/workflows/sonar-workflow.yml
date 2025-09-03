@@ -1,4 +1,4 @@
-name: Sonar Qube Analysis
+name: SonarQube Analysis
 
 on:
   pull_request:
@@ -7,7 +7,7 @@ on:
 
 jobs:
   on-merge:
-    if: github.event.pull_request.merged == true && github.event.pull_request.base.ref == 'development-nonfhirsdk'
+    if: github.event.pull_request.merged == true && github.event.pull_request.base.ref == 'hc-on-agni'
     runs-on: ubuntu-latest
 
     steps:
