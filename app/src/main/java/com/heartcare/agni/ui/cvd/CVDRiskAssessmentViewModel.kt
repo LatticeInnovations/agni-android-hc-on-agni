@@ -9,7 +9,10 @@ import androidx.lifecycle.viewModelScope
 import com.heartcare.agni.data.local.enums.AppointmentStatusEnum
 import com.heartcare.agni.data.local.enums.YesNoEnum
 import com.heartcare.agni.data.local.model.appointment.AppointmentResponseLocal
+import com.heartcare.agni.data.local.model.config.RiskConfig
+import com.heartcare.agni.data.local.model.config.RiskItem
 import com.heartcare.agni.data.local.repository.appointment.AppointmentRepository
+import com.heartcare.agni.data.local.repository.config.RemoteConfigRepository
 import com.heartcare.agni.data.local.repository.cvd.chart.RiskPredictionChartRepository
 import com.heartcare.agni.data.local.repository.cvd.records.CVDAssessmentRepository
 import com.heartcare.agni.data.local.repository.generic.GenericRepository
@@ -31,6 +34,7 @@ import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toTod
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import java.util.Date
 import javax.inject.Inject
@@ -44,6 +48,7 @@ class CVDRiskAssessmentViewModel @Inject constructor(
     private val genericRepository: GenericRepository,
     private val scheduleRepository: ScheduleRepository,
     private val patientLastUpdatedRepository: PatientLastUpdatedRepository,
+    private val remoteConfigRepository: RemoteConfigRepository,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) : ViewModel() {
     val user = preferenceRepository.getUserDetails()!!
@@ -100,6 +105,14 @@ class CVDRiskAssessmentViewModel @Inject constructor(
     var previousHeartAttack by mutableStateOf("")
 
     var todayCVD by mutableStateOf<CVDResponse?>(null)
+
+    private val riskConfig = MutableStateFlow<RiskConfig?>(null)
+
+    init {
+        viewModelScope.launch(ioDispatcher) {
+            riskConfig.value = remoteConfigRepository.getRiskConfig()
+        }
+    }
 
     internal fun getAppointmentInfo(
         callback: () -> Unit,
@@ -394,6 +407,16 @@ class CVDRiskAssessmentViewModel @Inject constructor(
                             screeningDate.toEndOfDay()
                         ) != null
             )
+        }
+    }
+
+    fun getRiskItem(riskPercentage: Int): RiskItem {
+        val config = riskConfig.value!!
+        return when {
+            riskPercentage < 10 -> config.lt10
+            riskPercentage in 10..19 -> config.range10to19
+            riskPercentage in 20..29 -> config.range20to29
+            else -> config.gte30
         }
     }
 }

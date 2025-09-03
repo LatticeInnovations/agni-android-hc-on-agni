@@ -231,8 +231,10 @@ dependencies {
 
     // hilt- viewmodel compose
     implementation 'androidx.hilt:hilt-navigation-compose:1.2.0'
+
     // Firebase Bom
-    implementation platform('com.google.firebase:firebase-bom:33.16.0')
+    implementation platform("com.google.firebase:firebase-bom:33.16.0")
+    implementation "com.google.firebase:firebase-config-ktx"
 
     // Firebase Crashlytics
     implementation 'com.google.firebase:firebase-crashlytics-ktx'
