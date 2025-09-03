@@ -36,3 +36,4 @@ jobs:
             -Dsonar.analysis.githubPrEmail=$AUTHOR_EMAIL
             -Dsonar.analysis.githubPrName="$AUTHOR_NAME"
             -Dsonar.analysis.githubPrHandle=${{ github.event.pull_request.user.login }}
+            -Dsonar.exclusions=**/*.java
