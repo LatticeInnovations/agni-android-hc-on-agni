@@ -16,4 +16,8 @@ class ReferralRepositoryImpl @Inject constructor(
     override suspend fun getReferralRecords(patientId: String): List<ReferralResponse> {
         return referralDao.getReferralRecords(patientId).map { it.toReferralResponse() }
     }
+
+    override suspend fun getReferralByAppointmentId(appointmentId: String): ReferralResponse? {
+        return referralDao.getReferralByAppointmentId(appointmentId)?.toReferralResponse()
+    }
 }

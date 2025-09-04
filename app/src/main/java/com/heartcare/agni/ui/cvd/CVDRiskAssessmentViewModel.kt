@@ -19,6 +19,7 @@ import com.heartcare.agni.data.local.repository.cvd.records.CVDAssessmentReposit
 import com.heartcare.agni.data.local.repository.generic.GenericRepository
 import com.heartcare.agni.data.local.repository.patient.lastupdated.PatientLastUpdatedRepository
 import com.heartcare.agni.data.local.repository.preference.PreferenceRepository
+import com.heartcare.agni.data.local.repository.referral.ReferralRepository
 import com.heartcare.agni.data.local.repository.schedule.ScheduleRepository
 import com.heartcare.agni.data.server.model.cvd.CVDResponse
 import com.heartcare.agni.data.server.model.patient.PatientLastUpdatedResponse
@@ -58,6 +59,7 @@ class CVDRiskAssessmentViewModel @Inject constructor(
     private val scheduleRepository: ScheduleRepository,
     private val patientLastUpdatedRepository: PatientLastUpdatedRepository,
     private val remoteConfigRepository: RemoteConfigRepository,
+    private val referralRepository: ReferralRepository,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) : ViewModel() {
     val user = preferenceRepository.getUserDetails()!!
@@ -584,5 +586,15 @@ class CVDRiskAssessmentViewModel @Inject constructor(
         genericRepository.insertSchedule(
             schedule
         )
+    }
+
+    fun checkIfReferralExists(
+        appointmentId: String,
+        exists: (Boolean) -> Unit
+    ) {
+        viewModelScope.launch(ioDispatcher) {
+            val referral = referralRepository.getReferralByAppointmentId(appointmentId)
+            exists(referral != null)
+        }
     }
 }

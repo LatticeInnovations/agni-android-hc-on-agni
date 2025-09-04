@@ -162,7 +162,7 @@ fun CVDRiskAssessmentScreen(
                     ) { index ->
                         when (index) {
                             0 -> CVDRiskAssessmentForm(viewModel)
-                            1 -> CVDRiskAssessmentRecords(viewModel)
+                            1 -> CVDRiskAssessmentRecords(viewModel, navController)
                         }
                     }
                 }

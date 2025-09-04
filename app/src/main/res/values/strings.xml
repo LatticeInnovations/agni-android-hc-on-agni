@@ -453,4 +453,7 @@
     <string name="follow_up_and_refer_dialog_text">A follow-up appointment is scheduled for %s.\nWould you like to refer the patient?</string>
     <string name="follow_up_dialog_text">A follow-up appointment is scheduled for %s.</string>
     <string name="refer_patient">Refer patient</string>
+    <string name="referred">Referred</string>
+    <string name="refer">Refer</string>
+    <string name="not_referred">Not referred</string>
 </resources>
