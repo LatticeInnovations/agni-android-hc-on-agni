@@ -446,7 +446,7 @@ class CVDRiskAssessmentViewModel @Inject constructor(
             } else {
                 // appointment already exists
                 if (existingAppointment.hospitalCode == user.hospitalCode) {
-                    (existingAppointment.createdOn)
+                    (existingAppointment.slot.start)
                 } else {
                     // appointment exists in other facility
                     // create appointment for next date
@@ -536,7 +536,7 @@ class CVDRiskAssessmentViewModel @Inject constructor(
                 genericRepository.insertPatientLastUpdated(
                     patientLastUpdatedResponse
                 )
-                return (date)
+                return date
             }
         }
     }

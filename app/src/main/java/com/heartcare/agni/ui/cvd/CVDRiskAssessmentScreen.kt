@@ -90,6 +90,7 @@ import com.heartcare.agni.ui.theme.VeryHighRiskLightContainer
 import com.heartcare.agni.utils.constants.NavControllerConstants.PATIENT
 import com.heartcare.agni.utils.constants.NavControllerConstants.REFERRAL_FROM_CVD
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toddMMMyyyy
+import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toddMMYYYYString
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -721,8 +722,8 @@ private fun FollowUpDialog(
         stringResource(R.string.follow_up_and_refer_dialog_title)
     else null
     val text = if (referralRequired)
-        stringResource(R.string.follow_up_and_refer_dialog_text, viewModel.followUpDate!!.toddMMMyyyy())
-    else stringResource(R.string.follow_up_dialog_text, viewModel.followUpDate!!.toddMMMyyyy())
+        stringResource(R.string.follow_up_and_refer_dialog_text, viewModel.followUpDate!!.toddMMYYYYString())
+    else stringResource(R.string.follow_up_dialog_text, viewModel.followUpDate!!.toddMMYYYYString())
     CustomDialog(
         canBeDismissed = false,
         title = title,

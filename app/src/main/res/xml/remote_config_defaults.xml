@@ -17,8 +17,8 @@
             "requiresReferral": true
             },
             "20_29": {
-            "action": "Strong lifestyle counselling and explain health implications. Provide risk summary to patient over email, screenshot.",
-            "medicationGuidance": "Start statin therapy and initiate antihypertensives if BP>=130/80 mmHg.",
+            "action": "Strong lifestyle counselling and explain health implications of High risk. Provide risk summary to patient over email, screenshot.",
+            "medicationGuidance": "Start stating therapy and initiate antihypertensives if BP>=130/80 mmHg.",
             "appointmentDays": 90,
             "requiresReferral": true
             },
