@@ -22,11 +22,6 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.key
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.toArgb
@@ -67,8 +62,8 @@ fun CVDRiskAssessmentRecords(
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
     ) {
-        if (viewModel.previousRecords.groupBy {
-                it.createdOn.formatDateToDayMonth()
+        if (viewModel.previousRecordsWithReferralStatus.groupBy {
+                it.first.createdOn.formatDateToDayMonth()
             }.size < 2) {
             Box(
                 modifier = Modifier
@@ -91,17 +86,19 @@ fun CVDRiskAssessmentRecords(
                     .fillMaxWidth()
                     .padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 16.dp)
                     .height(200.dp),
-                entries1 = getChartEntries(viewModel.previousRecords.reversed().groupBy {
+                entries1 = getChartEntries(viewModel.previousRecordsWithReferralStatus.map {
+                    it.first
+                }.reversed().groupBy {
                     it.createdOn.formatDateToDayMonth()
                 }.map { (_, entries) ->
                     entries.maxBy { it.createdOn }
                 }),
                 entries2 = null,
-                labels = viewModel.previousRecords.reversed()
-                    .map { it.createdOn.formatDateToDayMonth() }.toSet().toList()
+                labels = viewModel.previousRecordsWithReferralStatus.reversed()
+                    .map { it.first.createdOn.formatDateToDayMonth() }.toSet().toList()
             )
         }
-        if (viewModel.previousRecords.isEmpty()) {
+        if (viewModel.previousRecordsWithReferralStatus.isEmpty()) {
             Box(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.TopCenter
@@ -120,25 +117,14 @@ fun CVDRiskAssessmentRecords(
                 color = MaterialTheme.colorScheme.outline,
                 modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 8.dp)
             )
-            viewModel.previousRecords.forEach { record ->
-                key(record.appointmentId) {
-                    var referralExists by remember { mutableStateOf(false) }
-
-                    LaunchedEffect(record.appointmentId) {
-                        viewModel.checkIfReferralExists(
-                            appointmentId = record.appointmentId,
-                            exists = { referralExists = it }
-                        )
-                    }
-
-                    RecordDetailsComposable(
-                        referralExists = referralExists,
-                        record = record,
-                        onClick = { viewModel.selectedRecord = record },
-                        navController = navController,
-                        viewModel = viewModel
-                    )
-                }
+            viewModel.previousRecordsWithReferralStatus.forEach { record ->
+                RecordDetailsComposable(
+                    referralExists = record.second,
+                    record = record.first,
+                    onClick = { viewModel.selectedRecord = record.first },
+                    navController = navController,
+                    viewModel = viewModel
+                )
             }
         }
     }

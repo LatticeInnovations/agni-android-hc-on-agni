@@ -718,6 +718,8 @@ private fun FollowUpDialog(
     context: Context
 ) {
     val referralRequired = viewModel.getRiskItem(viewModel.riskPercentage.toInt()).requiresReferral
+            && !viewModel.isReferralAlreadyExists
+
     val title = if (referralRequired)
         stringResource(R.string.follow_up_and_refer_dialog_title)
     else null

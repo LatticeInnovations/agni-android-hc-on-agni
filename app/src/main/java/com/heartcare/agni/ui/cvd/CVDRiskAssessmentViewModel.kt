@@ -95,7 +95,7 @@ class CVDRiskAssessmentViewModel @Inject constructor(
     var bmi by mutableStateOf("")
     var riskPercentage by mutableStateOf("")
 
-    var previousRecords by mutableStateOf(listOf<CVDResponse>())
+    var previousRecordsWithReferralStatus by mutableStateOf(listOf<Pair<CVDResponse, Boolean>>())
     var selectedRecord by mutableStateOf<CVDResponse?>(null)
 
     var map = mapOf<String, Any>()
@@ -120,6 +120,7 @@ class CVDRiskAssessmentViewModel @Inject constructor(
     private val riskConfig = MutableStateFlow<RiskConfig?>(null)
     var followUpDate: Date? by mutableStateOf(null)
     var showFollowUpDialog by mutableStateOf(false)
+    var isReferralAlreadyExists by mutableStateOf(false)
 
     init {
         viewModelScope.launch(ioDispatcher) {
@@ -257,7 +258,14 @@ class CVDRiskAssessmentViewModel @Inject constructor(
         ioDispatcher: CoroutineDispatcher = Dispatchers.IO
     ) {
         viewModelScope.launch(ioDispatcher) {
-            previousRecords = cvdAssessmentRepository.getCVDRecord(patient!!.id)
+            previousRecordsWithReferralStatus = cvdAssessmentRepository.getCVDRecord(patient!!.id).map { cvdResponse ->
+                Pair(
+                    cvdResponse,
+                    checkIfReferralExists(
+                        cvdResponse.appointmentId
+                    )
+                )
+            }
         }
     }
 
@@ -331,6 +339,7 @@ class CVDRiskAssessmentViewModel @Inject constructor(
             )
             val appointmentDate =
                 cvdResponse.createdOn.plusMinusDays(getRiskItem(riskPercentage.toInt()).appointmentDays)
+            isReferralAlreadyExists = checkIfReferralExists(appointmentResponseLocal!!.uuid)
             followUpDate = createFollowUpAppointment(date = appointmentDate)
             saved()
         }
@@ -588,13 +597,10 @@ class CVDRiskAssessmentViewModel @Inject constructor(
         )
     }
 
-    fun checkIfReferralExists(
-        appointmentId: String,
-        exists: (Boolean) -> Unit
-    ) {
-        viewModelScope.launch(ioDispatcher) {
-            val referral = referralRepository.getReferralByAppointmentId(appointmentId)
-            exists(referral != null)
-        }
+    private suspend fun checkIfReferralExists(
+        appointmentId: String
+    ): Boolean {
+        val referral = referralRepository.getReferralByAppointmentId(appointmentId)
+        return referral != null
     }
 }
