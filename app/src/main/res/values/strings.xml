@@ -449,4 +449,8 @@
     <string name="medication_guidance_colon">Medication guidance:</string>
     <string name="action">Action</string>
     <string name="medication_guidance">Medication guidance</string>
+    <string name="follow_up_and_refer_dialog_title">A follow-up has been created. Should we refer this patient?</string>
+    <string name="follow_up_and_refer_dialog_text">A follow-up appointment is scheduled for %s.\nWould you like to refer the patient?</string>
+    <string name="follow_up_dialog_text">A follow-up appointment is scheduled for %s.</string>
+    <string name="refer_patient">Refer patient</string>
 </resources>

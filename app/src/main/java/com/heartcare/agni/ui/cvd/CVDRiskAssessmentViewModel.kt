@@ -7,6 +7,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.heartcare.agni.data.local.enums.AppointmentStatusEnum
+import com.heartcare.agni.data.local.enums.AppointmentTypeEnum
 import com.heartcare.agni.data.local.enums.YesNoEnum
 import com.heartcare.agni.data.local.model.appointment.AppointmentResponseLocal
 import com.heartcare.agni.data.local.model.config.RiskConfig
@@ -20,15 +21,23 @@ import com.heartcare.agni.data.local.repository.patient.lastupdated.PatientLastU
 import com.heartcare.agni.data.local.repository.preference.PreferenceRepository
 import com.heartcare.agni.data.local.repository.schedule.ScheduleRepository
 import com.heartcare.agni.data.server.model.cvd.CVDResponse
+import com.heartcare.agni.data.server.model.patient.PatientLastUpdatedResponse
 import com.heartcare.agni.data.server.model.patient.PatientResponse
+import com.heartcare.agni.data.server.model.scheduleandappointment.Slot
+import com.heartcare.agni.data.server.model.scheduleandappointment.appointment.AppointmentResponse
+import com.heartcare.agni.data.server.model.scheduleandappointment.schedule.ScheduleResponse
 import com.heartcare.agni.di.dispatcher.IoDispatcher
 import com.heartcare.agni.utils.builders.UUIDBuilder
 import com.heartcare.agni.utils.common.Queries
 import com.heartcare.agni.utils.common.Queries.checkAndUpdateAppointmentStatusToInProgress
 import com.heartcare.agni.utils.common.Queries.updatePatientLastUpdated
 import com.heartcare.agni.utils.converters.responseconverter.NameConverter.getFullName
+import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.plusMinusDays
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toAge
+import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toAppointmentEndTime
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toEndOfDay
+import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toScheduleEndTime
+import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toScheduleStartTime
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toTimeInMilli
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toTodayStartDate
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -107,6 +116,8 @@ class CVDRiskAssessmentViewModel @Inject constructor(
     var todayCVD by mutableStateOf<CVDResponse?>(null)
 
     private val riskConfig = MutableStateFlow<RiskConfig?>(null)
+    var followUpDate: Date? by mutableStateOf(null)
+    var showFollowUpDialog by mutableStateOf(false)
 
     init {
         viewModelScope.launch(ioDispatcher) {
@@ -114,9 +125,8 @@ class CVDRiskAssessmentViewModel @Inject constructor(
         }
     }
 
-    internal fun getAppointmentInfo(
-        callback: () -> Unit,
-        ioDispatcher: CoroutineDispatcher = Dispatchers.IO
+    fun getAppointmentInfo(
+        callback: () -> Unit
     ) {
         viewModelScope.launch(ioDispatcher) {
             appointment = appointmentRepository.getAppointmentsOfPatientByStatus(
@@ -150,7 +160,7 @@ class CVDRiskAssessmentViewModel @Inject constructor(
         }
     }
 
-    internal fun getBmi() {
+    fun getBmi() {
         if ((heightInCM.isNotBlank() || heightInFeet.isNotBlank() || heightInInch.isNotBlank())
             && weight.isNotBlank()
             && !heightInCMError && !heightInFeetError && !heightInInchError
@@ -174,7 +184,7 @@ class CVDRiskAssessmentViewModel @Inject constructor(
         }
     }
 
-    internal fun ifFormValid(): Boolean {
+    fun ifFormValid(): Boolean {
         return isDiabetic.isNotBlank() &&
                 isSmoker.isNotBlank() &&
                 previousHeartAttack.isNotBlank() &&
@@ -186,9 +196,7 @@ class CVDRiskAssessmentViewModel @Inject constructor(
                 !weightError && !cholesterolError
     }
 
-    internal fun getTodayCVDAssessment(
-        ioDispatcher: CoroutineDispatcher = Dispatchers.IO
-    ) {
+    fun getTodayCVDAssessment() {
         viewModelScope.launch(ioDispatcher) {
             cvdAssessmentRepository.getCVDRecord(patient!!.id).firstOrNull()?.let { record ->
                 isDiabetic = YesNoEnum.displayFromCode(record.diabetic)
@@ -221,7 +229,7 @@ class CVDRiskAssessmentViewModel @Inject constructor(
         }
     }
 
-    internal fun getRisk(
+    fun getRisk(
         ioDispatcher: CoroutineDispatcher = Dispatchers.IO
     ) {
         viewModelScope.launch(ioDispatcher) {
@@ -243,7 +251,7 @@ class CVDRiskAssessmentViewModel @Inject constructor(
         }
     }
 
-    internal fun getRecords(
+    fun getRecords(
         ioDispatcher: CoroutineDispatcher = Dispatchers.IO
     ) {
         viewModelScope.launch(ioDispatcher) {
@@ -284,7 +292,7 @@ class CVDRiskAssessmentViewModel @Inject constructor(
         )
     }
 
-    internal fun saveCVDRecord(
+    fun saveCVDRecord(
         saved: () -> Unit,
         ioDispatcher: CoroutineDispatcher = Dispatchers.IO
     ) {
@@ -319,8 +327,9 @@ class CVDRiskAssessmentViewModel @Inject constructor(
                 patientLastUpdatedRepository,
                 genericRepository
             )
-            clearForm()
-            getTodayCVDAssessment()
+            val appointmentDate =
+                cvdResponse.createdOn.plusMinusDays(getRiskItem(riskPercentage.toInt()).appointmentDays)
+            followUpDate = createFollowUpAppointment(date = appointmentDate)
             saved()
         }
     }
@@ -336,7 +345,7 @@ class CVDRiskAssessmentViewModel @Inject constructor(
             }
     }
 
-    private fun clearForm() {
+    fun clearForm() {
         screeningDate = Date()
         chiefComplaint = ""
         isDiabetic = ""
@@ -354,10 +363,11 @@ class CVDRiskAssessmentViewModel @Inject constructor(
         selectedWeightUnitIndex = 0
         riskPercentage = ""
         bmi = ""
+        followUpDate = null
     }
 
 
-    internal fun addPatientToQueue(
+    fun addPatientToQueue(
         patient: PatientResponse,
         addedToQueue: (List<Long>) -> Unit,
         ioDispatcher: CoroutineDispatcher = Dispatchers.IO
@@ -375,7 +385,7 @@ class CVDRiskAssessmentViewModel @Inject constructor(
         }
     }
 
-    internal fun updateStatusToArrived(
+    fun updateStatusToArrived(
         patient: PatientResponse,
         appointment: AppointmentResponseLocal,
         updated: (Int) -> Unit,
@@ -418,5 +428,161 @@ class CVDRiskAssessmentViewModel @Inject constructor(
             riskPercentage in 20..29 -> config.range20to29
             else -> config.gte30
         }
+    }
+
+    private suspend fun createFollowUpAppointment(
+        date: Date
+    ): Date {
+        appointmentRepository.getAppointmentsOfPatientByDate(
+            patient!!.id,
+            date.toTodayStartDate(),
+            date.toEndOfDay()
+        ).let { existingAppointment ->
+            return if (existingAppointment == null) {
+                // create appointment
+                createNewAppointment(date)
+            } else {
+                // appointment already exists
+                if (existingAppointment.hospitalCode == user.hospitalCode) {
+                    (existingAppointment.createdOn)
+                } else {
+                    // appointment exists in other facility
+                    // create appointment for next date
+                    createFollowUpAppointment(
+                        date = date.plusMinusDays(1)
+                    )
+                }
+            }
+        }
+    }
+
+    private suspend fun createNewAppointment(
+        date: Date
+    ): Date {
+        var id = UUIDBuilder.generateUUID()
+        var scheduleFhirId: String? = null
+        var scheduleId = date.toScheduleStartTime().time
+        scheduleRepository.getScheduleByStartTime(
+            scheduleId,
+            user.hospitalCode
+        ).let { scheduleResponse ->
+            if (scheduleResponse != null) {
+                id = scheduleResponse.uuid
+                scheduleFhirId = scheduleResponse.scheduleId
+                scheduleId = scheduleResponse.planningHorizon.start.time
+                updateSchedule(scheduleResponse)
+            } else {
+                createNewSchedule(id, date)
+            }
+        }.also {
+            val appointmentId = UUIDBuilder.generateUUID()
+            val createdOn = Date()
+            val appointmentStartTime = date.toScheduleStartTime()
+            val appointmentEndTime = appointmentStartTime.toAppointmentEndTime()
+            val slot = Slot(
+                start = appointmentStartTime,
+                end = appointmentEndTime
+            )
+            appointmentRepository.addAppointment(
+                AppointmentResponseLocal(
+                    appointmentId = null,
+                    uuid = appointmentId,
+                    patientId = patient?.id!!,
+                    scheduleId = Date(scheduleId),
+                    createdOn = createdOn,
+                    slot = slot,
+                    status = AppointmentStatusEnum.SCHEDULED.value,
+                    appointmentType = AppointmentTypeEnum.ROUTINE.code,
+                    inProgressTime = null,
+                    roleId = user.accountGroupId.toString(),
+                    slotId = null,
+                    practitionerId = user.fhirId,
+                    hospitalFhirId = null,
+                    hospitalId = user.hospitalId.toString(),
+                    hospitalName = user.hospitalName,
+                    hospitalCode = user.hospitalCode
+                )
+            ).also {
+                genericRepository.insertAppointment(
+                    AppointmentResponse(
+                        appointmentId = null,
+                        uuid = appointmentId,
+                        patientFhirId = patient!!.fhirId ?: patient!!.id,
+                        scheduleId = scheduleFhirId ?: id,
+                        createdOn = createdOn,
+                        slot = slot,
+                        status = AppointmentStatusEnum.SCHEDULED.value,
+                        appointmentType = AppointmentTypeEnum.ROUTINE.code,
+                        inProgressTime = null,
+                        roleId = null,
+                        slotId = null,
+                        practitionerId = null,
+                        hospitalFhirId = null,
+                        hospitalId = null,
+                        hospitalName = null,
+                        hospitalCode = null,
+                        appUpdatedDate = Date()
+                    )
+                )
+                val patientLastUpdatedResponse = PatientLastUpdatedResponse(
+                    uuid = patient!!.id,
+                    timestamp = Date()
+                )
+                patientLastUpdatedRepository.insertPatientLastUpdatedData(
+                    patientLastUpdatedResponse
+                )
+                genericRepository.insertPatientLastUpdated(
+                    patientLastUpdatedResponse
+                )
+                return (date)
+            }
+        }
+    }
+
+    private suspend fun updateSchedule(scheduleResponse: ScheduleResponse) {
+        scheduleRepository.updateSchedule(
+            scheduleResponse.copy(
+                bookedSlots = scheduleResponse.bookedSlots!! + 1
+            )
+        )
+    }
+
+    private suspend fun createNewSchedule(
+        id: String,
+        date: Date
+    ) {
+        val scheduleStartTime = date.toScheduleStartTime()
+        val scheduleEndTime = scheduleStartTime.toScheduleEndTime()
+        val schedule = ScheduleResponse(
+            uuid = id,
+            scheduleId = null,
+            planningHorizon = Slot(
+                start = scheduleStartTime,
+                end = scheduleEndTime
+            ),
+            bookedSlots = null,
+            roleId = null,
+            active = null,
+            practitionerId = null,
+            hospitalId = null,
+            hospitalFhirId = null,
+            hospitalName = null,
+            hospitalCode = null
+        )
+        scheduleRepository.insertSchedule(
+            schedule.copy(
+                bookedSlots = 1,
+                roleId = user.accountGroupId.toString(),
+                active = true,
+                practitionerId = user.fhirId,
+                hospitalId = user.hospitalId.toString(),
+                hospitalFhirId = null,
+                hospitalName = user.hospitalName,
+                hospitalCode = user.hospitalCode
+            )
+        )
+        genericRepository.insertSchedule(
+            schedule
+        )
     }
 }

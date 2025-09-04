@@ -67,6 +67,7 @@ import com.heartcare.agni.R
 import com.heartcare.agni.data.local.enums.YesNoEnum
 import com.heartcare.agni.data.server.model.cvd.CVDResponse
 import com.heartcare.agni.data.server.model.patient.PatientResponse
+import com.heartcare.agni.navigation.Screen
 import com.heartcare.agni.ui.common.AppointmentCompletedDialog
 import com.heartcare.agni.ui.common.CustomDialog
 import com.heartcare.agni.ui.common.TabRowComposable
@@ -87,6 +88,7 @@ import com.heartcare.agni.ui.theme.VeryHighRiskCircle
 import com.heartcare.agni.ui.theme.VeryHighRiskDarkContainer
 import com.heartcare.agni.ui.theme.VeryHighRiskLightContainer
 import com.heartcare.agni.utils.constants.NavControllerConstants.PATIENT
+import com.heartcare.agni.utils.constants.NavControllerConstants.REFERRAL_FROM_CVD
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toddMMMyyyy
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -108,7 +110,14 @@ fun CVDRiskAssessmentScreen(
     }
     val focusManager = LocalFocusManager.current
 
-    HandleLaunchedEffect(viewModel, navController)
+    HandleLaunchedEffect(
+        viewModel = viewModel,
+        navController = navController,
+        scope = scope,
+        pagerState = pagerState,
+        snackBarHostState = snackBarHostState,
+        context = context
+    )
 
     AddBackHandler(viewModel, navController, pagerState, scope)
 
@@ -172,13 +181,24 @@ fun CVDRiskAssessmentScreen(
             }
         )
     }
-    Dialogs(viewModel, scope, pagerState, snackBarHostState, context)
+    Dialogs(
+        viewModel = viewModel,
+        navController = navController,
+        scope = scope,
+        pagerState = pagerState,
+        snackBarHostState = snackBarHostState,
+        context = context
+    )
 }
 
 @Composable
 private fun HandleLaunchedEffect(
     viewModel: CVDRiskAssessmentViewModel,
-    navController: NavController
+    navController: NavController,
+    scope: CoroutineScope,
+    pagerState: PagerState,
+    snackBarHostState: SnackbarHostState,
+    context: Context
 ) {
     LaunchedEffect(viewModel.isLaunched) {
         if (!viewModel.isLaunched) {
@@ -189,6 +209,17 @@ private fun HandleLaunchedEffect(
             viewModel.getTodayCVDAssessment()
             viewModel.getAppointmentInfo(callback = {})
             viewModel.isLaunched = true
+        }
+        navController.currentBackStackEntry?.savedStateHandle?.let { handle ->
+            if (handle.remove<Boolean>(REFERRAL_FROM_CVD) == true){
+                navigateToRecordsAfterSaving(
+                    viewModel = viewModel,
+                    scope = scope,
+                    pagerState = pagerState,
+                    snackBarHostState = snackBarHostState,
+                    context = context
+                )
+            }
         }
     }
 }
@@ -251,9 +282,7 @@ private fun CVDBottomAppBar(
                         onClick = {
                             handleSaveButtonClick(
                                 viewModel,
-                                focusManager,
                                 scope,
-                                pagerState,
                                 snackBarHostState,
                                 context
                             )
@@ -331,9 +360,7 @@ private fun RiskPercentageInfoComposable(
 
 private fun handleSaveButtonClick(
     viewModel: CVDRiskAssessmentViewModel,
-    focusManager: FocusManager,
     scope: CoroutineScope,
-    pagerState: PagerState,
     snackBarHostState: SnackbarHostState,
     context: Context
 ) {
@@ -362,21 +389,7 @@ private fun handleSaveButtonClick(
                             viewModel.ifAllSlotsBooked -> viewModel.showAllSlotsBookedDialog = true
 
                             viewModel.canAddAssessment -> {
-                                viewModel.saveCVDRecord(
-                                    saved = {
-                                        scope.launch {
-                                            focusManager.clearFocus()
-                                            pagerState.animateScrollToPage(
-                                                1
-                                            )
-                                            snackBarHostState.showSnackbar(
-                                                message = context.getString(
-                                                    R.string.assessment_record_saved
-                                                )
-                                            )
-                                        }
-                                    }
-                                )
+                                saveCVD(viewModel)
                             }
 
                             viewModel.isAppointmentCompleted -> viewModel.showAppointmentCompletedDialog = true
@@ -455,8 +468,8 @@ private fun RecordsFullDetailsComposable(
             )
             Column(
                 modifier = Modifier
-                    .verticalScroll(rememberScrollState()).
-                    padding(16.dp),
+                    .verticalScroll(rememberScrollState())
+                    .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 DisplayField(
@@ -612,13 +625,14 @@ private fun ActionMedicationInfo(
 @Composable
 private fun Dialogs(
     viewModel: CVDRiskAssessmentViewModel,
+    navController: NavController,
     scope: CoroutineScope,
     pagerState: PagerState,
     snackBarHostState: SnackbarHostState,
     context: Context
 ) {
     if (viewModel.showAddToQueueDialog) {
-        AddToQueueComposable(viewModel, scope, pagerState, snackBarHostState, context)
+        AddToQueueComposable(viewModel)
     }
     if (viewModel.ifAllSlotsBooked) {
         AllSlotsBookedDialog {
@@ -630,15 +644,21 @@ private fun Dialogs(
             viewModel.showAppointmentCompletedDialog = false
         }
     }
+    if (viewModel.showFollowUpDialog) {
+        FollowUpDialog(
+            viewModel = viewModel,
+            navController = navController,
+            scope = scope,
+            pagerState = pagerState,
+            snackBarHostState = snackBarHostState,
+            context = context
+        )
+    }
 }
 
 @Composable
 private fun AddToQueueComposable(
-    viewModel: CVDRiskAssessmentViewModel,
-    scope: CoroutineScope,
-    pagerState: PagerState,
-    snackBarHostState: SnackbarHostState,
-    context: Context
+    viewModel: CVDRiskAssessmentViewModel
 ) {
     CustomDialog(
         title = if (viewModel.appointment != null) stringResource(id = R.string.patient_arrived_question) else stringResource(
@@ -657,16 +677,7 @@ private fun AddToQueueComposable(
                     viewModel.appointment!!,
                     updated = {
                         viewModel.showAddToQueueDialog = false
-                        viewModel.saveCVDRecord(
-                            saved = {
-                                scope.launch {
-                                    pagerState.animateScrollToPage(1)
-                                    snackBarHostState.showSnackbar(
-                                        message = context.getString(R.string.assessment_record_saved)
-                                    )
-                                }
-                            }
-                        )
+                        saveCVD(viewModel)
                     }
                 )
             } else {
@@ -677,20 +688,97 @@ private fun AddToQueueComposable(
                         viewModel.patient!!,
                         addedToQueue = {
                             viewModel.showAddToQueueDialog = false
-                            viewModel.saveCVDRecord(
-                                saved = {
-                                    scope.launch {
-                                        pagerState.animateScrollToPage(1)
-                                        snackBarHostState.showSnackbar(
-                                            message = context.getString(R.string.assessment_record_saved)
-                                        )
-                                    }
-                                }
-                            )
+                            saveCVD(viewModel)
                         }
                     )
                 }
             }
         }
     )
+}
+
+private fun saveCVD(
+    viewModel: CVDRiskAssessmentViewModel
+) {
+    viewModel.saveCVDRecord(
+        saved = {
+            viewModel.showFollowUpDialog = true
+        }
+    )
+}
+
+@Composable
+private fun FollowUpDialog(
+    viewModel: CVDRiskAssessmentViewModel,
+    navController: NavController,
+    scope: CoroutineScope,
+    pagerState: PagerState,
+    snackBarHostState: SnackbarHostState,
+    context: Context
+) {
+    val referralRequired = viewModel.getRiskItem(viewModel.riskPercentage.toInt()).requiresReferral
+    val title = if (referralRequired)
+        stringResource(R.string.follow_up_and_refer_dialog_title)
+    else null
+    val text = if (referralRequired)
+        stringResource(R.string.follow_up_and_refer_dialog_text, viewModel.followUpDate!!.toddMMMyyyy())
+    else stringResource(R.string.follow_up_dialog_text, viewModel.followUpDate!!.toddMMMyyyy())
+    CustomDialog(
+        canBeDismissed = false,
+        title = title,
+        text = text,
+        dismissBtnText = if (referralRequired) stringResource(R.string.dismiss) else null,
+        confirmBtnText = if (referralRequired) stringResource(R.string.refer_patient) else stringResource(R.string.dismiss),
+        dismiss = {
+            navigateToRecordsAfterSaving(
+                viewModel,
+                scope,
+                pagerState,
+                snackBarHostState,
+                context
+            )
+        },
+        confirm = {
+            if (referralRequired) {
+                viewModel.showFollowUpDialog = false
+                scope.launch {
+                    navController.currentBackStackEntry?.savedStateHandle?.set(
+                        PATIENT,
+                        viewModel.patient!!
+                    )
+                    navController.currentBackStackEntry?.savedStateHandle?.set(
+                        REFERRAL_FROM_CVD,
+                        true
+                    )
+                    navController.navigate(Screen.AddReferralScreen.route)
+                }
+            } else {
+                navigateToRecordsAfterSaving(
+                    viewModel,
+                    scope,
+                    pagerState,
+                    snackBarHostState,
+                    context
+                )
+            }
+        }
+    )
+}
+
+private fun navigateToRecordsAfterSaving(
+    viewModel: CVDRiskAssessmentViewModel,
+    scope: CoroutineScope,
+    pagerState: PagerState,
+    snackBarHostState: SnackbarHostState,
+    context: Context
+) {
+    viewModel.showFollowUpDialog = false
+    viewModel.clearForm()
+    viewModel.getTodayCVDAssessment()
+    scope.launch {
+        pagerState.animateScrollToPage(1)
+        snackBarHostState.showSnackbar(
+            message = context.getString(R.string.assessment_record_saved)
+        )
+    }
 }

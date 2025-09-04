@@ -155,11 +155,6 @@ object TimeConverter {
         return formatter.format(this)
     }
 
-    internal fun Date.toMonthAndYear(): String {
-        val formatter = SimpleDateFormat("MMMM yyyy", Locale.getDefault())
-        return formatter.format(this)
-    }
-
     internal fun String.toMonthInteger(): Int {
         val inputFormatter = SimpleDateFormat("MMM", Locale.getDefault())
         val currentMonth = inputFormatter.parse(this)
@@ -335,16 +330,6 @@ object TimeConverter {
         return formatter.format(this)
     }
 
-    internal fun Date.toPrescriptionNavDate(): String {
-        val formatter = SimpleDateFormat("dd MMMM yyyy · HH:mm", Locale.getDefault())
-        return formatter.format(this)
-    }
-
-    fun Date.toPrescriptionTime(): String {
-        val sdf = SimpleDateFormat("HH:mm", Locale.getDefault())
-        return sdf.format(this)
-    }
-
     fun isSameDay(date1: Date, date2: Date): Boolean {
         val cal1 = Calendar.getInstance()
         val cal2 = Calendar.getInstance()
@@ -352,12 +337,6 @@ object TimeConverter {
         cal2.time = date2
         return cal1[Calendar.YEAR] == cal2[Calendar.YEAR] &&
                 cal1[Calendar.DAY_OF_YEAR] == cal2[Calendar.DAY_OF_YEAR]
-    }
-
-    fun isYesterday(date: Date): Boolean {
-        val cal = Calendar.getInstance()
-        cal.add(Calendar.DATE, -1)
-        return isSameDay(date, cal.time)
     }
 
     fun isToday(date: Date): Boolean {
@@ -409,16 +388,10 @@ object TimeConverter {
         return sdf.format(this)
     }
 
-
     fun Date.formatDateToDayMonth(): String {
         // Create a formatter to get the day and short month (e.g., "04 Mar")
         val formatter = SimpleDateFormat("dd MMM", Locale.getDefault())
         return formatter.format(this)
-    }
-
-    fun String.convertStringToDate(): Date {
-        val formatter = SimpleDateFormat(YYYY_MM_DD, Locale.getDefault())
-        return formatter.parse(this) ?: Date()
     }
 
     fun String.convertDateFormat(): String {
@@ -442,46 +415,9 @@ object TimeConverter {
         return sdf.format(this)
     }
 
-    fun String.toDate(format: String): Date {
-        val dateFormat = SimpleDateFormat(format, Locale.getDefault())
-        return dateFormat.parse(this)!!
-    }
-
-    fun formatAgeInDaysWeeksMonthsYears(birthDate: String): String {
-        val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-        val birth = sdf.parse(birthDate) ?: return "Invalid Date"
-        val today = Date()
-
-        val diff = today.time - birth.time
-        val days = TimeUnit.MILLISECONDS.toDays(diff).toInt()
-        val weeks = days / 7
-        val remainingDays = days % 7
-        val months = days / 30
-        val completedWeeks = (days % 30) / 7
-        val years = days / 365
-        val completedMonths = (days % 365) / 30
-
-        return when {
-            days <= 14 -> "$days day"
-            days in 15 until 105 -> "$weeks week $remainingDays day"
-            days in 105 until 365 -> "$months month $completedWeeks week"
-            else -> "$years year $completedMonths month"
-        }
-    }
-
     internal fun Date.toddMMYYYYString(): String {
         val outputFormat = SimpleDateFormat("dd-MM-yyyy", Locale.getDefault())
         return outputFormat.format(this)
-    }
-
-    internal fun Date.toFileDateAndTimeName(): String {
-        val outputFormat = SimpleDateFormat("dd-MM-yyyy | HH:mm", Locale.getDefault())
-        return outputFormat.format(this)
-    }
-
-    internal fun daysBetween(date1: Date, date2: Date): Int {
-        val diffInMillis = date2.time - date1.time
-        return TimeUnit.MILLISECONDS.toDays(diffInMillis).toInt()
     }
 
     internal fun Date.plusMinusDays(days: Int): Date {
@@ -507,5 +443,20 @@ object TimeConverter {
     fun Date.toMMMddyyyy(): String {
         val sdf = SimpleDateFormat("MMM-dd-yyyy", Locale.getDefault())
         return sdf.format(this)
+    }
+
+    fun Date.toScheduleStartTime(): Date {
+        val millis = this.time
+        val intervalMillis = TimeUnit.MINUTES.toMillis(30)
+        val roundedMillis = millis - (millis % intervalMillis)
+        return Date(roundedMillis)
+    }
+
+    fun Date.toScheduleEndTime(): Date {
+        return Date(this.time + TimeUnit.MINUTES.toMillis(29))
+    }
+
+    fun Date.toAppointmentEndTime(): Date {
+        return Date(this.time + TimeUnit.MINUTES.toMillis(5))
     }
 }

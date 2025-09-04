@@ -9,7 +9,7 @@ import androidx.compose.runtime.Composable
 @Composable
 fun CustomDialog(
     canBeDismissed: Boolean = true,
-    title: String,
+    title: String?,
     text: String,
     dismissBtnText: String?,
     confirmBtnText: String,
@@ -30,9 +30,11 @@ fun CustomDialog(
                 }
             }
         },
-        title = {
-            Text(text = title)
-        },
+        title = if (title != null) {
+            {
+                Text(text = title)
+            }
+        } else null,
         text = {
             Text(text = text)
         }
