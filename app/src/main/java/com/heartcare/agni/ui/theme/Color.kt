@@ -83,19 +83,9 @@ val VeryHighRiskDarkContainer = Color(0xFF492D2D)
 val LowRiskCircle = Color(0xFF81AB04)
 val ModerateRiskCircle = Color(0xFFC7BA06)
 val HighRiskCircle = Color(0xFFD97818)
-val VeryHighRiskCircle = Color(0xFFCC0000)
-val VeryVeryHighRiskCircle = Color(0xFF990033)
+val VeryHighRiskCircle = Color(0xFF990033)
+
 val VitalLabel = Color(0xFFCB4470)
 
 val White = Color(0xFFFFFFFF)
 val Black = Color(0xFF000000)
-
-val TakenContainer = Color(0xFFE2FFE7)
-val MissedContainer = Color(0xFFFFF8C3)
-val TakenLabel = Color(0xFF0F6C1F)
-val MissedLabel = Color(0xFF867D19)
-
-val TakenContainerDark = Color(0xFF186324)
-val MissedContainerDark = Color(0xFF6A6621)
-val TakenLabelDark = Color(0xFFBCFEC7)
-val MissedLabelDark = Color(0xFFFDFDD6)

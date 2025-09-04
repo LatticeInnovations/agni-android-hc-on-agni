@@ -8,6 +8,8 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -16,6 +18,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -26,6 +29,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.navigation.NavController
 import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.components.XAxis
 import com.github.mikephil.charting.data.Entry
@@ -35,16 +39,20 @@ import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
 import com.github.mikephil.charting.formatter.ValueFormatter
 import com.heartcare.agni.R
 import com.heartcare.agni.data.server.model.cvd.CVDResponse
+import com.heartcare.agni.navigation.Screen
 import com.heartcare.agni.ui.cvd.CVDRiskAssessmentViewModel
 import com.heartcare.agni.ui.theme.Black
 import com.heartcare.agni.ui.theme.White
+import com.heartcare.agni.utils.constants.NavControllerConstants.PATIENT
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.formatDateToDayMonth
+import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.isToday
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toddMMMyyyy
 import kotlin.math.ceil
 
 @Composable
 fun CVDRiskAssessmentRecords(
-    viewModel: CVDRiskAssessmentViewModel
+    viewModel: CVDRiskAssessmentViewModel,
+    navController: NavController
 ) {
     LaunchedEffect(Unit) {
         viewModel.getRecords()
@@ -54,8 +62,8 @@ fun CVDRiskAssessmentRecords(
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
     ) {
-        if (viewModel.previousRecords.groupBy {
-                it.createdOn.formatDateToDayMonth()
+        if (viewModel.previousRecordsWithReferralStatus.groupBy {
+                it.first.createdOn.formatDateToDayMonth()
             }.size < 2) {
             Box(
                 modifier = Modifier
@@ -78,17 +86,19 @@ fun CVDRiskAssessmentRecords(
                     .fillMaxWidth()
                     .padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 16.dp)
                     .height(200.dp),
-                entries1 = getChartEntries(viewModel.previousRecords.reversed().groupBy {
+                entries1 = getChartEntries(viewModel.previousRecordsWithReferralStatus.map {
+                    it.first
+                }.reversed().groupBy {
                     it.createdOn.formatDateToDayMonth()
                 }.map { (_, entries) ->
                     entries.maxBy { it.createdOn }
                 }),
                 entries2 = null,
-                labels = viewModel.previousRecords.reversed()
-                    .map { it.createdOn.formatDateToDayMonth() }.toSet().toList()
+                labels = viewModel.previousRecordsWithReferralStatus.reversed()
+                    .map { it.first.createdOn.formatDateToDayMonth() }.toSet().toList()
             )
         }
-        if (viewModel.previousRecords.isEmpty()) {
+        if (viewModel.previousRecordsWithReferralStatus.isEmpty()) {
             Box(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.TopCenter
@@ -107,12 +117,13 @@ fun CVDRiskAssessmentRecords(
                 color = MaterialTheme.colorScheme.outline,
                 modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 8.dp)
             )
-            viewModel.previousRecords.forEach { record ->
+            viewModel.previousRecordsWithReferralStatus.forEach { record ->
                 RecordDetailsComposable(
-                    record = record,
-                    onClick = {
-                        viewModel.selectedRecord = record
-                    }
+                    referralExists = record.second,
+                    record = record.first,
+                    onClick = { viewModel.selectedRecord = record.first },
+                    navController = navController,
+                    viewModel = viewModel
                 )
             }
         }
@@ -121,27 +132,63 @@ fun CVDRiskAssessmentRecords(
 
 @Composable
 private fun RecordDetailsComposable(
+    referralExists: Boolean,
     record: CVDResponse,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    navController: NavController,
+    viewModel: CVDRiskAssessmentViewModel
 ) {
-    Column(
+    Row(
         modifier = Modifier
             .clickable {
                 onClick()
             }
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 12.dp)
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(
-            text = stringResource(R.string.percentage, record.risk.toString()),
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurface
-        )
-        Text(
-            text = record.createdOn.toddMMMyyyy(),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
+        Column {
+            Text(
+                text = stringResource(R.string.percentage, record.risk.toString()),
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Text(
+                text = record.createdOn.toddMMMyyyy(),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        Spacer(Modifier.weight(1f))
+        if (record.risk >= 10) {
+            if (referralExists) {
+                Text(
+                    text = stringResource(R.string.referred),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.outline
+                )
+            } else {
+                if (isToday(record.createdOn)) {
+                    OutlinedButton(
+                        onClick = {
+                            navController.currentBackStackEntry?.savedStateHandle?.set(
+                                PATIENT,
+                                viewModel.patient!!
+                            )
+                            navController.navigate(Screen.AddReferralScreen.route)
+                        }
+                    ) {
+                        Text(stringResource(R.string.refer))
+                    }
+                } else {
+                    Text(
+                        text = stringResource(R.string.not_referred),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.outline
+                    )
+                }
+            }
+        }
     }
 }
 
@@ -157,18 +204,13 @@ fun LineChartView(
 
     // Calculate Y-axis minimum and maximum values dynamically
     val allEntries = (entries1.orEmpty() + entries2.orEmpty())
-    val yMin = 0f  // Minimum Y value
     val yMax = allEntries.maxOfOrNull { it.y } ?: 0f  // Maximum Y value
 
     // Add some padding to min and max values for better visualization
     val axisMin = 0f
-    val axisMax = yMax + 10f
     val roundedMaxY = (ceil(yMax / 10) * 10)
 
     // Calculate a reasonable number of Y-axis labels (e.g., between 3 to 6 labels)
-    val yRange = axisMax - axisMin
-    val yLabelCount = (yRange / 10).coerceIn(4f, 10f)
-        .toInt()  // Adjust number of labels based on range
 
     val gridLineColor = MaterialTheme.colorScheme.primary.toArgb()
     val fastingColor = MaterialTheme.colorScheme.primary.toArgb()

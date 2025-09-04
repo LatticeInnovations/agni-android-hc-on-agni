@@ -29,4 +29,5 @@ object NavControllerConstants {
     const val TEST_EXAMINATION_SAVED = "test_examination_saved"
     const val REFERRAL_SAVED = "referral_saved"
     const val REFERRAL = "referral"
+    const val REFERRAL_FROM_CVD = "referral_from_CVD"
 }

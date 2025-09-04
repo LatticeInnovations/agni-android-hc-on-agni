@@ -445,4 +445,15 @@
     <string name="health_facility_mandatory">Health facility*</string>
     <string name="health_facility_required">Health facility required</string>
     <string name="add_notes">Add notes</string>
+    <string name="action_colon">Action:</string>
+    <string name="medication_guidance_colon">Medication guidance:</string>
+    <string name="action">Action</string>
+    <string name="medication_guidance">Medication guidance</string>
+    <string name="follow_up_and_refer_dialog_title">A follow-up has been created. Should we refer this patient?</string>
+    <string name="follow_up_and_refer_dialog_text">A follow-up appointment is scheduled for %s.\nWould you like to refer the patient?</string>
+    <string name="follow_up_dialog_text">A follow-up appointment is scheduled for %s.</string>
+    <string name="refer_patient">Refer patient</string>
+    <string name="referred">Referred</string>
+    <string name="refer">Refer</string>
+    <string name="not_referred">Not referred</string>
 </resources>

@@ -19,4 +19,7 @@ interface ReferralDao {
 
     @Query("DELETE FROM ReferralEntity WHERE uuid=:id")
     suspend fun deleteReferral(id: String): Int
+
+    @Query("SELECT * FROM ReferralEntity WHERE appointmentId=:appointmentId")
+    suspend fun getReferralByAppointmentId(appointmentId: String): ReferralEntity?
 }
