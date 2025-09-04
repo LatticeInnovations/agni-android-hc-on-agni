@@ -25,6 +25,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.key
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -104,60 +105,67 @@ fun AddReferralScreen(
                         ),
                         facility = "${viewModel.user.hospitalName} | ${viewModel.user.levelThreeName}"
                     )
-                    LevelDropDownComposable(
-                        value = viewModel.province?.name ?: "",
-                        updateValue = {
-                            viewModel.province = it
-                            resetAreaCouncilHierarchy(viewModel)
-                            viewModel.getAreaCouncilList()
-                        },
-                        label = stringResource(id = R.string.province_mandatory),
-                        dropdownList = viewModel.provinceList,
-                        errorText = stringResource(R.string.province_required),
-                        isMandatory = true,
-                        isEnabled = true
-                    )
+                    key(
+                        viewModel.province,
+                        viewModel.areaCouncil,
+                        viewModel.island
+                    ) {
+                        LevelDropDownComposable(
+                            value = viewModel.province?.name ?: "",
+                            updateValue = {
+                                viewModel.province = it
+                                resetAreaCouncilHierarchy(viewModel)
+                                viewModel.getAreaCouncilList()
+                            },
+                            label = stringResource(id = R.string.province_mandatory),
+                            dropdownList = viewModel.provinceList,
+                            errorText = stringResource(R.string.province_required),
+                            isMandatory = true,
+                            isEnabled = true
+                        )
 
-                    LevelDropDownComposable(
-                        value = viewModel.areaCouncil?.name ?: "",
-                        updateValue = {
-                            viewModel.areaCouncil = it
-                            resetIslandHierarchy(viewModel)
-                            viewModel.getIslandList()
-                        },
-                        label = stringResource(id = R.string.area_council_mandatory),
-                        dropdownList = viewModel.areaCouncilList,
-                        errorText = stringResource(R.string.area_council_required),
-                        isMandatory = true,
-                        isEnabled = viewModel.province != null
-                    )
+                        LevelDropDownComposable(
+                            value = viewModel.areaCouncil?.name ?: "",
+                            updateValue = {
+                                viewModel.areaCouncil = it
+                                resetIslandHierarchy(viewModel)
+                                viewModel.getIslandList()
+                            },
+                            label = stringResource(id = R.string.area_council_mandatory),
+                            dropdownList = viewModel.areaCouncilList,
+                            errorText = stringResource(R.string.area_council_required),
+                            isMandatory = true,
+                            isEnabled = viewModel.province != null
+                        )
 
-                    LevelDropDownComposable(
-                        value = viewModel.island?.name ?: "",
-                        updateValue = {
-                            viewModel.island = it
-                            resetHealthFacility(viewModel)
-                            viewModel.getHealthFacilityList()
-                        },
-                        label = stringResource(id = R.string.island_mandatory),
-                        dropdownList = viewModel.islandList,
-                        errorText = stringResource(R.string.island_required),
-                        isMandatory = true,
-                        isEnabled = viewModel.areaCouncil != null
-                    )
+                        LevelDropDownComposable(
+                            value = viewModel.island?.name ?: "",
+                            updateValue = {
+                                viewModel.island = it
+                                resetHealthFacility(viewModel)
+                                viewModel.getHealthFacilityList()
+                            },
+                            label = stringResource(id = R.string.island_mandatory),
+                            dropdownList = viewModel.islandList,
+                            errorText = stringResource(R.string.island_required),
+                            isMandatory = true,
+                            isEnabled = viewModel.areaCouncil != null
+                        )
 
-                    LevelDropDownComposable(
-                        value = viewModel.heathFacility?.name ?: "",
-                        updateValue = {
-                            viewModel.heathFacility = it
-                        },
-                        label = stringResource(id = R.string.health_facility_mandatory),
-                        dropdownList = viewModel.heathFacilityList,
-                        errorText = stringResource(R.string.health_facility_required),
-                        isMandatory = true,
-                        isEnabled = viewModel.island != null
-                    )
+                        LevelDropDownComposable(
+                            value = viewModel.heathFacility?.name ?: "",
+                            updateValue = {
+                                viewModel.heathFacility = it
+                            },
+                            label = stringResource(id = R.string.health_facility_mandatory),
+                            dropdownList = viewModel.heathFacilityList,
+                            errorText = stringResource(R.string.health_facility_required),
+                            isMandatory = true,
+                            isEnabled = viewModel.island != null
+                        )
 
+
+                    }
                     CustomTextFieldWithLength(
                         modifier = Modifier
                             .fillMaxWidth()
