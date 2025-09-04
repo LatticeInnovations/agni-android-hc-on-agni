@@ -12,7 +12,7 @@
             },
             "10_19": {
             "action": "Lifestyle counselling, measure BP and blood glucose.",
-            "medicationGuidance": "Start antihypertensive if BP>=140/90 mmHg, consider statin if diabetes or multiple risk factors.",
+            "medicationGuidance": "Start antihypertensive if BP>=140/90 mmHg, consider statin if the patient has diabetes or multiple risk factors.",
             "appointmentDays": 180,
             "requiresReferral": true
             },
@@ -23,7 +23,7 @@
             "requiresReferral": true
             },
             "gte_30": {
-            "action": "Notify nearest NCD by phone or email, counselling and emergency advice for symptoms (e.g., chest pain).",
+            "action": "Notify nearest NCD by phone or email, counselling and emergency advice for symptoms (e.g. , chest pain).",
             "medicationGuidance": "Mandatory statin therapy followed by antihypertensive medicine. Consider aspirin if not contraindicated.",
             "appointmentDays": 180,
             "requiresReferral": true
