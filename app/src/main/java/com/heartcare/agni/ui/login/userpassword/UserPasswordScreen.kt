@@ -112,8 +112,9 @@ fun UserPasswordScreen(
                 when (isInternetAvailable(context)) {
                     true -> {
                         viewModel.isLoading = true
-                        viewModel.clearAllAppData()
-                        loginAndNavigate(viewModel, navController, coroutineScope)
+                        viewModel.clearAllAppData {
+                            loginAndNavigate(viewModel, navController, coroutineScope)
+                        }
                     }
 
                     false -> {
