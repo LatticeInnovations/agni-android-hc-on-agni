@@ -5,7 +5,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewModelScope
 import com.heartcare.agni.base.viewmodel.BaseViewModel
-import com.heartcare.agni.data.local.enums.AppointmentStatusEnum
 import com.heartcare.agni.data.local.model.appointment.AppointmentResponseLocal
 import com.heartcare.agni.data.local.model.prescription.MedicationLocal
 import com.heartcare.agni.data.local.model.prescription.PrescriptionResponseLocal
@@ -28,10 +27,11 @@ import com.heartcare.agni.di.dispatcher.IoDispatcher
 import com.heartcare.agni.utils.builders.UUIDBuilder
 import com.heartcare.agni.utils.common.Queries
 import com.heartcare.agni.utils.common.Queries.checkAndUpdateAppointmentStatusToInProgress
+import com.heartcare.agni.utils.common.Queries.getAppointment
+import com.heartcare.agni.utils.common.Queries.getInProgressCompletedAppointmentIds
+import com.heartcare.agni.utils.common.Queries.loadAppointmentInfo
 import com.heartcare.agni.utils.common.Queries.updatePatientLastUpdated
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.isToday
-import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toEndOfDay
-import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toTodayStartDate
 import com.heartcare.agni.utils.converters.responseconverter.toMedicationResponse
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
@@ -40,7 +40,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import timber.log.Timber
 import java.util.Date
 import javax.inject.Inject
 
@@ -83,7 +82,7 @@ class PrescriptionViewModel @Inject constructor(
     var previousPrescriptionList by mutableStateOf(listOf<PrescriptionAndMedicineRelation>())
     var todayPrescription by mutableStateOf<PrescriptionAndMedicineRelation?>(null)
 
-    internal var appointmentResponseLocal: AppointmentResponseLocal? = null
+    var appointmentResponseLocal: AppointmentResponseLocal? = null
 
     var appointment by mutableStateOf<AppointmentResponseLocal?>(null)
     var canAddAssessment by mutableStateOf(false)
@@ -98,12 +97,14 @@ class PrescriptionViewModel @Inject constructor(
     var isReprescribing by mutableStateOf(false)
     var represcribingPrescription by mutableStateOf<PrescriptionAndMedicineRelation?>(null)
 
-    internal fun getPreviousPrescription(
+    fun getPreviousPrescription(
         patientId: String
     ) {
         viewModelScope.launch(ioDispatcher) {
+            val appointmentIds =
+                getInProgressCompletedAppointmentIds(patientId, appointmentRepository)
             previousPrescriptionList =
-                prescriptionRepository.getLastPrescriptionAndMedicine(patientId)
+                prescriptionRepository.getLastPrescriptionAndMedicineByAppointmentId(*appointmentIds.toTypedArray())
             todayPrescription =
                 previousPrescriptionList.firstOrNull { isToday(it.prescriptionEntity.prescriptionDate) }
             setTodayData()
@@ -142,54 +143,26 @@ class PrescriptionViewModel @Inject constructor(
             medicationRepository.getAllMedicationDirections()
         }
 
-    internal fun getAppointmentInfo(
+    fun getAppointmentInfo(
         callback: () -> Unit
     ) {
         viewModelScope.launch(ioDispatcher) {
-            val todayStart = Date().toTodayStartDate()
-            val todayEnd = Date().toEndOfDay()
-            val patientId = patient?.id ?: return@launch callback()
-
-            val appointmentsToday = appointmentRepository.getAppointmentsOfPatientByDate(
-                patientId, todayStart, todayEnd
+            val info = loadAppointmentInfo(
+                patientId = patient!!.id,
+                hospitalCode = user.hospitalCode,
+                maxNumberOfAppointmentsInADay = maxNumberOfAppointmentsInADay,
+                appointmentRepository = appointmentRepository
             )
-
-            // Determine if assessment can be added
-            appointmentsToday?.let {
-                existsInOtherHospital = it.hospitalCode != user.hospitalCode
-                val status = it.status
-                canAddAssessment = (status == AppointmentStatusEnum.ARRIVED.value ||
-                        status == AppointmentStatusEnum.WALK_IN.value ||
-                        status == AppointmentStatusEnum.IN_PROGRESS.value)
-                        && it.hospitalCode == user.hospitalCode
-
-                isAppointmentCompleted = status == AppointmentStatusEnum.COMPLETED.value
-                        && it.hospitalCode == user.hospitalCode
-            }
-
-            // Get the appointment matching today's time window and scheduled status
-            appointment = appointmentRepository
-                .getAppointmentsOfPatientByStatus(patientId, AppointmentStatusEnum.SCHEDULED.value)
-                .firstOrNull {
-                    it.slot.start.time in todayStart..todayEnd
-                            && it.hospitalCode == user.hospitalCode
-                }
-
-            // Check if all slots are booked
-            val bookedAppointments =
-                appointmentRepository.getAppointmentListByDate(todayStart, todayEnd)
-                    .count {
-                        it.status != AppointmentStatusEnum.CANCELLED.value
-                                && it.hospitalCode == user.hospitalCode
-                    }
-
-            ifAllSlotsBooked = bookedAppointments >= maxNumberOfAppointmentsInADay
-
+            appointment = info.appointment
+            existsInOtherHospital = info.existsInOtherHospital
+            canAddAssessment = info.canAddAssessment
+            isAppointmentCompleted = info.isAppointmentCompleted
+            ifAllSlotsBooked = info.ifAllSlotsBooked
             callback()
         }
     }
 
-    internal fun getMedications(medicationsList: (List<MedicationResponse>) -> Unit) {
+    fun getMedications(medicationsList: (List<MedicationResponse>) -> Unit) {
         viewModelScope.launch(ioDispatcher) {
             medicationsList(
                 medicationRepository.getAllMedication().map { it.toMedicationResponse() }
@@ -197,7 +170,7 @@ class PrescriptionViewModel @Inject constructor(
         }
     }
 
-    internal fun getAllMedicationDirections(medicationDirectionsList: (List<MedicineTimingEntity>) -> Unit) {
+    fun getAllMedicationDirections(medicationDirectionsList: (List<MedicineTimingEntity>) -> Unit) {
         viewModelScope.launch(ioDispatcher) {
             medicationDirectionsList(
                 timingList.await()
@@ -205,18 +178,7 @@ class PrescriptionViewModel @Inject constructor(
         }
     }
 
-    private suspend fun getAppointment() {
-        appointmentResponseLocal =
-            appointmentRepository.getAppointmentListByDate(
-                Date().toTodayStartDate(),
-                Date().toEndOfDay()
-            ).firstOrNull { appointmentEntity ->
-                appointmentEntity.patientId == patient!!.id && appointmentEntity.status != AppointmentStatusEnum.CANCELLED.value
-                        && user.hospitalCode == appointmentEntity.hospitalCode
-            }
-    }
-
-    internal fun insertPrescription(
+    fun insertPrescription(
         date: Date = Date(),
         inserted: (Long) -> Unit
     ) {
@@ -227,10 +189,13 @@ class PrescriptionViewModel @Inject constructor(
             )
         }
         viewModelScope.launch(ioDispatcher) {
-            getAppointment()
+            appointmentResponseLocal = getAppointment(
+                patientId = patient!!.id,
+                hospitalCode = user.hospitalCode,
+                appointmentRepository = appointmentRepository
+            )
             var uuid = UUIDBuilder.generateUUID()
             var fhirId: String? = null
-            Timber.d("manseeyy today prescription $todayPrescription")
             todayPrescription?.let {
                 if (isToday(it.prescriptionEntity.prescriptionDate)) {
                     uuid = it.prescriptionEntity.id
@@ -272,7 +237,7 @@ class PrescriptionViewModel @Inject constructor(
         }
     }
 
-    internal fun getPreviousSearch(previousSearches: (List<String>) -> Unit) {
+    fun getPreviousSearch(previousSearches: (List<String>) -> Unit) {
         viewModelScope.launch(ioDispatcher) {
             previousSearches(
                 searchRepository.getRecentActiveIngredientSearches()
@@ -280,7 +245,7 @@ class PrescriptionViewModel @Inject constructor(
         }
     }
 
-    internal fun insertRecentSearch(query: String, date: Date = Date(), inserted: (Long) -> Unit) {
+    fun insertRecentSearch(query: String, date: Date = Date(), inserted: (Long) -> Unit) {
         viewModelScope.launch(ioDispatcher) {
             inserted(
                 searchRepository.insertRecentActiveIngredientSearch(query, date)
@@ -288,7 +253,7 @@ class PrescriptionViewModel @Inject constructor(
         }
     }
 
-    internal fun getActiveIngredientSearchList(
+    fun getActiveIngredientSearchList(
         activeIngredient: String,
         searchList: (List<MedicationResponse>) -> Unit
     ) {
@@ -373,7 +338,7 @@ class PrescriptionViewModel @Inject constructor(
         }
     }
 
-    internal fun addPatientToQueue(
+    fun addPatientToQueue(
         patient: PatientResponse,
         addedToQueue: (List<Long>) -> Unit,
         ioDispatcher: CoroutineDispatcher = Dispatchers.IO
@@ -391,7 +356,7 @@ class PrescriptionViewModel @Inject constructor(
         }
     }
 
-    internal fun updateStatusToArrived(
+    fun updateStatusToArrived(
         patient: PatientResponse,
         appointment: AppointmentResponseLocal,
         updated: (Int) -> Unit,
