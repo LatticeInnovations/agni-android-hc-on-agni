@@ -29,7 +29,7 @@ class ExaminationRepositoryImpl @Inject constructor(
         return examinationDao.insertExamination(*examinationResponse.map { it.toExaminationEntity() }.toTypedArray())
     }
 
-    override suspend fun getExaminationList(patientId: String): List<ExaminationResponseLocal> {
-        return examinationDao.getExaminations(patientId).map { it.toExaminationResponseLocal(examinationDao) }
+    override suspend fun getExaminationListByAppointmentId(vararg appointmentIds: String): List<ExaminationResponseLocal> {
+        return examinationDao.getExaminationsByAppointmentId(*appointmentIds).map { it.toExaminationResponseLocal(examinationDao) }
     }
 }
