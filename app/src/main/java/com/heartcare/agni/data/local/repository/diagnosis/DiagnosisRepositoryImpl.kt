@@ -12,8 +12,8 @@ class DiagnosisRepositoryImpl @Inject constructor(private val dao: DiagnosisDao)
         return dao.insertDiagnosis(local.toDiagnosisEntity())
     }
 
-    override suspend fun getPastDiagnosis(patientId: String): List<DiagnosisLocal> {
-        return dao.getPastDiagnosis(patientId).map { it.toDiagnosisLocal() }
+    override suspend fun getPastDiagnosisByAppointmentId(vararg appointmentIds: String): List<DiagnosisLocal> {
+        return dao.getPastDiagnosisByAppointmentId(*appointmentIds).map { it.toDiagnosisLocal() }
     }
 
     override suspend fun updateDiagnosisFhirId(diagnosisUuid: String, fhirId: String) {
