@@ -20,6 +20,7 @@ import com.heartcare.agni.data.server.model.scheduleandappointment.appointment.A
 import com.heartcare.agni.di.dispatcher.IoDispatcher
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toEndOfDay
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toTodayStartDate
+import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toddMMMyyyy
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.launch
@@ -63,11 +64,19 @@ class AppointmentsScreenViewModel @Inject constructor(
             ).filter { appointmentResponseLocal ->
                 appointmentResponseLocal.hospitalCode == user.hospitalCode &&
                 appointmentResponseLocal.slot.start.time > Date().toTodayStartDate()
+            }.groupBy {
+                it.slot.start.toddMMMyyyy()
+            }.map { (_, appointment) ->
+                appointment.minBy { it.createdOn }
             }
             pastAppointmentsList = appointmentRepository.getAppointmentsOfPatient(patientId)
                 .filter { appointmentResponseLocal ->
                     appointmentResponseLocal.hospitalCode == user.hospitalCode &&
                     appointmentResponseLocal.slot.start.time < Date().toEndOfDay() && appointmentResponseLocal.status != AppointmentStatusEnum.SCHEDULED.value
+                }.groupBy {
+                    it.slot.start.toddMMMyyyy()
+                }.map { (_, appointments) ->
+                    appointments.minBy { it.createdOn }
                 }
         }
     }
