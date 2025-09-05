@@ -21,6 +21,7 @@ import com.heartcare.agni.data.server.model.referral.ReferralResponse
 import com.heartcare.agni.di.dispatcher.IoDispatcher
 import com.heartcare.agni.utils.builders.UUIDBuilder
 import com.heartcare.agni.utils.common.Queries.checkAndUpdateAppointmentStatusToInProgress
+import com.heartcare.agni.utils.common.Queries.getInProgressCompletedAppointmentIds
 import com.heartcare.agni.utils.common.Queries.updatePatientLastUpdated
 import com.heartcare.agni.utils.converters.responseconverter.NameConverter.getFullName
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.isToday
@@ -80,7 +81,9 @@ class AddReferralViewModel @Inject constructor(
             provinceList =
                 levelRepository.getLevelListByFhirIds(*masterAreaCouncilList.map { it.precedingLevelId!! }
                     .toTypedArray())
-            todayReferral = referralRepository.getReferralRecords(patientId).firstOrNull {
+            val appointmentIds =
+                getInProgressCompletedAppointmentIds(patientId, appointmentRepository)
+            todayReferral = referralRepository.getReferralRecordsByAppointmentIds(*appointmentIds.toTypedArray()).firstOrNull {
                 isToday(it.appUpdatedDate)
             }
             todayReferral?.let { referral ->

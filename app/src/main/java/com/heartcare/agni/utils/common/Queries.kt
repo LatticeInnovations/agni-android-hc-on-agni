@@ -376,7 +376,7 @@ object Queries {
                         || it.status == AppointmentStatusEnum.COMPLETED.value
             }
             .groupBy {
-                it.createdOn.toddMMMyyyy()
+                it.slot.start.toddMMMyyyy()
             }
             .map { (_, appointments) ->
                 appointments.minBy { it.createdOn }.uuid

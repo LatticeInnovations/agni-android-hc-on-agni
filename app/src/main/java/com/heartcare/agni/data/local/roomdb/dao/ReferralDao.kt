@@ -11,8 +11,8 @@ interface ReferralDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insertReferralRecord(vararg referralEntity: ReferralEntity): List<Long>
 
-    @Query("SELECT * FROM ReferralEntity WHERE patientId=:patientId ORDER BY appUpdatedDate DESC")
-    fun getReferralRecords(patientId: String): List<ReferralEntity>
+    @Query("SELECT * FROM ReferralEntity WHERE appointmentId IN (:appointmentIds) ORDER BY appUpdatedDate DESC")
+    fun getReferralRecordsByAppointmentIds(vararg appointmentIds: String): List<ReferralEntity>
 
     @Query("UPDATE ReferralEntity SET fhirId = :fhirId WHERE uuid = :id")
     suspend fun updateFhirId(id: String, fhirId: String): Int
