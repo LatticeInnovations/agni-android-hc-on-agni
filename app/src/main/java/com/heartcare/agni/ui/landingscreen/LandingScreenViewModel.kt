@@ -49,12 +49,14 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import okhttp3.OkHttpClient
 import timber.log.Timber
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.util.Date
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
+import javax.inject.Named
 
 @HiltViewModel
 class LandingScreenViewModel @Inject constructor(
@@ -64,6 +66,7 @@ class LandingScreenViewModel @Inject constructor(
     private val preferenceRepository: PreferenceRepository,
     private val appointmentRepository: AppointmentRepository,
     private val riskPredictionChartRepository: RiskPredictionChartRepository,
+    @Named("main_okhttp") private val okHttpClient: OkHttpClient,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
     @DefaultDispatcher private val defaultDispatcher: CoroutineDispatcher
 ) : BaseAndroidViewModel(application) {
@@ -340,6 +343,7 @@ class LandingScreenViewModel @Inject constructor(
             WorkManager.getInstance(getApplication<Application>().applicationContext)
                 .cancelAllWork().await().also {
                     (getApplication<FhirApp>().applicationContext.getSystemService(Context.JOB_SCHEDULER_SERVICE) as JobScheduler).cancelAll()
+                    okHttpClient.dispatcher.cancelAll()
                     preferenceRepository.setPin("")
                 }
         }

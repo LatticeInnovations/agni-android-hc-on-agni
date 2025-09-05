@@ -99,10 +99,13 @@ class UserPasswordViewModel @Inject constructor(
         } else userDetails.userId.lowercase() != userId.lowercase()
     }
 
-    fun clearAllAppData() {
+    fun clearAllAppData(
+        cleared: () -> Unit
+    ) {
         viewModelScope.launch(ioDispatcher) {
             fhirAppDatabase.clearAllTables()
             preferenceRepository.clearPreferences()
+            cleared()
         }
     }
 }
