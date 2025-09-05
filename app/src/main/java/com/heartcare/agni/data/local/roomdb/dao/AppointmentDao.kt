@@ -43,7 +43,7 @@ interface AppointmentDao {
         patientId: String,
         startOfDay: Long,
         endOfDay: Long
-    ): AppointmentEntity?
+    ): List<AppointmentEntity>
 
     @Query("SELECT * FROM AppointmentEntity WHERE patientId=:patientId ORDER BY startTime DESC")
     suspend fun getAppointmentsOfPatient(

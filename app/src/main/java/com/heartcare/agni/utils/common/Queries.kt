@@ -4,6 +4,7 @@ import com.heartcare.agni.data.local.enums.AppointmentStatusEnum
 import com.heartcare.agni.data.local.enums.AppointmentTypeEnum
 import com.heartcare.agni.data.local.enums.ChangeTypeEnum
 import com.heartcare.agni.data.local.enums.LastVisit
+import com.heartcare.agni.data.local.model.appointment.AppointmentInfo
 import com.heartcare.agni.data.local.model.appointment.AppointmentResponseLocal
 import com.heartcare.agni.data.local.model.patch.ChangeRequest
 import com.heartcare.agni.data.local.repository.appointment.AppointmentRepository
@@ -27,9 +28,14 @@ import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.to30M
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.to5MinutesAfter
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toAppointmentTime
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toCurrentTimeInMillis
+import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toEndOfDay
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toSlotStartTime
+import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toTodayStartDate
+import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toddMMMyyyy
 import timber.log.Timber
 import java.util.Date
+import kotlin.collections.component1
+import kotlin.collections.component2
 
 object Queries {
     internal suspend fun addPatientToQueue(
@@ -146,7 +152,10 @@ object Queries {
                             uuid = appointmentId,
                             patientFhirId = patient.fhirId ?: patient.id,
                             scheduleId = scheduleFhirId
-                                ?: scheduleRepository.getScheduleByStartTime(scheduleId.time, user.hospitalCode)?.uuid!!,
+                                ?: scheduleRepository.getScheduleByStartTime(
+                                    scheduleId.time,
+                                    user.hospitalCode
+                                )?.uuid!!,
                             createdOn = createdOn,
                             slot = slot,
                             status = AppointmentStatusEnum.WALK_IN.value,
@@ -196,8 +205,14 @@ object Queries {
                             createdOn = appointment.createdOn,
                             uuid = appointment.uuid,
                             patientFhirId = patient.fhirId ?: patient.id,
-                            scheduleId = scheduleRepository.getScheduleByStartTime(appointment.scheduleId.time, user.hospitalCode)?.scheduleId
-                                ?: scheduleRepository.getScheduleByStartTime(appointment.scheduleId.time, user.hospitalCode)?.uuid!!,
+                            scheduleId = scheduleRepository.getScheduleByStartTime(
+                                appointment.scheduleId.time,
+                                user.hospitalCode
+                            )?.scheduleId
+                                ?: scheduleRepository.getScheduleByStartTime(
+                                    appointment.scheduleId.time,
+                                    user.hospitalCode
+                                )?.uuid!!,
                             slot = appointment.slot,
                             status = AppointmentStatusEnum.ARRIVED.value,
                             appointmentType = appointment.appointmentType,
@@ -236,7 +251,7 @@ object Queries {
         )
     }
 
-     suspend fun updatePatientLastUpdated(
+    suspend fun updatePatientLastUpdated(
         patientId: String,
         patientLastUpdatedRepository: PatientLastUpdatedRepository,
         genericRepository: GenericRepository
@@ -291,7 +306,8 @@ object Queries {
         preferenceRepository: PreferenceRepository
     ) {
         if (appointmentResponseLocal.status == AppointmentStatusEnum.WALK_IN.value
-            || appointmentResponseLocal.status == AppointmentStatusEnum.ARRIVED.value) {
+            || appointmentResponseLocal.status == AppointmentStatusEnum.ARRIVED.value
+        ) {
             appointmentRepository.updateAppointment(
                 appointmentResponseLocal.copy(
                     status = AppointmentStatusEnum.IN_PROGRESS.value,
@@ -306,8 +322,14 @@ object Queries {
                         createdOn = appointmentResponseLocal.createdOn,
                         uuid = appointmentResponseLocal.uuid,
                         patientFhirId = patient.fhirId ?: patient.id,
-                        scheduleId = scheduleRepository.getScheduleByStartTime(appointmentResponseLocal.scheduleId.time, user.hospitalCode)?.scheduleId
-                            ?: scheduleRepository.getScheduleByStartTime(appointmentResponseLocal.scheduleId.time, user.hospitalCode)?.uuid!!,
+                        scheduleId = scheduleRepository.getScheduleByStartTime(
+                            appointmentResponseLocal.scheduleId.time,
+                            user.hospitalCode
+                        )?.scheduleId
+                            ?: scheduleRepository.getScheduleByStartTime(
+                                appointmentResponseLocal.scheduleId.time,
+                                user.hospitalCode
+                            )?.uuid!!,
                         slot = appointmentResponseLocal.slot,
                         status = AppointmentStatusEnum.IN_PROGRESS.value,
                         appointmentType = appointmentResponseLocal.appointmentType,
@@ -343,4 +365,70 @@ object Queries {
             }
         }
     }
+
+    suspend fun getInProgressCompletedAppointmentIds(
+        patientId: String,
+        appointmentRepository: AppointmentRepository
+    ): List<String> {
+        return appointmentRepository.getAppointmentsOfPatient(patientId)
+            .filter {
+                it.status == AppointmentStatusEnum.IN_PROGRESS.value
+                        || it.status == AppointmentStatusEnum.COMPLETED.value
+            }
+            .groupBy {
+                it.createdOn.toddMMMyyyy()
+            }
+            .map { (_, appointments) ->
+                appointments.minBy { it.createdOn }.uuid
+            }
+    }
+
+    suspend fun loadAppointmentInfo(
+        patientId: String,
+        hospitalCode: String,
+        maxNumberOfAppointmentsInADay: Int,
+        appointmentRepository: AppointmentRepository
+    ): AppointmentInfo {
+        val todayStart = Date().toTodayStartDate()
+        val todayEnd = Date().toEndOfDay()
+
+        val appointment = appointmentRepository
+            .getAppointmentsOfPatientByStatus(patientId, AppointmentStatusEnum.SCHEDULED.value)
+            .sortedBy { it.createdOn }
+            .firstOrNull { response ->
+                response.slot.start.time in (todayStart..todayEnd) &&
+                        response.hospitalCode == hospitalCode
+            }
+
+        val appointmentResponse = appointmentRepository
+            .getAppointmentsOfPatientByDate(patientId, todayStart, todayEnd)
+
+        val existsInOtherHospital = appointmentResponse?.hospitalCode?.let { it != hospitalCode } == true
+
+        val canAddAssessment =
+            (appointmentResponse?.status == AppointmentStatusEnum.ARRIVED.value ||
+                    appointmentResponse?.status == AppointmentStatusEnum.WALK_IN.value ||
+                    appointmentResponse?.status == AppointmentStatusEnum.IN_PROGRESS.value) &&
+                    appointmentResponse.hospitalCode == hospitalCode
+
+        val isAppointmentCompleted =
+            appointmentResponse?.status == AppointmentStatusEnum.COMPLETED.value &&
+                    appointmentResponse.hospitalCode == hospitalCode
+
+        val ifAllSlotsBooked = appointmentRepository
+            .getAppointmentListByDate(todayStart, todayEnd)
+            .count { local ->
+                local.status != AppointmentStatusEnum.CANCELLED.value &&
+                        local.hospitalCode == hospitalCode
+            } >= maxNumberOfAppointmentsInADay
+
+        return AppointmentInfo(
+            appointment = appointment,
+            existsInOtherHospital = existsInOtherHospital,
+            canAddAssessment = canAddAssessment,
+            isAppointmentCompleted = isAppointmentCompleted,
+            ifAllSlotsBooked = ifAllSlotsBooked
+        )
+    }
+
 }

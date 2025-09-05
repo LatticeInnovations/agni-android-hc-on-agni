@@ -37,6 +37,7 @@ class AppointmentRepositoryImpl @Inject constructor(private val appointmentDao: 
         endOfDay: Long
     ): AppointmentResponseLocal? {
         return appointmentDao.getAppointmentOfPatientByDate(patientId, startOfDay, endOfDay)
+            .minByOrNull { it.createdOn }
             ?.toAppointmentResponseLocal()
     }
 
