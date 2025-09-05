@@ -5,7 +5,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewModelScope
 import com.heartcare.agni.base.viewmodel.BaseViewModel
-import com.heartcare.agni.data.local.enums.AppointmentStatusEnum
 import com.heartcare.agni.data.local.enums.PriorDiagnosis
 import com.heartcare.agni.data.local.model.appointment.AppointmentResponseLocal
 import com.heartcare.agni.data.local.repository.appointment.AppointmentRepository
@@ -19,11 +18,11 @@ import com.heartcare.agni.data.server.model.priordx.PriorDxResponse
 import com.heartcare.agni.di.dispatcher.IoDispatcher
 import com.heartcare.agni.utils.builders.UUIDBuilder
 import com.heartcare.agni.utils.common.Queries.checkAndUpdateAppointmentStatusToInProgress
+import com.heartcare.agni.utils.common.Queries.getAppointment
+import com.heartcare.agni.utils.common.Queries.getInProgressCompletedAppointmentIds
 import com.heartcare.agni.utils.common.Queries.updatePatientLastUpdated
 import com.heartcare.agni.utils.converters.responseconverter.NameConverter.getFullName
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.isToday
-import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toEndOfDay
-import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toTodayStartDate
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.launch
@@ -57,7 +56,9 @@ class AddPriorDxViewModel @Inject constructor(
 
     fun getLastPriorDx(patientId: String) {
         viewModelScope.launch(ioDispatcher) {
-            lastPriorDx = priorDxRepository.getPriorDxRecords(patientId).firstOrNull()
+            val appointmentIds =
+                getInProgressCompletedAppointmentIds(patientId, appointmentRepository)
+            lastPriorDx = priorDxRepository.getPriorDxRecordsByAppointmentIds(*appointmentIds.toTypedArray()).firstOrNull()
             lastPriorDx?.let { priorDx ->
                 selectedPriorDx = mutableListOf<String>().apply {
                     if (priorDx.hasHypertension) add(PriorDiagnosis.HYPERTENSION.display)
@@ -90,17 +91,6 @@ class AddPriorDxViewModel @Inject constructor(
             PriorDiagnosis.CANCER.display in selectedPriorDx && cancerField.isBlank() -> false
             else -> true
         }
-    }
-
-    private suspend fun getAppointment() {
-        appointmentResponseLocal =
-            appointmentRepository.getAppointmentListByDate(
-                Date().toTodayStartDate(),
-                Date().toEndOfDay()
-            ).firstOrNull { appointmentEntity ->
-                appointmentEntity.patientId == patient!!.id && appointmentEntity.status != AppointmentStatusEnum.CANCELLED.value
-                        && user.hospitalCode == appointmentEntity.hospitalCode
-            }
     }
 
     private fun getPriorDxResponse(
@@ -140,7 +130,11 @@ class AddPriorDxViewModel @Inject constructor(
         added: () -> Unit
     ) {
         viewModelScope.launch(ioDispatcher) {
-            getAppointment()
+            appointmentResponseLocal = getAppointment(
+                patientId = patient!!.id,
+                hospitalCode = user.hospitalCode,
+                appointmentRepository = appointmentRepository
+            )
             var uuid = UUIDBuilder.generateUUID()
             var fhirId: String? = null
             lastPriorDx?.let {

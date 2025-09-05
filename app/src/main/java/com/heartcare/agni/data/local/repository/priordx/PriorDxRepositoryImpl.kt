@@ -13,7 +13,7 @@ class PriorDxRepositoryImpl @Inject constructor(
         return priorDxDao.insertPriorDxRecord(*priorDxResponse.map { it.toPriorDxEntity() }.toTypedArray())
     }
 
-    override suspend fun getPriorDxRecords(patientId: String): List<PriorDxResponse> {
-        return priorDxDao.getPriorDxRecords(patientId).map { it.toPriorDxResponse() }
+    override suspend fun getPriorDxRecordsByAppointmentIds(vararg appointmentIds: String): List<PriorDxResponse> {
+        return priorDxDao.getPriorDxRecordsByAppointmentIds(*appointmentIds).map { it.toPriorDxResponse() }
     }
 }

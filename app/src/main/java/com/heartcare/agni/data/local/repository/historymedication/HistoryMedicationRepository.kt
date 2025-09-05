@@ -4,5 +4,5 @@ import com.heartcare.agni.data.server.model.historymedication.HistoryMedicationR
 
 interface HistoryMedicationRepository {
     suspend fun insertHistoryMedication(vararg historyMedicationResponse: HistoryMedicationResponse): List<Long>
-    suspend fun getHistoryMedicationRecords(patientId: String): List<HistoryMedicationResponse>
+    suspend fun getHistoryMedicationRecordsByAppointmentIds(vararg appointmentIds: String): List<HistoryMedicationResponse>
 }

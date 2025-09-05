@@ -5,7 +5,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewModelScope
 import com.heartcare.agni.base.viewmodel.BaseViewModel
-import com.heartcare.agni.data.local.enums.AppointmentStatusEnum
 import com.heartcare.agni.data.local.model.appointment.AppointmentResponseLocal
 import com.heartcare.agni.data.local.repository.allergy.AllergyRepository
 import com.heartcare.agni.data.local.repository.appointment.AppointmentRepository
@@ -27,14 +26,12 @@ import com.heartcare.agni.data.server.model.risk.RiskFactorResponse
 import com.heartcare.agni.data.server.model.tobacco.TobaccoCessationResponse
 import com.heartcare.agni.di.dispatcher.IoDispatcher
 import com.heartcare.agni.utils.common.Queries
+import com.heartcare.agni.utils.common.Queries.getInProgressCompletedAppointmentIds
+import com.heartcare.agni.utils.common.Queries.loadAppointmentInfo
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.isToday
-import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toEndOfDay
-import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toTodayStartDate
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import java.util.Date
 import javax.inject.Inject
 
 @HiltViewModel
@@ -87,58 +84,27 @@ class HistoryTakingAndTestsViewModel @Inject constructor(
     var existsInOtherHospital by mutableStateOf(false)
 
     internal fun getAppointmentInfo(
-        callback: () -> Unit,
-        ioDispatcher: CoroutineDispatcher = Dispatchers.IO
+        callback: () -> Unit
     ) {
         viewModelScope.launch(ioDispatcher) {
-            val todayStart = Date().toTodayStartDate()
-            val todayEnd = Date().toEndOfDay()
-            val patientId = patient?.id ?: return@launch callback()
-
-            val appointmentsToday = appointmentRepository.getAppointmentsOfPatientByDate(
-                patientId, todayStart, todayEnd
+            val info = loadAppointmentInfo(
+                patientId = patient!!.id,
+                hospitalCode = user.hospitalCode,
+                maxNumberOfAppointmentsInADay = maxNumberOfAppointmentsInADay,
+                appointmentRepository = appointmentRepository
             )
-
-            // Determine if assessment can be added
-            appointmentsToday?.let {
-                existsInOtherHospital = it.hospitalCode != user.hospitalCode
-                val status = it.status
-                canAddAssessment = (status == AppointmentStatusEnum.ARRIVED.value ||
-                        status == AppointmentStatusEnum.WALK_IN.value ||
-                        status == AppointmentStatusEnum.IN_PROGRESS.value)
-                        && it.hospitalCode == user.hospitalCode
-
-                isAppointmentCompleted = status == AppointmentStatusEnum.COMPLETED.value
-                        && it.hospitalCode == user.hospitalCode
-            }
-
-            // Get the appointment matching today's time window and scheduled status
-            appointment = appointmentRepository
-                .getAppointmentsOfPatientByStatus(patientId, AppointmentStatusEnum.SCHEDULED.value)
-                .firstOrNull {
-                    it.slot.start.time in todayStart..todayEnd
-                            && it.hospitalCode == user.hospitalCode
-                }
-
-            // Check if all slots are booked
-            val bookedAppointments =
-                appointmentRepository.getAppointmentListByDate(todayStart, todayEnd)
-                    .count {
-                        it.status != AppointmentStatusEnum.CANCELLED.value
-                                && it.hospitalCode == user.hospitalCode
-                    }
-
-            ifAllSlotsBooked = bookedAppointments >= maxNumberOfAppointmentsInADay
-
+            appointment = info.appointment
+            existsInOtherHospital = info.existsInOtherHospital
+            canAddAssessment = info.canAddAssessment
+            isAppointmentCompleted = info.isAppointmentCompleted
+            ifAllSlotsBooked = info.ifAllSlotsBooked
             callback()
         }
     }
 
-
     internal fun addPatientToQueue(
         patient: PatientResponse,
-        addedToQueue: (List<Long>) -> Unit,
-        ioDispatcher: CoroutineDispatcher = Dispatchers.IO
+        addedToQueue: (List<Long>) -> Unit
     ) {
         viewModelScope.launch(ioDispatcher) {
             Queries.addPatientToQueue(
@@ -156,8 +122,7 @@ class HistoryTakingAndTestsViewModel @Inject constructor(
     internal fun updateStatusToArrived(
         patient: PatientResponse,
         appointment: AppointmentResponseLocal,
-        updated: (Int) -> Unit,
-        ioDispatcher: CoroutineDispatcher = Dispatchers.IO
+        updated: (Int) -> Unit
     ) {
         viewModelScope.launch(ioDispatcher) {
             Queries.updateStatusToArrived(
@@ -175,22 +140,24 @@ class HistoryTakingAndTestsViewModel @Inject constructor(
 
     fun getPreviousRecords(patientId: String) {
         viewModelScope.launch(ioDispatcher) {
-            priorDxList = priorDxRepository.getPriorDxRecords(patientId).also {
+            val appointmentIds =
+                getInProgressCompletedAppointmentIds(patientId, appointmentRepository)
+            priorDxList = priorDxRepository.getPriorDxRecordsByAppointmentIds(*appointmentIds.toTypedArray()).also {
                 todayPriorDx = it.firstOrNull { priorDx -> isToday(priorDx.createdOn!!) }
             }
-            medicationList = historyMedicationRepository.getHistoryMedicationRecords(patientId).also {
+            medicationList = historyMedicationRepository.getHistoryMedicationRecordsByAppointmentIds(*appointmentIds.toTypedArray()).also {
                 todayHistoryMedication = it.firstOrNull { historyMedication -> isToday(historyMedication.appUpdatedDate) }
             }
-            familyHistoryList = familyHistoryRepository.getFamilyHistoryRecords(patientId).also {
+            familyHistoryList = familyHistoryRepository.getFamilyHistoryRecordsByAppointmentIds(*appointmentIds.toTypedArray()).also {
                 todayFamilyHistory = it.firstOrNull { familyHistory -> isToday(familyHistory.appUpdatedDate) }
             }
-            allergyList = allergyRepository.getAllergyRecords(patientId).also {
+            allergyList = allergyRepository.getAllergyRecordsByAppointmentIds(*appointmentIds.toTypedArray()).also {
                 todayAllergy = it.firstOrNull { allergy -> isToday(allergy.appUpdatedDate) }
             }
-            riskFactorsList = riskFactorRepository.getRiskFactorRecords(patientId).also {
+            riskFactorsList = riskFactorRepository.getRiskFactorRecordsByAppointmentIds(*appointmentIds.toTypedArray()).also {
                 todayRiskFactor = it.firstOrNull { riskFactor -> isToday(riskFactor.appUpdatedDate) }
             }
-            tobaccoCessationList = tobaccoCessationRepository.getTobaccoCessationRecords(patientId).also {
+            tobaccoCessationList = tobaccoCessationRepository.getTobaccoCessationRecordsByAppointmentIds(*appointmentIds.toTypedArray()).also {
                 todayTobaccoCessation = it.firstOrNull { tobaccoCessation -> isToday(tobaccoCessation.appUpdatedDate) }
             }
             isLoading = false

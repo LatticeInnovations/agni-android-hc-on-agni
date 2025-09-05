@@ -11,8 +11,8 @@ interface TobaccoCessationDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insertTobaccoCessationRecord(vararg tobaccoCessationEntity: TobaccoCessationEntity): List<Long>
 
-    @Query("SELECT * FROM TobaccoCessationEntity WHERE patientId=:patientId ORDER BY appUpdatedDate DESC")
-    fun getTobaccoCessationRecords(patientId: String): List<TobaccoCessationEntity>
+    @Query("SELECT * FROM TobaccoCessationEntity WHERE appointmentId IN (:appointmentIds) ORDER BY appUpdatedDate DESC")
+    fun getTobaccoCessationRecordsByAppointmentIds(vararg appointmentIds: String): List<TobaccoCessationEntity>
 
     @Query("UPDATE TobaccoCessationEntity SET fhirId = :fhirId WHERE uuid = :id")
     suspend fun updateFhirId(id: String, fhirId: String): Int

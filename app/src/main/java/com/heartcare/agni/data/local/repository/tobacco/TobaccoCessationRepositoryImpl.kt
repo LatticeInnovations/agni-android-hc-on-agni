@@ -13,7 +13,7 @@ class TobaccoCessationRepositoryImpl@Inject constructor(
         return tobaccoCessationDao.insertTobaccoCessationRecord(*tobaccoCessationResponse.map { it.toTobaccoCessationEntity() }.toTypedArray())
     }
 
-    override suspend fun getTobaccoCessationRecords(patientId: String): List<TobaccoCessationResponse> {
-        return tobaccoCessationDao.getTobaccoCessationRecords(patientId).map { it.toTobaccoCessationResponse() }
+    override suspend fun getTobaccoCessationRecordsByAppointmentIds(vararg appointmentIds: String): List<TobaccoCessationResponse> {
+        return tobaccoCessationDao.getTobaccoCessationRecordsByAppointmentIds(*appointmentIds).map { it.toTobaccoCessationResponse() }
     }
 }
