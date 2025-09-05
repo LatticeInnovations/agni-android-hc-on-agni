@@ -17,6 +17,10 @@ class AppointmentRepositoryImpl @Inject constructor(private val appointmentDao: 
     ): List<AppointmentResponseLocal> {
         return appointmentDao.getAppointmentsByDate(startOfDay, endOfDay).map { appointmentEntity ->
             appointmentEntity.toAppointmentResponseLocal()
+        }.groupBy {
+            it.patientId
+        }.map { (_, appointments) ->
+            appointments.minBy { it.createdOn }
         }
     }
 
