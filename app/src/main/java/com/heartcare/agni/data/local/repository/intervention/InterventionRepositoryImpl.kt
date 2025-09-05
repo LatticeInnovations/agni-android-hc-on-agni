@@ -31,7 +31,7 @@ class InterventionRepositoryImpl @Inject constructor(
         return interventionDao.insertIntervention(*interventionResponse.map { it.toInterventionEntity() }.toTypedArray())
     }
 
-    override suspend fun getInterventionList(patientId: String): List<InterventionResponseLocal> {
-        return interventionDao.getInterventions(patientId).map { it.toInterventionResponseLocal(interventionDao) }
+    override suspend fun getInterventionListByAppointmentId(vararg appointmentIds: String): List<InterventionResponseLocal> {
+        return interventionDao.getInterventionsByAppointmentId(*appointmentIds).map { it.toInterventionResponseLocal(interventionDao) }
     }
 }

@@ -5,7 +5,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewModelScope
 import com.heartcare.agni.base.viewmodel.BaseViewModel
-import com.heartcare.agni.data.local.enums.AppointmentStatusEnum
 import com.heartcare.agni.data.local.model.InterventionResponseLocal
 import com.heartcare.agni.data.local.model.appointment.AppointmentResponseLocal
 import com.heartcare.agni.data.local.repository.appointment.AppointmentRepository
@@ -17,13 +16,12 @@ import com.heartcare.agni.data.local.repository.schedule.ScheduleRepository
 import com.heartcare.agni.data.server.model.patient.PatientResponse
 import com.heartcare.agni.di.dispatcher.IoDispatcher
 import com.heartcare.agni.utils.common.Queries
+import com.heartcare.agni.utils.common.Queries.getInProgressCompletedAppointmentIds
+import com.heartcare.agni.utils.common.Queries.loadAppointmentInfo
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.isToday
-import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toEndOfDay
-import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toTodayStartDate
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.launch
-import java.util.Date
 import javax.inject.Inject
 
 @HiltViewModel
@@ -57,45 +55,17 @@ class InterventionViewModel @Inject constructor(
         callback: () -> Unit
     ) {
         viewModelScope.launch(ioDispatcher) {
-            val todayStart = Date().toTodayStartDate()
-            val todayEnd = Date().toEndOfDay()
-            val patientId = patient?.id ?: return@launch callback()
-
-            val appointmentsToday = appointmentRepository.getAppointmentsOfPatientByDate(
-                patientId, todayStart, todayEnd
+            val info = loadAppointmentInfo(
+                patientId = patient!!.id,
+                hospitalCode = user.hospitalCode,
+                maxNumberOfAppointmentsInADay = maxNumberOfAppointmentsInADay,
+                appointmentRepository = appointmentRepository
             )
-
-            // Determine if assessment can be added
-            appointmentsToday?.let {
-                existsInOtherHospital = it.hospitalCode != user.hospitalCode
-                val status = it.status
-                canAddAssessment = (status == AppointmentStatusEnum.ARRIVED.value ||
-                        status == AppointmentStatusEnum.WALK_IN.value ||
-                        status == AppointmentStatusEnum.IN_PROGRESS.value)
-                        && it.hospitalCode == user.hospitalCode
-
-                isAppointmentCompleted = status == AppointmentStatusEnum.COMPLETED.value
-                        && it.hospitalCode == user.hospitalCode
-            }
-
-            // Get the appointment matching today's time window and scheduled status
-            appointment = appointmentRepository
-                .getAppointmentsOfPatientByStatus(patientId, AppointmentStatusEnum.SCHEDULED.value)
-                .firstOrNull {
-                    it.slot.start.time in todayStart..todayEnd
-                            && it.hospitalCode == user.hospitalCode
-                }
-
-            // Check if all slots are booked
-            val bookedAppointments =
-                appointmentRepository.getAppointmentListByDate(todayStart, todayEnd)
-                    .count {
-                        it.status != AppointmentStatusEnum.CANCELLED.value
-                                && it.hospitalCode == user.hospitalCode
-                    }
-
-            ifAllSlotsBooked = bookedAppointments >= maxNumberOfAppointmentsInADay
-
+            appointment = info.appointment
+            existsInOtherHospital = info.existsInOtherHospital
+            canAddAssessment = info.canAddAssessment
+            isAppointmentCompleted = info.isAppointmentCompleted
+            ifAllSlotsBooked = info.ifAllSlotsBooked
             callback()
         }
     }
@@ -138,7 +108,9 @@ class InterventionViewModel @Inject constructor(
 
     fun getInterventionRecords(patientId: String) {
         viewModelScope.launch(ioDispatcher) {
-            interventionLists = interventionRepository.getInterventionList(patientId).also {
+            val appointmentIds =
+                getInProgressCompletedAppointmentIds(patientId, appointmentRepository)
+            interventionLists = interventionRepository.getInterventionListByAppointmentId(*appointmentIds.toTypedArray()).also {
                 todayIntervention = it.firstOrNull { intervention -> isToday(intervention.appUpdatedDate) }
             }
         }
