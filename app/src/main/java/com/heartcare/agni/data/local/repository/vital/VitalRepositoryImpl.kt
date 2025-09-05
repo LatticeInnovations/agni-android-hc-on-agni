@@ -13,8 +13,8 @@ class VitalRepositoryImpl @Inject constructor(
         return vitalDao.insertVital(*vitalResponse.map { it.toVitalEntity() }.toTypedArray())
     }
 
-    override suspend fun getLastVital(patientId: String): List<VitalResponse> {
-        return vitalDao.getPastVitals(patientId).map { it.toVitalResponse() }
+    override suspend fun getLastVitalByAppointmentId(vararg appointmentIds: String): List<VitalResponse> {
+        return vitalDao.getPastVitalsByAppointmentId(*appointmentIds).map { it.toVitalResponse() }
     }
 
     override suspend fun getVitalByAppointmentId(appointmentId: String): List<VitalResponse> {
