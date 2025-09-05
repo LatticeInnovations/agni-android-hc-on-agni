@@ -31,6 +31,7 @@ import com.heartcare.agni.di.dispatcher.IoDispatcher
 import com.heartcare.agni.utils.builders.UUIDBuilder
 import com.heartcare.agni.utils.common.Queries
 import com.heartcare.agni.utils.common.Queries.checkAndUpdateAppointmentStatusToInProgress
+import com.heartcare.agni.utils.common.Queries.getAppointment
 import com.heartcare.agni.utils.common.Queries.getInProgressCompletedAppointmentIds
 import com.heartcare.agni.utils.common.Queries.loadAppointmentInfo
 import com.heartcare.agni.utils.common.Queries.updatePatientLastUpdated
@@ -290,11 +291,14 @@ class CVDRiskAssessmentViewModel @Inject constructor(
     }
 
     fun saveCVDRecord(
-        saved: () -> Unit,
-        ioDispatcher: CoroutineDispatcher = Dispatchers.IO
+        saved: () -> Unit
     ) {
         viewModelScope.launch(ioDispatcher) {
-            getAppointment()
+            appointmentResponseLocal = getAppointment(
+                patientId = patient!!.id,
+                hospitalCode = user.hospitalCode,
+                appointmentRepository = appointmentRepository
+            )
             val cvdResponse = getCVDRecord(
                 cvdUUid = todayCVD?.cvdUuid ?: UUIDBuilder.generateUUID()
             )
@@ -318,7 +322,11 @@ class CVDRiskAssessmentViewModel @Inject constructor(
                 genericRepository = genericRepository,
                 preferenceRepository = preferenceRepository
             )
-            getAppointment()
+            appointmentResponseLocal = getAppointment(
+                patientId = patient!!.id,
+                hospitalCode = user.hospitalCode,
+                appointmentRepository = appointmentRepository
+            )
             updatePatientLastUpdated(
                 patient!!.id,
                 patientLastUpdatedRepository,
@@ -330,18 +338,6 @@ class CVDRiskAssessmentViewModel @Inject constructor(
             followUpDate = createFollowUpAppointment(date = appointmentDate)
             saved()
         }
-    }
-
-    private suspend fun getAppointment() {
-        appointmentResponseLocal =
-            appointmentRepository.getAppointmentListByDate(
-                Date().toTodayStartDate(),
-                Date().toEndOfDay()
-            ).sortedBy { it.createdOn }
-                .firstOrNull { appointmentEntity ->
-                    appointmentEntity.patientId == patient!!.id && appointmentEntity.status != AppointmentStatusEnum.CANCELLED.value
-                            && user.hospitalCode == appointmentEntity.hospitalCode
-                }
     }
 
     fun clearForm() {

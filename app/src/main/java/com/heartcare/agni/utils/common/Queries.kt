@@ -431,4 +431,18 @@ object Queries {
         )
     }
 
+    suspend fun getAppointment(
+        patientId: String,
+        hospitalCode: String,
+        appointmentRepository: AppointmentRepository
+    ): AppointmentResponseLocal? {
+        return appointmentRepository
+            .getAppointmentListByDate(Date().toTodayStartDate(), Date().toEndOfDay())
+            .sortedBy { it.createdOn }
+            .firstOrNull { appointmentEntity ->
+                appointmentEntity.patientId == patientId &&
+                        appointmentEntity.status != AppointmentStatusEnum.CANCELLED.value &&
+                        appointmentEntity.hospitalCode == hospitalCode
+            }
+    }
 }
