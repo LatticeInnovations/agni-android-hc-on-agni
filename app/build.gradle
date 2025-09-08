@@ -41,7 +41,7 @@ tasks.register('jacocoTestReport', JacocoReport) {
 android {
 
     namespace 'com.heartcare.agni'
-    compileSdk 35
+    compileSdk 36
 
     signingConfigs {
         release {
@@ -55,7 +55,7 @@ android {
     defaultConfig {
         applicationId "com.heartcare.agni"
         minSdk 26
-        targetSdk 35
+        targetSdk 36
         versionCode 10
         versionName "1.9.0"
 
