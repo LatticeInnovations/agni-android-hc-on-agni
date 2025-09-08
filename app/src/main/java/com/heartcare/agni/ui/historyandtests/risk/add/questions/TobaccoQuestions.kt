@@ -134,7 +134,8 @@ private fun TobaccoQuestionTwo(
                 updateValue = {
                     viewModel.otherTobacco = it
                     viewModel.otherTobaccoError = it.isBlank()
-                }
+                },
+                modifier = Modifier.padding(top = 12.dp)
             )
         }
     }

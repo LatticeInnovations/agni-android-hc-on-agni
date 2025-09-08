@@ -777,6 +777,7 @@ private fun navigateToRecordsAfterSaving(
 ) {
     viewModel.showFollowUpDialog = false
     viewModel.clearForm()
+    viewModel.getTodayCVDAssessment()
     scope.launch {
         pagerState.animateScrollToPage(1)
         snackBarHostState.showSnackbar(
