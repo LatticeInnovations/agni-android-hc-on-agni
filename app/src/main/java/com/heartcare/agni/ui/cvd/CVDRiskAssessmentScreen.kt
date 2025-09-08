@@ -207,10 +207,10 @@ private fun HandleLaunchedEffect(
                 navController.previousBackStackEntry?.savedStateHandle?.get<PatientResponse>(
                     PATIENT
                 )
-            viewModel.getTodayCVDAssessment()
             viewModel.getAppointmentInfo(callback = {})
             viewModel.isLaunched = true
         }
+        viewModel.getTodayCVDAssessment()
         navController.currentBackStackEntry?.savedStateHandle?.let { handle ->
             if (handle.remove<Boolean>(REFERRAL_FROM_CVD) == true){
                 navigateToRecordsAfterSaving(
@@ -777,7 +777,6 @@ private fun navigateToRecordsAfterSaving(
 ) {
     viewModel.showFollowUpDialog = false
     viewModel.clearForm()
-    viewModel.getTodayCVDAssessment()
     scope.launch {
         pagerState.animateScrollToPage(1)
         snackBarHostState.showSnackbar(
