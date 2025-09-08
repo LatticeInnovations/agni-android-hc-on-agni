@@ -82,7 +82,7 @@ fun PatientRegistrationStepThree(
             modifier = Modifier
                 .verticalScroll(rememberScrollState())
                 .weight(1f),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             key(
                 viewModel.provinceList,
