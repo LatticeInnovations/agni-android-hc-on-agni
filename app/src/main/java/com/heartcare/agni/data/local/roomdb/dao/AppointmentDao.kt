@@ -34,7 +34,7 @@ interface AppointmentDao {
     ): List<AppointmentEntity>
 
     @Transaction
-    @Query("SELECT * FROM AppointmentEntity WHERE startTime BETWEEN :startOfDay AND :endOfDay ORDER BY startTime")
+    @Query("SELECT * FROM AppointmentEntity WHERE startTime BETWEEN :startOfDay AND :endOfDay AND status<>\"cancelled\"  ORDER BY startTime")
     suspend fun getAppointmentsByDate(startOfDay: Long, endOfDay: Long): List<AppointmentEntity>
 
     @Transaction
@@ -45,7 +45,7 @@ interface AppointmentDao {
         endOfDay: Long
     ): List<AppointmentEntity>
 
-    @Query("SELECT * FROM AppointmentEntity WHERE patientId=:patientId ORDER BY startTime DESC")
+    @Query("SELECT * FROM AppointmentEntity WHERE patientId=:patientId AND status<>\"cancelled\" ORDER BY startTime DESC")
     suspend fun getAppointmentsOfPatient(
         patientId: String
     ): List<AppointmentEntity>

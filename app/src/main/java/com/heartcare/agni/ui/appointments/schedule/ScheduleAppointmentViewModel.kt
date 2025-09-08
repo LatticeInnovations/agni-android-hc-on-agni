@@ -180,7 +180,7 @@ class ScheduleAppointmentViewModel @Inject constructor(
                 selectedDate.toTodayStartDate(),
                 selectedDate.toEndOfDay()
             ).let { todaysAppointment ->
-                if (todaysAppointment == null || todaysAppointment == appointment) appointmentExists(
+                if (todaysAppointment == null || todaysAppointment.uuid == appointment?.uuid) appointmentExists(
                     false
                 )
                 else {

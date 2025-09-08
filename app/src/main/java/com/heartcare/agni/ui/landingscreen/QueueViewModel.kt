@@ -74,6 +74,7 @@ class QueueViewModel @Inject constructor(
     var prescribedQueueList by mutableStateOf(listOf<AppointmentResponseLocal>())
 
     internal suspend fun syncData() {
+        getAppointmentListByDate()
         getWorkerInfo<TriggerWorkerPeriodicImpl>(getApplication<FhirApp>().applicationContext).collectLatest { workInfo ->
             if (workInfo != null && workInfo.state == WorkInfo.State.ENQUEUED) {
                 withContext(ioDispatcher) {
