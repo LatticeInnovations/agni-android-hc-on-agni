@@ -23,9 +23,9 @@ interface PrescriptionDao {
     suspend fun insertPrescriptionMedicines(vararg prescriptionDirectionsEntity: PrescriptionDirectionsEntity): List<Long>
 
     @Transaction
-    @Query("SELECT * FROM PrescriptionEntity prescription WHERE patientId = :patientId AND prescriptionType=:prescriptionType ORDER BY prescription.prescriptionDate DESC")
-    suspend fun getPastPrescriptions(
-        patientId: String,
+    @Query("SELECT * FROM PrescriptionEntity prescription WHERE appointmentId IN (:appointmentIds) AND prescriptionType=:prescriptionType ORDER BY prescription.prescriptionDate DESC")
+    suspend fun getPastPrescriptionsByAppointmentId(
+        vararg appointmentIds: String,
         prescriptionType: String = PrescriptionType.FORM.type
     ): List<PrescriptionAndMedicineRelation>
 

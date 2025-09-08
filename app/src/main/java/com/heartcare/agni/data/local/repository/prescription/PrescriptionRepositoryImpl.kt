@@ -22,12 +22,8 @@ class PrescriptionRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun getLastPrescription(patientId: String): List<PrescriptionResponseLocal> {
-        return prescriptionDao.getPastPrescriptions(patientId).map { it.toPrescriptionResponseLocal() }
-    }
-
-    override suspend fun getLastPrescriptionAndMedicine(patientId: String): List<PrescriptionAndMedicineRelation> {
-        return prescriptionDao.getPastPrescriptions(patientId)
+    override suspend fun getLastPrescriptionAndMedicineByAppointmentId(vararg appointmentIds: String): List<PrescriptionAndMedicineRelation> {
+        return prescriptionDao.getPastPrescriptionsByAppointmentId(*appointmentIds)
     }
 
     override suspend fun getPrescriptionByAppointmentId(appointmentId: String): List<PrescriptionResponseLocal> {

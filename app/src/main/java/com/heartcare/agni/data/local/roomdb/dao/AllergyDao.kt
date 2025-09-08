@@ -11,8 +11,8 @@ interface AllergyDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insertAllergyRecord(vararg allergyEntity: AllergyEntity): List<Long>
 
-    @Query("SELECT * FROM AllergyEntity WHERE patientId=:patientId ORDER BY appUpdatedDate DESC")
-    fun getAllergyRecords(patientId: String): List<AllergyEntity>
+    @Query("SELECT * FROM AllergyEntity WHERE appointmentId IN (:appointmentIds) ORDER BY appUpdatedDate DESC")
+    fun getAllergyRecordsByAppointmentIds(vararg appointmentIds: String): List<AllergyEntity>
 
     @Query("UPDATE AllergyEntity SET fhirId = :fhirId WHERE uuid = :id")
     suspend fun updateFhirId(id: String, fhirId: String): Int

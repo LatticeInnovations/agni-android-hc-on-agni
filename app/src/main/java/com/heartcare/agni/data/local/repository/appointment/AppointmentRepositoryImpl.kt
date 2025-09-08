@@ -3,6 +3,7 @@ package com.heartcare.agni.data.local.repository.appointment
 import com.heartcare.agni.data.local.model.appointment.AppointmentResponseLocal
 import com.heartcare.agni.data.local.roomdb.dao.AppointmentDao
 import com.heartcare.agni.data.local.roomdb.entities.appointment.AppointmentEntity
+import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toddMMMyyyy
 import com.heartcare.agni.utils.converters.responseconverter.toAppointmentEntity
 import com.heartcare.agni.utils.converters.responseconverter.toAppointmentResponseLocal
 import javax.inject.Inject
@@ -16,6 +17,10 @@ class AppointmentRepositoryImpl @Inject constructor(private val appointmentDao: 
     ): List<AppointmentResponseLocal> {
         return appointmentDao.getAppointmentsByDate(startOfDay, endOfDay).map { appointmentEntity ->
             appointmentEntity.toAppointmentResponseLocal()
+        }.groupBy {
+            it.patientId
+        }.map { (_, appointments) ->
+            appointments.minBy { it.createdOn }
         }
     }
 
@@ -28,6 +33,10 @@ class AppointmentRepositoryImpl @Inject constructor(private val appointmentDao: 
     ): List<AppointmentResponseLocal> {
         return appointmentDao.getAppointmentsOfPatient(patientId).map {
             it.toAppointmentResponseLocal()
+        }.groupBy {
+            it.slot.start.toddMMMyyyy()
+        }.map { (_, appointment) ->
+            appointment.minBy { it.createdOn }
         }
     }
 
@@ -37,6 +46,7 @@ class AppointmentRepositoryImpl @Inject constructor(private val appointmentDao: 
         endOfDay: Long
     ): AppointmentResponseLocal? {
         return appointmentDao.getAppointmentOfPatientByDate(patientId, startOfDay, endOfDay)
+            .minByOrNull { it.createdOn }
             ?.toAppointmentResponseLocal()
     }
 
@@ -55,6 +65,11 @@ class AppointmentRepositoryImpl @Inject constructor(private val appointmentDao: 
         return appointmentDao.getAppointmentsOfPatientByStatus(patientId, status)
             .map { appointmentEntity ->
                 appointmentEntity.toAppointmentResponseLocal()
+            }
+            .groupBy {
+                it.slot.start.toddMMMyyyy()
+            }.map { (_, appointment) ->
+                appointment.minBy { it.createdOn }
             }
     }
 

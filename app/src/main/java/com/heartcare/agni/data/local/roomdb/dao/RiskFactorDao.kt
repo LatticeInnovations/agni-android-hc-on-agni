@@ -11,8 +11,8 @@ interface RiskFactorDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insertRiskFactorRecord(vararg riskFactorEntity: RiskFactorEntity): List<Long>
 
-    @Query("SELECT * FROM RiskFactorEntity WHERE patientId=:patientId ORDER BY appUpdatedDate DESC")
-    fun getRiskFactorRecords(patientId: String): List<RiskFactorEntity>
+    @Query("SELECT * FROM RiskFactorEntity WHERE appointmentId IN (:appointmentIds) ORDER BY appUpdatedDate DESC")
+    fun getRiskFactorRecordsByAppointmentIds(vararg appointmentIds: String): List<RiskFactorEntity>
 
     @Query("UPDATE RiskFactorEntity SET fhirId = :fhirId WHERE uuid = :id")
     suspend fun updateFhirId(id: String, fhirId: String): Int

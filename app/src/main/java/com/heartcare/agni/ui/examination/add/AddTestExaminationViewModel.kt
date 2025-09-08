@@ -5,7 +5,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewModelScope
 import com.heartcare.agni.base.viewmodel.BaseViewModel
-import com.heartcare.agni.data.local.enums.AppointmentStatusEnum
 import com.heartcare.agni.data.local.model.appointment.AppointmentResponseLocal
 import com.heartcare.agni.data.local.model.examination.ExaminationResponseLocal
 import com.heartcare.agni.data.local.repository.appointment.AppointmentRepository
@@ -21,11 +20,11 @@ import com.heartcare.agni.data.server.model.patient.PatientResponse
 import com.heartcare.agni.di.dispatcher.IoDispatcher
 import com.heartcare.agni.utils.builders.UUIDBuilder
 import com.heartcare.agni.utils.common.Queries.checkAndUpdateAppointmentStatusToInProgress
+import com.heartcare.agni.utils.common.Queries.getAppointment
+import com.heartcare.agni.utils.common.Queries.getInProgressCompletedAppointmentIds
 import com.heartcare.agni.utils.common.Queries.updatePatientLastUpdated
 import com.heartcare.agni.utils.converters.responseconverter.NameConverter.getFullName
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.isToday
-import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toEndOfDay
-import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toTodayStartDate
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.launch
@@ -72,8 +71,10 @@ class AddTestExaminationViewModel @Inject constructor(
 
     fun getTodayExamination(patientId: String) {
         viewModelScope.launch(ioDispatcher) {
+            val appointmentIds =
+                getInProgressCompletedAppointmentIds(patientId, appointmentRepository)
             todayExamination =
-                examinationRepository.getExaminationList(patientId).firstOrNull {
+                examinationRepository.getExaminationListByAppointmentId(*appointmentIds.toTypedArray()).firstOrNull {
                     isToday(it.appUpdatedDate)
                 }
             todayExamination?.let {
@@ -102,20 +103,13 @@ class AddTestExaminationViewModel @Inject constructor(
         }
     }
 
-    private suspend fun getAppointment() {
-        appointmentResponseLocal =
-            appointmentRepository.getAppointmentListByDate(
-                Date().toTodayStartDate(),
-                Date().toEndOfDay()
-            ).firstOrNull { appointmentEntity ->
-                appointmentEntity.patientId == patient!!.id && appointmentEntity.status != AppointmentStatusEnum.CANCELLED.value
-                        && user.hospitalCode == appointmentEntity.hospitalCode
-            }
-    }
-
     fun saveExamination(saved: () -> Unit) {
         viewModelScope.launch(ioDispatcher) {
-            getAppointment()
+            appointmentResponseLocal = getAppointment(
+                patientId = patient!!.id,
+                hospitalCode = user.hospitalCode,
+                appointmentRepository = appointmentRepository
+            )
 
             var uuid = UUIDBuilder.generateUUID()
             var fhirId: String? = null

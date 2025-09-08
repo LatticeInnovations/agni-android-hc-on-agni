@@ -6,7 +6,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewModelScope
 import com.heartcare.agni.base.viewmodel.BaseViewModel
-import com.heartcare.agni.data.local.enums.AppointmentStatusEnum
 import com.heartcare.agni.data.local.enums.FatFrequency.Companion.fatFrequencyCodeFromDisplay
 import com.heartcare.agni.data.local.enums.FatFrequency.Companion.fatFrequencyDisplayFromCode
 import com.heartcare.agni.data.local.enums.FatType
@@ -47,17 +46,16 @@ import com.heartcare.agni.data.server.model.risk.TobaccoResponse
 import com.heartcare.agni.di.dispatcher.IoDispatcher
 import com.heartcare.agni.utils.builders.UUIDBuilder
 import com.heartcare.agni.utils.common.Queries.checkAndUpdateAppointmentStatusToInProgress
+import com.heartcare.agni.utils.common.Queries.getAppointment
+import com.heartcare.agni.utils.common.Queries.getInProgressCompletedAppointmentIds
 import com.heartcare.agni.utils.common.Queries.updatePatientLastUpdated
 import com.heartcare.agni.utils.converters.responseconverter.NameConverter.getFullName
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.isToday
-import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toEndOfDay
-import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toTodayStartDate
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.launch
 import java.util.Date
 import javax.inject.Inject
-import kotlin.text.toInt
 
 @HiltViewModel
 class AddRiskFactorViewModel @Inject constructor(
@@ -247,7 +245,9 @@ class AddRiskFactorViewModel @Inject constructor(
 
     fun getTodayRiskFactor(patientId: String) {
         viewModelScope.launch(ioDispatcher) {
-            todayRiskFactor = riskFactorRepository.getRiskFactorRecords(patientId)
+            val appointmentIds =
+                getInProgressCompletedAppointmentIds(patientId, appointmentRepository)
+            todayRiskFactor = riskFactorRepository.getRiskFactorRecordsByAppointmentIds(*appointmentIds.toTypedArray())
                 .firstOrNull { isToday(it.appUpdatedDate) }
 
             todayRiskFactor?.let { rf ->
@@ -340,18 +340,6 @@ class AddRiskFactorViewModel @Inject constructor(
             false -> KnowEnum.DO_NOT_KNOW.display
         }
         mealsPerWeek = meals.mealsPerWeek?.toString().orEmpty()
-    }
-
-
-    private suspend fun getAppointment() {
-        appointmentResponseLocal =
-            appointmentRepository.getAppointmentListByDate(
-                Date().toTodayStartDate(),
-                Date().toEndOfDay()
-            ).firstOrNull { appointmentEntity ->
-                appointmentEntity.patientId == patient!!.id && appointmentEntity.status != AppointmentStatusEnum.CANCELLED.value
-                        && user.hospitalCode == appointmentEntity.hospitalCode
-            }
     }
 
     private fun getRiskFactorResponse(
@@ -467,7 +455,11 @@ class AddRiskFactorViewModel @Inject constructor(
         added: () -> Unit
     ) {
         viewModelScope.launch(ioDispatcher) {
-            getAppointment()
+            appointmentResponseLocal = getAppointment(
+                patientId = patient!!.id,
+                hospitalCode = user.hospitalCode,
+                appointmentRepository = appointmentRepository
+            )
             var uuid = UUIDBuilder.generateUUID()
             var fhirId: String? = null
             todayRiskFactor?.let {

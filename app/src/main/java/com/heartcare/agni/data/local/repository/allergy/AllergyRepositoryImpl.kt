@@ -13,7 +13,7 @@ class AllergyRepositoryImpl@Inject constructor(
         return allergyDao.insertAllergyRecord(*allergyResponse.map { it.toAllergyEntity() }.toTypedArray())
     }
 
-    override suspend fun getAllergyRecords(patientId: String): List<AllergyResponse> {
-        return allergyDao.getAllergyRecords(patientId).map { it.toAllergyResponse() }
+    override suspend fun getAllergyRecordsByAppointmentIds(vararg appointmentIds: String): List<AllergyResponse> {
+        return allergyDao.getAllergyRecordsByAppointmentIds(*appointmentIds).map { it.toAllergyResponse() }
     }
 }

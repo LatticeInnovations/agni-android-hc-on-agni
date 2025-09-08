@@ -11,8 +11,8 @@ interface FamilyHistoryDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insertFamilyHistoryRecord(vararg familyHistoryEntity: FamilyHistoryEntity): List<Long>
 
-    @Query("SELECT * FROM FamilyHistoryEntity WHERE patientId=:patientId ORDER BY appUpdatedDate DESC")
-    fun getFamilyHistoryRecords(patientId: String): List<FamilyHistoryEntity>
+    @Query("SELECT * FROM FamilyHistoryEntity WHERE appointmentId IN (:appointmentIds) ORDER BY appUpdatedDate DESC")
+    fun getFamilyHistoryRecordsByAppointmentIds(vararg appointmentIds: String): List<FamilyHistoryEntity>
 
     @Query("UPDATE FamilyHistoryEntity SET fhirId = :fhirId WHERE uuid = :id")
     suspend fun updateFhirId(id: String, fhirId: String): Int

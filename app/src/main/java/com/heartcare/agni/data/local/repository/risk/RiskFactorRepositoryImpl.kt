@@ -14,7 +14,7 @@ class RiskFactorRepositoryImpl @Inject constructor(
             .toTypedArray())
     }
 
-    override suspend fun getRiskFactorRecords(patientId: String): List<RiskFactorResponse> {
-        return riskFactorDao.getRiskFactorRecords(patientId).map { it.toRiskFactorResponse() }
+    override suspend fun getRiskFactorRecordsByAppointmentIds(vararg appointmentIds: String): List<RiskFactorResponse> {
+        return riskFactorDao.getRiskFactorRecordsByAppointmentIds(*appointmentIds).map { it.toRiskFactorResponse() }
     }
 }

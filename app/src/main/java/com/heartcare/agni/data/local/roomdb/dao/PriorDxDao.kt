@@ -11,8 +11,8 @@ interface PriorDxDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insertPriorDxRecord(vararg priorDxEntity: PriorDxEntity): List<Long>
 
-    @Query("SELECT * FROM PriorDxEntity WHERE patientId=:patientId ORDER BY createdOn DESC")
-    fun getPriorDxRecords(patientId: String): List<PriorDxEntity>
+    @Query("SELECT * FROM PriorDxEntity WHERE appointmentId IN (:appointmentIds) ORDER BY createdOn DESC")
+    fun getPriorDxRecordsByAppointmentIds(vararg appointmentIds: String): List<PriorDxEntity>
 
     @Query("UPDATE PriorDxEntity SET priorDxFhirId = :fhirId WHERE priorDxUuid = :id")
     suspend fun updateFhirId(id: String, fhirId: String): Int

@@ -13,7 +13,7 @@ class HistoryMedicationRepositoryImpl @Inject constructor(
         return historyMedicationDao.insertHistoryMedicationRecord(*historyMedicationResponse.map { it.toHistoryMedicationEntity() }.toTypedArray())
     }
 
-    override suspend fun getHistoryMedicationRecords(patientId: String): List<HistoryMedicationResponse> {
-        return historyMedicationDao.getHistoryMedicationRecords(patientId).map { it.toHistoryMedicationResponse() }
+    override suspend fun getHistoryMedicationRecordsByAppointmentIds(vararg appointmentIds: String): List<HistoryMedicationResponse> {
+        return historyMedicationDao.getHistoryMedicationRecordsByAppointmentIds(*appointmentIds).map { it.toHistoryMedicationResponse() }
     }
 }

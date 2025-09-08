@@ -9,5 +9,5 @@ interface ExaminationRepository {
     suspend fun getExaminationMaster(): List<ExaminationMasterResponse>
     suspend fun getExaminationMasterByFhirId(fhirId: String): ExaminationMasterResponse
     suspend fun insertExamination(vararg examinationResponse: ExaminationResponse): List<Long>
-    suspend fun getExaminationList(patientId: String): List<ExaminationResponseLocal>
+    suspend fun getExaminationListByAppointmentId(vararg appointmentIds: String): List<ExaminationResponseLocal>
 }

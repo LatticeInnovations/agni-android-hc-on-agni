@@ -31,6 +31,9 @@ import com.heartcare.agni.di.dispatcher.IoDispatcher
 import com.heartcare.agni.utils.builders.UUIDBuilder
 import com.heartcare.agni.utils.common.Queries
 import com.heartcare.agni.utils.common.Queries.checkAndUpdateAppointmentStatusToInProgress
+import com.heartcare.agni.utils.common.Queries.getAppointment
+import com.heartcare.agni.utils.common.Queries.getInProgressCompletedAppointmentIds
+import com.heartcare.agni.utils.common.Queries.loadAppointmentInfo
 import com.heartcare.agni.utils.common.Queries.updatePatientLastUpdated
 import com.heartcare.agni.utils.converters.responseconverter.NameConverter.getFullName
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.plusMinusDays
@@ -132,33 +135,17 @@ class CVDRiskAssessmentViewModel @Inject constructor(
         callback: () -> Unit
     ) {
         viewModelScope.launch(ioDispatcher) {
-            appointment = appointmentRepository.getAppointmentsOfPatientByStatus(
-                patient!!.id,
-                AppointmentStatusEnum.SCHEDULED.value
-            ).firstOrNull { appointmentResponse ->
-                appointmentResponse.slot.start.time < Date().toEndOfDay() && appointmentResponse.slot.start.time > Date().toTodayStartDate()
-                        && appointmentResponse.hospitalCode == user.hospitalCode
-            }
-            appointmentRepository.getAppointmentsOfPatientByDate(
-                patient!!.id,
-                Date().toTodayStartDate(),
-                Date().toEndOfDay()
-            ).let { appointmentResponse ->
-                appointmentResponse?.let {
-                    existsInOtherHospital = it.hospitalCode != user.hospitalCode
-                }
-                canAddAssessment =
-                    (appointmentResponse?.status == AppointmentStatusEnum.ARRIVED.value || appointmentResponse?.status == AppointmentStatusEnum.WALK_IN.value
-                            || appointmentResponse?.status == AppointmentStatusEnum.IN_PROGRESS.value) && appointmentResponse.hospitalCode == user.hospitalCode
-                isAppointmentCompleted =
-                    appointmentResponse?.status == AppointmentStatusEnum.COMPLETED.value && appointmentResponse.hospitalCode == user.hospitalCode
-            }
-            ifAllSlotsBooked = appointmentRepository.getAppointmentListByDate(
-                Date().toTodayStartDate(),
-                Date().toEndOfDay()
-            ).filter { appointmentResponseLocal ->
-                appointmentResponseLocal.status != AppointmentStatusEnum.CANCELLED.value && appointmentResponseLocal.hospitalCode == user.hospitalCode
-            }.size >= maxNumberOfAppointmentsInADay
+            val info = loadAppointmentInfo(
+                patientId = patient!!.id,
+                hospitalCode = user.hospitalCode,
+                maxNumberOfAppointmentsInADay = maxNumberOfAppointmentsInADay,
+                appointmentRepository = appointmentRepository
+            )
+            appointment = info.appointment
+            existsInOtherHospital = info.existsInOtherHospital
+            canAddAssessment = info.canAddAssessment
+            isAppointmentCompleted = info.isAppointmentCompleted
+            ifAllSlotsBooked = info.ifAllSlotsBooked
             callback()
         }
     }
@@ -201,7 +188,8 @@ class CVDRiskAssessmentViewModel @Inject constructor(
 
     fun getTodayCVDAssessment() {
         viewModelScope.launch(ioDispatcher) {
-            cvdAssessmentRepository.getCVDRecord(patient!!.id).firstOrNull()?.let { record ->
+            getRecords()
+            previousRecordsWithReferralStatus.map { it.first }.firstOrNull()?.let { record ->
                 isDiabetic = YesNoEnum.displayFromCode(record.diabetic)
                 isSmoker = YesNoEnum.displayFromCode(record.smoker)
                 previousHeartAttack = YesNoEnum.displayFromCode(record.heartAttackHistory)
@@ -254,19 +242,19 @@ class CVDRiskAssessmentViewModel @Inject constructor(
         }
     }
 
-    fun getRecords(
-        ioDispatcher: CoroutineDispatcher = Dispatchers.IO
-    ) {
-        viewModelScope.launch(ioDispatcher) {
-            previousRecordsWithReferralStatus = cvdAssessmentRepository.getCVDRecord(patient!!.id).map { cvdResponse ->
-                Pair(
-                    cvdResponse,
-                    checkIfReferralExists(
-                        cvdResponse.appointmentId
+    private suspend fun getRecords() {
+        val appointmentIds =
+            getInProgressCompletedAppointmentIds(patient!!.id, appointmentRepository)
+        previousRecordsWithReferralStatus =
+            cvdAssessmentRepository.getCVDRecordByAppointmentIds(*appointmentIds.toTypedArray())
+                .map { cvdResponse ->
+                    Pair(
+                        cvdResponse,
+                        checkIfReferralExists(
+                            cvdResponse.appointmentId
+                        )
                     )
-                )
-            }
-        }
+                }
     }
 
     private fun getCVDRecord(
@@ -303,11 +291,14 @@ class CVDRiskAssessmentViewModel @Inject constructor(
     }
 
     fun saveCVDRecord(
-        saved: () -> Unit,
-        ioDispatcher: CoroutineDispatcher = Dispatchers.IO
+        saved: () -> Unit
     ) {
         viewModelScope.launch(ioDispatcher) {
-            getAppointment()
+            appointmentResponseLocal = getAppointment(
+                patientId = patient!!.id,
+                hospitalCode = user.hospitalCode,
+                appointmentRepository = appointmentRepository
+            )
             val cvdResponse = getCVDRecord(
                 cvdUUid = todayCVD?.cvdUuid ?: UUIDBuilder.generateUUID()
             )
@@ -331,7 +322,11 @@ class CVDRiskAssessmentViewModel @Inject constructor(
                 genericRepository = genericRepository,
                 preferenceRepository = preferenceRepository
             )
-            getAppointment()
+            appointmentResponseLocal = getAppointment(
+                patientId = patient!!.id,
+                hospitalCode = user.hospitalCode,
+                appointmentRepository = appointmentRepository
+            )
             updatePatientLastUpdated(
                 patient!!.id,
                 patientLastUpdatedRepository,
@@ -343,17 +338,6 @@ class CVDRiskAssessmentViewModel @Inject constructor(
             followUpDate = createFollowUpAppointment(date = appointmentDate)
             saved()
         }
-    }
-
-    private suspend fun getAppointment() {
-        appointmentResponseLocal =
-            appointmentRepository.getAppointmentListByDate(
-                Date().toTodayStartDate(),
-                Date().toEndOfDay()
-            ).firstOrNull { appointmentEntity ->
-                appointmentEntity.patientId == patient!!.id && appointmentEntity.status != AppointmentStatusEnum.CANCELLED.value
-                        && user.hospitalCode == appointmentEntity.hospitalCode
-            }
     }
 
     fun clearForm() {
@@ -380,8 +364,7 @@ class CVDRiskAssessmentViewModel @Inject constructor(
 
     fun addPatientToQueue(
         patient: PatientResponse,
-        addedToQueue: (List<Long>) -> Unit,
-        ioDispatcher: CoroutineDispatcher = Dispatchers.IO
+        addedToQueue: (List<Long>) -> Unit
     ) {
         viewModelScope.launch(ioDispatcher) {
             Queries.addPatientToQueue(
@@ -399,8 +382,7 @@ class CVDRiskAssessmentViewModel @Inject constructor(
     fun updateStatusToArrived(
         patient: PatientResponse,
         appointment: AppointmentResponseLocal,
-        updated: (Int) -> Unit,
-        ioDispatcher: CoroutineDispatcher = Dispatchers.IO
+        updated: (Int) -> Unit
     ) {
         viewModelScope.launch(ioDispatcher) {
             Queries.updateStatusToArrived(

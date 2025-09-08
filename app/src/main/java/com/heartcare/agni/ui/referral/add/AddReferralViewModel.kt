@@ -5,7 +5,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewModelScope
 import com.heartcare.agni.base.viewmodel.BaseViewModel
-import com.heartcare.agni.data.local.enums.AppointmentStatusEnum
 import com.heartcare.agni.data.local.model.appointment.AppointmentResponseLocal
 import com.heartcare.agni.data.local.repository.appointment.AppointmentRepository
 import com.heartcare.agni.data.local.repository.generic.GenericRepository
@@ -21,11 +20,11 @@ import com.heartcare.agni.data.server.model.referral.ReferralResponse
 import com.heartcare.agni.di.dispatcher.IoDispatcher
 import com.heartcare.agni.utils.builders.UUIDBuilder
 import com.heartcare.agni.utils.common.Queries.checkAndUpdateAppointmentStatusToInProgress
+import com.heartcare.agni.utils.common.Queries.getAppointment
+import com.heartcare.agni.utils.common.Queries.getInProgressCompletedAppointmentIds
 import com.heartcare.agni.utils.common.Queries.updatePatientLastUpdated
 import com.heartcare.agni.utils.converters.responseconverter.NameConverter.getFullName
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.isToday
-import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toEndOfDay
-import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toTodayStartDate
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.launch
@@ -80,7 +79,9 @@ class AddReferralViewModel @Inject constructor(
             provinceList =
                 levelRepository.getLevelListByFhirIds(*masterAreaCouncilList.map { it.precedingLevelId!! }
                     .toTypedArray())
-            todayReferral = referralRepository.getReferralRecords(patientId).firstOrNull {
+            val appointmentIds =
+                getInProgressCompletedAppointmentIds(patientId, appointmentRepository)
+            todayReferral = referralRepository.getReferralRecordsByAppointmentIds(*appointmentIds.toTypedArray()).firstOrNull {
                 isToday(it.appUpdatedDate)
             }
             todayReferral?.let { referral ->
@@ -118,17 +119,6 @@ class AddReferralViewModel @Inject constructor(
                 heathFacility != null
     }
 
-    private suspend fun getAppointment() {
-        appointmentResponseLocal =
-            appointmentRepository.getAppointmentListByDate(
-                Date().toTodayStartDate(),
-                Date().toEndOfDay()
-            ).firstOrNull { appointmentEntity ->
-                appointmentEntity.patientId == patient!!.id && appointmentEntity.status != AppointmentStatusEnum.CANCELLED.value
-                        && user.hospitalCode == appointmentEntity.hospitalCode
-            }
-    }
-
     private fun getReferralResponse(
         referralUuid: String = UUIDBuilder.generateUUID(),
         referralFhirId: String? = null
@@ -153,7 +143,11 @@ class AddReferralViewModel @Inject constructor(
         added: () -> Unit
     ) {
         viewModelScope.launch(ioDispatcher) {
-            getAppointment()
+            appointmentResponseLocal = getAppointment(
+                patientId = patient!!.id,
+                hospitalCode = user.hospitalCode,
+                appointmentRepository = appointmentRepository
+            )
             var uuid = UUIDBuilder.generateUUID()
             var fhirId: String? = null
             todayReferral?.let {

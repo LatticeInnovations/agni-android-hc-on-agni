@@ -16,6 +16,9 @@ interface CVDDao {
     @Query("SELECT * FROM CVDEntity WHERE patientId=:patientId ORDER BY createdOn DESC")
     fun getCVDRecords(patientId: String): List<CVDEntity>
 
+    @Query("SELECT * FROM CVDEntity WHERE appointmentId IN (:appointmentIds) ORDER BY createdOn DESC")
+    fun getCVDRecordsByAppointmentIds(vararg appointmentIds: String): List<CVDEntity>
+
     @Query("SELECT * FROM CVDEntity WHERE patientId=:patientId AND createdOn BETWEEN :startTime AND :endTime")
     fun getTodayCVDRecords(patientId: String, startTime: Long, endTime: Long): CVDEntity?
 

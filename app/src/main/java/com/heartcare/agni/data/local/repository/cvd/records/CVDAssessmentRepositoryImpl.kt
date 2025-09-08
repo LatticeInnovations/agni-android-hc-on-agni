@@ -19,6 +19,10 @@ class CVDAssessmentRepositoryImpl@Inject constructor(
         return cvdDao.getCVDRecords(patientId).map { it.toCVDResponse() }
     }
 
+    override suspend fun getCVDRecordByAppointmentIds(vararg appointmentIds: String): List<CVDResponse> {
+        return cvdDao.getCVDRecordsByAppointmentIds(*appointmentIds).map { it.toCVDResponse() }
+    }
+
     override suspend fun getTodayCVDRecord(
         patientId: String,
         startTime: Long,

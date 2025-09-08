@@ -5,28 +5,27 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewModelScope
 import com.heartcare.agni.base.viewmodel.BaseViewModel
-import com.heartcare.agni.data.local.enums.AppointmentStatusEnum
 import com.heartcare.agni.data.local.enums.SearchTypeEnum
 import com.heartcare.agni.data.local.model.appointment.AppointmentResponseLocal
 import com.heartcare.agni.data.local.repository.appointment.AppointmentRepository
+import com.heartcare.agni.data.local.repository.diagnosis.DiagnosisRepository
 import com.heartcare.agni.data.local.repository.generic.GenericRepository
 import com.heartcare.agni.data.local.repository.patient.lastupdated.PatientLastUpdatedRepository
 import com.heartcare.agni.data.local.repository.preference.PreferenceRepository
 import com.heartcare.agni.data.local.repository.schedule.ScheduleRepository
 import com.heartcare.agni.data.local.repository.search.SearchRepository
-import com.heartcare.agni.data.local.repository.diagnosis.DiagnosisRepository
 import com.heartcare.agni.data.local.roomdb.entities.diagnosis.DiagnosisLocal
-import com.heartcare.agni.data.server.model.patient.PatientResponse
 import com.heartcare.agni.data.server.model.diagnosis.DiagnosisItem
+import com.heartcare.agni.data.server.model.patient.PatientResponse
 import com.heartcare.agni.di.dispatcher.IoDispatcher
 import com.heartcare.agni.utils.builders.UUIDBuilder
 import com.heartcare.agni.utils.common.Queries.checkAndUpdateAppointmentStatusToInProgress
+import com.heartcare.agni.utils.common.Queries.getAppointment
+import com.heartcare.agni.utils.common.Queries.getInProgressCompletedAppointmentIds
 import com.heartcare.agni.utils.common.Queries.updatePatientLastUpdated
 import com.heartcare.agni.utils.converters.responseconverter.NameConverter.getFullName
 import com.heartcare.agni.utils.converters.responseconverter.SymDiagConverter.splitString
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.isToday
-import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toEndOfDay
-import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toTodayStartDate
 import com.heartcare.agni.utils.converters.responseconverter.toDiagnosisData
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
@@ -36,7 +35,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class AddDiagnosisViewModel @Inject constructor(
-    private val diagRepository: DiagnosisRepository,
+    private val diagnosisRepository: DiagnosisRepository,
     private val searchRepository: SearchRepository,
     private val appointmentRepository: AppointmentRepository,
     private val preferenceRepository: PreferenceRepository,
@@ -74,7 +73,9 @@ class AddDiagnosisViewModel @Inject constructor(
 
     fun getLastDiagnosis(patientId: String) {
         viewModelScope.launch(ioDispatcher) {
-            lastDiagnosis = diagRepository.getPastDiagnosis(patientId).firstOrNull()
+            val appointmentIds =
+                getInProgressCompletedAppointmentIds(patientId, appointmentRepository)
+            lastDiagnosis = diagnosisRepository.getPastDiagnosisByAppointmentId(*appointmentIds.toTypedArray()).firstOrNull()
             lastDiagnosis?.let { dx ->
                 if (isToday(dx.createdOn)) {
                     isTodayDiagnosis = true
@@ -95,24 +96,13 @@ class AddDiagnosisViewModel @Inject constructor(
         }
     }
 
-    private suspend fun getAppointment() {
-        appointmentResponseLocal =
-            appointmentRepository.getAppointmentListByDate(
-                Date().toTodayStartDate(),
-                Date().toEndOfDay()
-            ).firstOrNull { appointmentEntity ->
-                appointmentEntity.patientId == patient!!.id && appointmentEntity.status != AppointmentStatusEnum.CANCELLED.value
-                        && user.hospitalCode == appointmentEntity.hospitalCode
-            }
-    }
-
     private fun getDiagnosisResponse(
-        diagUuid: String = UUIDBuilder.generateUUID(),
+        diagnosisUuid: String = UUIDBuilder.generateUUID(),
         fhirId: String? = null,
         createdOn: Date = Date()
     ): DiagnosisLocal {
         return DiagnosisLocal(
-            diagnosisUuid = diagUuid,
+            diagnosisUuid = diagnosisUuid,
             appointmentId = appointmentResponseLocal!!.uuid,
             diagnosisFhirId = fhirId,
             createdOn = createdOn,
@@ -136,7 +126,11 @@ class AddDiagnosisViewModel @Inject constructor(
         added: () -> Unit
     ) {
         viewModelScope.launch(ioDispatcher) {
-            getAppointment()
+            appointmentResponseLocal = getAppointment(
+                patientId = patient!!.id,
+                hospitalCode = user.hospitalCode,
+                appointmentRepository = appointmentRepository
+            )
             var uuid = UUIDBuilder.generateUUID()
             var fhirId: String? = null
             lastDiagnosis?.let {
@@ -145,8 +139,8 @@ class AddDiagnosisViewModel @Inject constructor(
                     fhirId = it.diagnosisFhirId
                 }
             }
-            val diagnosisResponseLocal = getDiagnosisResponse(diagUuid = uuid, fhirId = fhirId)
-            diagRepository.insertDiagnosis(
+            val diagnosisResponseLocal = getDiagnosisResponse(diagnosisUuid = uuid, fhirId = fhirId)
+            diagnosisRepository.insertDiagnosis(
                 diagnosisResponseLocal
             )
             genericRepository.insertSymDiag(
