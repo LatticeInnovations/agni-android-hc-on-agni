@@ -64,7 +64,11 @@ fun PrescriptionSearchResult(viewModel: PrescriptionViewModel) {
             )
         },
         content = {
-            Box(modifier = Modifier.padding(it)) {
+            Box(
+                modifier =
+                    Modifier.padding(it)
+                        .padding(bottom = 64.dp)
+            ) {
                 if (viewModel.medicationsSearchList.isEmpty()) {
                     Box(
                         modifier = Modifier.fillMaxSize(),
