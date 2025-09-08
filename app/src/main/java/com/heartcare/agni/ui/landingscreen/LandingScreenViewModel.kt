@@ -43,11 +43,14 @@ import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toLas
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
 import timber.log.Timber
@@ -291,27 +294,36 @@ class LandingScreenViewModel @Inject constructor(
         }
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     private fun searchPatient(searchParameters: SearchParameters) {
-        viewModelScope.launch(ioDispatcher) {
-            var finalSearchList = searchRepository.getSearchList()
-            if (!searchParameters.lastFacilityVisit.isNullOrBlank() && searchParameters.lastFacilityVisit != LastVisit.NOT_APPLICABLE.label) {
-                finalSearchList = getSearchListWithLastVisited(
-                    searchParameters.lastFacilityVisit,
-                    finalSearchList,
-                    appointmentRepository
-                )
-            }
-            searchResultList =
-                searchRepository.searchPatients(searchParameters, finalSearchList)
-                    .map { data ->
-                        data.map { paginationResponse ->
-                            size = paginationResponse.size
-                            paginationResponse.data
-                        }
-                    }.cachedIn(viewModelScope)
-            isLoading = false
-        }
+        searchResultList =
+            searchRepository.getSearchList()
+                .map { searchList ->
+                    var finalSearchList = searchList
+                    if (!searchParameters.lastFacilityVisit.isNullOrBlank() &&
+                        searchParameters.lastFacilityVisit != LastVisit.NOT_APPLICABLE.label
+                    ) {
+                        finalSearchList = getSearchListWithLastVisited(
+                            searchParameters.lastFacilityVisit,
+                            finalSearchList,
+                            appointmentRepository
+                        )
+                    }
+                    finalSearchList
+                }
+                .flatMapLatest { finalSearchList ->
+                    searchRepository.searchPatients(searchParameters, finalSearchList)
+                }
+                .map { pagingData ->
+                    pagingData.map { paginationResponse ->
+                        size = paginationResponse.size
+                        paginationResponse.data
+                    }
+                }
+                .onEach { isLoading = false }
+                .cachedIn(viewModelScope)
     }
+
 
     private fun searchPatientByQuery() {
         viewModelScope.launch(ioDispatcher) {
@@ -323,8 +335,9 @@ class LandingScreenViewModel @Inject constructor(
                     size = paginationResponse.size
                     paginationResponse.data
                 }
+            }.onEach {
+                isLoading = false
             }.cachedIn(viewModelScope)
-            isLoading = false
         }
     }
 
