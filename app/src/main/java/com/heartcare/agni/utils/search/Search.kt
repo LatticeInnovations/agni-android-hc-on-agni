@@ -15,6 +15,7 @@ import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toAge
 import com.heartcare.agni.utils.converters.responseconverter.toExaminationMasterResponse
 import com.heartcare.agni.utils.converters.responseconverter.toInterventionMasterResponse
 import me.xdrop.fuzzywuzzy.FuzzySearch
+import kotlin.text.lowercase
 
 object Search {
 
@@ -125,12 +126,13 @@ object Search {
     }
 
     internal fun getFuzzySearchMedication(
-        queryActiveIngredient: String,
+        searchQuery: String,
         medicationList: List<MedicationResponse>,
         matchingRatio: Int
     ): List<MedicationResponse> {
         return medicationList.filter { medication ->
-            FuzzySearch.partialRatio(queryActiveIngredient, medication.activeIngredient) > matchingRatio
+            FuzzySearch.partialRatio(searchQuery.lowercase(), medication.activeIngredient.lowercase()) > matchingRatio
+                    || FuzzySearch.partialRatio(searchQuery.lowercase(), medication.code.lowercase()) > matchingRatio
         }
     }
 
