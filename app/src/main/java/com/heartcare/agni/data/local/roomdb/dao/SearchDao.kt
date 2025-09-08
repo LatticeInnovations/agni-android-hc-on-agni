@@ -14,6 +14,7 @@ import com.heartcare.agni.data.local.roomdb.entities.patient.PatientAndIdentifie
 import com.heartcare.agni.data.local.roomdb.entities.search.SearchHistoryEntity
 import com.heartcare.agni.data.local.roomdb.entities.search.SearchEntity
 import com.heartcare.agni.data.local.roomdb.entities.diagnosis.DiagnosisMasterEntity
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface SearchDao {
@@ -25,7 +26,7 @@ interface SearchDao {
     @Transaction
     @RewriteQueriesToDropUnusedColumns
     @Query("SELECT * FROM PatientEntity INNER JOIN PatientLastUpdatedEntity ON PatientEntity.id = PatientLastUpdatedEntity.patientId WHERE PatientEntity.isDeleted = 0 OR PatientEntity.isDeleted IS NULL  ORDER BY PatientLastUpdatedEntity.lastUpdated DESC")
-    suspend fun getPatientList(): List<PatientAndIdentifierEntity>
+    fun getPatientList(): Flow<List<PatientAndIdentifierEntity>>
 
     @Transaction
     @Query("SELECT searchQuery FROM SearchHistoryEntity WHERE searchType = :searchTypeEnum ORDER BY date DESC")

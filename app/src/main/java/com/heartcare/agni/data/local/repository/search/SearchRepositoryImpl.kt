@@ -25,7 +25,9 @@ import com.heartcare.agni.utils.search.Search.getFuzzySearchInterventionList
 import com.heartcare.agni.utils.search.Search.getFuzzySearchList
 import com.heartcare.agni.utils.search.Search.getFuzzySearchListByQuery
 import com.heartcare.agni.utils.search.Search.getFuzzySearchMedication
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import java.util.Date
 import javax.inject.Inject
@@ -34,11 +36,8 @@ class SearchRepositoryImpl @Inject constructor(
     private val searchDao: SearchDao
 ) : SearchRepository {
 
-    @Volatile
-    private var searchPatientList: List<PatientAndIdentifierEntity>? = null
-
-    override suspend fun getSearchList(): List<PatientAndIdentifierEntity> {
-        return searchPatientList ?: searchDao.getPatientList().also { searchPatientList = it }
+    override fun getSearchList(): Flow<List<PatientAndIdentifierEntity>> {
+        return searchDao.getPatientList()
     }
 
     override fun searchPatients(
@@ -71,35 +70,36 @@ class SearchRepositoryImpl @Inject constructor(
         }
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     override fun searchPatientsByQuery(
         query: String,
-        searchList: List<PatientAndIdentifierEntity>
+        searchListFlow: Flow<List<PatientAndIdentifierEntity>>
     ): Flow<PagingData<PaginationResponse<PatientResponse>>> {
-        val fuzzySearchList = getFuzzySearchListByQuery(
-            searchList,
-            query,
-            68
-        )
-        return Pager(
-            config = PagingConfig(
-                pageSize = PAGE_SIZE,
-                enablePlaceholders = false
-            ),
-            pagingSourceFactory = {
-                SearchPagingSource(
-                    fuzzySearchList,
-                    PAGE_SIZE
-                )
-            }
-        ).flow.map { pagingData ->
-            pagingData.map { patientAndIdentifierEntity ->
-                PaginationResponse(
-                    patientAndIdentifierEntity.toPatientResponse(),
-                    fuzzySearchList.size
-                )
+        return searchListFlow.flatMapLatest { searchList ->
+            val fuzzySearchList = getFuzzySearchListByQuery(searchList, query, 68)
+
+            Pager(
+                config = PagingConfig(
+                    pageSize = PAGE_SIZE,
+                    enablePlaceholders = false
+                ),
+                pagingSourceFactory = {
+                    SearchPagingSource(
+                        fuzzySearchList,
+                        PAGE_SIZE
+                    )
+                }
+            ).flow.map { pagingData ->
+                pagingData.map { patientAndIdentifierEntity ->
+                    PaginationResponse(
+                        patientAndIdentifierEntity.toPatientResponse(),
+                        fuzzySearchList.size
+                    )
+                }
             }
         }
     }
+
 
     override fun filteredSearchPatients(
         patientId: String,

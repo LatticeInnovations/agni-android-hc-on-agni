@@ -28,7 +28,7 @@ interface SearchRepository {
 
     fun searchPatientsByQuery(
         query: String,
-        searchList: List<PatientAndIdentifierEntity>
+        searchListFlow: Flow<List<PatientAndIdentifierEntity>>
     ): Flow<PagingData<PaginationResponse<PatientResponse>>>
 
     /** Medication Search */
@@ -50,7 +50,7 @@ interface SearchRepository {
     suspend fun insertRecentTestExaminationSearch(searchQuery: String, date: Date = Date()): Long
     suspend fun getRecentTestExaminationSearches(): List<String>
 
-    suspend fun getSearchList(): List<PatientAndIdentifierEntity>
+    fun getSearchList(): Flow<List<PatientAndIdentifierEntity>>
 
     /** Recent Diagnosis Search*/
     suspend fun insertRecentDiagnosisSearch(searchQuery: String, searchTypeEnum: SearchTypeEnum, size:Int, date: Date = Date()): Long
