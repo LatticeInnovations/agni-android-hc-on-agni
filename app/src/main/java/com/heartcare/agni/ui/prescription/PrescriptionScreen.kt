@@ -128,7 +128,7 @@ fun PrescriptionScreen(
         Scaffold(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(bottom = if (viewModel.selectedMedicationsList.isNotEmpty() && pagerState.pageCount == 1) 60.dp else 0.dp),
+                .padding(bottom = if (pagerState.pageCount == 1) 60.dp else 0.dp),
             topBar = {
                 TopAppBar(
                     modifier = Modifier.fillMaxWidth(),
@@ -294,8 +294,7 @@ fun PrescriptionScreen(
         }
         Box(
             modifier = Modifier
-                .matchParentSize()
-                .padding(bottom = if (viewModel.selectedMedicationsList.isNotEmpty()) 60.dp else 0.dp),
+                .matchParentSize(),
         ) {
             AnimatedVisibility(
                 visible = viewModel.isSearchResult,

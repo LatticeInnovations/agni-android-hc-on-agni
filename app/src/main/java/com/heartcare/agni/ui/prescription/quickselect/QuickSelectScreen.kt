@@ -31,7 +31,7 @@ fun QuickSelectScreen(viewModel: PrescriptionViewModel = hiltViewModel()) {
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
                 .padding(8.dp)
-                .padding(bottom = if (viewModel.selectedMedicationsList.isNotEmpty()) 60.dp else 0.dp),
+                .padding(bottom = 64.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             viewModel.medicationsList.forEach { medicationResponse ->

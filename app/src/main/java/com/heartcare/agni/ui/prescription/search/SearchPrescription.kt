@@ -39,7 +39,6 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import com.heartcare.agni.R
 import com.heartcare.agni.ui.prescription.PrescriptionViewModel
-import com.heartcare.agni.utils.regex.OnlyAlphabetRegex.onlyAlphabets
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -57,7 +56,7 @@ fun SearchPrescription(viewModel: PrescriptionViewModel) {
         TextField(
             value = viewModel.searchQuery,
             onValueChange = {
-                if (it.matches(onlyAlphabets)) viewModel.searchQuery = it
+                viewModel.searchQuery = it
             },
             leadingIcon = {
                 IconButton(onClick = {

@@ -136,7 +136,7 @@ class SearchRepositoryImpl @Inject constructor(
     }
 
     override suspend fun searchMedication(query: String): List<MedicationResponse> {
-        return getFuzzySearchMedication(query, searchDao.getAllMedication().map { it.toMedicationResponse() }, 60)
+        return getFuzzySearchMedication(query, searchDao.getAllMedication().map { it.toMedicationResponse() }, 70)
     }
 
     override suspend fun insertRecentPatientSearch(searchQuery: String, date: Date): Long {
