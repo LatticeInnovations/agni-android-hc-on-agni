@@ -90,6 +90,7 @@ class FhirApp : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        System.loadLibrary("sqlcipher")
         if (BuildConfig.DEBUG) {
             plant(Timber.DebugTree())
         }
