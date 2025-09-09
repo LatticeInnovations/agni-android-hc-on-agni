@@ -196,6 +196,9 @@ class FhirApp : Application() {
                         }
                     }
                 }
+            } catch (e: Exception){
+                Timber.e(e, e.localizedMessage)
+                crashlyticsLogger.logException(e)
             } finally {
                 isSyncing.set(false)
             }

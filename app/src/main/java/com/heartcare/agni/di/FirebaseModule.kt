@@ -23,6 +23,18 @@ object FirebaseModule {
 
     @Provides
     @Singleton
+    fun provideCrashlytics(): FirebaseCrashlytics {
+        return FirebaseCrashlytics.getInstance()
+    }
+
+    @Provides
+    @Singleton
+    fun provideCrashlyticsLogger(firebaseCrashlytics: FirebaseCrashlytics): CrashlyticsLogger {
+        return CrashlyticsLoggerImpl(firebaseCrashlytics)
+    }
+
+    @Provides
+    @Singleton
     fun provideFirebaseRemoteConfig(): FirebaseRemoteConfig {
         val remoteConfig = Firebase.remoteConfig
         val settings = remoteConfigSettings {
@@ -41,20 +53,9 @@ object FirebaseModule {
     @Singleton
     fun provideRemoteConfigRepository(
         firebaseRemoteConfig: FirebaseRemoteConfig,
-        gson: Gson
+        gson: Gson,
+        crashlyticsLogger: CrashlyticsLogger
     ): RemoteConfigRepository {
-        return RemoteConfigRepositoryImpl(firebaseRemoteConfig, gson)
-    }
-
-    @Provides
-    @Singleton
-    fun provideCrashlytics(): FirebaseCrashlytics {
-        return FirebaseCrashlytics.getInstance()
-    }
-
-    @Provides
-    @Singleton
-    fun provideCrashlyticsLogger(firebaseCrashlytics: FirebaseCrashlytics): CrashlyticsLogger {
-        return CrashlyticsLoggerImpl(firebaseCrashlytics)
+        return RemoteConfigRepositoryImpl(firebaseRemoteConfig, gson, crashlyticsLogger)
     }
 }
