@@ -6,6 +6,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewModelScope
 import com.heartcare.agni.base.viewmodel.BaseViewModel
+import com.heartcare.agni.data.local.repository.crashlytics.CrashlyticsLogger
 import com.heartcare.agni.data.local.repository.preference.PreferenceRepository
 import com.heartcare.agni.data.local.roomdb.FhirAppDatabase
 import com.heartcare.agni.data.server.repository.authentication.AuthenticationRepository
@@ -14,6 +15,7 @@ import com.heartcare.agni.utils.constants.AuthenticationConstants.AUTHORIZATION
 import com.heartcare.agni.utils.constants.AuthenticationConstants.REFRESH_TOKEN
 import com.heartcare.agni.utils.constants.ErrorConstants.ERROR_FETCHING_USER_DETAILS
 import com.heartcare.agni.utils.constants.ErrorConstants.SOMETHING_WENT_WRONG
+import com.heartcare.agni.utils.constants.FirebaseKeyConstants.USER_ID
 import com.heartcare.agni.utils.converters.server.responsemapper.ApiEmptyResponse
 import com.heartcare.agni.utils.converters.server.responsemapper.ApiEndResponse
 import com.heartcare.agni.utils.converters.server.responsemapper.ApiErrorResponse
@@ -28,7 +30,8 @@ class UserPasswordViewModel @Inject constructor(
     private val authenticationRepository: AuthenticationRepository,
     private val preferenceRepository: PreferenceRepository,
     private val fhirAppDatabase: FhirAppDatabase,
-    @IoDispatcher private val ioDispatcher: CoroutineDispatcher
+    private val crashlyticsLogger: CrashlyticsLogger,
+    @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) : BaseViewModel() {
     val maxUserIdLength = 10
     val minUserIdLength = 3
@@ -61,7 +64,7 @@ class UserPasswordViewModel @Inject constructor(
         viewModelScope.launch(ioDispatcher) {
             authenticationRepository.login(userId, password).apply {
                 isLoading = false
-                when(this) {
+                when (this) {
                     is ApiEndResponse -> {
                         // save user details and navigate
                         isPasswordCreated = body.systemPasswordChanged
@@ -73,16 +76,24 @@ class UserPasswordViewModel @Inject constructor(
                         } catch (e: Exception) {
                             Timber.e(e, e.localizedMessage)
                             snackBarError = SOMETHING_WENT_WRONG
+                            crashlyticsLogger.logException(
+                                e,
+                                "Headers not provided.",
+                                mapOf(Pair(USER_ID, body.userId))
+                            )
                         }
                     }
+
                     is ApiEmptyResponse -> {
                         // show user details not found error
                         snackBarError = ERROR_FETCHING_USER_DETAILS
                     }
+
                     is ApiErrorResponse -> {
                         // show error
                         snackBarError = errorMessage
                     }
+
                     else -> {
                         // show default error
                         snackBarError = SOMETHING_WENT_WRONG
