@@ -448,14 +448,13 @@ private fun RecordsFullDetailsComposable(
             onClick()
         },
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-        modifier = Modifier
-            .heightIn(max = screenHeight * 0.8f)
-            .navigationBarsPadding(),
         dragHandle = null
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
+                .heightIn(max = screenHeight * 0.8f)
+                .navigationBarsPadding()
                 .background(
                     color = MaterialTheme.colorScheme.surface,
                     shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)
