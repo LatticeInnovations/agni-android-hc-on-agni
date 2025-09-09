@@ -10,7 +10,7 @@ object GsonConverters {
         return gson.toJson(this, type)
     }
 
-    fun <T> String.fromJson(): T {
+    inline fun <reified T> String.fromJson(): T {
         val type = object : TypeToken<T>() {}.type
         return gson.fromJson(this, type)
     }
