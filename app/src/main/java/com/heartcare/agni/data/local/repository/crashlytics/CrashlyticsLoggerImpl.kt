@@ -1,6 +1,7 @@
 package com.heartcare.agni.data.local.repository.crashlytics
 
 import com.google.firebase.crashlytics.FirebaseCrashlytics
+import timber.log.Timber
 import javax.inject.Inject
 
 class CrashlyticsLoggerImpl @Inject constructor(
@@ -17,7 +18,7 @@ class CrashlyticsLoggerImpl @Inject constructor(
         customKeys?.forEach { (key, value) ->
             crashlytics.setCustomKey(key, value.toString())
         }
-
+        Timber.d("Exception recording to firebase $exception")
         crashlytics.recordException(exception)
     }
 

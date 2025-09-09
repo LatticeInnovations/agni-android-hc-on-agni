@@ -2,10 +2,13 @@ package com.heartcare.agni
 
 import android.app.Application
 import androidx.lifecycle.MutableLiveData
+import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.heartcare.agni.data.local.enums.SyncStatusMessageEnum
 import com.heartcare.agni.data.local.enums.WorkerStatus
+import com.heartcare.agni.data.local.repository.crashlytics.CrashlyticsLogger
+import com.heartcare.agni.data.local.repository.crashlytics.CrashlyticsLoggerImpl
 import com.heartcare.agni.data.local.repository.generic.GenericRepository
 import com.heartcare.agni.data.local.repository.generic.GenericRepositoryImpl
 import com.heartcare.agni.data.local.repository.preference.PreferenceRepository
@@ -75,6 +78,9 @@ class FhirApp : Application() {
     @Inject
     lateinit var referralApiService: ReferralApiService
 
+    @Inject
+    lateinit var crashlytics: FirebaseCrashlytics
+
     private lateinit var _syncRepository: SyncRepository
     internal val syncRepository get() = _syncRepository
     private lateinit var _genericRepository: GenericRepository
@@ -83,6 +89,10 @@ class FhirApp : Application() {
     internal val workRequestBuilder get() = _workRequestBuilder
     private lateinit var _syncService: SyncService
     internal val syncService get() = _syncService
+
+    private lateinit var _crashlyticsLogger: CrashlyticsLogger
+    internal val crashlyticsLogger get() = _crashlyticsLogger
+
     val sessionExpireFlow = MutableLiveData<Map<String, Any>>(emptyMap())
 
     internal var syncWorkerStatus = MutableLiveData<WorkerStatus>()
@@ -96,6 +106,10 @@ class FhirApp : Application() {
         }
 
         val preferenceRepository: PreferenceRepository = PreferenceRepositoryImpl(preferenceStorage)
+
+        _crashlyticsLogger = CrashlyticsLoggerImpl(
+            crashlytics
+        )
 
         _syncRepository = SyncRepositoryImpl(
             patientApiService,
@@ -131,7 +145,8 @@ class FhirApp : Application() {
             fhirAppDatabase.getInterventionDao(),
             fhirAppDatabase.getExaminationDao(),
             fhirAppDatabase.getHealthFacilityDao(),
-            fhirAppDatabase.getReferralDao()
+            fhirAppDatabase.getReferralDao(),
+            crashlyticsLogger
         )
 
         _genericRepository = GenericRepositoryImpl(
