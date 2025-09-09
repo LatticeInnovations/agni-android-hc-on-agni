@@ -1,6 +1,7 @@
 package com.heartcare.agni.di
 
 import com.google.firebase.Firebase
+import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig
 import com.google.firebase.remoteconfig.remoteConfig
 import com.google.firebase.remoteconfig.remoteConfigSettings
@@ -8,6 +9,8 @@ import com.google.gson.Gson
 import com.heartcare.agni.R
 import com.heartcare.agni.data.local.repository.config.RemoteConfigRepository
 import com.heartcare.agni.data.local.repository.config.RemoteConfigRepositoryImpl
+import com.heartcare.agni.data.local.repository.crashlytics.CrashlyticsLogger
+import com.heartcare.agni.data.local.repository.crashlytics.CrashlyticsLoggerImpl
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -16,7 +19,19 @@ import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-object RemoteConfigModule {
+object FirebaseModule {
+
+    @Provides
+    @Singleton
+    fun provideCrashlytics(): FirebaseCrashlytics {
+        return FirebaseCrashlytics.getInstance()
+    }
+
+    @Provides
+    @Singleton
+    fun provideCrashlyticsLogger(firebaseCrashlytics: FirebaseCrashlytics): CrashlyticsLogger {
+        return CrashlyticsLoggerImpl(firebaseCrashlytics)
+    }
 
     @Provides
     @Singleton
@@ -38,8 +53,9 @@ object RemoteConfigModule {
     @Singleton
     fun provideRemoteConfigRepository(
         firebaseRemoteConfig: FirebaseRemoteConfig,
-        gson: Gson
+        gson: Gson,
+        crashlyticsLogger: CrashlyticsLogger
     ): RemoteConfigRepository {
-        return RemoteConfigRepositoryImpl(firebaseRemoteConfig, gson)
+        return RemoteConfigRepositoryImpl(firebaseRemoteConfig, gson, crashlyticsLogger)
     }
 }

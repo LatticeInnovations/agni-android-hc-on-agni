@@ -4,6 +4,7 @@ import com.google.gson.internal.LinkedTreeMap
 import com.heartcare.agni.data.local.enums.GenericTypeEnum
 import com.heartcare.agni.data.local.enums.SyncType
 import com.heartcare.agni.data.local.model.diagnosis.DiagnosisData
+import com.heartcare.agni.data.local.repository.crashlytics.CrashlyticsLogger
 import com.heartcare.agni.data.local.repository.preference.PreferenceRepository
 import com.heartcare.agni.data.local.roomdb.dao.AllergyDao
 import com.heartcare.agni.data.local.roomdb.dao.AppointmentDao
@@ -77,7 +78,9 @@ import com.heartcare.agni.data.server.model.scheduleandappointment.appointment.A
 import com.heartcare.agni.data.server.model.scheduleandappointment.schedule.ScheduleResponse
 import com.heartcare.agni.data.server.model.tobacco.TobaccoCessationResponse
 import com.heartcare.agni.data.server.model.vitals.VitalResponse
+import com.heartcare.agni.utils.constants.ErrorConstants.ERROR_FETCHING_USER_DETAILS
 import com.heartcare.agni.utils.constants.ErrorConstants.SOMETHING_WENT_WRONG
+import com.heartcare.agni.utils.constants.FirebaseKeyConstants.USER_ID
 import com.heartcare.agni.utils.converters.responseconverter.GsonConverters.fromJson
 import com.heartcare.agni.utils.converters.responseconverter.GsonConverters.mapToObject
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toTimeStampDate
@@ -127,7 +130,8 @@ class SyncRepositoryImpl @Inject constructor(
     interventionDao: InterventionDao,
     examinationDao: ExaminationDao,
     healthFacilityDao: HealthFacilityDao,
-    referralDao: ReferralDao
+    referralDao: ReferralDao,
+    private val crashlyticsLogger: CrashlyticsLogger
 ) : SyncRepository, SyncRepositoryDatabaseTransactions(
     patientDao,
     genericDao,
@@ -191,6 +195,16 @@ class SyncRepositoryImpl @Inject constructor(
             }
         } catch (e: Exception) {
             Timber.e(e, e.localizedMessage)
+            crashlyticsLogger.logException(
+                e,
+                "getAndInsertListPatientData function failed.",
+                mapOf(
+                    Pair(
+                        USER_ID,
+                        preferenceRepository.getUserDetails()?.userId ?: ERROR_FETCHING_USER_DETAILS
+                    )
+                )
+            )
             return ApiErrorResponse(
                 statusCode = 0,
                 errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
@@ -219,6 +233,16 @@ class SyncRepositoryImpl @Inject constructor(
             }
         } catch (e: Exception) {
             Timber.e(e, e.localizedMessage)
+            crashlyticsLogger.logException(
+                e,
+                "getAndInsertPatientDataById function failed.",
+                mapOf(
+                    Pair(
+                        USER_ID,
+                        preferenceRepository.getUserDetails()?.userId ?: ERROR_FETCHING_USER_DETAILS
+                    )
+                )
+            )
             return ApiErrorResponse(
                 statusCode = 0,
                 errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
@@ -275,6 +299,16 @@ class SyncRepositoryImpl @Inject constructor(
             }
         } catch (e: Exception) {
             Timber.e(e, e.localizedMessage)
+            crashlyticsLogger.logException(
+                e,
+                "getAndInsertFormPrescription function failed.",
+                mapOf(
+                    Pair(
+                        USER_ID,
+                        preferenceRepository.getUserDetails()?.userId ?: ERROR_FETCHING_USER_DETAILS
+                    )
+                )
+            )
             ApiErrorResponse(
                 statusCode = 0,
                 errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
@@ -313,6 +347,16 @@ class SyncRepositoryImpl @Inject constructor(
             }
         } catch (e: Exception) {
             Timber.e(e, e.localizedMessage)
+            crashlyticsLogger.logException(
+                e,
+                "getAndInsertMedication function failed.",
+                mapOf(
+                    Pair(
+                        USER_ID,
+                        preferenceRepository.getUserDetails()?.userId ?: ERROR_FETCHING_USER_DETAILS
+                    )
+                )
+            )
             ApiErrorResponse(
                 statusCode = 0,
                 errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
@@ -351,6 +395,16 @@ class SyncRepositoryImpl @Inject constructor(
             }
         } catch (e: Exception) {
             Timber.e(e, e.localizedMessage)
+            crashlyticsLogger.logException(
+                e,
+                "getAndInsertInterventionMaster function failed.",
+                mapOf(
+                    Pair(
+                        USER_ID,
+                        preferenceRepository.getUserDetails()?.userId ?: ERROR_FETCHING_USER_DETAILS
+                    )
+                )
+            )
             ApiErrorResponse(
                 statusCode = 0,
                 errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
@@ -389,6 +443,16 @@ class SyncRepositoryImpl @Inject constructor(
             }
         } catch (e: Exception) {
             Timber.e(e, e.localizedMessage)
+            crashlyticsLogger.logException(
+                e,
+                "getAndInsertExaminationMaster function failed.",
+                mapOf(
+                    Pair(
+                        USER_ID,
+                        preferenceRepository.getUserDetails()?.userId ?: ERROR_FETCHING_USER_DETAILS
+                    )
+                )
+            )
             ApiErrorResponse(
                 statusCode = 0,
                 errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
@@ -420,6 +484,16 @@ class SyncRepositoryImpl @Inject constructor(
             }
         } catch (e: Exception) {
             Timber.e(e, e.localizedMessage)
+            crashlyticsLogger.logException(
+                e,
+                "getAndInsertDiagnosisMaster function failed.",
+                mapOf(
+                    Pair(
+                        USER_ID,
+                        preferenceRepository.getUserDetails()?.userId ?: ERROR_FETCHING_USER_DETAILS
+                    )
+                )
+            )
             ApiErrorResponse(
                 statusCode = 0,
                 errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
@@ -453,6 +527,16 @@ class SyncRepositoryImpl @Inject constructor(
             }
         } catch (e: Exception) {
             Timber.e(e, e.localizedMessage)
+            crashlyticsLogger.logException(
+                e,
+                "getMedicineTime function failed.",
+                mapOf(
+                    Pair(
+                        USER_ID,
+                        preferenceRepository.getUserDetails()?.userId ?: ERROR_FETCHING_USER_DETAILS
+                    )
+                )
+            )
             ApiErrorResponse(
                 statusCode = 0,
                 errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
@@ -494,6 +578,16 @@ class SyncRepositoryImpl @Inject constructor(
             }
         } catch (e: Exception) {
             Timber.e(e, e.localizedMessage)
+            crashlyticsLogger.logException(
+                e,
+                "getAndInsertSchedule function failed.",
+                mapOf(
+                    Pair(
+                        USER_ID,
+                        preferenceRepository.getUserDetails()?.userId ?: ERROR_FETCHING_USER_DETAILS
+                    )
+                )
+            )
             ApiErrorResponse(
                 statusCode = 0,
                 errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
@@ -535,6 +629,16 @@ class SyncRepositoryImpl @Inject constructor(
             }
         } catch (e: Exception) {
             Timber.e(e, e.localizedMessage)
+            crashlyticsLogger.logException(
+                e,
+                "getAndInsertAppointment function failed.",
+                mapOf(
+                    Pair(
+                        USER_ID,
+                        preferenceRepository.getUserDetails()?.userId ?: ERROR_FETCHING_USER_DETAILS
+                    )
+                )
+            )
             ApiErrorResponse(
                 statusCode = 0,
                 errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
@@ -559,6 +663,16 @@ class SyncRepositoryImpl @Inject constructor(
             }
         } catch (e: Exception) {
             Timber.e(e, e.localizedMessage)
+            crashlyticsLogger.logException(
+                e,
+                "getAndInsertPatientLastUpdatedData function failed.",
+                mapOf(
+                    Pair(
+                        USER_ID,
+                        preferenceRepository.getUserDetails()?.userId ?: ERROR_FETCHING_USER_DETAILS
+                    )
+                )
+            )
             ApiErrorResponse(
                 statusCode = 0,
                 errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
@@ -600,6 +714,16 @@ class SyncRepositoryImpl @Inject constructor(
             }
         } catch (e: Exception) {
             Timber.e(e, e.localizedMessage)
+            crashlyticsLogger.logException(
+                e,
+                "getAndInsertCVD function failed.",
+                mapOf(
+                    Pair(
+                        USER_ID,
+                        preferenceRepository.getUserDetails()?.userId ?: ERROR_FETCHING_USER_DETAILS
+                    )
+                )
+            )
             ApiErrorResponse(
                 statusCode = 0,
                 errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
@@ -642,6 +766,16 @@ class SyncRepositoryImpl @Inject constructor(
             }
         } catch (e: Exception) {
             Timber.e(e, e.localizedMessage)
+            crashlyticsLogger.logException(
+                e,
+                "getAndInsertListVitalData function failed.",
+                mapOf(
+                    Pair(
+                        USER_ID,
+                        preferenceRepository.getUserDetails()?.userId ?: ERROR_FETCHING_USER_DETAILS
+                    )
+                )
+            )
             ApiErrorResponse(
                 statusCode = 0,
                 errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
@@ -684,6 +818,16 @@ class SyncRepositoryImpl @Inject constructor(
             }
         } catch (e: Exception) {
             Timber.e(e, e.localizedMessage)
+            crashlyticsLogger.logException(
+                e,
+                "getAndInsertListDiagnosisData function failed.",
+                mapOf(
+                    Pair(
+                        USER_ID,
+                        preferenceRepository.getUserDetails()?.userId ?: ERROR_FETCHING_USER_DETAILS
+                    )
+                )
+            )
             return ApiErrorResponse(
                 statusCode = 0,
                 errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
@@ -720,6 +864,16 @@ class SyncRepositoryImpl @Inject constructor(
             }
         } catch (e: Exception) {
             Timber.e(e, e.localizedMessage)
+            crashlyticsLogger.logException(
+                e,
+                "sendPersonPostData function failed.",
+                mapOf(
+                    Pair(
+                        USER_ID,
+                        preferenceRepository.getUserDetails()?.userId ?: ERROR_FETCHING_USER_DETAILS
+                    )
+                )
+            )
             ApiErrorResponse(
                 statusCode = 0,
                 errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
@@ -761,6 +915,16 @@ class SyncRepositoryImpl @Inject constructor(
             }
         } catch (e: Exception) {
             Timber.e(e, e.localizedMessage)
+            crashlyticsLogger.logException(
+                e,
+                "sendFormPrescriptionPostData function failed.",
+                mapOf(
+                    Pair(
+                        USER_ID,
+                        preferenceRepository.getUserDetails()?.userId ?: ERROR_FETCHING_USER_DETAILS
+                    )
+                )
+            )
             ApiErrorResponse(
                 statusCode = 0,
                 errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
@@ -793,6 +957,16 @@ class SyncRepositoryImpl @Inject constructor(
             }
         } catch (e: Exception) {
             Timber.e(e, e.localizedMessage)
+            crashlyticsLogger.logException(
+                e,
+                "sendSchedulePostData function failed.",
+                mapOf(
+                    Pair(
+                        USER_ID,
+                        preferenceRepository.getUserDetails()?.userId ?: ERROR_FETCHING_USER_DETAILS
+                    )
+                )
+            )
             ApiErrorResponse(
                 statusCode = 0,
                 errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
@@ -825,6 +999,16 @@ class SyncRepositoryImpl @Inject constructor(
             }
         } catch (e: Exception) {
             Timber.e(e, e.localizedMessage)
+            crashlyticsLogger.logException(
+                e,
+                "sendAppointmentPostData function failed.",
+                mapOf(
+                    Pair(
+                        USER_ID,
+                        preferenceRepository.getUserDetails()?.userId ?: ERROR_FETCHING_USER_DETAILS
+                    )
+                )
+            )
             ApiErrorResponse(
                 statusCode = 0,
                 errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
@@ -859,6 +1043,16 @@ class SyncRepositoryImpl @Inject constructor(
             }
         } catch (e: Exception) {
             Timber.e(e, e.localizedMessage)
+            crashlyticsLogger.logException(
+                e,
+                "sendPatientLastUpdatePostData function failed.",
+                mapOf(
+                    Pair(
+                        USER_ID,
+                        preferenceRepository.getUserDetails()?.userId ?: ERROR_FETCHING_USER_DETAILS
+                    )
+                )
+            )
             ApiErrorResponse(
                 statusCode = 0,
                 errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
@@ -891,6 +1085,16 @@ class SyncRepositoryImpl @Inject constructor(
             }
         } catch (e: Exception) {
             Timber.e(e, e.localizedMessage)
+            crashlyticsLogger.logException(
+                e,
+                "sendCVDPostData function failed.",
+                mapOf(
+                    Pair(
+                        USER_ID,
+                        preferenceRepository.getUserDetails()?.userId ?: ERROR_FETCHING_USER_DETAILS
+                    )
+                )
+            )
             ApiErrorResponse(
                 statusCode = 0,
                 errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
@@ -923,6 +1127,16 @@ class SyncRepositoryImpl @Inject constructor(
             }
         } catch (e: Exception) {
             Timber.e(e, e.localizedMessage)
+            crashlyticsLogger.logException(
+                e,
+                "sendVitalPostData function failed.",
+                mapOf(
+                    Pair(
+                        USER_ID,
+                        preferenceRepository.getUserDetails()?.userId ?: ERROR_FETCHING_USER_DETAILS
+                    )
+                )
+            )
             ApiErrorResponse(
                 statusCode = 0,
                 errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
@@ -957,6 +1171,16 @@ class SyncRepositoryImpl @Inject constructor(
             }
         } catch (e: Exception) {
             Timber.e(e, e.localizedMessage)
+            crashlyticsLogger.logException(
+                e,
+                "sendDiagnosisPostData function failed.",
+                mapOf(
+                    Pair(
+                        USER_ID,
+                        preferenceRepository.getUserDetails()?.userId ?: ERROR_FETCHING_USER_DETAILS
+                    )
+                )
+            )
             ApiErrorResponse(
                 statusCode = 0,
                 errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
@@ -991,6 +1215,16 @@ class SyncRepositoryImpl @Inject constructor(
             }
         } catch (e: Exception) {
             Timber.e(e, e.localizedMessage)
+            crashlyticsLogger.logException(
+                e,
+                "sendPriorDxPostData function failed.",
+                mapOf(
+                    Pair(
+                        USER_ID,
+                        preferenceRepository.getUserDetails()?.userId ?: ERROR_FETCHING_USER_DETAILS
+                    )
+                )
+            )
             ApiErrorResponse(
                 statusCode = 0,
                 errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
@@ -1025,6 +1259,16 @@ class SyncRepositoryImpl @Inject constructor(
             }
         } catch (e: Exception) {
             Timber.e(e, e.localizedMessage)
+            crashlyticsLogger.logException(
+                e,
+                "sendHistoryMedicationPostData function failed.",
+                mapOf(
+                    Pair(
+                        USER_ID,
+                        preferenceRepository.getUserDetails()?.userId ?: ERROR_FETCHING_USER_DETAILS
+                    )
+                )
+            )
             ApiErrorResponse(
                 statusCode = 0,
                 errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
@@ -1059,6 +1303,16 @@ class SyncRepositoryImpl @Inject constructor(
             }
         } catch (e: Exception) {
             Timber.e(e, e.localizedMessage)
+            crashlyticsLogger.logException(
+                e,
+                "sendFamilyHistoryPostData function failed.",
+                mapOf(
+                    Pair(
+                        USER_ID,
+                        preferenceRepository.getUserDetails()?.userId ?: ERROR_FETCHING_USER_DETAILS
+                    )
+                )
+            )
             ApiErrorResponse(
                 statusCode = 0,
                 errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
@@ -1093,6 +1347,16 @@ class SyncRepositoryImpl @Inject constructor(
             }
         } catch (e: Exception) {
             Timber.e(e, e.localizedMessage)
+            crashlyticsLogger.logException(
+                e,
+                "sendAllergyPostData function failed.",
+                mapOf(
+                    Pair(
+                        USER_ID,
+                        preferenceRepository.getUserDetails()?.userId ?: ERROR_FETCHING_USER_DETAILS
+                    )
+                )
+            )
             ApiErrorResponse(
                 statusCode = 0,
                 errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
@@ -1127,6 +1391,16 @@ class SyncRepositoryImpl @Inject constructor(
             }
         } catch (e: Exception) {
             Timber.e(e, e.localizedMessage)
+            crashlyticsLogger.logException(
+                e,
+                "sendRiskFactorPostData function failed.",
+                mapOf(
+                    Pair(
+                        USER_ID,
+                        preferenceRepository.getUserDetails()?.userId ?: ERROR_FETCHING_USER_DETAILS
+                    )
+                )
+            )
             ApiErrorResponse(
                 statusCode = 0,
                 errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
@@ -1161,6 +1435,16 @@ class SyncRepositoryImpl @Inject constructor(
             }
         } catch (e: Exception) {
             Timber.e(e, e.localizedMessage)
+            crashlyticsLogger.logException(
+                e,
+                "sendTobaccoCessationPostData function failed.",
+                mapOf(
+                    Pair(
+                        USER_ID,
+                        preferenceRepository.getUserDetails()?.userId ?: ERROR_FETCHING_USER_DETAILS
+                    )
+                )
+            )
             ApiErrorResponse(
                 statusCode = 0,
                 errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
@@ -1195,6 +1479,16 @@ class SyncRepositoryImpl @Inject constructor(
             }
         } catch (e: Exception) {
             Timber.e(e, e.localizedMessage)
+            crashlyticsLogger.logException(
+                e,
+                "sendInterventionPostData function failed.",
+                mapOf(
+                    Pair(
+                        USER_ID,
+                        preferenceRepository.getUserDetails()?.userId ?: ERROR_FETCHING_USER_DETAILS
+                    )
+                )
+            )
             ApiErrorResponse(
                 statusCode = 0,
                 errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
@@ -1229,6 +1523,16 @@ class SyncRepositoryImpl @Inject constructor(
             }
         } catch (e: Exception) {
             Timber.e(e, e.localizedMessage)
+            crashlyticsLogger.logException(
+                e,
+                "sendExaminationPostData function failed.",
+                mapOf(
+                    Pair(
+                        USER_ID,
+                        preferenceRepository.getUserDetails()?.userId ?: ERROR_FETCHING_USER_DETAILS
+                    )
+                )
+            )
             ApiErrorResponse(
                 statusCode = 0,
                 errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
@@ -1263,6 +1567,16 @@ class SyncRepositoryImpl @Inject constructor(
             }
         } catch (e: Exception) {
             Timber.e(e, e.localizedMessage)
+            crashlyticsLogger.logException(
+                e,
+                "sendReferralPostData function failed.",
+                mapOf(
+                    Pair(
+                        USER_ID,
+                        preferenceRepository.getUserDetails()?.userId ?: ERROR_FETCHING_USER_DETAILS
+                    )
+                )
+            )
             ApiErrorResponse(
                 statusCode = 0,
                 errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
@@ -1298,6 +1612,16 @@ class SyncRepositoryImpl @Inject constructor(
             }
         } catch (e: Exception) {
             Timber.e(e, e.localizedMessage)
+            crashlyticsLogger.logException(
+                e,
+                "sendPersonPatchData function failed.",
+                mapOf(
+                    Pair(
+                        USER_ID,
+                        preferenceRepository.getUserDetails()?.userId ?: ERROR_FETCHING_USER_DETAILS
+                    )
+                )
+            )
             ApiErrorResponse(
                 statusCode = 0,
                 errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
@@ -1330,6 +1654,16 @@ class SyncRepositoryImpl @Inject constructor(
             }
         } catch (e: Exception) {
             Timber.e(e, e.localizedMessage)
+            crashlyticsLogger.logException(
+                e,
+                "sendAppointmentPatchData function failed.",
+                mapOf(
+                    Pair(
+                        USER_ID,
+                        preferenceRepository.getUserDetails()?.userId ?: ERROR_FETCHING_USER_DETAILS
+                    )
+                )
+            )
             ApiErrorResponse(
                 statusCode = 0,
                 errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
@@ -1369,6 +1703,16 @@ class SyncRepositoryImpl @Inject constructor(
             }
         } catch (e: Exception) {
             Timber.e(e, e.localizedMessage)
+            crashlyticsLogger.logException(
+                e,
+                "sendPrescriptionPutData function failed.",
+                mapOf(
+                    Pair(
+                        USER_ID,
+                        preferenceRepository.getUserDetails()?.userId ?: ERROR_FETCHING_USER_DETAILS
+                    )
+                )
+            )
             ApiErrorResponse(
                 statusCode = 0,
                 errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
@@ -1405,6 +1749,16 @@ class SyncRepositoryImpl @Inject constructor(
             }
         } catch (e: Exception) {
             Timber.e(e, e.localizedMessage)
+            crashlyticsLogger.logException(
+                e,
+                "sentInterventionPutData function failed.",
+                mapOf(
+                    Pair(
+                        USER_ID,
+                        preferenceRepository.getUserDetails()?.userId ?: ERROR_FETCHING_USER_DETAILS
+                    )
+                )
+            )
             ApiErrorResponse(
                 statusCode = 0,
                 errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
@@ -1441,6 +1795,16 @@ class SyncRepositoryImpl @Inject constructor(
             }
         } catch (e: Exception) {
             Timber.e(e, e.localizedMessage)
+            crashlyticsLogger.logException(
+                e,
+                "sentExaminationPutData function failed.",
+                mapOf(
+                    Pair(
+                        USER_ID,
+                        preferenceRepository.getUserDetails()?.userId ?: ERROR_FETCHING_USER_DETAILS
+                    )
+                )
+            )
             ApiErrorResponse(
                 statusCode = 0,
                 errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
@@ -1485,6 +1849,16 @@ class SyncRepositoryImpl @Inject constructor(
             }
         } catch (e: Exception) {
             Timber.e(e, e.localizedMessage)
+            crashlyticsLogger.logException(
+                e,
+                "getAndInsertLevelsData function failed.",
+                mapOf(
+                    Pair(
+                        USER_ID,
+                        preferenceRepository.getUserDetails()?.userId ?: ERROR_FETCHING_USER_DETAILS
+                    )
+                )
+            )
             ApiErrorResponse(
                 statusCode = 0,
                 errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
@@ -1526,6 +1900,16 @@ class SyncRepositoryImpl @Inject constructor(
             }
         } catch (e: Exception) {
             Timber.e(e, e.localizedMessage)
+            crashlyticsLogger.logException(
+                e,
+                "getAndInsertHealthFacilityData function failed.",
+                mapOf(
+                    Pair(
+                        USER_ID,
+                        preferenceRepository.getUserDetails()?.userId ?: ERROR_FETCHING_USER_DETAILS
+                    )
+                )
+            )
             ApiErrorResponse(
                 statusCode = 0,
                 errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
@@ -1568,6 +1952,16 @@ class SyncRepositoryImpl @Inject constructor(
             }
         } catch (e: Exception) {
             Timber.e(e, e.localizedMessage)
+            crashlyticsLogger.logException(
+                e,
+                "getAndInsertPriorDxData function failed.",
+                mapOf(
+                    Pair(
+                        USER_ID,
+                        preferenceRepository.getUserDetails()?.userId ?: ERROR_FETCHING_USER_DETAILS
+                    )
+                )
+            )
             ApiErrorResponse(
                 statusCode = 0,
                 errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
@@ -1612,6 +2006,16 @@ class SyncRepositoryImpl @Inject constructor(
             }
         } catch (e: Exception) {
             Timber.e(e, e.localizedMessage)
+            crashlyticsLogger.logException(
+                e,
+                "getAndInsertHistoryMedicationData function failed.",
+                mapOf(
+                    Pair(
+                        USER_ID,
+                        preferenceRepository.getUserDetails()?.userId ?: ERROR_FETCHING_USER_DETAILS
+                    )
+                )
+            )
             ApiErrorResponse(
                 statusCode = 0,
                 errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
@@ -1654,6 +2058,16 @@ class SyncRepositoryImpl @Inject constructor(
             }
         } catch (e: Exception) {
             Timber.e(e, e.localizedMessage)
+            crashlyticsLogger.logException(
+                e,
+                "getAndInsertFamilyHistoryData function failed.",
+                mapOf(
+                    Pair(
+                        USER_ID,
+                        preferenceRepository.getUserDetails()?.userId ?: ERROR_FETCHING_USER_DETAILS
+                    )
+                )
+            )
             ApiErrorResponse(
                 statusCode = 0,
                 errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
@@ -1694,6 +2108,16 @@ class SyncRepositoryImpl @Inject constructor(
             }
         } catch (e: Exception) {
             Timber.e(e, e.localizedMessage)
+            crashlyticsLogger.logException(
+                e,
+                "getAndInsertAllergyData function failed.",
+                mapOf(
+                    Pair(
+                        USER_ID,
+                        preferenceRepository.getUserDetails()?.userId ?: ERROR_FETCHING_USER_DETAILS
+                    )
+                )
+            )
             ApiErrorResponse(
                 statusCode = 0,
                 errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
@@ -1734,6 +2158,16 @@ class SyncRepositoryImpl @Inject constructor(
             }
         } catch (e: Exception) {
             Timber.e(e, e.localizedMessage)
+            crashlyticsLogger.logException(
+                e,
+                "getAndInsertRiskFactorData function failed.",
+                mapOf(
+                    Pair(
+                        USER_ID,
+                        preferenceRepository.getUserDetails()?.userId ?: ERROR_FETCHING_USER_DETAILS
+                    )
+                )
+            )
             ApiErrorResponse(
                 statusCode = 0,
                 errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
@@ -1776,6 +2210,16 @@ class SyncRepositoryImpl @Inject constructor(
             }
         } catch (e: Exception) {
             Timber.e(e, e.localizedMessage)
+            crashlyticsLogger.logException(
+                e,
+                "getAndInsertTobaccoCessationData function failed.",
+                mapOf(
+                    Pair(
+                        USER_ID,
+                        preferenceRepository.getUserDetails()?.userId ?: ERROR_FETCHING_USER_DETAILS
+                    )
+                )
+            )
             ApiErrorResponse(
                 statusCode = 0,
                 errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
@@ -1818,6 +2262,16 @@ class SyncRepositoryImpl @Inject constructor(
             }
         } catch (e: Exception) {
             Timber.e(e, e.localizedMessage)
+            crashlyticsLogger.logException(
+                e,
+                "getAndInsertInterventionsData function failed.",
+                mapOf(
+                    Pair(
+                        USER_ID,
+                        preferenceRepository.getUserDetails()?.userId ?: ERROR_FETCHING_USER_DETAILS
+                    )
+                )
+            )
             ApiErrorResponse(
                 statusCode = 0,
                 errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
@@ -1860,6 +2314,16 @@ class SyncRepositoryImpl @Inject constructor(
             }
         } catch (e: Exception) {
             Timber.e(e, e.localizedMessage)
+            crashlyticsLogger.logException(
+                e,
+                "getAndInsertExaminationData function failed.",
+                mapOf(
+                    Pair(
+                        USER_ID,
+                        preferenceRepository.getUserDetails()?.userId ?: ERROR_FETCHING_USER_DETAILS
+                    )
+                )
+            )
             ApiErrorResponse(
                 statusCode = 0,
                 errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
@@ -1902,6 +2366,16 @@ class SyncRepositoryImpl @Inject constructor(
             }
         } catch (e: Exception) {
             Timber.e(e, e.localizedMessage)
+            crashlyticsLogger.logException(
+                e,
+                "getAndInsertReferralData function failed.",
+                mapOf(
+                    Pair(
+                        USER_ID,
+                        preferenceRepository.getUserDetails()?.userId ?: ERROR_FETCHING_USER_DETAILS
+                    )
+                )
+            )
             ApiErrorResponse(
                 statusCode = 0,
                 errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
