@@ -571,12 +571,12 @@ fun DeceasedReasonComposable(
         },
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
         modifier = Modifier
-            .statusBarsPadding()
-            .navigationBarsPadding(),
+            .statusBarsPadding(),
         dragHandle = null
     ) {
         Column(
             modifier = Modifier
+                .navigationBarsPadding()
                 .padding(24.dp)
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(4.dp)

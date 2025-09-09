@@ -64,8 +64,8 @@ import com.heartcare.agni.data.local.roomdb.typeconverters.DiagnosisTypeConverte
 import com.heartcare.agni.data.local.roomdb.typeconverters.TypeConverter
 import com.heartcare.agni.data.local.roomdb.views.PrescriptionDirectionAndMedicineView
 import com.heartcare.agni.data.local.sharedpreferences.PreferenceStorage
-import net.sqlcipher.database.SQLiteDatabase
-import net.sqlcipher.database.SupportFactory
+import net.zetetic.database.sqlcipher.SupportOpenHelperFactory
+import java.nio.charset.StandardCharsets
 import java.util.UUID
 
 @Database(
@@ -151,8 +151,8 @@ abstract class FhirAppDatabase : RoomDatabase() {
             }
 
             val passphrase: ByteArray =
-                SQLiteDatabase.getBytes(preferenceStorage.roomDBEncryptionKey.toCharArray())
-            val factory = SupportFactory(passphrase)
+                preferenceStorage.roomDBEncryptionKey.toByteArray(StandardCharsets.UTF_8)
+            val factory = SupportOpenHelperFactory(passphrase)
 
             return if (BuildConfig.DEBUG) {
                 Room.databaseBuilder(context, FhirAppDatabase::class.java, "heartcare_agni")
