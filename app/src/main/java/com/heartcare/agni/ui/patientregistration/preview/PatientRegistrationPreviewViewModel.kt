@@ -60,7 +60,6 @@ class PatientRegistrationPreviewViewModel @Inject constructor(
     val identifierList = mutableListOf<PatientIdentifier>()
 
     var relativeId by mutableStateOf(UUIDBuilder.generateUUID())
-    var relation by mutableStateOf("")
 
     var province: LevelResponse? by mutableStateOf(null)
     var areaCouncil: LevelResponse? by mutableStateOf(null)
