@@ -1,5 +1,8 @@
 package com.heartcare.agni.ui.prescription.filldetails
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
@@ -73,132 +76,145 @@ fun FillDetailsScreen(
             setMedicationData(viewModel, prescriptionViewModel)
         }
     }
-    Scaffold(
-        modifier = Modifier.imePadding(),
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = stringResource(id = R.string.fill_details),
-                        style = MaterialTheme.typography.titleLarge,
-                        modifier = Modifier.testTag("HEADING_TAG")
+    Box(
+        modifier = Modifier
+            .fillMaxSize(),
+    ) {
+        AnimatedVisibility(
+            visible = prescriptionViewModel.checkedMedication != null,
+            enter = slideInVertically(initialOffsetY = { it }),
+            exit = slideOutVertically(targetOffsetY = { it })
+        ) {
+            Scaffold(
+                modifier = Modifier.imePadding(),
+                topBar = {
+                    TopAppBar(
+                        title = {
+                            Text(
+                                text = stringResource(id = R.string.fill_details),
+                                style = MaterialTheme.typography.titleLarge,
+                                modifier = Modifier.testTag("HEADING_TAG")
+                            )
+                        },
+                        navigationIcon = {
+                            IconButton(onClick = {
+                                prescriptionViewModel.checkedMedication = null
+                                prescriptionViewModel.medicationToEdit = null
+                                viewModel.reset()
+                            }) {
+                                Icon(Icons.Default.Clear, contentDescription = "CLEAR_ICON")
+                            }
+                        },
+                        colors = TopAppBarDefaults.topAppBarColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(8.dp)
+                        ),
+                        actions = {
+                            TextButton(
+                                onClick = {
+                                    doneButtonClick(viewModel, prescriptionViewModel)
+                                },
+                                enabled = viewModel.quantityPrescribed().isNotBlank(),
+                                modifier = Modifier.testTag("DONE_BTN")
+                            ) {
+                                Text(text = stringResource(id = R.string.done))
+                            }
+                        }
                     )
                 },
-                navigationIcon = {
-                    IconButton(onClick = {
-                        prescriptionViewModel.checkedMedication = null
-                        prescriptionViewModel.medicationToEdit = null
-                        viewModel.reset()
-                    }) {
-                        Icon(Icons.Default.Clear, contentDescription = "CLEAR_ICON")
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(8.dp)
-                ),
-                actions = {
-                    TextButton(
-                        onClick = {
-                            doneButtonClick(viewModel, prescriptionViewModel)
-                        },
-                        enabled = viewModel.quantityPrescribed().isNotBlank(),
-                        modifier = Modifier.testTag("DONE_BTN")
-                    ) {
-                        Text(text = stringResource(id = R.string.done))
+                content = { paddingValues ->
+                    Box(modifier = Modifier.padding(paddingValues)) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(15.dp)
+                                .verticalScroll(rememberScrollState()),
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            Column {
+                                var formulationExpanded by remember { mutableStateOf(false) }
+                                OutlinedTextField(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .testTag("ACTIVE_INGREDIENT_FIELD"),
+                                    value = prescriptionViewModel.checkedMedication?.name ?: "",
+                                    onValueChange = {
+                                    },
+                                    label = {
+                                        Text(text = stringResource(id = R.string.medicine_name_label))
+                                    },
+                                    trailingIcon = {
+                                        Icon(
+                                            Icons.Default.KeyboardArrowDown,
+                                            contentDescription = "DROP_DOWN_ARROW"
+                                        )
+                                    },
+                                    readOnly = true,
+                                    interactionSource = remember {
+                                        MutableInteractionSource()
+                                    }.also { interactionSource ->
+                                        LaunchedEffect(interactionSource) {
+                                            interactionSource.interactions.collect { interaction ->
+                                                if (interaction is PressInteraction.Release) {
+                                                    formulationExpanded = !formulationExpanded
+                                                }
+                                            }
+                                        }
+                                    },
+                                    singleLine = true
+                                )
+                                DropdownMenu(
+                                    modifier = Modifier
+                                        .fillMaxHeight(0.6f)
+                                        .fillMaxWidth(0.9f)
+                                        .testTag("ACTIVE_INGREDIENT_DROPDOWN_LIST"),
+                                    expanded = formulationExpanded,
+                                    onDismissRequest = {
+                                        formulationExpanded = !formulationExpanded
+                                    },
+                                ) {
+                                    prescriptionViewModel.medicationsList.filter { ingredient ->
+                                        !prescriptionViewModel.selectedMedicationsList.contains(
+                                            ingredient
+                                        )
+                                    }.forEach { label ->
+                                        DropdownMenuItem(
+                                            onClick = {
+                                                formulationExpanded = !formulationExpanded
+                                                prescriptionViewModel.checkedMedication = label
+                                                viewModel.reset()
+                                            },
+                                            text = {
+                                                Text(
+                                                    text = label.name,
+                                                    style = MaterialTheme.typography.bodyLarge,
+                                                    color = MaterialTheme.colorScheme.onSurface
+                                                )
+                                            }
+                                        )
+                                    }
+                                }
+                            }
+                            Text(
+                                text = "${viewModel.medicationSelected?.code ?: ""} · ${viewModel.medicationSelected?.categoryName ?: ""} · ${viewModel.medicationSelected?.className ?: ""} ",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            DropdownComposable(
+                                value = viewModel.selectedBrand,
+                                updateValue = { viewModel.selectedBrand = it },
+                                label = stringResource(R.string.brand),
+                                dropdownList = viewModel.medicationSelected?.brandList ?: listOf(),
+                                errorText = "",
+                                isMandatory = false,
+                                dropdownWeight = 0.9f
+                            )
+                            FormulationsForm(prescriptionViewModel, viewModel)
+                        }
                     }
                 }
             )
-        },
-        content = { paddingValues ->
-            Box(modifier = Modifier.padding(paddingValues)) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(15.dp)
-                        .verticalScroll(rememberScrollState()),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    Column {
-                        var formulationExpanded by remember { mutableStateOf(false) }
-                        OutlinedTextField(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .testTag("ACTIVE_INGREDIENT_FIELD"),
-                            value = prescriptionViewModel.checkedMedication?.name ?: "",
-                            onValueChange = {
-                            },
-                            label = {
-                                Text(text = stringResource(id = R.string.medicine_name_label))
-                            },
-                            trailingIcon = {
-                                Icon(
-                                    Icons.Default.KeyboardArrowDown,
-                                    contentDescription = "DROP_DOWN_ARROW"
-                                )
-                            },
-                            readOnly = true,
-                            interactionSource = remember {
-                                MutableInteractionSource()
-                            }.also { interactionSource ->
-                                LaunchedEffect(interactionSource) {
-                                    interactionSource.interactions.collect { interaction ->
-                                        if (interaction is PressInteraction.Release) {
-                                            formulationExpanded = !formulationExpanded
-                                        }
-                                    }
-                                }
-                            },
-                            singleLine = true
-                        )
-                        DropdownMenu(
-                            modifier = Modifier
-                                .fillMaxHeight(0.6f)
-                                .fillMaxWidth(0.9f)
-                                .testTag("ACTIVE_INGREDIENT_DROPDOWN_LIST"),
-                            expanded = formulationExpanded,
-                            onDismissRequest = { formulationExpanded = !formulationExpanded },
-                        ) {
-                            prescriptionViewModel.medicationsList.filter { ingredient ->
-                                !prescriptionViewModel.selectedMedicationsList.contains(
-                                    ingredient
-                                )
-                            }.forEach { label ->
-                                DropdownMenuItem(
-                                    onClick = {
-                                        formulationExpanded = !formulationExpanded
-                                        prescriptionViewModel.checkedMedication = label
-                                        viewModel.reset()
-                                    },
-                                    text = {
-                                        Text(
-                                            text = label.name,
-                                            style = MaterialTheme.typography.bodyLarge,
-                                            color = MaterialTheme.colorScheme.onSurface
-                                        )
-                                    }
-                                )
-                            }
-                        }
-                    }
-                    Text(
-                        text = "${viewModel.medicationSelected?.code ?: ""} · ${viewModel.medicationSelected?.categoryName ?: ""} · ${viewModel.medicationSelected?.className ?: ""} ",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    DropdownComposable(
-                        value = viewModel.selectedBrand,
-                        updateValue = { viewModel.selectedBrand = it },
-                        label = stringResource(R.string.brand),
-                        dropdownList = viewModel.medicationSelected?.brandList ?: listOf(),
-                        errorText = "",
-                        isMandatory = false,
-                        dropdownWeight = 0.9f
-                    )
-                    FormulationsForm(prescriptionViewModel, viewModel)
-                }
-            }
         }
-    )
+    }
 }
 
 @Composable

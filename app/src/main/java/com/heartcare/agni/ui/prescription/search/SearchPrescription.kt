@@ -1,15 +1,21 @@
 package com.heartcare.agni.ui.prescription.search
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -44,76 +50,97 @@ import com.heartcare.agni.ui.prescription.PrescriptionViewModel
 @Composable
 fun SearchPrescription(viewModel: PrescriptionViewModel) {
     val focusRequester = remember { FocusRequester() }
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.surfaceColorAtElevation(8.dp))
-            .testTag("SEARCH_LAYOUT")
-            .clickable { },
-        verticalArrangement = Arrangement.Top
+    Box(
+        modifier = if (!viewModel.isSearching) Modifier
+            .fillMaxSize()
+            .statusBarsPadding()
+            .background(MaterialTheme.colorScheme.outline.copy(alpha = 0f))
+        else Modifier
+            .fillMaxSize()
+            .statusBarsPadding()
+            .background(MaterialTheme.colorScheme.outline.copy(alpha = 0.5f))
+            .clickable(enabled = false) { }
     ) {
-        val containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(8.dp)
-        TextField(
-            value = viewModel.searchQuery,
-            onValueChange = {
-                viewModel.searchQuery = it
-            },
-            leadingIcon = {
-                IconButton(onClick = {
-                    viewModel.searchQuery = ""
-                    viewModel.isSearching = false
-                }) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "BACK_ICON")
-                }
-            },
-            trailingIcon = {
-                if (viewModel.searchQuery.isNotBlank()) {
-                    IconButton(onClick = {
-                        viewModel.searchQuery = ""
-                    }) {
-                        Icon(Icons.Default.Clear, contentDescription = "CLEAR_ICON")
-                    }
-                }
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(64.dp)
-                .focusRequester(focusRequester)
-                .onGloballyPositioned {
-                    focusRequester.requestFocus()
-                }
-                .testTag("SEARCH_TEXT_FIELD"),
-            colors = TextFieldDefaults.colors(
-                focusedContainerColor = containerColor,
-                unfocusedContainerColor = containerColor,
-                disabledContainerColor = containerColor,
-            ),
-            keyboardOptions = KeyboardOptions(
-                imeAction = ImeAction.Search
-            ),
-            keyboardActions = KeyboardActions(
-                onSearch = {
-                    if (viewModel.searchQuery.isNotBlank()) {
-                        viewModel.isSearching = false
-                        viewModel.isSearchResult = true
-                        viewModel.insertRecentSearch(viewModel.searchQuery.trim()) {}
-                        viewModel.getActiveIngredientSearchList(viewModel.searchQuery.trim()) {
-                            viewModel.medicationsSearchList = it
+        AnimatedVisibility(
+            visible = viewModel.isSearching,
+            enter = slideInVertically(initialOffsetY = { -it }),
+            exit = slideOutVertically(targetOffsetY = { -it })
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(MaterialTheme.colorScheme.surfaceColorAtElevation(8.dp))
+                    .testTag("SEARCH_LAYOUT")
+                    .clickable { },
+                verticalArrangement = Arrangement.Top
+            ) {
+                val containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(8.dp)
+                TextField(
+                    value = viewModel.searchQuery,
+                    onValueChange = {
+                        viewModel.searchQuery = it
+                    },
+                    leadingIcon = {
+                        IconButton(onClick = {
+                            viewModel.searchQuery = ""
+                            viewModel.isSearching = false
+                        }) {
+                            Icon(
+                                Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "BACK_ICON"
+                            )
                         }
-                        viewModel.searchQuery = ""
-                    } else {
-                        viewModel.isSearching = false
-                        viewModel.searchQuery = ""
+                    },
+                    trailingIcon = {
+                        if (viewModel.searchQuery.isNotBlank()) {
+                            IconButton(onClick = {
+                                viewModel.searchQuery = ""
+                            }) {
+                                Icon(Icons.Default.Clear, contentDescription = "CLEAR_ICON")
+                            }
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(64.dp)
+                        .focusRequester(focusRequester)
+                        .onGloballyPositioned {
+                            focusRequester.requestFocus()
+                        }
+                        .testTag("SEARCH_TEXT_FIELD"),
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = containerColor,
+                        unfocusedContainerColor = containerColor,
+                        disabledContainerColor = containerColor,
+                    ),
+                    keyboardOptions = KeyboardOptions(
+                        imeAction = ImeAction.Search
+                    ),
+                    keyboardActions = KeyboardActions(
+                        onSearch = {
+                            if (viewModel.searchQuery.isNotBlank()) {
+                                viewModel.isSearching = false
+                                viewModel.isSearchResult = true
+                                viewModel.insertRecentSearch(viewModel.searchQuery.trim()) {}
+                                viewModel.getActiveIngredientSearchList(viewModel.searchQuery.trim()) {
+                                    viewModel.medicationsSearchList = it
+                                }
+                                viewModel.searchQuery = ""
+                            } else {
+                                viewModel.isSearching = false
+                                viewModel.searchQuery = ""
+                            }
+                        }
+                    ),
+                    singleLine = true
+                )
+                LazyColumn(modifier = Modifier.testTag("PREVIOUS_SEARCHES")) {
+                    items(viewModel.previousSearchList) { listItem ->
+                        PreviousSearches(
+                            listItem, viewModel
+                        )
                     }
                 }
-            ),
-            singleLine = true
-        )
-        LazyColumn(modifier = Modifier.testTag("PREVIOUS_SEARCHES")) {
-            items(viewModel.previousSearchList) { listItem ->
-                PreviousSearches(
-                    listItem, viewModel
-                )
             }
         }
     }
