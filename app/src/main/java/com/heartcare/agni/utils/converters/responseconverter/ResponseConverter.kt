@@ -101,6 +101,7 @@ import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toAge
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toPatientDate
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toTimeInMilli
 import java.util.Date
+import java.util.Locale
 
 fun PatientResponse.toPatientEntity(): PatientEntity {
     return PatientEntity(
@@ -513,7 +514,11 @@ internal suspend fun CVDResponse.toCVDEntity(
     var cholesterolInMMHG: Double? = null
     if (cholesterol != null) {
         cholesterolInMMHG =
-            if (cholesterolUnits.indexOf(cholesterolUnit) == 1) cholesterol * 0.0259
+            if (cholesterolUnits.indexOf(cholesterolUnit) == 1) String.format(
+                Locale.getDefault(),
+                "%.1f",
+                cholesterol * 0.0259
+            ).toDouble()
             else cholesterol
     }
     val riskPercent = riskPredictionDao.predictRisk(
@@ -693,14 +698,6 @@ internal suspend fun VitalResponse.toVitalEntity(
 internal fun DiagnosisMasterResponse.toDiagnosisMasterEntity(): DiagnosisMasterEntity {
     return DiagnosisMasterEntity(
         id = diagnosisId,
-        code = code,
-        display = display
-    )
-}
-
-internal fun DiagnosisMasterEntity.toDiagnosisMasterResponse(): DiagnosisMasterResponse {
-    return DiagnosisMasterResponse(
-        diagnosisId = id,
         code = code,
         display = display
     )

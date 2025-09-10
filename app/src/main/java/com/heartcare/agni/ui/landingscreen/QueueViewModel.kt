@@ -69,9 +69,9 @@ class QueueViewModel @Inject constructor(
     var selectedChip by mutableIntStateOf(R.string.total_appointment)
     var rescheduled by mutableStateOf(false)
 
-    var scheduledQueueList by mutableStateOf(listOf<AppointmentResponseLocal>())
-    var assessedQueueList by mutableStateOf(listOf<AppointmentResponseLocal>())
-    var prescribedQueueList by mutableStateOf(listOf<AppointmentResponseLocal>())
+    var scheduledQueueListWithPatient by mutableStateOf(listOf<Pair<PatientResponse, AppointmentResponseLocal>>())
+    var assessedQueueListWithPatient by mutableStateOf(listOf<Pair<PatientResponse, AppointmentResponseLocal>>())
+    var prescribedQueueListWithPatient by mutableStateOf(listOf<Pair<PatientResponse, AppointmentResponseLocal>>())
 
     internal suspend fun syncData() {
         getAppointmentListByDate()
@@ -95,27 +95,42 @@ class QueueViewModel @Inject constructor(
                 appointmentResponseLocal.hospitalCode == user.hospitalCode &&
                         (patient.firstName.contains(searchQueueQuery, true) || patient.lastName.contains(searchQueueQuery, true) || patient.heartcareId?.contains(searchQueueQuery, true) == true)
             }
-            scheduledQueueList = appointmentsList.filter { appointmentResponseLocal ->
+            scheduledQueueListWithPatient = appointmentsList.filter { appointmentResponseLocal ->
                 appointmentResponseLocal.status == AppointmentStatusEnum.WALK_IN.value
                         || appointmentResponseLocal.status == AppointmentStatusEnum.ARRIVED.value
                         || appointmentResponseLocal.status == AppointmentStatusEnum.SCHEDULED.value
                         || appointmentResponseLocal.status == AppointmentStatusEnum.NO_SHOW.value
+            }.map { appointment ->
+                Pair(
+                    getPatientById(appointment.patientId),
+                    appointment
+                )
             }
-            assessedQueueList = appointmentsList.filter { appointmentResponseLocal ->
+            assessedQueueListWithPatient = appointmentsList.filter { appointmentResponseLocal ->
                 (appointmentResponseLocal.status == AppointmentStatusEnum.IN_PROGRESS.value
                         || appointmentResponseLocal.status == AppointmentStatusEnum.COMPLETED.value)
                         && !isPrescriptionExists(appointmentResponseLocal.uuid)
+            }.map { appointment ->
+                Pair(
+                    getPatientById(appointment.patientId),
+                    appointment
+                )
             }
-            prescribedQueueList = appointmentsList.filter { appointmentResponseLocal ->
+            prescribedQueueListWithPatient = appointmentsList.filter { appointmentResponseLocal ->
                 (appointmentResponseLocal.status == AppointmentStatusEnum.IN_PROGRESS.value
                         || appointmentResponseLocal.status == AppointmentStatusEnum.COMPLETED.value)
                         && isPrescriptionExists(appointmentResponseLocal.uuid)
+            }.map { appointment ->
+                Pair(
+                    getPatientById(appointment.patientId),
+                    appointment
+                )
             }
             isLoading = false
         }
     }
 
-    internal suspend fun getPatientById(patientId: String): PatientResponse {
+    private suspend fun getPatientById(patientId: String): PatientResponse {
         return patientRepository.getPatientById(patientId)[0]
     }
 
