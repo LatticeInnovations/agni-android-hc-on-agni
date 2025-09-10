@@ -41,7 +41,7 @@ class AddReferralViewModel @Inject constructor(
     private val genericRepository: GenericRepository,
     private val scheduleRepository: ScheduleRepository,
     private val patientLastUpdatedRepository: PatientLastUpdatedRepository,
-    @IoDispatcher private val ioDispatcher: CoroutineDispatcher
+    @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) : BaseViewModel() {
     val user = preferenceRepository.getUserDetails()!!
     var isLaunched by mutableStateOf(false)
@@ -70,6 +70,7 @@ class AddReferralViewModel @Inject constructor(
     fun getListAndRecords(patientId: String) {
         viewModelScope.launch(ioDispatcher) {
             masterHealthFacilityList = healthFacilityRepository.getHealthFacilityInLevelResponse()
+                .filter { it.code != user.hospitalCode }
             masterIslandList =
                 levelRepository.getLevelListByFhirIds(*masterHealthFacilityList.map { it.precedingLevelId!! }
                     .toTypedArray())
