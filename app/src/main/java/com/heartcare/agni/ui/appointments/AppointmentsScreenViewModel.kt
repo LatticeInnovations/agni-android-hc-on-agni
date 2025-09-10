@@ -33,7 +33,7 @@ class AppointmentsScreenViewModel @Inject constructor(
     private val scheduleRepository: ScheduleRepository,
     private val patientLastUpdatedRepository: PatientLastUpdatedRepository,
     preferenceRepository: PreferenceRepository,
-    @IoDispatcher private val ioDispatcher: CoroutineDispatcher
+    @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) : BaseViewModel() {
     var isLaunched by mutableStateOf(false)
     val user = preferenceRepository.getUserDetails()!!

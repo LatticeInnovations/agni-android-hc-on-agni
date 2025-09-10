@@ -18,7 +18,7 @@ import kotlinx.coroutines.launch
 class ViewReferralViewModel @Inject constructor(
     private val healthFacilityRepository: HealthFacilityRepository,
     private val levelRepository: LevelRepository,
-    @IoDispatcher private val ioDispatcher: CoroutineDispatcher
+    @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ): BaseViewModel() {
     var isLaunched by mutableStateOf(false)
 

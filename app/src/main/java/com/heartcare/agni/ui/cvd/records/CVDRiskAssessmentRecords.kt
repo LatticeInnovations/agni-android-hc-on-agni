@@ -172,7 +172,8 @@ private fun RecordDetailsComposable(
                                 viewModel.patient!!
                             )
                             navController.navigate(Screen.AddReferralScreen.route)
-                        }
+                        },
+                        enabled = viewModel.patient!!.patientDeceasedReason.isNullOrBlank()
                     ) {
                         Text(stringResource(R.string.refer))
                     }

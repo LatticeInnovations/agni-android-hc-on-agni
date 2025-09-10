@@ -20,7 +20,7 @@ import javax.inject.Inject
 @HiltViewModel
 class ForgotPasswordViewModel@Inject constructor(
     private val authenticationRepository: AuthenticationRepository,
-    @IoDispatcher private val ioDispatcher: CoroutineDispatcher
+    @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ): BaseViewModel() {
     var isLoading by mutableStateOf(false)
 

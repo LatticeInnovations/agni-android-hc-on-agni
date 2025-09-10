@@ -160,25 +160,33 @@ private fun HandleLaunchedEffectsAndSnackBars(
         }
         viewModel.getPreviousRecords(viewModel.patient!!.id)
 
-        navController.currentBackStackEntry?.savedStateHandle?.let { handle ->
-            if (handle.remove<Boolean>(PRIOR_DX_SAVED) == true) {
-                snackBarHostState.showSnackbar(context.getString(R.string.prior_dx_saved))
-            }
-            if (handle.remove<Boolean>(MEDICATION_SAVED) == true) {
-                snackBarHostState.showSnackbar(context.getString(R.string.medication_saved))
-            }
-            if (handle.remove<Boolean>(FAMILY_HISTORY_SAVED) == true) {
-                snackBarHostState.showSnackbar(context.getString(R.string.family_history_saved))
-            }
-            if (handle.remove<Boolean>(ALLERGIES_SAVED) == true) {
-                snackBarHostState.showSnackbar(context.getString(R.string.allergies_saved))
-            }
-            if (handle.remove<Boolean>(RISK_FACTORS_SAVED) == true) {
-                snackBarHostState.showSnackbar(context.getString(R.string.risk_factors_saved))
-            }
-            if (handle.remove<Boolean>(TOBACCO_CESSATION_SAVED) == true) {
-                snackBarHostState.showSnackbar(context.getString(R.string.tobacco_cessation_saved))
-            }
+        showSnackBars(navController, snackBarHostState, context)
+    }
+}
+
+private suspend fun showSnackBars(
+    navController: NavController,
+    snackBarHostState: SnackbarHostState,
+    context: Context
+) {
+    navController.currentBackStackEntry?.savedStateHandle?.let { handle ->
+        if (handle.remove<Boolean>(PRIOR_DX_SAVED) == true) {
+            snackBarHostState.showSnackbar(context.getString(R.string.prior_dx_saved))
+        }
+        if (handle.remove<Boolean>(MEDICATION_SAVED) == true) {
+            snackBarHostState.showSnackbar(context.getString(R.string.medication_saved))
+        }
+        if (handle.remove<Boolean>(FAMILY_HISTORY_SAVED) == true) {
+            snackBarHostState.showSnackbar(context.getString(R.string.family_history_saved))
+        }
+        if (handle.remove<Boolean>(ALLERGIES_SAVED) == true) {
+            snackBarHostState.showSnackbar(context.getString(R.string.allergies_saved))
+        }
+        if (handle.remove<Boolean>(RISK_FACTORS_SAVED) == true) {
+            snackBarHostState.showSnackbar(context.getString(R.string.risk_factors_saved))
+        }
+        if (handle.remove<Boolean>(TOBACCO_CESSATION_SAVED) == true) {
+            snackBarHostState.showSnackbar(context.getString(R.string.tobacco_cessation_saved))
         }
     }
 }
@@ -295,14 +303,22 @@ private fun AddAssessmentButton(
     Button(
         modifier = Modifier.fillMaxWidth(),
         onClick = {
-            handleAddButtonClick(
-                viewModel = viewModel,
-                pagerState = pagerState,
-                coroutineScope = coroutineScope,
-                navController = navController,
-                snackBarHostState = snackBarHostState,
-                context = context
-            )
+            if (viewModel.patient!!.patientDeceasedReason.isNullOrBlank()) {
+                handleAddButtonClick(
+                    viewModel = viewModel,
+                    pagerState = pagerState,
+                    coroutineScope = coroutineScope,
+                    navController = navController,
+                    snackBarHostState = snackBarHostState,
+                    context = context
+                )
+            } else {
+                coroutineScope.launch {
+                    snackBarHostState.showSnackbar(
+                        context.getString(R.string.patient_deceased_error_msg)
+                    )
+                }
+            }
         }
     ) {
         Icon(
@@ -375,7 +391,7 @@ private fun NavigationButtons(
             enabled = pagerState.canScrollBackward,
             border = if (!pagerState.canScrollBackward)
                 BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
-            else ButtonDefaults.outlinedButtonBorder
+            else ButtonDefaults.outlinedButtonBorder()
         ) {
             Text(stringResource(R.string.back))
         }
@@ -407,38 +423,33 @@ private fun getBtnText(
     page: Int,
     viewModel: HistoryTakingAndTestsViewModel
 ): String {
-    return when (page) {
-        0 -> {
-            if (viewModel.todayPriorDx != null && !viewModel.existsInOtherHospital) stringResource(R.string.update_prior_diagnosis)
-            else stringResource(R.string.add_prior_diagnosis)
-        }
+    val context = LocalContext.current
 
-        1 -> {
-            if (viewModel.todayHistoryMedication != null && !viewModel.existsInOtherHospital) stringResource(R.string.update_medication)
-            else stringResource(R.string.add_medication)
-        }
+    val pageMapping = mapOf(
+        0 to Pair(R.string.add_prior_diagnosis, R.string.update_prior_diagnosis),
+        1 to Pair(R.string.add_medication, R.string.update_medication),
+        2 to Pair(R.string.add_family_history, R.string.update_family_history),
+        3 to Pair(R.string.add_allergies, R.string.update_allergies),
+        4 to Pair(R.string.add_risk_factor, R.string.update_risk_factor),
+        5 to Pair(R.string.add_tobacco_cessation, R.string.update_tobacco_cessation)
+    )
 
-        2 -> {
-            if (viewModel.todayFamilyHistory != null && !viewModel.existsInOtherHospital) stringResource(R.string.update_family_history)
-            else stringResource(R.string.add_family_history)
-        }
+    val (addRes, updateRes) = pageMapping[page] ?: return ""
 
-        3 -> {
-            if (viewModel.todayAllergy != null && !viewModel.existsInOtherHospital) stringResource(R.string.update_allergies)
-            else stringResource(R.string.add_allergies)
-        }
+    val hasData = when (page) {
+        0 -> viewModel.todayPriorDx != null
+        1 -> viewModel.todayHistoryMedication != null
+        2 -> viewModel.todayFamilyHistory != null
+        3 -> viewModel.todayAllergy != null
+        4 -> viewModel.todayRiskFactor != null
+        5 -> viewModel.todayTobaccoCessation != null
+        else -> false
+    }
 
-        4 -> {
-            if (viewModel.todayRiskFactor != null && !viewModel.existsInOtherHospital) stringResource(R.string.update_risk_factor)
-            else stringResource(R.string.add_risk_factor)
-        }
-
-        5 -> {
-            if (viewModel.todayTobaccoCessation != null && !viewModel.existsInOtherHospital) stringResource(R.string.update_tobacco_cessation)
-            else stringResource(R.string.add_tobacco_cessation)
-        }
-
-        else -> ""
+    return if (hasData && !viewModel.existsInOtherHospital) {
+        context.getString(updateRes)
+    } else {
+        context.getString(addRes)
     }
 }
 

@@ -1,5 +1,6 @@
 package com.heartcare.agni.ui.vitalsscreen
 
+import android.content.Context
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -174,37 +175,21 @@ fun VitalsScreen(navController: NavController, vitalsViewModel: VitalsViewModel 
                             .padding(12.dp)
                             .fillMaxWidth(),
                         onClick = {
-                            vitalsViewModel.getAppointmentInfo(
-                                callback = {
-                                    when {
-                                        vitalsViewModel.existsInOtherHospital -> {
-                                            scope.launch {
-                                                snackBarHostState.showSnackbar(
-                                                    message = context.getString(R.string.appointment_exists_in_other_hospital)
-                                                )
-                                            }
-                                        }
-
-                                        vitalsViewModel.canAddAssessment -> {
-                                            scope.launch {
-                                                navController.currentBackStackEntry?.savedStateHandle?.set(
-                                                    PATIENT,
-                                                    vitalsViewModel.patient
-                                                )
-                                                navController.navigate(Screen.AddVitalsScreen.route)
-                                            }
-                                        }
-
-                                        vitalsViewModel.isAppointmentCompleted -> {
-                                            vitalsViewModel.showAppointmentCompletedDialog = true
-                                        }
-
-                                        else -> {
-                                            vitalsViewModel.showAddToQueueDialog = true
-                                        }
-                                    }
+                            if (vitalsViewModel.patient!!.patientDeceasedReason.isNullOrBlank()) {
+                                handleAddBtnClick(
+                                    vitalsViewModel = vitalsViewModel,
+                                    scope = scope,
+                                    snackBarHostState = snackBarHostState,
+                                    context = context,
+                                    navController = navController
+                                )
+                            } else {
+                                scope.launch {
+                                    snackBarHostState.showSnackbar(
+                                        context.getString(R.string.patient_deceased_error_msg)
+                                    )
                                 }
-                            )
+                            }
                         },
                         contentPadding = ButtonDefaults.ButtonWithIconContentPadding
                     ) {
@@ -225,6 +210,46 @@ fun VitalsScreen(navController: NavController, vitalsViewModel: VitalsViewModel 
         }
     )
     ShowDialogs(vitalsViewModel, navController, scope)
+}
+
+private fun handleAddBtnClick(
+    vitalsViewModel: VitalsViewModel,
+    scope: CoroutineScope,
+    snackBarHostState: SnackbarHostState,
+    context: Context,
+    navController: NavController
+) {
+    vitalsViewModel.getAppointmentInfo(
+        callback = {
+            when {
+                vitalsViewModel.existsInOtherHospital -> {
+                    scope.launch {
+                        snackBarHostState.showSnackbar(
+                            message = context.getString(R.string.appointment_exists_in_other_hospital)
+                        )
+                    }
+                }
+
+                vitalsViewModel.canAddAssessment -> {
+                    scope.launch {
+                        navController.currentBackStackEntry?.savedStateHandle?.set(
+                            PATIENT,
+                            vitalsViewModel.patient
+                        )
+                        navController.navigate(Screen.AddVitalsScreen.route)
+                    }
+                }
+
+                vitalsViewModel.isAppointmentCompleted -> {
+                    vitalsViewModel.showAppointmentCompletedDialog = true
+                }
+
+                else -> {
+                    vitalsViewModel.showAddToQueueDialog = true
+                }
+            }
+        }
+    )
 }
 
 @Composable

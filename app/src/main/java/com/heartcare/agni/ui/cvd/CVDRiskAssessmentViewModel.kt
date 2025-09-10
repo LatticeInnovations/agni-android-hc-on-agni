@@ -63,7 +63,7 @@ class CVDRiskAssessmentViewModel @Inject constructor(
     private val patientLastUpdatedRepository: PatientLastUpdatedRepository,
     private val remoteConfigRepository: RemoteConfigRepository,
     private val referralRepository: ReferralRepository,
-    @IoDispatcher private val ioDispatcher: CoroutineDispatcher
+    @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) : ViewModel() {
     val user = preferenceRepository.getUserDetails()!!
     var isLaunched by mutableStateOf(false)

@@ -16,7 +16,7 @@ import javax.inject.Inject
 @HiltViewModel
 class FillDetailsViewModel @Inject constructor(
     private val medicationRepository: MedicationRepository,
-    @IoDispatcher private val ioDispatcher: CoroutineDispatcher
+    @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) : BaseViewModel() {
     var isLaunched by mutableStateOf(false)
 

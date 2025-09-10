@@ -198,37 +198,45 @@ private fun InterventionBottomBar(
                 .fillMaxWidth(),
             onClick = {
                 // add intervention
-                viewModel.getAppointmentInfo(
-                    callback = {
-                        when {
-                            viewModel.existsInOtherHospital -> {
-                                coroutineScope.launch {
-                                    snackBarHostState.showSnackbar(
-                                        message = context.getString(R.string.appointment_exists_in_other_hospital)
-                                    )
+                if (viewModel.patient!!.patientDeceasedReason.isNullOrBlank()) {
+                    viewModel.getAppointmentInfo(
+                        callback = {
+                            when {
+                                viewModel.existsInOtherHospital -> {
+                                    coroutineScope.launch {
+                                        snackBarHostState.showSnackbar(
+                                            message = context.getString(R.string.appointment_exists_in_other_hospital)
+                                        )
+                                    }
                                 }
-                            }
 
-                            viewModel.canAddAssessment -> {
-                                coroutineScope.launch {
-                                    navController.currentBackStackEntry?.savedStateHandle?.set(
-                                        PATIENT,
-                                        viewModel.patient
-                                    )
-                                    navController.navigate(Screen.AddInterventionScreen.route)
+                                viewModel.canAddAssessment -> {
+                                    coroutineScope.launch {
+                                        navController.currentBackStackEntry?.savedStateHandle?.set(
+                                            PATIENT,
+                                            viewModel.patient
+                                        )
+                                        navController.navigate(Screen.AddInterventionScreen.route)
+                                    }
                                 }
-                            }
 
-                            viewModel.isAppointmentCompleted -> {
-                                viewModel.showAppointmentCompletedDialog = true
-                            }
+                                viewModel.isAppointmentCompleted -> {
+                                    viewModel.showAppointmentCompletedDialog = true
+                                }
 
-                            else -> {
-                                viewModel.showAddToQueueDialog = true
+                                else -> {
+                                    viewModel.showAddToQueueDialog = true
+                                }
                             }
                         }
+                    )
+                } else {
+                    coroutineScope.launch {
+                        snackBarHostState.showSnackbar(
+                            context.getString(R.string.patient_deceased_error_msg)
+                        )
                     }
-                )
+                }
             }
         ) {
             Icon(Icons.Filled.Add, Icons.Filled.Add.name)

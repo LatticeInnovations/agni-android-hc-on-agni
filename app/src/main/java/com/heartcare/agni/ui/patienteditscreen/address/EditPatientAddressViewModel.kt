@@ -23,7 +23,7 @@ class EditPatientAddressViewModel @Inject constructor(
     val patientRepository: PatientRepository,
     val genericRepository: GenericRepository,
     private val levelRepository: LevelRepository,
-    @IoDispatcher private val ioDispatcher: CoroutineDispatcher
+    @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) : BaseViewModel(), DefaultLifecycleObserver {
     var isLaunched by mutableStateOf(false)
 

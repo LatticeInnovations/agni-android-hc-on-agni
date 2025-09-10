@@ -35,7 +35,7 @@ class PatientLandingScreenViewModel @Inject constructor(
     private val patientRepository: PatientRepository,
     private val appointmentRepository: AppointmentRepository,
     private val cvdAssessmentRepository: CVDAssessmentRepository,
-    @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
+    @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher,
     preferenceRepository: PreferenceRepository
 ) : BaseAndroidViewModel(application) {
 

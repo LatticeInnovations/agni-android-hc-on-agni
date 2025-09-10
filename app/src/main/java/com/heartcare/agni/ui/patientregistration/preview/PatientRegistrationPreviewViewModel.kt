@@ -28,7 +28,7 @@ class PatientRegistrationPreviewViewModel @Inject constructor(
     private val genericRepository: GenericRepository,
     private val identifierRepository: IdentifierRepository,
     private val patientLastUpdatedRepository: PatientLastUpdatedRepository,
-    @IoDispatcher private val ioDispatcher: CoroutineDispatcher
+    @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) : BaseViewModel() {
     var isLaunched by mutableStateOf(false)
     var patientResponse by mutableStateOf<PatientResponse?>(null)
@@ -60,7 +60,6 @@ class PatientRegistrationPreviewViewModel @Inject constructor(
     val identifierList = mutableListOf<PatientIdentifier>()
 
     var relativeId by mutableStateOf(UUIDBuilder.generateUUID())
-    var relation by mutableStateOf("")
 
     var province: LevelResponse? by mutableStateOf(null)
     var areaCouncil: LevelResponse? by mutableStateOf(null)

@@ -1,5 +1,8 @@
 package com.heartcare.agni.ui.prescription.search
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -32,67 +35,78 @@ import com.heartcare.agni.ui.prescription.quickselect.CompoundRow
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PrescriptionSearchResult(viewModel: PrescriptionViewModel) {
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = stringResource(
-                            id = R.string.match_found,
-                            viewModel.medicationsSearchList.size
-                        ), style = MaterialTheme.typography.titleLarge
+    Box(
+        modifier = Modifier
+            .fillMaxSize(),
+    ) {
+        AnimatedVisibility(
+            visible = viewModel.isSearchResult,
+            enter = slideInVertically(initialOffsetY = { it }),
+            exit = slideOutVertically(targetOffsetY = { it })
+        ) {
+            Scaffold(
+                topBar = {
+                    TopAppBar(
+                        title = {
+                            Text(
+                                text = stringResource(
+                                    id = R.string.match_found,
+                                    viewModel.medicationsSearchList.size
+                                ), style = MaterialTheme.typography.titleLarge
+                            )
+                        },
+                        navigationIcon = {
+                            IconButton(onClick = { viewModel.isSearchResult = false }) {
+                                Icon(Icons.Default.Clear, contentDescription = "CLEAR_ICON")
+                            }
+                        },
+                        colors = TopAppBarDefaults.topAppBarColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(8.dp)
+                        ),
+                        actions = {
+                            IconButton(onClick = {
+                                viewModel.isSearching = true
+                                viewModel.getPreviousSearch {
+                                    viewModel.previousSearchList = it
+                                }
+                            }) {
+                                Icon(Icons.Default.Search, contentDescription = "SEARCH_ICON")
+                            }
+                        }
                     )
                 },
-                navigationIcon = {
-                    IconButton(onClick = { viewModel.isSearchResult = false }) {
-                        Icon(Icons.Default.Clear, contentDescription = "CLEAR_ICON")
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(8.dp)
-                ),
-                actions = {
-                    IconButton(onClick = {
-                        viewModel.isSearching = true
-                        viewModel.getPreviousSearch {
-                            viewModel.previousSearchList = it
-                        }
-                    }) {
-                        Icon(Icons.Default.Search, contentDescription = "SEARCH_ICON")
-                    }
-                }
-            )
-        },
-        content = {
-            Box(
-                modifier =
-                    Modifier.padding(it)
-                        .padding(bottom = 64.dp)
-            ) {
-                if (viewModel.medicationsSearchList.isEmpty()) {
+                content = {
                     Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
+                        modifier =
+                            Modifier.padding(it)
+                                .padding(bottom = 64.dp)
                     ) {
-                        Text(stringResource(R.string.no_results_found))
-                    }
-                } else {
-                    key(viewModel.selectedMedicationsList) {
-                        Column(
-                            modifier = Modifier.verticalScroll(rememberScrollState())
-                                .padding(8.dp),
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            viewModel.medicationsSearchList.forEach { medication ->
-                                CompoundRow(
-                                    medication = medication,
-                                    viewModel = viewModel
-                                )
+                        if (viewModel.medicationsSearchList.isEmpty()) {
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(stringResource(R.string.no_results_found))
+                            }
+                        } else {
+                            key(viewModel.selectedMedicationsList) {
+                                Column(
+                                    modifier = Modifier.verticalScroll(rememberScrollState())
+                                        .padding(8.dp),
+                                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    viewModel.medicationsSearchList.forEach { medication ->
+                                        CompoundRow(
+                                            medication = medication,
+                                            viewModel = viewModel
+                                        )
+                                    }
+                                }
                             }
                         }
                     }
                 }
-            }
+            )
         }
-    )
+    }
 }

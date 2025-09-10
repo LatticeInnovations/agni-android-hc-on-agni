@@ -23,7 +23,7 @@ import javax.inject.Inject
 @HiltViewModel
 class AuthenticateOtpViewModel@Inject constructor(
     private val authenticationRepository: AuthenticationRepository,
-    @IoDispatcher private val ioDispatcher: CoroutineDispatcher
+    @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ): BaseViewModel() {
     var isLaunched by mutableStateOf(false)
 

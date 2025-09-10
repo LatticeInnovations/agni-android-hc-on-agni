@@ -30,7 +30,7 @@ class AppointmentsFabViewModel @Inject constructor(
     private val genericRepository: GenericRepository,
     private val preferenceRepository: PreferenceRepository,
     private val patientLastUpdatedRepository: PatientLastUpdatedRepository,
-    @IoDispatcher private val ioDispatcher: CoroutineDispatcher
+    @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) : BaseViewModel() {
     val user = preferenceRepository.getUserDetails()!!
     var appointment by mutableStateOf<AppointmentResponseLocal?>(null)

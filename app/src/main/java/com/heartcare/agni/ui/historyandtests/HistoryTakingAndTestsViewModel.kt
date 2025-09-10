@@ -47,7 +47,7 @@ class HistoryTakingAndTestsViewModel @Inject constructor(
     private val allergyRepository: AllergyRepository,
     private val riskFactorRepository: RiskFactorRepository,
     private val tobaccoCessationRepository: TobaccoCessationRepository,
-    @IoDispatcher private val ioDispatcher: CoroutineDispatcher
+    @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) : BaseViewModel() {
     var isLaunched by mutableStateOf(false)
     var isLoading by mutableStateOf(true)

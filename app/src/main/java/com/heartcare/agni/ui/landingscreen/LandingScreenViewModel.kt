@@ -69,9 +69,9 @@ class LandingScreenViewModel @Inject constructor(
     private val preferenceRepository: PreferenceRepository,
     private val appointmentRepository: AppointmentRepository,
     private val riskPredictionChartRepository: RiskPredictionChartRepository,
-    @Named("main_okhttp") private val okHttpClient: OkHttpClient,
-    @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
-    @DefaultDispatcher private val defaultDispatcher: CoroutineDispatcher
+    @param:Named("main_okhttp") private val okHttpClient: OkHttpClient,
+    @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher,
+    @param:DefaultDispatcher private val defaultDispatcher: CoroutineDispatcher
 ) : BaseAndroidViewModel(application) {
 
     private val workRequestBuilders: WorkRequestBuilders by lazy { (application as FhirApp).workRequestBuilder }
