@@ -83,7 +83,9 @@ fun PreviousPrescriptionsScreen(
                     PrescriptionCard(
                         viewModel,
                         previousPrescription,
-                        index == 0 && !(isToday(previousPrescription.prescriptionEntity.prescriptionDate)),
+                        index == 0
+                                && !(isToday(previousPrescription.prescriptionEntity.prescriptionDate))
+                                && viewModel.patient!!.patientDeceasedReason.isNullOrBlank(),
                         snackBarHostState,
                         coroutineScope,
                         pagerState
@@ -98,7 +100,7 @@ fun PreviousPrescriptionsScreen(
 fun PrescriptionCard(
     viewModel: PrescriptionViewModel,
     prescription: PrescriptionAndMedicineRelation,
-    isLatest: Boolean,
+    showRePrescribeBtn: Boolean,
     snackBarHostState: SnackbarHostState,
     coroutineScope: CoroutineScope,
     pagerState: PagerState
@@ -179,44 +181,17 @@ fun PrescriptionCard(
                                 )
                             )
                         }
-                        if (isLatest) {
+                        if (showRePrescribeBtn) {
                             TextButton(
                                 onClick = {
                                     // re prescribe
-                                    viewModel.getAppointmentInfo(
-                                        callback = {
-                                            when {
-                                                viewModel.existsInOtherHospital -> {
-                                                    coroutineScope.launch {
-                                                        snackBarHostState.showSnackbar(
-                                                            message = context.getString(R.string.appointment_exists_in_other_hospital)
-                                                        )
-                                                    }
-                                                }
-
-                                                viewModel.canAddAssessment -> {
-                                                    saveRePrescription(
-                                                        context,
-                                                        viewModel,
-                                                        prescription,
-                                                        coroutineScope,
-                                                        snackBarHostState,
-                                                        pagerState
-                                                    )
-                                                }
-
-                                                viewModel.isAppointmentCompleted -> {
-                                                    viewModel.showAppointmentCompletedDialog = true
-                                                }
-
-                                                else -> {
-                                                    viewModel.isReprescribing = true
-                                                    viewModel.represcribingPrescription =
-                                                        prescription
-                                                    viewModel.showAddToQueueDialog = true
-                                                }
-                                            }
-                                        }
+                                    rePrescribeBtnClick(
+                                        viewModel = viewModel,
+                                        coroutineScope = coroutineScope,
+                                        snackBarHostState = snackBarHostState,
+                                        context = context,
+                                        prescription = prescription,
+                                        pagerState = pagerState
                                     )
                                 },
                                 modifier = Modifier
@@ -231,6 +206,51 @@ fun PrescriptionCard(
             }
         }
     }
+}
+
+private fun rePrescribeBtnClick(
+    viewModel: PrescriptionViewModel,
+    coroutineScope: CoroutineScope,
+    snackBarHostState: SnackbarHostState,
+    context: Context,
+    prescription: PrescriptionAndMedicineRelation,
+    pagerState: PagerState
+) {
+    viewModel.getAppointmentInfo(
+        callback = {
+            when {
+                viewModel.existsInOtherHospital -> {
+                    coroutineScope.launch {
+                        snackBarHostState.showSnackbar(
+                            message = context.getString(R.string.appointment_exists_in_other_hospital)
+                        )
+                    }
+                }
+
+                viewModel.canAddAssessment -> {
+                    saveRePrescription(
+                        context,
+                        viewModel,
+                        prescription,
+                        coroutineScope,
+                        snackBarHostState,
+                        pagerState
+                    )
+                }
+
+                viewModel.isAppointmentCompleted -> {
+                    viewModel.showAppointmentCompletedDialog = true
+                }
+
+                else -> {
+                    viewModel.isReprescribing = true
+                    viewModel.represcribingPrescription =
+                        prescription
+                    viewModel.showAddToQueueDialog = true
+                }
+            }
+        }
+    )
 }
 
 @Composable
