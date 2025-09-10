@@ -74,43 +74,15 @@ fun PatientLandingScreen(
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    val snackbarHostState = remember { SnackbarHostState() }
-    LaunchedEffect(viewModel.isLaunched) {
-        if (!viewModel.isLaunched) {
-            viewModel.patient =
-                navController.previousBackStackEntry?.savedStateHandle?.get<PatientResponse>(
-                    PATIENT
-                )
-            viewModel.isNationalIdVerified =
-                viewModel.patient?.identifier?.firstOrNull { it.identifierType == NATIONAL_ID }?.use == NationalIdUse.OFFICIAL.use
-            viewModel.selectedIndex =
-                navController.previousBackStackEntry?.savedStateHandle?.get<Int>(
-                    SELECTED_INDEX
-                )!!
-            viewModel.patient?.fhirId?.let { patientFhirId ->
-                viewModel.downloadPrescriptions(
-                    patientFhirId
-                )
-            }
-            if (navController.previousBackStackEntry?.savedStateHandle?.get<Boolean>(PATIENT_SAVED) == true) {
-                navController.previousBackStackEntry?.savedStateHandle?.remove<Boolean>(
-                    PATIENT_SAVED
-                )
-                snackbarHostState.showSnackbar(
-                    message = context.getString(R.string.patient_registered_successfully)
-                )
-            }
-        }
-        viewModel.patient = viewModel.getPatientData(viewModel.patient!!.id)
+    val snackBarHostState = remember { SnackbarHostState() }
 
-        viewModel.isLaunched = true
-    }
-    LaunchedEffect(true) {
-        viewModel.patient?.id?.let { id ->
-            viewModel.getScheduledAppointmentsCount(id)
-            viewModel.getLastCVDRisk(id)
-        }
-    }
+    HandleLaunchedEffect(
+        viewModel = viewModel,
+        navController = navController,
+        snackBarHostState = snackBarHostState,
+        context = context
+    )
+
     BackHandler(enabled = true) {
         if (viewModel.isFabSelected) viewModel.isFabSelected = false
         else navController.navigateUp()
@@ -122,12 +94,7 @@ fun PatientLandingScreen(
             },
             content = {
                 Box(modifier = Modifier.padding(it)) {
-                    CardComposableList(viewModel, navController, scope, snackbarHostState, context)
-                    if (viewModel.showAllSlotsBookedDialog) {
-                        AllSlotsBookedDialog {
-                            viewModel.showAllSlotsBookedDialog = false
-                        }
-                    }
+                    CardComposableList(viewModel, navController, scope, snackBarHostState, context)
                 }
             },
             bottomBar = {
@@ -149,7 +116,7 @@ fun PatientLandingScreen(
         contentAlignment = Alignment.BottomCenter
     ) {
         SnackbarHost(
-            hostState = snackbarHostState,
+            hostState = snackBarHostState,
             modifier = Modifier
                 .padding(bottom = 160.dp)
                 .navigationBarsPadding()
@@ -170,28 +137,55 @@ fun PatientLandingScreen(
                 showSnackBar = { snackBarMsg ->
                     viewModel.isFabSelected = false
                     scope.launch {
-                        snackbarHostState.showSnackbar(snackBarMsg)
+                        snackBarHostState.showSnackbar(snackBarMsg)
                     }
                 }
             )
         }
     }
-    if (viewModel.showIdStatusDialog) {
-        CustomDialog(
-            canBeDismissed = true,
-            title = if (viewModel.isNationalIdVerified) stringResource(R.string.national_id_verified)
-            else stringResource(R.string.national_id_unverified),
-            text = if (viewModel.isNationalIdVerified) stringResource(R.string.national_id_verified_info)
-            else stringResource(R.string.national_id_unverified_info),
-            dismissBtnText = null,
-            confirmBtnText = stringResource(R.string.okay),
-            dismiss = {
-                viewModel.showIdStatusDialog = false
-            },
-            confirm = {
-                viewModel.showIdStatusDialog = false
+    PatientLandingDialogs(viewModel)
+}
+
+@Composable
+private fun HandleLaunchedEffect(
+    viewModel: PatientLandingScreenViewModel,
+    navController: NavController,
+    snackBarHostState: SnackbarHostState,
+    context: Context
+) {
+    LaunchedEffect(viewModel.isLaunched) {
+        if (!viewModel.isLaunched) {
+            viewModel.patient =
+                navController.previousBackStackEntry?.savedStateHandle?.get<PatientResponse>(
+                    PATIENT
+                )
+            viewModel.isNationalIdVerified =
+                viewModel.patient?.identifier?.firstOrNull { it.identifierType == NATIONAL_ID }?.use == NationalIdUse.OFFICIAL.use
+            viewModel.selectedIndex =
+                navController.previousBackStackEntry?.savedStateHandle?.get<Int>(
+                    SELECTED_INDEX
+                )!!
+            viewModel.patient?.fhirId?.let { patientFhirId ->
+                viewModel.downloadPrescriptions(
+                    patientFhirId
+                )
             }
-        )
+            if (navController.previousBackStackEntry?.savedStateHandle?.get<Boolean>(PATIENT_SAVED) == true) {
+                navController.previousBackStackEntry?.savedStateHandle?.remove<Boolean>(
+                    PATIENT_SAVED
+                )
+                snackBarHostState.showSnackbar(
+                    message = context.getString(R.string.patient_registered_successfully)
+                )
+            }
+            viewModel.isLaunched = true
+        }
+        viewModel.patient = viewModel.getPatientData(viewModel.patient!!.id)
+
+        viewModel.patient?.id?.let { id ->
+            viewModel.getScheduledAppointmentsCount(id)
+            viewModel.getLastCVDRisk(id)
+        }
     }
 }
 
@@ -200,7 +194,7 @@ private fun CardComposableList(
     viewModel: PatientLandingScreenViewModel,
     navController: NavController,
     scope: CoroutineScope,
-    snackbarHostState: SnackbarHostState,
+    snackBarHostState: SnackbarHostState,
     context: Context
 ) {
     Column(
@@ -222,7 +216,7 @@ private fun CardComposableList(
                 if (viewModel.patient!!.birthDate.toTimeInMilli().toAge() !in 40..74
                 ) {
                     scope.launch {
-                        snackbarHostState.showSnackbar(
+                        snackBarHostState.showSnackbar(
                             message = context.getString(R.string.cvd_error_message)
                         )
                     }
@@ -272,7 +266,7 @@ private fun CardComposableList(
             R.drawable.event_note_icon,
             stringResource(
                 id = R.string.appointments_scheduled,
-                viewModel.appointmentsCount,
+                if (viewModel.patient!!.patientDeceasedReason.isNullOrBlank()) viewModel.appointmentsCount else 0,
                 viewModel.pastAppointmentsCount
             ),
             onClick = {
@@ -514,6 +508,34 @@ private fun HeaderComposable(
                 else MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
+    }
+}
+
+@Composable
+private fun PatientLandingDialogs(
+    viewModel: PatientLandingScreenViewModel
+) {
+    if (viewModel.showAllSlotsBookedDialog) {
+        AllSlotsBookedDialog {
+            viewModel.showAllSlotsBookedDialog = false
+        }
+    }
+    if (viewModel.showIdStatusDialog) {
+        CustomDialog(
+            canBeDismissed = true,
+            title = if (viewModel.isNationalIdVerified) stringResource(R.string.national_id_verified)
+            else stringResource(R.string.national_id_unverified),
+            text = if (viewModel.isNationalIdVerified) stringResource(R.string.national_id_verified_info)
+            else stringResource(R.string.national_id_unverified_info),
+            dismissBtnText = null,
+            confirmBtnText = stringResource(R.string.okay),
+            dismiss = {
+                viewModel.showIdStatusDialog = false
+            },
+            confirm = {
+                viewModel.showIdStatusDialog = false
+            }
+        )
     }
 }
 
