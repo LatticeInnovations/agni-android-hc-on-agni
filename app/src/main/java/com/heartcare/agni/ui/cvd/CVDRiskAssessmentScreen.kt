@@ -281,12 +281,20 @@ private fun CVDBottomAppBar(
                 if (viewModel.riskPercentage.isNotBlank()) {
                     Button(
                         onClick = {
-                            handleSaveButtonClick(
-                                viewModel,
-                                scope,
-                                snackBarHostState,
-                                context
-                            )
+                            if (viewModel.patient!!.patientDeceasedReason.isNullOrBlank()) {
+                                handleSaveButtonClick(
+                                    viewModel,
+                                    scope,
+                                    snackBarHostState,
+                                    context
+                                )
+                            } else {
+                                scope.launch {
+                                    snackBarHostState.showSnackbar(
+                                        context.getString(R.string.patient_deceased_error_msg)
+                                    )
+                                }
+                            }
                         },
                         modifier = Modifier
                             .weight(1f)
