@@ -1,6 +1,7 @@
 package com.heartcare.agni.ui.landingscreen
 
 import android.annotation.SuppressLint
+import android.content.Context
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -33,10 +34,7 @@ import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -77,7 +75,7 @@ fun QueueScreen(
     navController: NavController,
     dateScrollState: LazyListState,
     coroutineScope: CoroutineScope,
-    snackbarHostState: SnackbarHostState,
+    snackBarHostState: SnackbarHostState,
     viewModel: QueueViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
@@ -85,25 +83,14 @@ fun QueueScreen(
     viewModel.rescheduled = navController.currentBackStackEntry?.savedStateHandle?.get<Boolean>(
         NavControllerConstants.RESCHEDULED
     ) == true
-    LaunchedEffect(viewModel.isLaunched) {
-        if (!viewModel.isLaunched) {
-            dateScrollState.scrollToItem(7, scrollOffset = -130)
-        }
-        viewModel.isLaunched = true
-    }
-    LaunchedEffect(true) {
-        if (viewModel.rescheduled) {
-            coroutineScope.launch {
-                snackbarHostState.showSnackbar(
-                    message = context.getString(R.string.appointment_rescheduled)
-                )
-            }
-            navController.currentBackStackEntry?.savedStateHandle?.remove<Boolean>(
-                NavControllerConstants.RESCHEDULED
-            )
-        }
-        viewModel.syncData()
-    }
+    HandleLaunchedEffect(
+        viewModel = viewModel,
+        navController = navController,
+        dateScrollState = dateScrollState,
+        coroutineScope = coroutineScope,
+        snackBarHostState = snackBarHostState,
+        context = context
+    )
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -133,26 +120,40 @@ fun QueueScreen(
             }
         } else QueueList(queueListState, viewModel, navController)
     }
-    if (viewModel.showCancelAppointmentDialog) {
-        CancelAppointmentDialog(
-            patient = viewModel.patientSelected!!,
-            dateAndTime = viewModel.appointmentSelected?.slot?.start?.toAppointmentDate()!!
-        ) { cancel ->
-            if (cancel) {
-                viewModel.cancelAppointment {
-                    viewModel.getAppointmentListByDate()
-                    coroutineScope.launch {
-                        snackbarHostState.showSnackbar(
-                            message = context.getString(R.string.appointment_cancelled)
-                        )
-                    }
-                }
-            }
-            viewModel.showCancelAppointmentDialog = false
+    QueueDialogs(
+        viewModel = viewModel,
+        coroutineScope = coroutineScope,
+        dateScrollState = dateScrollState,
+        snackBarHostState = snackBarHostState,
+        context = context
+    )
+}
+
+@Composable
+private fun HandleLaunchedEffect(
+    viewModel: QueueViewModel,
+    navController: NavController,
+    dateScrollState: LazyListState,
+    coroutineScope: CoroutineScope,
+    snackBarHostState: SnackbarHostState,
+    context: Context
+) {
+    LaunchedEffect(viewModel.isLaunched) {
+        if (!viewModel.isLaunched) {
+            dateScrollState.scrollToItem(7, scrollOffset = -130)
+            viewModel.isLaunched = true
         }
-    }
-    if (viewModel.showDatePicker) {
-        DatePickerComposable(viewModel, coroutineScope, dateScrollState)
+        if (viewModel.rescheduled) {
+            coroutineScope.launch {
+                snackBarHostState.showSnackbar(
+                    message = context.getString(R.string.appointment_rescheduled)
+                )
+            }
+            navController.currentBackStackEntry?.savedStateHandle?.remove<Boolean>(
+                NavControllerConstants.RESCHEDULED
+            )
+        }
+        viewModel.syncData()
     }
 }
 
@@ -171,15 +172,15 @@ private fun QueueList(
             // scheduled
             item {
                 ListWithLabel(
-                    surfaceColor = if (viewModel.scheduledQueueList.isEmpty()
+                    surfaceColor = if (viewModel.scheduledQueueListWithPatient.isEmpty()
                         || viewModel.selectedDate.toTodayStartDate() != Date().toTodayStartDate()
                     ) MaterialTheme.colorScheme.surface
                     else MaterialTheme.colorScheme.secondaryContainer,
                     label = stringResource(
                         id = R.string.scheduled_count,
-                        viewModel.scheduledQueueList.size
+                        viewModel.scheduledQueueListWithPatient.size
                     ),
-                    listOfAppointment = viewModel.scheduledQueueList,
+                    listOfAppointment = viewModel.scheduledQueueListWithPatient,
                     viewModel = viewModel,
                     navController = navController
                 )
@@ -190,9 +191,9 @@ private fun QueueList(
                     surfaceColor = MaterialTheme.colorScheme.surface,
                     label = stringResource(
                         id = R.string.assessed_count,
-                        viewModel.assessedQueueList.size
+                        viewModel.assessedQueueListWithPatient.size
                     ),
-                    listOfAppointment = viewModel.assessedQueueList,
+                    listOfAppointment = viewModel.assessedQueueListWithPatient,
                     viewModel = viewModel,
                     navController = navController
                 )
@@ -203,9 +204,9 @@ private fun QueueList(
                     surfaceColor = MaterialTheme.colorScheme.surface,
                     label = stringResource(
                         id = R.string.prescribed_count,
-                        viewModel.prescribedQueueList.size
+                        viewModel.prescribedQueueListWithPatient.size
                     ),
-                    listOfAppointment = viewModel.prescribedQueueList,
+                    listOfAppointment = viewModel.prescribedQueueListWithPatient,
                     viewModel = viewModel,
                     navController = navController
                 )
@@ -221,7 +222,7 @@ private fun QueueList(
 private fun ListWithLabel(
     surfaceColor: Color,
     label: String,
-    listOfAppointment: List<AppointmentResponseLocal>,
+    listOfAppointment: List<Pair<PatientResponse, AppointmentResponseLocal>>,
     viewModel: QueueViewModel,
     navController: NavController
 ) {
@@ -245,17 +246,7 @@ private fun ListWithLabel(
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.outline
             )
-            listOfAppointment.forEach { waitingAppointmentResponse ->
-                var patient by remember {
-                    mutableStateOf<PatientResponse?>(null)
-                }
-                waitingAppointmentResponse.patientId.let { patientId ->
-                    LaunchedEffect(key1 = patientId) {
-                        patient = viewModel.getPatientById(
-                            patientId
-                        )
-                    }
-                }
+            listOfAppointment.forEach { item ->
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -265,8 +256,8 @@ private fun ListWithLabel(
                     QueuePatientCard(
                         navController,
                         viewModel,
-                        waitingAppointmentResponse,
-                        patient
+                        item.second,
+                        item.first
                     )
                 }
             }
@@ -404,6 +395,37 @@ private fun PatientCardDetails(name: String, subTitle: String, time: String) {
                 color = MaterialTheme.colorScheme.tertiary
             )
         }
+    }
+}
+
+@Composable
+private fun QueueDialogs(
+    viewModel: QueueViewModel,
+    coroutineScope: CoroutineScope,
+    dateScrollState: LazyListState,
+    snackBarHostState: SnackbarHostState,
+    context: Context
+) {
+    if (viewModel.showCancelAppointmentDialog) {
+        CancelAppointmentDialog(
+            patient = viewModel.patientSelected!!,
+            dateAndTime = viewModel.appointmentSelected?.slot?.start?.toAppointmentDate()!!
+        ) { cancel ->
+            if (cancel) {
+                viewModel.cancelAppointment {
+                    viewModel.getAppointmentListByDate()
+                    coroutineScope.launch {
+                        snackBarHostState.showSnackbar(
+                            message = context.getString(R.string.appointment_cancelled)
+                        )
+                    }
+                }
+            }
+            viewModel.showCancelAppointmentDialog = false
+        }
+    }
+    if (viewModel.showDatePicker) {
+        DatePickerComposable(viewModel, coroutineScope, dateScrollState)
     }
 }
 
