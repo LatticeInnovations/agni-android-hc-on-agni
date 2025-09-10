@@ -70,7 +70,7 @@ class LandingScreenViewModel @Inject constructor(
     private val appointmentRepository: AppointmentRepository,
     private val riskPredictionChartRepository: RiskPredictionChartRepository,
     @Named("main_okhttp") private val okHttpClient: OkHttpClient,
-    @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
+    @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher,
     @DefaultDispatcher private val defaultDispatcher: CoroutineDispatcher
 ) : BaseAndroidViewModel(application) {
 

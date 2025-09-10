@@ -19,7 +19,7 @@ import javax.inject.Inject
 @HiltViewModel
 class PatientRegistrationStepThreeViewModel @Inject constructor(
     private val levelRepository: LevelRepository,
-    @IoDispatcher private val ioDispatcher: CoroutineDispatcher
+    @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) : BaseViewModel(), DefaultLifecycleObserver {
     var isLaunched by mutableStateOf(false)
     val otherName = "Others"

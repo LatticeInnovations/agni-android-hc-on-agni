@@ -48,7 +48,7 @@ class QueueViewModel @Inject constructor(
     private val patientLastUpdatedRepository: PatientLastUpdatedRepository,
     private val prescriptionRepository: PrescriptionRepository,
     preferenceRepository: PreferenceRepository,
-    @IoDispatcher private val ioDispatcher: CoroutineDispatcher
+    @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) : BaseAndroidViewModel(application) {
 
     val user = preferenceRepository.getUserDetails()!!

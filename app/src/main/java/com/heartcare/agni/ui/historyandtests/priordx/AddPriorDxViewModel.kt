@@ -37,7 +37,7 @@ class AddPriorDxViewModel @Inject constructor(
     private val genericRepository: GenericRepository,
     private val scheduleRepository: ScheduleRepository,
     private val patientLastUpdatedRepository: PatientLastUpdatedRepository,
-    @IoDispatcher private val ioDispatcher: CoroutineDispatcher
+    @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ): BaseViewModel() {
     val maxCancerFieldLength = 200
     val maxOtherFieldLength = 200

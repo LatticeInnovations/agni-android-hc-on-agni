@@ -18,7 +18,7 @@ import javax.inject.Inject
 @HiltViewModel
 class SearchPatientViewModel @Inject constructor(
     private val levelRepository: LevelRepository,
-    @IoDispatcher private val ioDispatcher: CoroutineDispatcher
+    @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) : BaseViewModel() {
     var isLaunched by mutableStateOf(false)
 

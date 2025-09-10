@@ -19,7 +19,7 @@ import javax.inject.Inject
 @HiltViewModel
 class CreatePasswordViewModel @Inject constructor(
     private val authenticationRepository: AuthenticationRepository,
-    @IoDispatcher private val ioDispatcher: CoroutineDispatcher
+    @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) : BaseViewModel() {
     val maxPasswordLength = 15
 

@@ -28,7 +28,7 @@ class PatientRegistrationPreviewViewModel @Inject constructor(
     private val genericRepository: GenericRepository,
     private val identifierRepository: IdentifierRepository,
     private val patientLastUpdatedRepository: PatientLastUpdatedRepository,
-    @IoDispatcher private val ioDispatcher: CoroutineDispatcher
+    @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) : BaseViewModel() {
     var isLaunched by mutableStateOf(false)
     var patientResponse by mutableStateOf<PatientResponse?>(null)
