@@ -23,6 +23,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.heartcare.agni.R
@@ -36,26 +37,47 @@ import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toEnd
 import java.util.Date
 
 @Composable
-fun UpcomingAppointments(navController: NavController, viewModel: AppointmentsScreenViewModel) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
-            .verticalScroll(rememberScrollState())
-    ) {
-        if (viewModel.upcomingAppointmentsList.isEmpty()) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(top = 60.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(text = stringResource(id = R.string.no_upcoming_appointments))
+fun UpcomingAppointments(
+    navController: NavController,
+    viewModel: AppointmentsScreenViewModel
+) {
+    if (viewModel.patient?.patientDeceasedReason.isNullOrBlank()) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(16.dp)
+        ) {
+            if (viewModel.upcomingAppointmentsList.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(top = 60.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(text = stringResource(id = R.string.no_upcoming_appointments))
+                }
+            } else {
+                viewModel.upcomingAppointmentsList.forEach { appointmentResponseLocal ->
+                    UpcomingAppointmentCard(navController, appointmentResponseLocal, viewModel)
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
             }
-        } else {
-            viewModel.upcomingAppointmentsList.forEach { appointmentResponseLocal ->
-                UpcomingAppointmentCard(navController, appointmentResponseLocal, viewModel)
-                Spacer(modifier = Modifier.height(16.dp))
+        }
+    } else {
+        Box(
+            modifier = Modifier
+                .fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Column {
+                Spacer(Modifier.weight(1f))
+                Text(
+                    text = stringResource(id = R.string.patient_deceased_no_upcoming_appointments),
+                    modifier = Modifier.fillMaxWidth(),
+                    textAlign = TextAlign.Center
+                )
+                Spacer(Modifier.weight(2f))
             }
         }
     }
