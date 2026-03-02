@@ -35,6 +35,7 @@ import androidx.navigation.NavController
 import com.heartcare.agni.R
 import com.heartcare.agni.data.server.model.patient.PatientResponse
 import com.heartcare.agni.utils.constants.NavControllerConstants.PATIENT
+import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toAppointmentDate
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -45,6 +46,9 @@ fun ScreeningReportDownloadScreen(
     LaunchedEffect(viewModel.isLaunched) {
         if (!viewModel.isLaunched) {
             viewModel.patient = navController.previousBackStackEntry?.savedStateHandle?.get<PatientResponse>(PATIENT)
+            viewModel.patient?.let { patient ->
+                viewModel.getAppointmentsList(patient.id)
+            }
         }
         viewModel.isLaunched = true
     }
@@ -97,7 +101,7 @@ fun ScreeningReportDownloadScreen(
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Text(
-                                        text = appointment,
+                                        text = appointment.slot.start.toAppointmentDate(),
                                         style = MaterialTheme.typography.bodyLarge
                                     )
                                     FilledTonalIconButton(
