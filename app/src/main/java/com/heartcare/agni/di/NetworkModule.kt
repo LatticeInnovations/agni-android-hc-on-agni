@@ -56,29 +56,31 @@ object NetworkModule {
             .connectTimeout(30, TimeUnit.SECONDS)
             .readTimeout(30, TimeUnit.SECONDS)
             .writeTimeout(30, TimeUnit.SECONDS)
-            .apply {
-                if (BuildConfig.DEBUG) {
-                    val interceptor = HttpLoggingInterceptor()
-                    interceptor.level = HttpLoggingInterceptor.Level.BODY
-                    addInterceptor(interceptor)
-                }
-            }.build()
-    }
-
-    @Provides
-    @Singleton
-    @Named("auth_okhttp_with_token")
-    fun provideAuthOkHttpClientWithToken(preferenceStorage: PreferenceStorage): OkHttpClient {
-        return OkHttpClient.Builder()
             .addInterceptor { chain ->
-                val requestBuilder = chain.request().newBuilder()
-                    .addHeader("Content-Type", CONTENT_TYPE)
+                val originalRequest = chain.request()
 
-                if (preferenceStorage.accessToken.isNotBlank()) {
-                    requestBuilder.addHeader(AUTHORIZATION, preferenceStorage.accessToken)
+                try {
+                    chain.proceed(originalRequest)
+                } catch (e: IOException) {
+                    val errorMsg = when (e) {
+                        is SocketTimeoutException -> ErrorConstants.SOCKET_TIMEOUT_EXCEPTION
+                        else -> ErrorConstants.IO_EXCEPTION
+                    }
+
+                    Response.Builder()
+                        .request(originalRequest)
+                        .protocol(Protocol.HTTP_1_1)
+                        .code(504)
+                        .message(errorMsg)
+                        .body(
+                            JSONObject().apply {
+                                put("status", "FAILED")
+                                put("message", errorMsg)
+                            }.toString().toByteArray()
+                                .toResponseBody("application/json".toMediaType())
+                        )
+                        .build()
                 }
-
-                chain.proceed(requestBuilder.build())
             }
             .apply {
                 if (BuildConfig.DEBUG) {
@@ -86,7 +88,58 @@ object NetworkModule {
                     interceptor.level = HttpLoggingInterceptor.Level.BODY
                     addInterceptor(interceptor)
                 }
-            }.build()
+            }
+            .build()
+    }
+
+    @Provides
+    @Singleton
+    @Named("auth_okhttp_with_token")
+    fun provideAuthOkHttpClientWithToken(preferenceStorage: PreferenceStorage): OkHttpClient {
+        return OkHttpClient.Builder()
+            .connectTimeout(30, TimeUnit.SECONDS)
+            .readTimeout(30, TimeUnit.SECONDS)
+            .writeTimeout(30, TimeUnit.SECONDS)
+            .addInterceptor { chain ->
+                val originalRequest = chain.request()
+                val requestBuilder = originalRequest.newBuilder()
+                    .addHeader("Content-Type", CONTENT_TYPE)
+
+                if (preferenceStorage.accessToken.isNotBlank()) {
+                    requestBuilder.addHeader(AUTHORIZATION, preferenceStorage.accessToken)
+                }
+
+                try {
+                    chain.proceed(requestBuilder.build())
+                } catch (e: IOException) {
+                    val errorMsg = when (e) {
+                        is SocketTimeoutException -> ErrorConstants.SOCKET_TIMEOUT_EXCEPTION
+                        else -> ErrorConstants.IO_EXCEPTION
+                    }
+
+                    Response.Builder()
+                        .request(originalRequest)
+                        .protocol(Protocol.HTTP_1_1)
+                        .code(504)
+                        .message(errorMsg)
+                        .body(
+                            JSONObject().apply {
+                                put("status", "FAILED")
+                                put("message", errorMsg)
+                            }.toString().toByteArray()
+                                .toResponseBody("application/json".toMediaType())
+                        )
+                        .build()
+                }
+            }
+            .apply {
+                if (BuildConfig.DEBUG) {
+                    val interceptor = HttpLoggingInterceptor()
+                    interceptor.level = HttpLoggingInterceptor.Level.BODY
+                    addInterceptor(interceptor)
+                }
+            }
+            .build()
     }
 
     @Provides

@@ -150,7 +150,7 @@ fun PatientIdentifier.toIdentifierEntity(patientId: String): IdentifierEntity {
 
 fun PatientResponse.toListOfIdentifierEntity(): List<IdentifierEntity> {
     return this.identifier
-        .filter { it.code != IdentifierIgnoreEnum.MEDICAL_RECORD.value && it.identifierType != IdentifierIgnoreEnum.HEARTCARE_TYPE.value }
+        .filter { it.code != IdentifierIgnoreEnum.MEDICAL_RECORD.value && !it.identifierType.contains(IdentifierIgnoreEnum.HEARTCARE_TYPE.value) }
         .map {
             it.toIdentifierEntity(this.id)
         }
