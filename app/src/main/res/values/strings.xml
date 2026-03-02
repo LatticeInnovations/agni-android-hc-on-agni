@@ -458,4 +458,6 @@
     <string name="not_referred">Not referred</string>
     <string name="patient_deceased_error_msg">This action is not allowed. The patient is marked as deceased.</string>
     <string name="patient_deceased_no_upcoming_appointments">This patient is deceased.\nNo upcoming appointments available.</string>
+
+    <string name="screening_report_download">Screening report download</string>
 </resources>
