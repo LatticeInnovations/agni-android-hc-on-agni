@@ -26,6 +26,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -43,6 +44,8 @@ fun ScreeningReportDownloadScreen(
     navController: NavController,
     viewModel: ScreeningReportDownloadViewModel = hiltViewModel()
 ) {
+    val context = LocalContext.current
+
     LaunchedEffect(viewModel.isLaunched) {
         if (!viewModel.isLaunched) {
             viewModel.patient = navController.previousBackStackEntry?.savedStateHandle?.get<PatientResponse>(PATIENT)
@@ -52,6 +55,7 @@ fun ScreeningReportDownloadScreen(
         }
         viewModel.isLaunched = true
     }
+
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         topBar = {
@@ -107,6 +111,7 @@ fun ScreeningReportDownloadScreen(
                                     FilledTonalIconButton(
                                         onClick = {
                                             // download pdf
+                                            viewModel.getAssessmentsByAppointmentId(appointment, context)
                                         }
                                     ) {
                                         Icon(painter = painterResource(R.drawable.file_download), contentDescription = null)

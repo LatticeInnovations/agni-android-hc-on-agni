@@ -445,6 +445,11 @@ object TimeConverter {
         return sdf.format(this)
     }
 
+    fun Date.toMMMMddyyyy(): String {
+        val sdf = SimpleDateFormat("MMMM dd, yyyy", Locale.getDefault())
+        return sdf.format(this)
+    }
+
     fun Date.toScheduleStartTime(): Date {
         val millis = this.time
         val intervalMillis = TimeUnit.MINUTES.toMillis(30)
