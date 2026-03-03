@@ -81,7 +81,7 @@ fun MedicationView(
     }
 }
 
-private fun getListOfHistoryMedication(
+fun getListOfHistoryMedication(
     historyMedication: HistoryMedicationResponse
 ): List<String> {
     return mutableListOf<String>().apply {

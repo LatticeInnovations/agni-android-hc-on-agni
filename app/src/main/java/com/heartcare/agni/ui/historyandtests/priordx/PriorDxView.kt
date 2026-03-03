@@ -60,7 +60,7 @@ fun PriorDxView(
     }
 }
 
-private fun getListOfPriorDx(
+fun getListOfPriorDx(
     priorDx: PriorDxResponse
 ): List<String> {
     return mutableListOf<String>().apply {

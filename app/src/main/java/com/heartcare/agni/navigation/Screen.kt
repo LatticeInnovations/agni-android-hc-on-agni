@@ -44,4 +44,6 @@ sealed class Screen(val route: String) {
     data object ReferralScreen : Screen("referral_screen")
     data object ViewReferralScreen : Screen("view_referral_screen")
     data object AddReferralScreen : Screen("add_referral_screen")
+
+    data object ScreeningReportDownloadScreen : Screen("screening_report_download_screen")
 }
