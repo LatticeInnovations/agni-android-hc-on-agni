@@ -634,7 +634,7 @@ object PDFHelper {
                     <div class="item">
                         <div class="label">&nbsp;</div>
                         <div class="sub-label">Start date of plan</div>
-                        <div class="value">${tobaccoCessation?.dateOfPlan?.toMMMMddyyyy() ?: "--"}</div>
+                        <div class="value">${tobaccoCessation?.pharmacotherapy?.let { tobaccoCessation.dateOfPlan?.toMMMMddyyyy() ?: "--"} ?: "--" } </div>
                     </div>
                 </div>
                 <div class="row">
