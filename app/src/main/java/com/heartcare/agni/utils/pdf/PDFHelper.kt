@@ -26,7 +26,10 @@ import com.heartcare.agni.data.server.model.family.FamilyHistoryResponse
 import com.heartcare.agni.data.server.model.historymedication.HistoryMedicationResponse
 import com.heartcare.agni.data.server.model.patient.PatientResponse
 import com.heartcare.agni.data.server.model.priordx.PriorDxResponse
+import com.heartcare.agni.data.server.model.risk.AlcoholResponse
+import com.heartcare.agni.data.server.model.risk.FruitsVegetablesResponse
 import com.heartcare.agni.data.server.model.risk.RiskFactorResponse
+import com.heartcare.agni.data.server.model.risk.TobaccoResponse
 import com.heartcare.agni.data.server.model.tobacco.TobaccoCessationResponse
 import com.heartcare.agni.data.server.model.vitals.VitalResponse
 import com.heartcare.agni.ui.historyandtests.medication.getListOfHistoryMedication
@@ -398,87 +401,9 @@ object PDFHelper {
             <div class="section">
                 <div class="section-header">Risk factors</div>
                 
-                <!-- Tobacco -->
-                <div class="row multiple-items">
-                    <div class="item">
-                        <div class="label">Tobacco</div>
-                        <div class="sub-label">Current use</div>
-                        <div class="value">${riskFactors?.tobacco?.let { if (it.tobaccoUser) "Yes" else "No" } ?: "--"}</div>
-                    </div>
-                    <div class="item">
-                        <div class="label">Products used</div>
-                        <div class="value">${riskFactors?.tobacco?.tobaccoItemType?.let { TobaccoProduct.tobaccoTypeDisplayFromCode(it) +
-                if (it == TobaccoProduct.OTHER.code) " (${riskFactors.tobacco.tobaccoOther})" else "" } ?: "--"}</div>
-                    </div>
-                </div>
-                <div class="row multiple-items">
-                    <div class="item">
-                        <div class="label">Age when started</div>
-                        <div class="value">${riskFactors?.tobacco?.startAge?.let { "$it years" } ?: "--"}</div>
-                    </div>
-                    <div class="item">
-                        <div class="label">Avg daily use</div>
-                        <div class="value">${riskFactors?.tobacco?.consumptionAmount?.let { "$it ${riskFactors.tobacco.consumptionUnit}" } ?: "--"}</div>
-                    </div>
-                    <div class="item">
-                        <div class="label">Willing to quit</div>
-                        <div class="value">${riskFactors?.tobacco?.willingToQuit?.let { if (it) "Yes" else "No" } ?: "--"}</div>
-                    </div>
-                </div>
-                
-                <!-- Alcohol -->
-                <div class="row">
-                    <div class="item">
-                        <div class="label">Alcohol</div>
-                        <div class="sub-label">Consumed in the last 30 days?</div>
-                        <div class="value">${riskFactors?.alcohol?.consumedWithin30Days?.let { if (it) "Yes" else "No" } ?: "--"}</div>
-                    </div>
-                </div>
-                <div class="row multiple-items">
-                    <div class="item">
-                        <div class="label">Had at least one standard drink</div>
-                        <div class="value">${riskFactors?.alcohol?.alcoholQ1?.let { "$it times in past 30 days" } ?: "--"}</div>
-                    </div>
-                    <div class="item">
-                        <div class="label">Standard drinks per occasion</div>
-                        <div class="value">${riskFactors?.alcohol?.alcoholQ2?.let { "$it" } ?: "--"}</div>
-                    </div>
-                </div>
-                <div class="row multiple-items">
-                    <div class="item">
-                        <div class="label">≥ 6 standard drinks in a single occasion</div>
-                        <div class="value">${riskFactors?.alcohol?.alcoholQ3?.let { "$it times in past 30 days" } ?: "--"}</div>
-                    </div>
-                </div>
-                
-                <!-- Fruits & vegetables -->
-                <div class="row">
-                    <div class="item">
-                        <div class="label">Fruits & vegetables</div>
-                        <div class="sub-label">Eat weekly?</div>
-                        <div class="value">${riskFactors?.fruitsVegetables?.consumptionInWeek?.let { if (it) "Yes" else "No" } ?: "--"}</div>
-                    </div>
-                </div>
-                <div class="row multiple-items">
-                    <div class="item">
-                        <div class="label">Frequency - fruits</div>
-                        <div class="value">${riskFactors?.fruitsVegetables?.fruitsDays?.let { "$it days a week" } ?: "--"}</div>
-                    </div>
-                    <div class="item">
-                        <div class="label">Servings of fruits</div>
-                        <div class="value">${riskFactors?.fruitsVegetables?.fruitServings?.let { "$it" } ?: "--"}</div>
-                    </div>
-                </div>
-                <div class="row multiple-items">
-                    <div class="item">
-                        <div class="label">Frequency - veg</div>
-                        <div class="value">${riskFactors?.fruitsVegetables?.vegetableDays?.let { "$it days a week" } ?: "--"}</div>
-                    </div>
-                    <div class="item">
-                        <div class="label">Servings of veg</div>
-                        <div class="value">${riskFactors?.fruitsVegetables?.vegetableServings?.let { "$it" } ?: "--"}</div>
-                    </div>
-                </div>
+                ${getTobaccoSection(riskFactors?.tobacco)}
+                ${getAlcoholSection(riskFactors?.alcohol)}
+                ${getFruitAndVegetableSection(riskFactors?.fruitsVegetables)}
                 
                 <!-- Physical activity -->
                 <div class="row">
@@ -563,6 +488,105 @@ object PDFHelper {
             </div>
         </div>
     """.trimIndent()
+    }
+
+    private fun getTobaccoSection(tobacco: TobaccoResponse?): String {
+        return """
+            <!-- Tobacco -->
+            <div class="row multiple-items">
+                <div class="item">
+                    <div class="label">Tobacco</div>
+                    <div class="sub-label">Current use</div>
+                    <div class="value">${tobacco?.let { if (it.tobaccoUser) "Yes" else "No" } ?: "--"}</div>
+                </div>
+                <div class="item">
+                    <div class="label">Products used</div>
+                    <div class="value">${
+                            tobacco?.tobaccoItemType?.let {
+                                TobaccoProduct.tobaccoTypeDisplayFromCode(it) +
+                                        if (it == TobaccoProduct.OTHER.code) " (${tobacco.tobaccoOther})" else ""
+                            } ?: "--"
+                            }
+                    </div>
+                </div>
+            </div>
+            <div class="row multiple-items">
+                <div class="item">
+                    <div class="label">Age when started</div>
+                    <div class="value">${tobacco?.startAge?.let { "$it years" } ?: "--"}</div>
+                </div>
+                <div class="item">
+                    <div class="label">Avg daily use</div>
+                    <div class="value">${tobacco?.consumptionAmount?.let { "$it ${tobacco.consumptionUnit}" } ?: "--"}</div>
+                </div>
+                <div class="item">
+                    <div class="label">Willing to quit</div>
+                    <div class="value">${tobacco?.willingToQuit?.let { if (it) "Yes" else "No" } ?: "--"}</div>
+                </div>
+            </div>
+        """.trimIndent()
+    }
+
+    private fun getAlcoholSection(alcohol: AlcoholResponse?): String {
+        return """
+            <!-- Alcohol -->
+            <div class="row">
+                <div class="item">
+                    <div class="label">Alcohol</div>
+                    <div class="sub-label">Consumed in the last 30 days?</div>
+                    <div class="value">${alcohol?.consumedWithin30Days?.let { if (it) "Yes" else "No" } ?: "--"}</div>
+                </div>
+            </div>
+            <div class="row multiple-items">
+                <div class="item">
+                    <div class="label">Had at least one standard drink</div>
+                    <div class="value">${alcohol?.alcoholQ1?.let { "$it times in past 30 days" } ?: "--"}</div>
+                </div>
+                <div class="item">
+                    <div class="label">Standard drinks per occasion</div>
+                    <div class="value">${alcohol?.alcoholQ2?.let { "$it" } ?: "--"}</div>
+                </div>
+            </div>
+            <div class="row multiple-items">
+                <div class="item">
+                    <div class="label">≥ 6 standard drinks in a single occasion</div>
+                    <div class="value">${alcohol?.alcoholQ3?.let { "$it times in past 30 days" } ?: "--"}</div>
+                </div>
+            </div>
+        """.trimIndent()
+    }
+
+    private fun getFruitAndVegetableSection(fruitsVegetables: FruitsVegetablesResponse?): String {
+        return """
+            <!-- Fruits & vegetables -->
+            <div class="row">
+                <div class="item">
+                    <div class="label">Fruits & vegetables</div>
+                    <div class="sub-label">Eat weekly?</div>
+                    <div class="value">${fruitsVegetables?.consumptionInWeek?.let { if (it) "Yes" else "No" } ?: "--"}</div>
+                </div>
+            </div>
+            <div class="row multiple-items">
+                <div class="item">
+                    <div class="label">Frequency - fruits</div>
+                    <div class="value">${fruitsVegetables?.fruitsDays?.let { "$it days a week" } ?: "--"}</div>
+                </div>
+                <div class="item">
+                    <div class="label">Servings of fruits</div>
+                    <div class="value">${fruitsVegetables?.fruitServings?.let { "$it" } ?: "--"}</div>
+                </div>
+            </div>
+            <div class="row multiple-items">
+                <div class="item">
+                    <div class="label">Frequency - veg</div>
+                    <div class="value">${fruitsVegetables?.vegetableDays?.let { "$it days a week" } ?: "--"}</div>
+                </div>
+                <div class="item">
+                    <div class="label">Servings of veg</div>
+                    <div class="value">${fruitsVegetables?.vegetableServings?.let { "$it" } ?: "--"}</div>
+                </div>
+            </div>
+        """.trimIndent()
     }
 
     fun tobaccoCessationSection(tobaccoCessation: TobaccoCessationResponse?): String {
