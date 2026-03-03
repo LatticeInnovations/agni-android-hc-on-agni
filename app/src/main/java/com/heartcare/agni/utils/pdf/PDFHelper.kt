@@ -410,18 +410,19 @@ object PDFHelper {
                     <div class="item">
                         <div class="label">Physical activity</div>
                         <div class="sub-label">Weekly activity</div>
-                        <div class="value">${riskFactors?.physicalActivity?.weeklyEngagement?.let { if (it) "Active for at least 10 mins/week" else "Not active for at least 10 mins/week" } ?: "--"}</div>
+                        <div class="value">${riskFactors?.physicalActivity?.weeklyEngagement?.let { if (it) "Active for at least 10 mins/week" else "No" } ?: "--"}</div>
                     </div>
                 </div>
                 <div class="row multiple-items">
                     <div class="item">
                         <div class="label">Vigorous activity</div>
-                        <div class="value">${riskFactors?.physicalActivity?.let { "${it.vigorousTime} minutes, ${it.vigorousDays} days a week" } ?: "--"}</div>
+                        <div class="value">${riskFactors?.physicalActivity?.vigorousTime?.let { "$it" } ?: "--"} minutes, ${riskFactors?.physicalActivity?.vigorousDays?.let { "$it" } ?: "--"} days a week</div>
                     </div>
                     <div class="item">
                         <div class="label">Moderate intensity activity</div>
-                        <div class="value">${riskFactors?.physicalActivity?.let { "${it.moderateTime} minutes, ${it.moderateDays} days a week" } ?: "--"}</div>
+                        <div class="value">${riskFactors?.physicalActivity?.moderateTime?.let { "$it" } ?: "--"} minutes, ${riskFactors?.physicalActivity?.moderateDays?.let { "$it" } ?: "--"} days a week</div>
                     </div>
+                    <div class="item"></div>
                 </div>
                 
                 <!-- Salt -->
@@ -476,6 +477,7 @@ object PDFHelper {
                         <div class="label">Fruit juice consumed</div>
                         <div class="value">${ riskFactors?.sugar?.juiceFrequency?.let { fruitJuiceFrequencyDisplayFromCode(it)  } ?: "--"}</div>
                     </div>
+                    <div class="item"></div>
                 </div>
                 
                 <!-- Dining out -->
@@ -509,6 +511,7 @@ object PDFHelper {
                             }
                     </div>
                 </div>
+                <div class="item"></div>
             </div>
             <div class="row multiple-items">
                 <div class="item">
@@ -540,18 +543,21 @@ object PDFHelper {
             <div class="row multiple-items">
                 <div class="item">
                     <div class="label">Had at least one standard drink</div>
-                    <div class="value">${alcohol?.alcoholQ1?.let { "$it times in past 30 days" } ?: "--"}</div>
+                    <div class="value">${alcohol?.alcoholQ1?.let { "$it" } ?: "--"} times in past 30 days</div>
                 </div>
                 <div class="item">
                     <div class="label">Standard drinks per occasion</div>
                     <div class="value">${alcohol?.alcoholQ2?.let { "$it" } ?: "--"}</div>
                 </div>
+                <div class="item"></div>
             </div>
             <div class="row multiple-items">
                 <div class="item">
                     <div class="label">≥ 6 standard drinks in a single occasion</div>
-                    <div class="value">${alcohol?.alcoholQ3?.let { "$it times in past 30 days" } ?: "--"}</div>
+                    <div class="value">${alcohol?.alcoholQ3?.let { "$it" } ?: "--"} times in past 30 days</div>
                 </div>
+                <div class="item"></div>
+                <div class="item"></div>
             </div>
         """.trimIndent()
     }
@@ -569,22 +575,24 @@ object PDFHelper {
             <div class="row multiple-items">
                 <div class="item">
                     <div class="label">Frequency - fruits</div>
-                    <div class="value">${fruitsVegetables?.fruitsDays?.let { "$it days a week" } ?: "--"}</div>
+                    <div class="value">${fruitsVegetables?.fruitsDays?.let { "$it" } ?: "--"} days a week</div>
                 </div>
                 <div class="item">
                     <div class="label">Servings of fruits</div>
                     <div class="value">${fruitsVegetables?.fruitServings?.let { "$it" } ?: "--"}</div>
                 </div>
+                <div class="item"></div>
             </div>
             <div class="row multiple-items">
                 <div class="item">
                     <div class="label">Frequency - veg</div>
-                    <div class="value">${fruitsVegetables?.vegetableDays?.let { "$it days a week" } ?: "--"}</div>
+                    <div class="value">${fruitsVegetables?.vegetableDays?.let { "$it" } ?: "--"} days a week</div>
                 </div>
                 <div class="item">
                     <div class="label">Servings of veg</div>
                     <div class="value">${fruitsVegetables?.vegetableServings?.let { "$it" } ?: "--"}</div>
                 </div>
+                <div class="item"></div>
             </div>
         """.trimIndent()
     }
