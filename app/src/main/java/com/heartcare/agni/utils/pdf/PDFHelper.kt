@@ -685,13 +685,13 @@ object PDFHelper {
     }
 
     private fun prescriptionSection(prescription: PrescriptionAndMedicineRelation?): String {
-        return if (prescription?.prescriptionDirectionAndMedicineView?.isEmpty() == true) {
+        return if (prescription?.prescriptionDirectionAndMedicineView.isNullOrEmpty()) {
             """
                 <div class="value">--</div>
             """.trimIndent()
         } else {
             buildString {
-                prescription?.prescriptionDirectionAndMedicineView?.forEach { item ->
+                prescription.prescriptionDirectionAndMedicineView.forEach { item ->
                     append(
                         """
                     <div style="padding-bottom: 6px;">
