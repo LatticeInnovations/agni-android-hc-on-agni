@@ -400,6 +400,7 @@ private fun setMedicationData(
     viewModel.timing = prescriptionViewModel.medicationToEdit!!.medication.timing ?: ""
     viewModel.duration =
         prescriptionViewModel.medicationToEdit!!.medication.duration.toString()
+    viewModel.selectedBrand  = prescriptionViewModel.medicationToEdit!!.medication.brandName ?: ""
 }
 
 private fun doneButtonClick(
