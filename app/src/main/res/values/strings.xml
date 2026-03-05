@@ -460,4 +460,7 @@
     <string name="patient_deceased_no_upcoming_appointments">This patient is deceased.\nNo upcoming appointments available.</string>
 
     <string name="screening_report_download">Screening report download</string>
+
+    <string name="gender_is_required">Gender is required</string>
+    <string name="dob_age_required">Valid DOB/Age is required</string>
 </resources>

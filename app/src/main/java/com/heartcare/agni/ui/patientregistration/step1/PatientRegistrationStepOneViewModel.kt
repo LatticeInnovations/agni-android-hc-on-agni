@@ -9,6 +9,7 @@ import androidx.lifecycle.DefaultLifecycleObserver
 import com.heartcare.agni.base.viewmodel.BaseViewModel
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toMonthInteger
+import com.heartcare.agni.utils.regex.PhoneNumberRegex.phoneNumberRegex
 
 class PatientRegistrationStepOneViewModel : BaseViewModel(), DefaultLifecycleObserver {
     internal var isLaunched by mutableStateOf(false)
@@ -50,8 +51,17 @@ class PatientRegistrationStepOneViewModel : BaseViewModel(), DefaultLifecycleObs
     internal var isAgeDaysValid by mutableStateOf(false)
     internal var isAgeMonthsValid by mutableStateOf(false)
     internal var isAgeYearsValid by mutableStateOf(false)
+    internal var isGenderBlank by mutableStateOf(false)
+    internal var isDOBAgeBlank by mutableStateOf(false)
 
     internal fun basicInfoValidation(): Boolean {
+        isFirstNameValid = firstName.isBlank()
+        isLastNameValid = lastName.isBlank()
+        isPhoneValid = phoneNumber.isNotBlank() && !phoneNumber.matches(phoneNumberRegex)
+        isMotherNameValid = motherName.isBlank()
+        isGenderBlank = gender.isBlank()
+        isDOBAgeBlank = if (dobAgeSelector == "dob") dobDay.isBlank() || dobMonth.isBlank() || dobYear.isBlank()
+        else years.isBlank() && months.isBlank() && days.isBlank()
         return firstName.isNotBlank() &&
                 lastName.isNotBlank() &&
                 motherName.isNotBlank() &&

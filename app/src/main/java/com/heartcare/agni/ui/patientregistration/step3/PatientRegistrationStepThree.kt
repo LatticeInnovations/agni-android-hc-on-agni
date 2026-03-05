@@ -96,26 +96,27 @@ fun PatientRegistrationStepThree(
 
         Button(
             onClick = {
-                with(patientRegister) {
-                    province = viewModel.province
-                    areaCouncil = viewModel.areaCouncil
-                    island = viewModel.island
-                    village = viewModel.village
-                    postalCode = viewModel.postalCode
-                    otherVillage = viewModel.otherVillage
+                if (viewModel.addressInfoValidation()) {
+                    with(patientRegister) {
+                        province = viewModel.province
+                        areaCouncil = viewModel.areaCouncil
+                        island = viewModel.island
+                        village = viewModel.village
+                        postalCode = viewModel.postalCode
+                        otherVillage = viewModel.otherVillage
+                    }
+
+                    navController.currentBackStackEntry?.savedStateHandle?.set(
+                        "patient_register_details",
+                        patientRegister
+                    )
+
+                    navController.navigate(Screen.PatientRegistrationPreviewScreen.route)
                 }
-
-                navController.currentBackStackEntry?.savedStateHandle?.set(
-                    "patient_register_details",
-                    patientRegister
-                )
-
-                navController.navigate(Screen.PatientRegistrationPreviewScreen.route)
             },
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 15.dp),
-            enabled = viewModel.addressInfoValidation()
+                .padding(top = 15.dp)
         ) {
             Text(text = stringResource(id = R.string.preview))
         }
@@ -147,6 +148,7 @@ private fun AddressHierarchy(viewModel: PatientRegistrationStepThreeViewModel) {
         value = viewModel.province?.name ?: "",
         updateValue = {
             viewModel.province = it
+            viewModel.provinceError = false
             resetAreaCouncilHierarchy(viewModel)
             viewModel.getAreaCouncilList()
         },
@@ -154,13 +156,15 @@ private fun AddressHierarchy(viewModel: PatientRegistrationStepThreeViewModel) {
         dropdownList = viewModel.provinceList,
         errorText = stringResource(R.string.province_required),
         isMandatory = true,
-        isEnabled = true
+        isEnabled = true,
+        showError = viewModel.provinceError
     )
 
     LevelDropDownComposable(
         value = viewModel.areaCouncil?.name ?: "",
         updateValue = {
             viewModel.areaCouncil = it
+            viewModel.areaCouncilError = false
             resetIslandHierarchy(viewModel)
             viewModel.getIslandList()
         },
@@ -168,13 +172,15 @@ private fun AddressHierarchy(viewModel: PatientRegistrationStepThreeViewModel) {
         dropdownList = viewModel.areaCouncilList,
         errorText = stringResource(R.string.area_council_required),
         isMandatory = true,
-        isEnabled = viewModel.province != null
+        isEnabled = viewModel.province != null,
+        showError = viewModel.areaCouncilError
     )
 
     LevelDropDownComposable(
         value = viewModel.island?.name ?: "",
         updateValue = {
             viewModel.island = it
+            viewModel.islandError = false
             resetVillage(viewModel)
             viewModel.getVillageList()
         },
@@ -182,7 +188,8 @@ private fun AddressHierarchy(viewModel: PatientRegistrationStepThreeViewModel) {
         dropdownList = viewModel.islandList,
         errorText = stringResource(R.string.island_required),
         isMandatory = true,
-        isEnabled = viewModel.areaCouncil != null
+        isEnabled = viewModel.areaCouncil != null,
+        showError = viewModel.islandError
     )
 
     LevelDropDownComposable(
@@ -215,7 +222,8 @@ fun LevelDropDownComposable(
     dropdownList: List<LevelResponse>,
     errorText: String,
     isMandatory: Boolean,
-    isEnabled: Boolean
+    isEnabled: Boolean,
+    showError: Boolean = false
 ) {
     val defaultOption = LevelResponse(
         fhirId = "",
@@ -260,12 +268,12 @@ fun LevelDropDownComposable(
             trailingIcon = {
                 Icon(Icons.Default.ArrowDropDown, contentDescription = null)
             },
-            supportingText = if (isError) {
+            supportingText = if (isError || showError) {
                 {
                     Text(errorText)
                 }
             } else null,
-            isError = isError
+            isError = isError || showError
         )
 
         DropdownMenu(

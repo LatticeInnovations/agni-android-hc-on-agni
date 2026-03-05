@@ -27,12 +27,15 @@ class PatientRegistrationStepThreeViewModel @Inject constructor(
     val postalCodeLength = 10
 
     var province: LevelResponse? by mutableStateOf(null)
+    var provinceError: Boolean by mutableStateOf(false)
     var provinceList: List<LevelResponse> by mutableStateOf(emptyList())
 
     var areaCouncil: LevelResponse? by mutableStateOf(null)
+    var areaCouncilError: Boolean by mutableStateOf(false)
     var areaCouncilList: List<LevelResponse> by mutableStateOf(emptyList())
 
     var island: LevelResponse? by mutableStateOf(null)
+    var islandError: Boolean by mutableStateOf(false)
     var islandList: List<LevelResponse> by mutableStateOf(emptyList())
 
     var village: LevelResponse? by mutableStateOf(null)
@@ -83,6 +86,9 @@ class PatientRegistrationStepThreeViewModel @Inject constructor(
     }
 
     fun addressInfoValidation(): Boolean {
+        provinceError = province == null
+        areaCouncilError = areaCouncil == null
+        islandError = island == null
         if (province == null || areaCouncil == null || island == null) return false
 
         if (village?.name == otherName) {
