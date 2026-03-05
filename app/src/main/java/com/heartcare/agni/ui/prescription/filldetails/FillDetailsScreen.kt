@@ -71,7 +71,7 @@ fun FillDetailsScreen(
             viewModel.medFhirId = prescriptionViewModel.checkedMedication!!.medFhirId
         }
     }
-    LaunchedEffect(viewModel.isLaunched) {
+    LaunchedEffect(prescriptionViewModel.medicationToEdit) {
         if (prescriptionViewModel.medicationToEdit != null) {
             setMedicationData(viewModel, prescriptionViewModel)
         }
