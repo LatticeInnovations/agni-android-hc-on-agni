@@ -273,6 +273,7 @@ fun PatientRegistrationStepOne(
                         months = viewModel.months
                         days = viewModel.days
                         phoneNumber = viewModel.phoneNumber
+                        email = viewModel.email
                         gender = viewModel.gender
                         isPersonDeceased = viewModel.isPersonDeceased
                         personDeceasedReason = viewModel.selectedDeceasedReason

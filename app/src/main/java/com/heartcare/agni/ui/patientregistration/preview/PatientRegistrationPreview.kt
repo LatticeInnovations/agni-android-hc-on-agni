@@ -251,6 +251,7 @@ private fun setData(
             viewModel.firstName = firstName.toString()
             viewModel.lastName = lastName.toString()
             viewModel.phoneNumber = phoneNumber.toString()
+            viewModel.email = email.toString()
             viewModel.dobDay = dobDay.toString()
             viewModel.dobMonth = dobMonth.toString()
             viewModel.dobYear = dobYear.toString()
@@ -274,6 +275,9 @@ private fun setData(
             viewModel.village = village
             viewModel.otherVillage = otherVillage.toString()
             viewModel.postalCode = postalCode.toString()
+
+            viewModel.latitude = latitude
+            viewModel.longitude = longitude
 
             if (dobAgeSelector == "dob") {
                 viewModel.dob = "${viewModel.dobDay}-${viewModel.dobMonth}-${viewModel.dobYear}"

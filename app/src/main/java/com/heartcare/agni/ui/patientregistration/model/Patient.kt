@@ -9,6 +9,7 @@ data class PatientRegister(
     var firstName: String? = "",
     var lastName: String? = "",
     var phoneNumber: String? = "",
+    var email: String? = "",
     var dobAgeSelector: String? = "dob",
     var dobDay: String? = "",
     var dobMonth: String? = "",
@@ -33,4 +34,6 @@ data class PatientRegister(
     var village: LevelResponse? = null,
     var postalCode: String? = "",
     var otherVillage: String? ="",
+    var latitude: Double = 0.0,
+    var longitude: Double = 0.0
 ) : Parcelable

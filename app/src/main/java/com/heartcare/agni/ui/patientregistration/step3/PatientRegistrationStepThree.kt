@@ -134,6 +134,8 @@ fun PatientRegistrationStepThree(
                         village = viewModel.village
                         postalCode = viewModel.postalCode
                         otherVillage = viewModel.otherVillage
+                        latitude = viewModel.latitude
+                        longitude = viewModel.longitude
                     }
 
                     navController.currentBackStackEntry?.savedStateHandle?.set(
