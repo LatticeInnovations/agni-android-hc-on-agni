@@ -145,6 +145,11 @@ class EditPatientAddressViewModel @Inject constructor(
         isVillageOtherSelected = otherVillage.isNotBlank()
         latitude = latitudeTemp
         longitude = longitudeTemp
+        if (longitude != null && latitude != null) {
+            stepState = LocationStateEnum.SAVED
+        } else {
+            stepState = LocationStateEnum.TODO
+        }
         return true
     }
 

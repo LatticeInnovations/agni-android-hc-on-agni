@@ -487,7 +487,7 @@ private fun CurrentLocationLayout(viewModel: PatientRegistrationStepThreeViewMod
                 onClick = {
                     viewModel.latitude = 0.0
                     viewModel.longitude = 0.0
-                    viewModel.fetchLocation()
+                    viewModel.stepState = LocationStateEnum.TODO
                 }
             ) {
                 Text(

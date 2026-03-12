@@ -468,7 +468,9 @@ private fun CurrentLocationLayout(viewModel: EditPatientAddressViewModel) {
         if (viewModel.stepState == LocationStateEnum.SAVED) {
             TextButton(
                 onClick = {
-                    viewModel.fetchLocation()
+                    viewModel.latitude = null
+                    viewModel.longitude = null
+                    viewModel.stepState = LocationStateEnum.TODO
                 }
             ) {
                 Text(
