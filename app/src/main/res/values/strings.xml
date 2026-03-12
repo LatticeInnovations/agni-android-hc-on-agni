@@ -256,7 +256,7 @@
     <string name="pin_info">This pin will be required for login</string>
     <string name="save_pin">Save m-pin</string>
     <string name="enter_registered_email">Enter the registered email address</string>
-    <string name="enter_valid_email">Please enter a valid email address</string>
+    <string name="enter_valid_email">Enter a valid email address</string>
     <string name="email_is_required">Email address is required</string>
     <string name="enter_pin">Enter your m-pin to login</string>
     <string name="reset_pin">Reset your m-pin</string>

@@ -23,6 +23,7 @@ class PatientRegistrationStepOneViewModel : BaseViewModel(), DefaultLifecycleObs
     internal var lastName by mutableStateOf("")
     internal var phoneNumber by mutableStateOf("")
     internal var email by mutableStateOf("")
+    internal var emailError by mutableStateOf(false)
     internal var dobAgeSelector by mutableStateOf("dob")
     internal var dobDay by mutableStateOf("")
     internal var dobMonth by mutableStateOf("")
@@ -68,6 +69,7 @@ class PatientRegistrationStepOneViewModel : BaseViewModel(), DefaultLifecycleObs
                 !verifyDOB() &&
                 !verifyAge() &&
                 !isPhoneValid &&
+                !emailError &&
                 gender.isNotBlank()
     }
 
