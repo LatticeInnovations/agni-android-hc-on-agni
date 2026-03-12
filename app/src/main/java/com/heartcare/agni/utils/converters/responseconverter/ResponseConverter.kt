@@ -125,8 +125,8 @@ fun PatientResponse.toPatientEntity(): PatientEntity {
         active = active,
         heartcareId = heartcareId,
         email = email,
-        latitude = gpsCoordinates.latitude,
-        longitude = gpsCoordinates.longitude
+        latitude = gpsCoordinates?.latitude,
+        longitude = gpsCoordinates?.longitude
     )
 }
 

@@ -29,5 +29,5 @@ data class PatientResponse(
     val active: Boolean?,
     val heartcareId: String?,
     val email: String?,
-    val gpsCoordinates: GPSCoordinates
+    val gpsCoordinates: GPSCoordinates?
 ) : Parcelable
