@@ -226,7 +226,7 @@ private fun PreviewScreenComposable(
             gpsCoordinates = GPSCoordinates(
                 longitude = viewModel.longitude.takeIf { it != 0.0 },
                 latitude = viewModel.latitude.takeIf { it != 0.0 }
-            )
+            ).takeIf { it.longitude != null && it.latitude != null }
         )
         PreviewScreen(
             viewModel.patientResponse!!

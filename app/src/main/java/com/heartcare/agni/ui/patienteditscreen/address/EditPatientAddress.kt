@@ -231,7 +231,7 @@ fun EditPatientAddress(
                                 gpsCoordinates = GPSCoordinates(
                                     longitude = viewModel.longitude.takeIf { it != null },
                                     latitude = viewModel.latitude.takeIf { it != null }
-                                )
+                                ).takeIf { it.longitude != null && it.latitude != null }
                             )
                         )
 
