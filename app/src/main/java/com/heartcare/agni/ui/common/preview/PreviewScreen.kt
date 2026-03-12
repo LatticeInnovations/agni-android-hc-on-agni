@@ -33,6 +33,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.heartcare.agni.R
 import com.heartcare.agni.data.local.enums.NationalIdUse
@@ -109,7 +110,12 @@ private fun BasicInformationCard(
             if (patientResponse.mobileNumber != null) {
                 Spacer(modifier = Modifier.height(10.dp))
                 Label(stringResource(R.string.phone_number_label))
-                Detail("${patientResponse.mobileNumber}")
+                Detail(patientResponse.mobileNumber)
+            }
+            if (patientResponse.email != null) {
+                Spacer(modifier = Modifier.height(10.dp))
+                Label(stringResource(R.string.email))
+                Detail(patientResponse.email)
             }
             Spacer(modifier = Modifier.height(10.dp))
             Label(stringResource(R.string.patient_deceased_label))
@@ -239,6 +245,11 @@ private fun AddressCard(
             if (!homeAddressLine1.isNullOrBlank()) Detail(homeAddressLine1)
             Detail(homeAddressLine2)
             Detail(homeAddressLine3)
+
+            if (patientResponse.gpsCoordinates?.latitude != null && patientResponse.gpsCoordinates.longitude != null) {
+                Spacer(modifier = Modifier.height(10.dp))
+                LocationView()
+            }
         }
     }
 }
@@ -294,4 +305,22 @@ private fun Detail(detail: String) {
         text = detail,
         style = MaterialTheme.typography.bodyLarge
     )
+}
+
+@Composable
+fun LocationView() {
+    Card(
+        shape = RoundedCornerShape(8.dp),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+    ) {
+        Row(
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(start = 10.dp, end = 12.dp, bottom = 5.dp, top = 5.dp)
+        ) {
+            Icon(painter = painterResource(R.drawable.sync_completed_icon), contentDescription = null)
+            Spacer(modifier = Modifier.width(5.dp))
+            Text(text = stringResource(id = R.string.gps_location_saved), fontSize = 14.sp)
+        }
+    }
 }
