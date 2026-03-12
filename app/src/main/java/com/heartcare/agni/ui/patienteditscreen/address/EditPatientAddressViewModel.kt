@@ -1,12 +1,19 @@
 package com.heartcare.agni.ui.patienteditscreen.address
 
+import android.Manifest
+import android.app.Application
+import android.content.pm.PackageManager
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.core.app.ActivityCompat
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.viewModelScope
-import com.heartcare.agni.base.viewmodel.BaseViewModel
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
 import com.heartcare.agni.data.local.enums.LevelsEnum
+import com.heartcare.agni.data.local.enums.LocationStateEnum
 import com.heartcare.agni.data.local.repository.generic.GenericRepository
 import com.heartcare.agni.data.local.repository.levels.LevelRepository
 import com.heartcare.agni.data.local.repository.patient.PatientRepository
@@ -16,15 +23,17 @@ import com.heartcare.agni.di.dispatcher.IoDispatcher
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
 
 @HiltViewModel
 class EditPatientAddressViewModel @Inject constructor(
+    private val application: Application,
     val patientRepository: PatientRepository,
     val genericRepository: GenericRepository,
     private val levelRepository: LevelRepository,
     @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher
-) : BaseViewModel(), DefaultLifecycleObserver {
+) : AndroidViewModel(application), DefaultLifecycleObserver {
     var isLaunched by mutableStateOf(false)
 
     val otherName = "Others"
@@ -48,12 +57,20 @@ class EditPatientAddressViewModel @Inject constructor(
 
     var postalCode by mutableStateOf("")
 
+    var latitude: Double? by mutableStateOf(null)
+    var longitude: Double? by mutableStateOf(null)
+
     var provinceTemp: LevelResponse? by mutableStateOf(null)
     var areaCouncilTemp: LevelResponse? by mutableStateOf(null)
     var islandTemp: LevelResponse? by mutableStateOf(null)
     var villageTemp: LevelResponse? by mutableStateOf(null)
     var otherVillageTemp by mutableStateOf("")
     var postalCodeTemp by mutableStateOf("")
+    var latitudeTemp: Double? by mutableStateOf(null)
+    var longitudeTemp: Double? by mutableStateOf(null)
+
+    var stepState by mutableStateOf(LocationStateEnum.TODO)
+    var openPermissionDialog by mutableStateOf(false)
 
     fun getLists() {
         viewModelScope.launch(ioDispatcher) {
@@ -111,7 +128,9 @@ class EditPatientAddressViewModel @Inject constructor(
                 areaCouncil != areaCouncilTemp ||
                 island != islandTemp ||
                 village != villageTemp ||
-                otherVillage != otherVillageTemp
+                otherVillage != otherVillageTemp ||
+                latitude != latitudeTemp ||
+                longitude != longitudeTemp
     }
 
 
@@ -124,6 +143,8 @@ class EditPatientAddressViewModel @Inject constructor(
         otherVillage = otherVillageTemp
         otherVillageError = false
         isVillageOtherSelected = otherVillage.isNotBlank()
+        latitude = latitudeTemp
+        longitude = longitudeTemp
         return true
     }
 
@@ -142,6 +163,38 @@ class EditPatientAddressViewModel @Inject constructor(
                     )
                 }
             }
+        }
+    }
+
+    fun fetchLocation() {
+        stepState = LocationStateEnum.LOADING
+
+        val fusedLocationClient = LocationServices.getFusedLocationProviderClient(application)
+
+        if (ActivityCompat.checkSelfPermission(
+                application,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
+                application,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            return
+        }
+
+        fusedLocationClient.getCurrentLocation(
+            Priority.PRIORITY_HIGH_ACCURACY,
+            null
+        ).addOnSuccessListener { location ->
+            location?.let {
+                latitude = it.latitude
+                longitude = it.longitude
+                Timber.d("Latitude: $latitude Longitude: $longitude")
+                stepState = LocationStateEnum.SAVED
+            }
+        }.addOnFailureListener {
+            Timber.e(it, "Failed to fetch location")
+            stepState = LocationStateEnum.TODO
         }
     }
 }
