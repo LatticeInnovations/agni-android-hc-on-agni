@@ -29,6 +29,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.heartcare.agni.R
 import com.heartcare.agni.data.local.enums.NationalIdUse
+import com.heartcare.agni.data.server.model.patient.GPSCoordinates
 import com.heartcare.agni.data.server.model.patient.PatientAddressResponse
 import com.heartcare.agni.data.server.model.patient.PatientIdentifier
 import com.heartcare.agni.data.server.model.patient.PatientResponse
@@ -220,7 +221,12 @@ private fun PreviewScreenComposable(
             patientDeceasedReason = viewModel.selectedDeceasedReason.ifBlank { null },
             appUpdatedDate = Date(),
             active = true,
-            heartcareId = null
+            heartcareId = null,
+            email = viewModel.email.ifBlank { null },
+            gpsCoordinates = GPSCoordinates(
+                longitude = viewModel.longitude.takeIf { it != 0.0 },
+                latitude = viewModel.latitude.takeIf { it != 0.0 }
+            )
         )
         PreviewScreen(
             viewModel.patientResponse!!

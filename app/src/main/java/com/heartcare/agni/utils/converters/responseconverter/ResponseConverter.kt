@@ -71,6 +71,7 @@ import com.heartcare.agni.data.server.model.historymedication.HistoryMedicationR
 import com.heartcare.agni.data.server.model.intervention.InterventionMasterResponse
 import com.heartcare.agni.data.server.model.intervention.InterventionResponse
 import com.heartcare.agni.data.server.model.levels.LevelResponse
+import com.heartcare.agni.data.server.model.patient.GPSCoordinates
 import com.heartcare.agni.data.server.model.patient.GeneralPractitioner
 import com.heartcare.agni.data.server.model.patient.ManagingOrganization
 import com.heartcare.agni.data.server.model.patient.PatientAddressResponse
@@ -122,7 +123,10 @@ fun PatientResponse.toPatientEntity(): PatientEntity {
         patientDeceasedReason = patientDeceasedReason,
         patientDeceasedReasonId = patientDeceasedReasonId,
         active = active,
-        heartcareId = heartcareId
+        heartcareId = heartcareId,
+        email = email,
+        latitude = gpsCoordinates.latitude,
+        longitude = gpsCoordinates.longitude
     )
 }
 
@@ -187,7 +191,12 @@ fun PatientAndIdentifierEntity.toPatientResponse(): PatientResponse {
         patientDeceasedReasonId = patientEntity.patientDeceasedReasonId,
         appUpdatedDate = null,
         active = patientEntity.active,
-        heartcareId = patientEntity.heartcareId
+        heartcareId = patientEntity.heartcareId,
+        email = patientEntity.email,
+        gpsCoordinates = GPSCoordinates(
+            longitude = patientEntity.longitude,
+            latitude = patientEntity.latitude
+        )
     )
 }
 
