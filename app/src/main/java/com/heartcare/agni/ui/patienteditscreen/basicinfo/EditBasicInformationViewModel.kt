@@ -87,6 +87,7 @@ class EditBasicInformationViewModel @Inject constructor(
     internal var isAgeDaysValid by mutableStateOf(false)
     internal var isAgeMonthsValid by mutableStateOf(false)
     internal var isAgeYearsValid by mutableStateOf(false)
+    var emailError by mutableStateOf(false)
 
     fun basicInfoValidation(): Boolean {
         return firstName.isNotBlank() &&
@@ -95,6 +96,7 @@ class EditBasicInformationViewModel @Inject constructor(
                 !verifyDOB() &&
                 !verifyAge() &&
                 !isPhoneValid &&
+                !emailError &&
                 gender.isNotBlank()
     }
 
@@ -169,6 +171,7 @@ class EditBasicInformationViewModel @Inject constructor(
         isAgeDaysValid = false
         isAgeMonthsValid = false
         isAgeYearsValid = false
+        emailError = false
         return true
     }
 

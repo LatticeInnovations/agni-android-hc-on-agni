@@ -1,6 +1,7 @@
 package com.heartcare.agni.data.local.roomdb
 
 import android.content.Context
+import androidx.room.AutoMigration
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
@@ -102,8 +103,11 @@ import java.util.UUID
         HealthFacilityEntity::class
     ],
     views = [PrescriptionDirectionAndMedicineView::class],
-    version = 1,
-    exportSchema = true
+    version = 2,
+    exportSchema = true,
+    autoMigrations = [
+        AutoMigration(from = 1, to = 2)
+    ]
 )
 @TypeConverters(TypeConverter::class, DiagnosisTypeConverter::class)
 abstract class FhirAppDatabase : RoomDatabase() {

@@ -1,6 +1,7 @@
 package com.heartcare.agni.ui.patientregistration.preview
 
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -67,6 +68,8 @@ class PatientRegistrationPreviewViewModel @Inject constructor(
     var village: LevelResponse? by mutableStateOf(null)
     var postalCode by mutableStateOf("")
     var otherVillage by mutableStateOf("")
+    var latitude by mutableDoubleStateOf(0.0)
+    var longitude by mutableDoubleStateOf(0.0)
 
     fun addPatient(patientResponse: PatientResponse) {
         viewModelScope.launch(ioDispatcher) {

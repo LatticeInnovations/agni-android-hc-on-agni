@@ -56,8 +56,8 @@ android {
         applicationId "com.heartcare.agni"
         minSdk 26
         targetSdk 36
-        versionCode 15
-        versionName "1.9.5"
+        versionCode 16
+        versionName "1.9.6"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
@@ -214,6 +214,9 @@ dependencies {
 
     //mp chart
     implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
+
+    //GMS Location
+    implementation("com.google.android.gms:play-services-location:21.3.0")
 }
 
 allprojects {

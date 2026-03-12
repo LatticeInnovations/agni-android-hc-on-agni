@@ -1,5 +1,14 @@
 package com.heartcare.agni.ui.patientregistration.step3
 
+import android.Manifest
+import android.app.Activity.RESULT_OK
+import android.content.Context
+import android.content.IntentSender
+import android.content.pm.PackageManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.IntentSenderRequest
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.Arrangement
@@ -11,17 +20,23 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.Button
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -31,21 +46,36 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.google.android.gms.common.api.ResolvableApiException
+import com.google.android.gms.location.LocationRequest
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.LocationSettingsRequest
+import com.google.android.gms.location.LocationSettingsResponse
+import com.google.android.gms.location.Priority
+import com.google.android.gms.location.SettingsClient
+import com.google.android.gms.tasks.Task
 import com.heartcare.agni.R
+import com.heartcare.agni.data.local.enums.LocationStateEnum
 import com.heartcare.agni.data.server.model.levels.LevelResponse
 import com.heartcare.agni.navigation.Screen
+import com.heartcare.agni.ui.common.CustomDialog
 import com.heartcare.agni.ui.common.CustomTextFieldWithLength
 import com.heartcare.agni.ui.patientregistration.PatientRegistrationViewModel
 import com.heartcare.agni.ui.patientregistration.model.PatientRegister
 import com.heartcare.agni.ui.theme.Neutral40
 import com.heartcare.agni.utils.regex.OnlyNumberRegex.onlyNumbers
+import timber.log.Timber
 
 @Composable
 fun PatientRegistrationStepThree(
@@ -104,6 +134,8 @@ fun PatientRegistrationStepThree(
                         village = viewModel.village
                         postalCode = viewModel.postalCode
                         otherVillage = viewModel.otherVillage
+                        latitude = viewModel.latitude
+                        longitude = viewModel.longitude
                     }
 
                     navController.currentBackStackEntry?.savedStateHandle?.set(
@@ -212,6 +244,7 @@ private fun AddressHierarchy(viewModel: PatientRegistrationStepThreeViewModel) {
     }
 
     PostalCodeComposable(viewModel)
+    CurrentLocationLayout(viewModel)
 }
 
 @Composable
@@ -361,4 +394,188 @@ private fun resetVillage(viewModel: PatientRegistrationStepThreeViewModel) {
     viewModel.village = null
     viewModel.otherVillage = ""
     viewModel.isVillageOtherSelected = false
+}
+
+@Composable
+private fun CurrentLocationLayout(viewModel: PatientRegistrationStepThreeViewModel) {
+    val context = LocalContext.current
+
+    // check location turn on or not
+    val settingResultRequest = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartIntentSenderForResult()
+    ) { activityResult ->
+        if (activityResult.resultCode == RESULT_OK) {
+            viewModel.fetchLocation()
+
+            Timber.d("location permission: Accepted")
+        } else {
+            Timber.d("location permission : Denied")
+        }
+    }
+
+    val requestPermissionLauncher = rememberLauncherForActivityResult(contract = ActivityResultContracts.RequestPermission(),
+        onResult = { isGranted: Boolean ->
+            if (isGranted) {
+                // Permission granted, update the location
+                checkLocationSetting(
+                    context = context,
+                    onDisabled = { intentSenderRequest ->
+                        settingResultRequest.launch(intentSenderRequest)
+                    },
+                    onEnabled = {
+                        if (viewModel.latitude == 0.0 && viewModel.longitude == 0.0) {
+                            viewModel.fetchLocation()
+                        }
+                    })
+            } else {
+                Timber.d("Permission not granted")
+            }
+        }
+    )
+
+    Row(
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        ElevatedCard(
+            modifier = Modifier.clickable {
+                if (hasLocationPermission(context)) {
+                    // ask to turn on location
+                    checkLocationSetting(context = context, onDisabled = { intentSenderRequest ->
+                        settingResultRequest.launch(intentSenderRequest)
+                    }, onEnabled = {
+                        if (viewModel.latitude == 0.0 && viewModel.longitude == 0.0) {
+                            viewModel.fetchLocation()
+                        }
+                    })
+                } else {
+                    // Request location permission
+                    viewModel.openPermissionDialog = true
+                }
+            },
+            shape = RoundedCornerShape(10.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
+        ) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(5.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(10.dp)
+            ) {
+                LocationStateIcon(stepState = viewModel.stepState)
+                Text(
+                    modifier = Modifier.padding(end = 10.dp),
+                    text = when (viewModel.stepState) {
+                        LocationStateEnum.TODO -> {
+                            context.getString(R.string.use_my_current_location)
+                        }
+
+                        LocationStateEnum.LOADING -> {
+                            context.getString(R.string.fetching_location)
+                        }
+
+                        LocationStateEnum.SAVED -> {
+                            context.getString(R.string.gps_location_saved)
+                        }
+                    },
+                    style = MaterialTheme.typography.labelLarge
+                )
+            }
+        }
+        if (viewModel.stepState == LocationStateEnum.SAVED) {
+            TextButton(
+                onClick = {
+                    viewModel.latitude = 0.0
+                    viewModel.longitude = 0.0
+                    viewModel.stepState = LocationStateEnum.TODO
+                }
+            ) {
+                Text(
+                    text = stringResource(R.string.update_location),
+                    textDecoration = TextDecoration.Underline,
+                    color = MaterialTheme.colorScheme.secondary
+                )
+            }
+        }
+    }
+    if (viewModel.openPermissionDialog) {
+        CustomDialog(
+            canBeDismissed = true,
+            title = stringResource(id = R.string.location_permission),
+            text = stringResource(id = R.string.location_dialog_description),
+            dismissBtnText = stringResource(id = R.string.discard),
+            confirmBtnText = stringResource(id = R.string.allow),
+            dismiss = {
+                viewModel.openPermissionDialog = false
+            },
+            confirm = {
+                viewModel.openPermissionDialog = false
+                requestPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+            }
+        )
+    }
+}
+
+private fun checkLocationSetting(
+    context: Context,
+    onDisabled: (IntentSenderRequest) -> Unit,
+    onEnabled: () -> Unit
+) {
+    val locationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 1000)
+
+    val client: SettingsClient = LocationServices.getSettingsClient(context)
+    val builder: LocationSettingsRequest.Builder =
+        LocationSettingsRequest.Builder().addLocationRequest(locationRequest.build())
+
+    val gpsSettingTask: Task<LocationSettingsResponse> =
+        client.checkLocationSettings(builder.build())
+
+    gpsSettingTask.addOnSuccessListener { onEnabled() }
+    gpsSettingTask.addOnFailureListener { exception ->
+        if (exception is ResolvableApiException) {
+            try {
+                val intentSenderRequest = IntentSenderRequest.Builder(exception.resolution).build()
+                onDisabled(intentSenderRequest)
+            } catch (_: IntentSender.SendIntentException) {
+                // ignore here
+            }
+        }
+    }
+}
+
+private fun hasLocationPermission(context: Context): Boolean {
+    return ContextCompat.checkSelfPermission(
+        context, Manifest.permission.ACCESS_COARSE_LOCATION
+    ) == PackageManager.PERMISSION_GRANTED || ContextCompat.checkSelfPermission(
+        context, Manifest.permission.ACCESS_FINE_LOCATION
+    ) == PackageManager.PERMISSION_GRANTED
+}
+
+@Composable
+private fun LocationStateIcon(stepState: LocationStateEnum) {
+    when (stepState) {
+        LocationStateEnum.TODO -> {
+            Icon(
+                painter = painterResource(id = R.drawable.current_location_icon),
+                contentDescription = null
+            )
+        }
+
+        LocationStateEnum.LOADING -> {
+            CircularProgressIndicator(
+                modifier = Modifier
+                    .size(20.dp),
+                strokeWidth = 2.dp,
+                trackColor = MaterialTheme.colorScheme.onSurface,
+                color = MaterialTheme.colorScheme.primaryContainer
+            )
+        }
+
+        LocationStateEnum.SAVED -> {
+            Icon(
+                painter = painterResource(id = R.drawable.sync_completed_icon),
+                contentDescription = null
+            )
+        }
+    }
 }

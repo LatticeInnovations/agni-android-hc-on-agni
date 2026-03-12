@@ -67,6 +67,7 @@ import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.ageTo
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.isDOBValid
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toMonthInteger
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toPatientDate
+import com.heartcare.agni.utils.regex.EmailRegex.emailPattern
 import com.heartcare.agni.utils.regex.NameRegex.nameRegex
 import com.heartcare.agni.utils.regex.PhoneNumberRegex.phoneNumberRegex
 import kotlinx.coroutines.launch
@@ -224,6 +225,20 @@ fun EditBasicInformation(
                             )
                     }
 
+                    CustomTextField(
+                        value = viewModel.email,
+                        label = stringResource(id = R.string.email),
+                        weight = 1f,
+                        maxLength = viewModel.maxNameLength,
+                        isError = viewModel.emailError,
+                        error = stringResource(id = R.string.enter_valid_email),
+                        keyboardType = KeyboardType.Text,
+                        keyboardCapitalization = KeyboardCapitalization.None
+                    ) {
+                        viewModel.email = it
+                        viewModel.emailError = viewModel.email.isNotBlank() && !viewModel.email.matches(emailPattern)
+                    }
+
                     GenderComposable(viewModel)
                     PatientDeceasedComposable(viewModel)
                     CustomTextFieldWithLength(
@@ -361,7 +376,8 @@ private fun handleBasicInfoNavigation(
             mothersName = viewModel.motherName.capitalizeFirst().trim(),
             fathersName = viewModel.fatherName.ifBlank { null }?.capitalizeFirst()?.trim(),
             spouseName = viewModel.spouseName.ifBlank { null }?.capitalizeFirst()?.trim(),
-            patientDeceasedReason = viewModel.selectedDeceasedReason.ifBlank { null }
+            patientDeceasedReason = viewModel.selectedDeceasedReason.ifBlank { null },
+            email = viewModel.email.ifBlank { null }
         )
     )
     navController.previousBackStackEntry?.savedStateHandle?.set(
@@ -403,6 +419,7 @@ fun HandleLaunchedEffect(
                 viewModel.spouseName = spouseName ?: ""
                 viewModel.isPersonDeceased = if (patientDeceasedReason.isNullOrBlank()) 0 else 1
                 viewModel.selectedDeceasedReason = patientDeceasedReason ?: ""
+                viewModel.email = email ?: ""
             }
             viewModel.isLaunched = true
 
@@ -424,6 +441,7 @@ fun HandleLaunchedEffect(
             viewModel.spouseNameTemp = viewModel.spouseName
             viewModel.isPersonDeceasedTemp = viewModel.isPersonDeceased
             viewModel.selectedDeceasedReasonTemp = viewModel.selectedDeceasedReason
+            viewModel.emailTemp = viewModel.email
         }
     }
 

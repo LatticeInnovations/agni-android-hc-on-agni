@@ -29,6 +29,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.heartcare.agni.R
 import com.heartcare.agni.data.local.enums.NationalIdUse
+import com.heartcare.agni.data.server.model.patient.GPSCoordinates
 import com.heartcare.agni.data.server.model.patient.PatientAddressResponse
 import com.heartcare.agni.data.server.model.patient.PatientIdentifier
 import com.heartcare.agni.data.server.model.patient.PatientResponse
@@ -220,7 +221,12 @@ private fun PreviewScreenComposable(
             patientDeceasedReason = viewModel.selectedDeceasedReason.ifBlank { null },
             appUpdatedDate = Date(),
             active = true,
-            heartcareId = null
+            heartcareId = null,
+            email = viewModel.email.ifBlank { null },
+            gpsCoordinates = GPSCoordinates(
+                longitude = viewModel.longitude.takeIf { it != 0.0 },
+                latitude = viewModel.latitude.takeIf { it != 0.0 }
+            ).takeIf { it.longitude != null && it.latitude != null }
         )
         PreviewScreen(
             viewModel.patientResponse!!
@@ -251,6 +257,7 @@ private fun setData(
             viewModel.firstName = firstName.toString()
             viewModel.lastName = lastName.toString()
             viewModel.phoneNumber = phoneNumber.toString()
+            viewModel.email = email.toString()
             viewModel.dobDay = dobDay.toString()
             viewModel.dobMonth = dobMonth.toString()
             viewModel.dobYear = dobYear.toString()
@@ -274,6 +281,9 @@ private fun setData(
             viewModel.village = village
             viewModel.otherVillage = otherVillage.toString()
             viewModel.postalCode = postalCode.toString()
+
+            viewModel.latitude = latitude
+            viewModel.longitude = longitude
 
             if (dobAgeSelector == "dob") {
                 viewModel.dob = "${viewModel.dobDay}-${viewModel.dobMonth}-${viewModel.dobYear}"

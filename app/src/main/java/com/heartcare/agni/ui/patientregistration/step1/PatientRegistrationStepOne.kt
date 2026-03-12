@@ -60,6 +60,7 @@ import com.heartcare.agni.utils.converters.responseconverter.MonthsList.getMonth
 import com.heartcare.agni.utils.converters.responseconverter.StringUtils.capitalizeFirst
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.isDOBValid
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toMonthInteger
+import com.heartcare.agni.utils.regex.EmailRegex.emailPattern
 import com.heartcare.agni.utils.regex.NameRegex.nameRegex
 import com.heartcare.agni.utils.regex.PhoneNumberRegex.phoneNumberRegex
 
@@ -199,6 +200,20 @@ fun PatientRegistrationStepOne(
                     )
             }
 
+            CustomTextField(
+                value = viewModel.email,
+                label = stringResource(id = R.string.email),
+                weight = 1f,
+                maxLength = viewModel.maxNameLength,
+                isError = viewModel.emailError,
+                error = stringResource(id = R.string.enter_valid_email),
+                keyboardType = KeyboardType.Text,
+                keyboardCapitalization = KeyboardCapitalization.None
+            ) {
+                viewModel.email = it
+                viewModel.emailError = viewModel.email.isNotBlank() && !viewModel.email.matches(emailPattern)
+            }
+
             GenderComposable(viewModel)
             PatientDeceasedComposable(viewModel)
             CustomTextFieldWithLength(
@@ -258,6 +273,7 @@ fun PatientRegistrationStepOne(
                         months = viewModel.months
                         days = viewModel.days
                         phoneNumber = viewModel.phoneNumber
+                        email = viewModel.email
                         gender = viewModel.gender
                         isPersonDeceased = viewModel.isPersonDeceased
                         personDeceasedReason = viewModel.selectedDeceasedReason
