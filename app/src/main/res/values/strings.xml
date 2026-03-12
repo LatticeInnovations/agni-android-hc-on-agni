@@ -463,4 +463,13 @@
 
     <string name="gender_is_required">Gender is required</string>
     <string name="dob_age_required">Valid DOB/Age is required</string>
+
+    <string name="location_permission">Location permission</string>
+    <string name="location_dialog_description">"Allow this app to access your device location."</string>
+    <string name="allow">Allow</string>
+    <string name="discard">Discard</string>
+    <string name="use_my_current_location">Use my current location</string>
+    <string name="fetching_location">Fetching location</string>
+    <string name="gps_location_saved">GPS location saved</string>
+    <string name="update_location">Update location</string>
 </resources>

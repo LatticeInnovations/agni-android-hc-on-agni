@@ -1,12 +1,20 @@
 package com.heartcare.agni.ui.patientregistration.step3
 
+import android.Manifest
+import android.app.Application
+import android.content.pm.PackageManager
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.core.app.ActivityCompat
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.viewModelScope
-import com.heartcare.agni.base.viewmodel.BaseViewModel
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
 import com.heartcare.agni.data.local.enums.LevelsEnum
+import com.heartcare.agni.data.local.enums.LocationStateEnum
 import com.heartcare.agni.data.local.repository.levels.LevelRepository
 import com.heartcare.agni.data.server.model.levels.LevelResponse
 import com.heartcare.agni.di.dispatcher.IoDispatcher
@@ -14,13 +22,15 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
 
 @HiltViewModel
 class PatientRegistrationStepThreeViewModel @Inject constructor(
+    private val application: Application,
     private val levelRepository: LevelRepository,
     @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher
-) : BaseViewModel(), DefaultLifecycleObserver {
+) : AndroidViewModel(application), DefaultLifecycleObserver {
     var isLaunched by mutableStateOf(false)
     val otherName = "Others"
     val maxLength = 50
@@ -45,6 +55,11 @@ class PatientRegistrationStepThreeViewModel @Inject constructor(
     var otherVillageError by mutableStateOf(false)
 
     var postalCode by mutableStateOf("")
+
+    var latitude by mutableDoubleStateOf(0.0)
+    var longitude by mutableDoubleStateOf(0.0)
+    var stepState by mutableStateOf(LocationStateEnum.TODO)
+    var openPermissionDialog by mutableStateOf(false)
 
     init {
         viewModelScope.launch(ioDispatcher) {
@@ -96,6 +111,38 @@ class PatientRegistrationStepThreeViewModel @Inject constructor(
         }
 
         return true
+    }
+
+    fun fetchLocation() {
+        stepState = LocationStateEnum.LOADING
+
+        val fusedLocationClient = LocationServices.getFusedLocationProviderClient(application)
+
+        if (ActivityCompat.checkSelfPermission(
+                application,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
+                application,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            return
+        }
+
+        fusedLocationClient.getCurrentLocation(
+            Priority.PRIORITY_HIGH_ACCURACY,
+            null
+        ).addOnSuccessListener { location ->
+            location?.let {
+                latitude = it.latitude
+                longitude = it.longitude
+                Timber.d("Latitude: $latitude Longitude: $longitude")
+                stepState = LocationStateEnum.SAVED
+            }
+        }.addOnFailureListener {
+            Timber.e(it, "Failed to fetch location")
+            stepState = LocationStateEnum.TODO
+        }
     }
 }
 
