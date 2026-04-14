@@ -66,6 +66,12 @@ object CommonPDFComponents {
               color: #1C1B1F;
             }
         
+            .sub-section-title-regular {
+              font-size: 14px;
+              font-weight: 400;
+              color: #1C1B1F;
+            }
+        
             .card {
               background-color: #F7F2F9;
               border-radius: 10px;
@@ -167,6 +173,18 @@ object CommonPDFComponents {
               font-weight: 400;
               color: #79747E;
             }
+            
+            ul {
+              margin-left: 6px;
+            }
+            
+            ul li {
+              font-weight: 400;
+              font-size: 14px;
+              line-height: 20px;
+              letter-spacing: 0.25px;
+              color: #49454F;
+            }
           </style>
         """.trimIndent()
     }
@@ -197,7 +215,7 @@ object CommonPDFComponents {
               Female: <span>583</span>
             </div>
           </div>
-    """.trimIndent()
+        """.trimIndent()
     }
 
     fun buildTable(
@@ -210,30 +228,32 @@ object CommonPDFComponents {
         val gridTemplate = columnWeights.joinToString(" ")
 
         val headerHtml = """
-        <div class="table-header" style="grid-template-columns: $gridTemplate;">
-            ${headers.joinToString("") { "<span>$it</span>" }}
-        </div>
-    """
+            <div class="table-header" style="grid-template-columns: $gridTemplate;">
+                ${headers.joinToString("") { "<span>$it</span>" }}
+            </div>
+        """
 
         val rowsHtml = rows.joinToString("") { row ->
             """
-        <div class="table-row" style="grid-template-columns: $gridTemplate;">
-            ${
-                row.mapIndexed { index, cell ->
-                    val highlightClass = if (index in highlightColumns) "highlight" else ""
-                    "<span class=\"$highlightClass\">$cell</span>"
-                }.joinToString("")
-            }
-        </div>
-        """
+                <div class="table-row" style="grid-template-columns: $gridTemplate;">
+                    ${
+                        row.mapIndexed { index, cell ->
+                            val highlightClass = if (index in highlightColumns) "highlight" else ""
+                            "<span class=\"$highlightClass\">$cell</span>"
+                        }.joinToString("")
+                    }
+                </div>
+            """
         }
 
         return """
-        <div class="table-container">
-            $headerHtml
-            $rowsHtml
-        </div>
-    """
+            <div class="section-block">
+                <div class="table-container">
+                    $headerHtml
+                    $rowsHtml
+                </div>
+            </div>
+        """
     }
 
     fun buildSection(
