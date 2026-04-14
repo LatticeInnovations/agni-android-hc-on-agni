@@ -129,7 +129,7 @@ fun HistoryTakingAndTestsScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = if (currentStep > 0) "Add ${tabs[pagerState.currentPage]}" else stringResource(R.string.history_taking_and_tests),
+                        text = if (currentStep > 0) "Add ${tabs[pagerState.currentPage].lowercase()}" else stringResource(R.string.history_taking_and_tests),
                         style = MaterialTheme.typography.titleLarge
                     )
                 },
