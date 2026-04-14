@@ -153,6 +153,11 @@ object CommonPDFComponents {
             .table-row span:last-child {
               text-align: right;
             }
+            
+            .table-container.left-last-col .table-header span:last-child,
+            .table-container.left-last-col .table-row span:last-child {
+              text-align: left;
+            }
         
             .highlight {
               color: #6750A4;
@@ -197,8 +202,9 @@ object CommonPDFComponents {
             <div class="title">$title</div>
             <div class="subtitle">Health facility: Vila Central</div>
             <div class="subtitle">Administrative Division: Shefa province</div>
-            <div class="subtitle">Team Lead: Dr. Sarah Naupa</div>
-            <div class="subtitle">Date Range: Mar 1 – Mar 15, 2026</div>
+            <div class="subtitle">Team Lead: Dr. Sarah Naupa, +91 419419412, sarah@gmail.com</div>
+            <div class="subtitle">Date of screening: Mar 15, 2026</div>
+            <div class="subtitle">Date Range: Mar 1, 2026 – Mar 15, 2026</div>
             <div class="subtitle">Report Generated: April 8, 2026</div>
           </div>
           <div class="divider"></div>
@@ -222,14 +228,17 @@ object CommonPDFComponents {
         headers: List<String>,
         rows: List<List<String>>,
         columnWeights: List<String> = List(headers.size) { "1fr" },
-        highlightColumns: Set<Int> = emptySet()
+        highlightColumns: Set<Int> = emptySet(),
+        tableClass: String = ""
     ): String {
 
         val gridTemplate = columnWeights.joinToString(" ")
 
         val headerHtml = """
-            <div class="table-header" style="grid-template-columns: $gridTemplate;">
-                ${headers.joinToString("") { "<span>$it</span>" }}
+            <div class="section-block">
+                <div class="table-header" style="grid-template-columns: $gridTemplate;">
+                    ${headers.joinToString("") { "<span>$it</span>" }}
+                </div>
             </div>
         """
 
@@ -247,11 +256,9 @@ object CommonPDFComponents {
         }
 
         return """
-            <div class="section-block">
-                <div class="table-container">
-                    $headerHtml
-                    $rowsHtml
-                </div>
+            <div class="table-container $tableClass">
+                $headerHtml
+                $rowsHtml
             </div>
         """
     }
@@ -261,22 +268,24 @@ object CommonPDFComponents {
         content: String
     ): String {
         return """
-        <div class="section-block">
-            <div class="section-title">$title</div>
-            $content
-        </div>
-    """
+            <div class="section-block">
+                <div class="section-title">$title</div>
+                $content
+            </div>
+        """
     }
 
     fun reportFooterSection(
         title: String
     ): String {
         return """ 
-          <div class="footer-divider"></div>
-        
-          <div class="footer">
-            <div>$title - Shefa province</div>
-            <div>Generated on April 8, 2026</div>
+          <div class="section-block">
+              <div class="footer-divider"></div>
+            
+              <div class="footer">
+                <div>$title - Shefa province</div>
+                <div>Generated on April 8, 2026</div>
+              </div>
           </div>
         """.trimIndent()
     }
