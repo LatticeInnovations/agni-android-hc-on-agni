@@ -1,10 +1,6 @@
 package com.heartcare.agni.ui.screeningreportdownload
 
 import android.content.Context
-import android.print.PrintAttributes
-import android.print.PrintManager
-import android.webkit.WebView
-import android.webkit.WebViewClient
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -31,16 +27,17 @@ import com.heartcare.agni.di.dispatcher.IoDispatcher
 import com.heartcare.agni.di.dispatcher.MainDispatcher
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toEndOfDay
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toddMMMyyyy
-import com.heartcare.agni.utils.pdf.PDFHelper.chiefComplaintSection
-import com.heartcare.agni.utils.pdf.PDFHelper.diagnosisAndPrescriptionSection
-import com.heartcare.agni.utils.pdf.PDFHelper.headerSection
-import com.heartcare.agni.utils.pdf.PDFHelper.historySection
-import com.heartcare.agni.utils.pdf.PDFHelper.pdfCss
-import com.heartcare.agni.utils.pdf.PDFHelper.personalInfoSection
-import com.heartcare.agni.utils.pdf.PDFHelper.riskFactorsSection
-import com.heartcare.agni.utils.pdf.PDFHelper.riskScoreSection
-import com.heartcare.agni.utils.pdf.PDFHelper.testResultSection
-import com.heartcare.agni.utils.pdf.PDFHelper.tobaccoCessationSection
+import com.heartcare.agni.utils.pdf.PDFHelper.generatePdf
+import com.heartcare.agni.utils.pdf.AssessmentReportPDF.chiefComplaintSection
+import com.heartcare.agni.utils.pdf.AssessmentReportPDF.diagnosisAndPrescriptionSection
+import com.heartcare.agni.utils.pdf.AssessmentReportPDF.headerSection
+import com.heartcare.agni.utils.pdf.AssessmentReportPDF.historySection
+import com.heartcare.agni.utils.pdf.AssessmentReportPDF.pdfCss
+import com.heartcare.agni.utils.pdf.AssessmentReportPDF.personalInfoSection
+import com.heartcare.agni.utils.pdf.AssessmentReportPDF.riskFactorsSection
+import com.heartcare.agni.utils.pdf.AssessmentReportPDF.riskScoreSection
+import com.heartcare.agni.utils.pdf.AssessmentReportPDF.testResultSection
+import com.heartcare.agni.utils.pdf.AssessmentReportPDF.tobaccoCessationSection
 import dagger.hilt.android.lifecycle.HiltViewModel
 import jakarta.inject.Inject
 import kotlinx.coroutines.CoroutineDispatcher
@@ -147,44 +144,6 @@ class ScreeningReportDownloadViewModel @Inject constructor(
 
             withContext(mainDispatcher) {
                 generatePdf(context, html, fileName)
-            }
-        }
-    }
-
-    private fun generatePdf(context: Context, html: String, fileName: String) {
-
-        val webView = WebView(context)
-
-        webView.settings.javaScriptEnabled = false
-
-        webView.loadDataWithBaseURL(
-            null,
-            html,
-            "text/HTML",
-            "UTF-8",
-            null
-        )
-
-        webView.webViewClient = object : WebViewClient() {
-
-            override fun onPageFinished(view: WebView?, url: String?) {
-
-                val printManager =
-                    context.getSystemService(Context.PRINT_SERVICE) as PrintManager
-
-                val printAdapter =
-                    webView.createPrintDocumentAdapter(fileName)
-
-                val printAttributes = PrintAttributes.Builder()
-                    .setMediaSize(PrintAttributes.MediaSize.ISO_A4)
-                    .setMinMargins(PrintAttributes.Margins.NO_MARGINS)
-                    .build()
-
-                printManager.print(
-                    fileName,
-                    printAdapter,
-                    printAttributes
-                )
             }
         }
     }
