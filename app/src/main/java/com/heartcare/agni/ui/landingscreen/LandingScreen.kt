@@ -71,6 +71,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
@@ -79,6 +80,8 @@ import com.heartcare.agni.data.local.enums.AppointmentStatusEnum.Companion.fromL
 import com.heartcare.agni.data.local.model.search.SearchParameters
 import com.heartcare.agni.navigation.Screen
 import com.heartcare.agni.ui.common.BottomNavBar
+import com.heartcare.agni.ui.sitescreendashboard.ReportsScreen
+import com.heartcare.agni.ui.sitescreendashboard.components.DownloadReportBottomSheet
 import com.heartcare.agni.utils.constants.NavControllerConstants.ADD_TO_QUEUE
 import com.heartcare.agni.utils.constants.NavControllerConstants.LOGGED_IN
 import com.heartcare.agni.utils.constants.NavControllerConstants.PATIENT_ARRIVED
@@ -109,7 +112,7 @@ fun LandingScreen(
     }
     BackHandler(enabled = true) {
         when (pagerState.currentPage) {
-            2 ->
+            3, 2 ->
                 coroutineScope.launch {
                     pagerState.animateScrollToPage(0)
                 }
@@ -230,7 +233,23 @@ fun LandingScreen(
             modifier = Modifier.fillMaxSize(),
             snackbarHost = { SnackbarHost(snackbarHostState) },
             topBar = {
-                if (viewModel.isSearchResult && pagerState.currentPage == 0) {
+                if (pagerState.currentPage == 2) {
+                    TopAppBar(
+                        title = { Text("Reports", style = MaterialTheme.typography.titleLarge, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth()) },
+
+                        actions = {
+                            IconButton(onClick = { viewModel.showDownloadSheet = true }) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.file_download),
+                                    contentDescription = "Download"
+                                )
+                            }
+                        },
+                        colors = TopAppBarDefaults.topAppBarColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(8.dp)
+                        )
+                    )
+                } else if (viewModel.isSearchResult && pagerState.currentPage == 0) {
                     TopAppBar(
                         title = {
                             Text(
@@ -323,7 +342,7 @@ fun LandingScreen(
                                         Icons.Default.Search, contentDescription = "SEARCH_ICON"
                                     )
                                 }
-                            else if (pagerState.currentPage == 2) {
+                            else if (pagerState.currentPage == 3) {
                                 IconButton(onClick = {
                                     viewModel.isLoggingOut = true
                                 }) {
@@ -399,8 +418,8 @@ fun LandingScreen(
                                 coroutineScope,
                                 snackbarHostState
                             )
-
-                            2 -> ProfileScreen()
+                            2 -> ReportsScreen()
+                            3 -> ProfileScreen()
                         }
                     }
                 }
@@ -604,6 +623,15 @@ fun LandingScreen(
                 }
             }
         }
+    }
+
+    if (viewModel.showDownloadSheet) {
+        DownloadReportBottomSheet(
+            onDismissRequest = { viewModel.showDownloadSheet = false },
+            onDownloadClick = {
+                // handle download PDF
+            }
+        )
     }
 }
 

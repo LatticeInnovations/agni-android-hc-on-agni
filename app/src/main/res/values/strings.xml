@@ -478,4 +478,56 @@
     <string name="screening_site">Screening Site</string>
     <string name="tag_this_record_to_an_active_screening_campaign">Tag this record to an active screening campaign</string>
     <string name="screening_site_title">Select the screening site</string>
+
+    <!-- Reports Screen -->
+    <string name="reports">Reports</string>
+    <string name="download">Download</string>
+
+    <!-- Report Tabs -->
+    <string name="tab_screening_site">Screening site</string>
+    <string name="tab_facility">Facility</string>
+    <string name="tab_division">Division</string>
+
+    <!-- Filter Hints -->
+    <string name="choose_screening_campaign_hint">Choose a screening campaign to view its data.</string>
+    <string name="choose_health_facility_hint">Choose a health facility.</string>
+    <string name="administrative_division">Administrative division</string>
+
+    <!-- Screening Site Campaign Card -->
+    <string name="custom_range">Custom range</string>
+    <string name="date_range">Date range</string>
+    <string name="date_range_description">Select the time period for your report data.</string>
+
+    <!-- Summary Card -->
+    <string name="screened_count">%1$s Screened</string>
+    <string name="screened_gender_breakdown">M - %1$s     F - %2$s</string>
+    <string name="age_group">Age group</string>
+
+    <!-- Stat Card Titles -->
+    <string name="stat_bmi_categories">BMI Categories</string>
+    <string name="stat_blood_pressure">Blood Pressure</string>
+    <string name="stat_smoking_status">Smoking Status</string>
+    <string name="stat_blood_sugar">Blood Sugar</string>
+    <string name="stat_total_cholesterol">Total Cholesterol</string>
+    <string name="stat_cvd_risk">CVD Risk</string>
+
+    <!-- Blood Sugar Sub-group Headings -->
+    <string name="blood_sugar_fasting">Fasting</string>
+    <string name="blood_sugar_random">Random</string>
+
+    <!-- Download Report Sheet -->
+    <string name="download_report">Download report</string>
+    <string name="report_high_level">High-Level</string>
+    <string name="report_high_level_desc">A summary document mirroring the dashboard visuals.</string>
+    <string name="report_clinical_action">Clinical Action</string>
+    <string name="report_clinical_action_desc">A patient-centric report</string>
+    <string name="report_risk_roster">Risk Roster</string>
+    <string name="report_risk_roster_desc">A detailed roster for follow-up of all patients with CVD Risk > 10%.</string>
+
+    <!-- Date Range Sheet -->
+    <string name="last_7_days">Last 7 days</string>
+    <string name="last_30_days">Last 30 days</string>
+    <string name="last_90_days">Last 90 days</string>
+    <string name="start_date">Start date</string>
+    <string name="end_date">End date</string>
 </resources>

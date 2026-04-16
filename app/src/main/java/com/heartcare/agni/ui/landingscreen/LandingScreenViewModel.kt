@@ -79,7 +79,7 @@ class LandingScreenViewModel @Inject constructor(
     var isLaunched by mutableStateOf(false)
     var isLoading by mutableStateOf(true)
 
-    val headings = listOf("My Patients", "Schedule", "Profile")
+    val headings = listOf("My Patients", "Schedule", "Reports", "Profile")
     var isSearching by mutableStateOf(false)
     var isSearchingByQuery by mutableStateOf(false)
     var isSearchResult by mutableStateOf(false)
@@ -112,6 +112,7 @@ class LandingScreenViewModel @Inject constructor(
     var lastSyncDate by mutableStateOf("")
     var syncStatusDisplay by mutableStateOf("")
     var syncIconDisplay by mutableIntStateOf(0)
+    var showDownloadSheet by mutableStateOf(false)
 
     init {
         viewModelScope.launch(ioDispatcher) {

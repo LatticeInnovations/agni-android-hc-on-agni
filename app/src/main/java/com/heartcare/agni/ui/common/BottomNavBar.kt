@@ -27,6 +27,7 @@ fun BottomNavBar(
             listOf(
                 R.drawable.patient_list,
                 R.drawable.list_alt,
+                R.drawable.outline_draft,
                 R.drawable.person_icon
             )
         stringArrayResource(R.array.bottom_nav).forEachIndexed { index, item ->

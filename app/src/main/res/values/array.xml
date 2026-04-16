@@ -39,6 +39,7 @@
     <string-array name="bottom_nav">
         <item>Patient list</item>
         <item>Schedule</item>
+        <item>Reports</item>
         <item>Profile</item>
     </string-array>
     <string-array name="history_and_tests_tabs">

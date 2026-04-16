@@ -14,6 +14,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -30,7 +31,8 @@ fun SelectableRadioCard(
     title: String,
     subtitle: String? = null,
     selected: Boolean,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    isShowBorderAndBG: Boolean= true
 ) {
     Card(
         modifier = modifier
@@ -38,9 +40,9 @@ fun SelectableRadioCard(
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
-            containerColor =  MaterialTheme.colorScheme.surfaceColorAtElevation(1.dp)
+            containerColor =  if (!isShowBorderAndBG) Color.Transparent else MaterialTheme.colorScheme.surfaceColorAtElevation(1.dp)
         ),
-        border = BorderStroke(
+        border = if (!isShowBorderAndBG) BorderStroke(0.dp, color = Color.Transparent) else BorderStroke(
             width = 1.dp,
             color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant
         )
@@ -68,7 +70,7 @@ fun SelectableRadioCard(
                     Text(
                         text = subtitle,
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.secondary
                     )
                 }
             }
