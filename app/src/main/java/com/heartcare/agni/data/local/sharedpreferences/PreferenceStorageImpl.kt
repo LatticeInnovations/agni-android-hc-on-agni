@@ -4,6 +4,7 @@ import android.content.SharedPreferences
 import androidx.core.content.edit
 import com.heartcare.agni.utils.sharedpreference.LongPreference
 import com.heartcare.agni.utils.sharedpreference.StringPreference
+import com.heartcare.agni.utils.sharedpreference.BooleanPreference
 
 class PreferenceStorageImpl(private val sharedPreferences: SharedPreferences) : PreferenceStorage {
 
@@ -151,6 +152,16 @@ class PreferenceStorageImpl(private val sharedPreferences: SharedPreferences) : 
         PREF_LAST_REFERRAL_SYNC_TIME,
         0L
     )
+    override var lastSyncScreeningSiteMaster by LongPreference(
+        sharedPreferences,
+        PREF_LAST_SCREENING_SITE_MASTER_SYNC_TIME,
+        0L
+    )
+    override var isScreeningSiteSeeded by BooleanPreference(
+        sharedPreferences,
+        PREF_IS_SCREENING_SITE_SEEDED,
+        false
+    )
 
     override fun clear() {
         sharedPreferences.edit {
@@ -195,5 +206,7 @@ class PreferenceStorageImpl(private val sharedPreferences: SharedPreferences) : 
         const val PREF_LAST_DIAGNOSIS_MASTER_SYNC_TIME = "pref_last_diagnosis_master_sync_time"
         const val PREF_LAST_HEALTH_FACILITY_SYNC_TIME = "pref_last_health_facility_sync_time"
         const val PREF_LAST_REFERRAL_SYNC_TIME = "pref_last_referral_sync_time"
+        const val PREF_LAST_SCREENING_SITE_MASTER_SYNC_TIME = "pref_last_screening_site_master_sync_time"
+        const val PREF_IS_SCREENING_SITE_SEEDED = "pref_is_screening_site_seeded"
     }
 }

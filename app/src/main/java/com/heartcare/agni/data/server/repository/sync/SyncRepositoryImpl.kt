@@ -26,8 +26,10 @@ import com.heartcare.agni.data.local.roomdb.dao.ReferralDao
 import com.heartcare.agni.data.local.roomdb.dao.RiskFactorDao
 import com.heartcare.agni.data.local.roomdb.dao.RiskPredictionDao
 import com.heartcare.agni.data.local.roomdb.dao.ScheduleDao
+import com.heartcare.agni.data.local.roomdb.dao.ScreeningSiteDao
 import com.heartcare.agni.data.local.roomdb.dao.TobaccoCessationDao
 import com.heartcare.agni.data.local.roomdb.dao.VitalDao
+import com.heartcare.agni.data.server.api.CampaignApiService
 import com.heartcare.agni.data.server.api.CVDApiService
 import com.heartcare.agni.data.server.api.DiagnosisApiService
 import com.heartcare.agni.data.server.api.ExaminationApiService
@@ -78,6 +80,7 @@ import com.heartcare.agni.data.server.model.scheduleandappointment.appointment.A
 import com.heartcare.agni.data.server.model.scheduleandappointment.schedule.ScheduleResponse
 import com.heartcare.agni.data.server.model.tobacco.TobaccoCessationResponse
 import com.heartcare.agni.data.server.model.vitals.VitalResponse
+import com.heartcare.agni.data.server.model.campaign.ScreeningSiteMasterResponse
 import com.heartcare.agni.utils.constants.ErrorConstants.ERROR_FETCHING_USER_DETAILS
 import com.heartcare.agni.utils.constants.ErrorConstants.SOMETHING_WENT_WRONG
 import com.heartcare.agni.utils.constants.FirebaseKeyConstants.USER_ID
@@ -108,6 +111,7 @@ class SyncRepositoryImpl @Inject constructor(
     private val interventionApiService: InterventionApiService,
     private val examinationApiService: ExaminationApiService,
     private val referralApiService: ReferralApiService,
+    private val campaignApiService: CampaignApiService,
     patientDao: PatientDao,
     private val genericDao: GenericDao,
     private val preferenceRepository: PreferenceRepository,
@@ -131,6 +135,7 @@ class SyncRepositoryImpl @Inject constructor(
     examinationDao: ExaminationDao,
     healthFacilityDao: HealthFacilityDao,
     referralDao: ReferralDao,
+    screeningSiteDao: ScreeningSiteDao,
     private val crashlyticsLogger: CrashlyticsLogger
 ) : SyncRepository, SyncRepositoryDatabaseTransactions(
     patientDao,
@@ -154,7 +159,8 @@ class SyncRepositoryImpl @Inject constructor(
     interventionDao,
     examinationDao,
     healthFacilityDao,
-    referralDao
+    referralDao,
+    screeningSiteDao
 ) {
 
     override suspend fun getAndInsertListPatientData(
@@ -487,6 +493,46 @@ class SyncRepositoryImpl @Inject constructor(
             crashlyticsLogger.logException(
                 e,
                 "getAndInsertDiagnosisMaster function failed.",
+                mapOf(
+                    Pair(
+                        USER_ID,
+                        preferenceRepository.getUserDetails()?.userId ?: ERROR_FETCHING_USER_DETAILS
+                    )
+                )
+            )
+            ApiErrorResponse(
+                statusCode = 0,
+                errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
+            )
+        }
+    }
+
+    override suspend fun getAndInsertScreeningSiteMaster(): ResponseMapper<List<ScreeningSiteMasterResponse>> {
+        val map = mutableMapOf<String, String>()
+        if (preferenceRepository.getLastSyncScreeningSiteMaster() != 0L) map[LAST_UPDATED] =
+            String.format(
+                GREATER_THAN_BUILDER,
+                preferenceRepository.getLastSyncScreeningSiteMaster().toTimeStampDate()
+            )
+
+        return try {
+            ApiResponseConverter.convert(
+                campaignApiService.getScreeningSites(map)
+            ).run {
+                when (this) {
+                    is ApiEndResponse -> {
+                        insertScreeningSiteMasterList(body)
+                        preferenceRepository.setLastSyncScreeningSiteMaster(Date().time)
+                        this
+                    }
+
+                    else -> this
+                }
+            }
+        } catch (e: Exception) {
+            Timber.e(e, e.localizedMessage)
+            crashlyticsLogger.logException(
+                e, "getAndInsertScreeningSiteMaster function failed.",
                 mapOf(
                     Pair(
                         USER_ID,

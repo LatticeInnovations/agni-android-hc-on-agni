@@ -33,6 +33,7 @@ class SyncService(
     private lateinit var interventionMasterDownloadJob: Deferred<ResponseMapper<Any>?>
     private lateinit var examinationMasterDownloadJob: Deferred<ResponseMapper<Any>?>
     private lateinit var healthFacilityDownloadJob: Deferred<ResponseMapper<Any>?>
+    private lateinit var screeningSiteMasterDownloadJob: Deferred<ResponseMapper<Any>?>
 
     /**
      *
@@ -82,6 +83,10 @@ class SyncService(
                     async {
                         downloadExaminationMasterList(logout)
                     }
+                   // ,
+//                    async {
+//                        downloadScreeningSiteMasterList(logout)
+//                    }
                 )
             }
         }
@@ -443,6 +448,16 @@ class SyncService(
     /** Download Diagnosis Master */
     internal suspend fun downloadDiagnosisMasterList(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
         return checkAuthenticationStatus(syncRepository.getAndInsertDiagnosisMaster(), logout)
+    }
+
+    /** Download Screening Site Master */
+    internal suspend fun downloadScreeningSiteMasterList(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
+        coroutineScope {
+            screeningSiteMasterDownloadJob = async {
+                checkAuthenticationStatus(syncRepository.getAndInsertScreeningSiteMaster(), logout)
+            }
+        }
+        return screeningSiteMasterDownloadJob.await()
     }
 
     /** Download Medication Timing */
