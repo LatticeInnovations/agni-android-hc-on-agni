@@ -33,8 +33,6 @@ class SyncService(
     private lateinit var interventionMasterDownloadJob: Deferred<ResponseMapper<Any>?>
     private lateinit var examinationMasterDownloadJob: Deferred<ResponseMapper<Any>?>
     private lateinit var healthFacilityDownloadJob: Deferred<ResponseMapper<Any>?>
-    private lateinit var screeningSiteMasterDownloadJob: Deferred<ResponseMapper<Any>?>
-
     /**
      *
      *
@@ -452,12 +450,7 @@ class SyncService(
 
     /** Download Screening Site Master */
     internal suspend fun downloadScreeningSiteMasterList(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
-        coroutineScope {
-            screeningSiteMasterDownloadJob = async {
-                checkAuthenticationStatus(syncRepository.getAndInsertScreeningSiteMaster(), logout)
-            }
-        }
-        return screeningSiteMasterDownloadJob.await()
+        return checkAuthenticationStatus(syncRepository.getAndInsertScreeningSiteMaster(), logout)
     }
 
     /** Download Medication Timing */
