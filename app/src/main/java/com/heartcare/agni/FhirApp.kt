@@ -14,8 +14,11 @@ import com.heartcare.agni.data.local.repository.generic.GenericRepositoryImpl
 import com.heartcare.agni.data.local.repository.preference.PreferenceRepository
 import com.heartcare.agni.data.local.repository.preference.PreferenceRepositoryImpl
 import com.heartcare.agni.data.local.roomdb.FhirAppDatabase
+import com.heartcare.agni.data.local.roomdb.dao.ScreeningSiteDao
+import com.heartcare.agni.data.local.roomdb.entities.campaign.ScreeningSiteMasterEntity
 import com.heartcare.agni.data.local.sharedpreferences.PreferenceStorage
 import com.heartcare.agni.data.server.api.CVDApiService
+import com.heartcare.agni.data.server.api.CampaignApiService
 import com.heartcare.agni.data.server.api.DiagnosisApiService
 import com.heartcare.agni.data.server.api.ExaminationApiService
 import com.heartcare.agni.data.server.api.HistoryAndTestsApiService
@@ -30,10 +33,14 @@ import com.heartcare.agni.data.server.repository.sync.SyncRepository
 import com.heartcare.agni.data.server.repository.sync.SyncRepositoryImpl
 import com.heartcare.agni.service.sync.SyncService
 import com.heartcare.agni.service.workmanager.request.WorkRequestBuilders
+import com.heartcare.agni.utils.common.ScreeningSiteSeeder
 import com.heartcare.agni.utils.converters.gson.DateDeserializer
 import com.heartcare.agni.utils.converters.gson.DateSerializer
 import com.heartcare.agni.utils.network.CheckNetwork
 import dagger.hilt.android.HiltAndroidApp
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import timber.log.Timber
 import timber.log.Timber.Forest.plant
 import java.util.Date
@@ -79,6 +86,9 @@ class FhirApp : Application() {
     lateinit var referralApiService: ReferralApiService
 
     @Inject
+    lateinit var campaignApiService: CampaignApiService
+
+    @Inject
     lateinit var crashlytics: FirebaseCrashlytics
 
     private lateinit var _syncRepository: SyncRepository
@@ -98,6 +108,7 @@ class FhirApp : Application() {
     internal var syncWorkerStatus = MutableLiveData<WorkerStatus>()
     private val isSyncing = AtomicBoolean(false)
 
+    lateinit var screeningSiteSeeder: ScreeningSiteSeeder
     override fun onCreate() {
         super.onCreate()
         System.loadLibrary("sqlcipher")
@@ -123,6 +134,7 @@ class FhirApp : Application() {
             interventionApiService,
             examinationApiService,
             referralApiService,
+            campaignApiService,
             fhirAppDatabase.getPatientDao(),
             fhirAppDatabase.getGenericDao(),
             preferenceRepository,
@@ -146,8 +158,14 @@ class FhirApp : Application() {
             fhirAppDatabase.getExaminationDao(),
             fhirAppDatabase.getHealthFacilityDao(),
             fhirAppDatabase.getReferralDao(),
+            fhirAppDatabase.getScreeningSiteMasterDao(),
             crashlyticsLogger
         )
+        /* To load dummy data for Screen site
+            will remove this once api is ready
+         */
+        screeningSiteSeeder= ScreeningSiteSeeder(fhirAppDatabase.getScreeningSiteMasterDao(), preferenceRepository)
+
 
         _genericRepository = GenericRepositoryImpl(
             fhirAppDatabase.getGenericDao(),
@@ -169,9 +187,26 @@ class FhirApp : Application() {
                     preferenceRepository
                 )
         }
+
+        /* To load dummy data for Screen site
+            will remove this once api is ready
+         */
+        CoroutineScope(Dispatchers.IO).launch {
+            getScreeningSites(fhirAppDatabase.getScreeningSiteMasterDao(),screeningSiteSeeder)
+        }
+
+    }
+    internal suspend fun getScreeningSites(
+        screeningSiteDao: ScreeningSiteDao,
+        screeningSiteSeeder: ScreeningSiteSeeder
+    ): List<ScreeningSiteMasterEntity> {
+        screeningSiteSeeder.seedMockData()
+        return screeningSiteDao.getScreeningSiteMaster()
     }
 
+
     internal suspend fun launchSyncing() {
+        // load dummy screen site data
         if (isSyncing.compareAndSet(false, true)) {
             try {
                 if (CheckNetwork.isInternetAvailable(applicationContext)) {

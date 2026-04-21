@@ -61,6 +61,8 @@ import com.heartcare.agni.data.local.roomdb.entities.search.SearchEntity
 import com.heartcare.agni.data.local.roomdb.entities.search.SearchHistoryEntity
 import com.heartcare.agni.data.local.roomdb.entities.tobacco.TobaccoCessationEntity
 import com.heartcare.agni.data.local.roomdb.entities.vitals.VitalEntity
+import com.heartcare.agni.data.local.roomdb.dao.ScreeningSiteDao
+import com.heartcare.agni.data.local.roomdb.entities.campaign.ScreeningSiteMasterEntity
 import com.heartcare.agni.data.local.roomdb.typeconverters.DiagnosisTypeConverter
 import com.heartcare.agni.data.local.roomdb.typeconverters.TypeConverter
 import com.heartcare.agni.data.local.roomdb.views.PrescriptionDirectionAndMedicineView
@@ -100,13 +102,15 @@ import java.util.UUID
         ExaminationMasterEntity::class,
         ExaminationEntity::class,
         ReferralEntity::class,
-        HealthFacilityEntity::class
+        HealthFacilityEntity::class,
+        ScreeningSiteMasterEntity::class
     ],
     views = [PrescriptionDirectionAndMedicineView::class],
-    version = 2,
+    version = 3,
     exportSchema = true,
     autoMigrations = [
-        AutoMigration(from = 1, to = 2)
+        AutoMigration(from = 1, to = 2),
+        AutoMigration(from = 2, to = 3)
     ]
 )
 @TypeConverters(TypeConverter::class, DiagnosisTypeConverter::class)
@@ -136,6 +140,7 @@ abstract class FhirAppDatabase : RoomDatabase() {
     abstract fun getExaminationDao(): ExaminationDao
     abstract fun getReferralDao(): ReferralDao
     abstract fun getHealthFacilityDao(): HealthFacilityDao
+    abstract fun getScreeningSiteMasterDao(): ScreeningSiteDao
 
     companion object {
         @Volatile

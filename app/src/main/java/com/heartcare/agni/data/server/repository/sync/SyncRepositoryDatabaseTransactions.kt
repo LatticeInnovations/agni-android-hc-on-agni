@@ -22,6 +22,7 @@ import com.heartcare.agni.data.local.roomdb.dao.ReferralDao
 import com.heartcare.agni.data.local.roomdb.dao.RiskFactorDao
 import com.heartcare.agni.data.local.roomdb.dao.RiskPredictionDao
 import com.heartcare.agni.data.local.roomdb.dao.ScheduleDao
+import com.heartcare.agni.data.local.roomdb.dao.ScreeningSiteDao
 import com.heartcare.agni.data.local.roomdb.dao.TobaccoCessationDao
 import com.heartcare.agni.data.local.roomdb.dao.VitalDao
 import com.heartcare.agni.data.local.roomdb.entities.generic.GenericEntity
@@ -52,6 +53,7 @@ import com.heartcare.agni.data.server.model.scheduleandappointment.appointment.A
 import com.heartcare.agni.data.server.model.scheduleandappointment.schedule.ScheduleResponse
 import com.heartcare.agni.data.server.model.tobacco.TobaccoCessationResponse
 import com.heartcare.agni.data.server.model.vitals.VitalResponse
+import com.heartcare.agni.data.server.model.campaign.ScreeningSiteMasterResponse
 import com.heartcare.agni.utils.constants.ErrorConstants
 import com.heartcare.agni.utils.constants.ErrorConstants.APPOINTMENT_ERROR
 import com.heartcare.agni.utils.constants.ErrorConstants.DUPLICATE_RECORD
@@ -81,6 +83,7 @@ import com.heartcare.agni.utils.converters.responseconverter.toReferralEntity
 import com.heartcare.agni.utils.converters.responseconverter.toRiskFactorEntity
 import com.heartcare.agni.utils.converters.responseconverter.toScheduleEntity
 import com.heartcare.agni.utils.converters.responseconverter.toTobaccoCessationEntity
+import com.heartcare.agni.utils.converters.responseconverter.toScreeningSiteMasterEntity
 import com.heartcare.agni.utils.converters.responseconverter.toVitalEntity
 import java.util.UUID
 
@@ -106,7 +109,8 @@ open class SyncRepositoryDatabaseTransactions(
     private val interventionDao: InterventionDao,
     private val examinationDao: ExaminationDao,
     private val healthFacilityDao: HealthFacilityDao,
-    private val referralDao: ReferralDao
+    private val referralDao: ReferralDao,
+    private val screeningSiteDao: ScreeningSiteDao
 ) {
 
 
@@ -180,6 +184,12 @@ open class SyncRepositoryDatabaseTransactions(
     protected suspend fun insertDiagnosisMasterList(body: List<DiagnosisMasterResponse>) {
         diagnosisDao.insertDiagnosisMasterEntity(
             *body.map { it.toDiagnosisMasterEntity() }.toTypedArray()
+        )
+    }
+
+    protected suspend fun insertScreeningSiteMasterList(body: List<ScreeningSiteMasterResponse>) {
+        screeningSiteDao.insertScreeningSiteMaster(
+            *body.map { it.toScreeningSiteMasterEntity() }.toTypedArray()
         )
     }
 

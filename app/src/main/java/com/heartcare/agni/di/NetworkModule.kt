@@ -7,6 +7,7 @@ import com.heartcare.agni.data.local.sharedpreferences.PreferenceStorage
 import com.heartcare.agni.data.server.api.AuthenticationApiService
 import com.heartcare.agni.data.server.api.AuthenticationApiServiceWithToken
 import com.heartcare.agni.data.server.api.CVDApiService
+import com.heartcare.agni.data.server.api.CampaignApiService
 import com.heartcare.agni.data.server.api.ExaminationApiService
 import com.heartcare.agni.data.server.api.LevelsApiService
 import com.heartcare.agni.data.server.api.PatientApiService
@@ -331,4 +332,8 @@ object NetworkModule {
     @Singleton
     fun provideReferralApiService(@Named("agni") retrofit: Retrofit): ReferralApiService =
         retrofit.create(ReferralApiService::class.java)
+    @Provides
+    @Singleton
+    fun provideCampaignApiService(@Named("agni") retrofit: Retrofit): CampaignApiService =
+        retrofit.create(CampaignApiService::class.java)
 }

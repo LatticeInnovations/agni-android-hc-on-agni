@@ -19,6 +19,7 @@ import com.heartcare.agni.data.local.roomdb.dao.RiskPredictionDao
 import com.heartcare.agni.data.local.roomdb.dao.ScheduleDao
 import com.heartcare.agni.data.local.roomdb.entities.allergy.AllergyEntity
 import com.heartcare.agni.data.local.roomdb.entities.appointment.AppointmentEntity
+import com.heartcare.agni.data.local.roomdb.entities.campaign.ScreeningSiteMasterEntity
 import com.heartcare.agni.data.local.roomdb.entities.cvd.CVDEntity
 import com.heartcare.agni.data.local.roomdb.entities.diagnosis.DiagnosisEntity
 import com.heartcare.agni.data.local.roomdb.entities.diagnosis.DiagnosisLocal
@@ -60,6 +61,7 @@ import com.heartcare.agni.data.local.roomdb.entities.vitals.Measurement
 import com.heartcare.agni.data.local.roomdb.entities.vitals.VitalEntity
 import com.heartcare.agni.data.local.roomdb.views.PrescriptionDirectionAndMedicineView
 import com.heartcare.agni.data.server.model.allergy.AllergyResponse
+import com.heartcare.agni.data.server.model.campaign.ScreeningSiteMasterResponse
 import com.heartcare.agni.data.server.model.cvd.CVDResponse
 import com.heartcare.agni.data.server.model.diagnosis.DiagnosisMasterResponse
 import com.heartcare.agni.data.server.model.diagnosis.DiagnosisResponse
@@ -1284,6 +1286,20 @@ fun InterventionMasterResponse.toInterventionMasterEntity(): InterventionMasterE
         code = code,
         name = name,
         secondaryName = secondaryName,
+        status = status
+    )
+}
+
+fun ScreeningSiteMasterResponse.toScreeningSiteMasterEntity(): ScreeningSiteMasterEntity {
+    return ScreeningSiteMasterEntity(
+        id = id,
+        name = name,
+        location = location ,
+        areaCouncil = areaCouncil ,
+        serviceMode = serviceMode ,
+        fromDate = fromDate ,
+        toDate = toDate,
+        teamLead = teamLead ,
         status = status
     )
 }

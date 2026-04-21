@@ -188,6 +188,18 @@ class PreferenceRepositoryImpl @Inject constructor(private val preferenceStorage
 
     override fun getLastSyncReferral(): Long = preferenceStorage.lastSyncReferral
 
+    override fun setLastSyncScreeningSiteMaster(long: Long) {
+        preferenceStorage.lastSyncScreeningSiteMaster = long
+    }
+
+    override fun getLastSyncScreeningSiteMaster(): Long = preferenceStorage.lastSyncScreeningSiteMaster
+
+    override fun setScreeningSiteSeeded(isSeeded: Boolean) {
+        preferenceStorage.isScreeningSiteSeeded = isSeeded
+    }
+
+    override fun isScreeningSiteSeeded(): Boolean = preferenceStorage.isScreeningSiteSeeded
+
     override fun getLastMedicineDosageInstructionSyncDate() =
         preferenceStorage.lastMedicineDosageInstructionSyncTime
 

@@ -24,6 +24,7 @@ import com.heartcare.agni.data.local.roomdb.dao.SearchDao
 import com.heartcare.agni.data.local.roomdb.dao.DiagnosisDao
 import com.heartcare.agni.data.local.roomdb.dao.HealthFacilityDao
 import com.heartcare.agni.data.local.roomdb.dao.ReferralDao
+import com.heartcare.agni.data.local.roomdb.dao.ScreeningSiteDao
 import com.heartcare.agni.data.local.roomdb.dao.TobaccoCessationDao
 import com.heartcare.agni.data.local.roomdb.dao.VitalDao
 import com.heartcare.agni.data.local.sharedpreferences.PreferenceStorage
@@ -188,5 +189,10 @@ object DatabaseModule {
     @Provides
     fun provideHealthFacilityDao(fhirAppDatabase: FhirAppDatabase): HealthFacilityDao {
         return fhirAppDatabase.getHealthFacilityDao()
+    }
+    @Singleton
+    @Provides
+    fun provideScreenSiteDaoDao(fhirAppDatabase: FhirAppDatabase): ScreeningSiteDao {
+        return fhirAppDatabase.getScreeningSiteMasterDao()
     }
 }

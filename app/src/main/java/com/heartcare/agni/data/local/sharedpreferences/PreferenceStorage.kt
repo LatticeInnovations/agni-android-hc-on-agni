@@ -45,6 +45,8 @@ interface PreferenceStorage {
     var lastSyncDiagnosisMaster: Long
     var lastSyncHealthFacility: Long
     var lastSyncReferral: Long
+    var lastSyncScreeningSiteMaster: Long
+    var isScreeningSiteSeeded: Boolean
 
     fun clear()
 }

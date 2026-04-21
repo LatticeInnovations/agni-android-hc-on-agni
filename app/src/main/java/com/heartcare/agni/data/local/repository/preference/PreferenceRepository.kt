@@ -120,6 +120,14 @@ interface PreferenceRepository {
     fun setLastSyncReferral(long: Long)
     fun getLastSyncReferral(): Long
 
+    /** Last Screening Site Master Sync Date */
+    fun setLastSyncScreeningSiteMaster(long: Long)
+    fun getLastSyncScreeningSiteMaster(): Long
+
+    /** Screening Site Seeding Status */
+    fun setScreeningSiteSeeded(isSeeded: Boolean)
+    fun isScreeningSiteSeeded(): Boolean
+
     /** RoomDB EncryptionKey */
     fun setRoomDBEncryptionKey(encryptionKey: String)
     fun getRoomDBEncryptionKey(): String
