@@ -1294,13 +1294,15 @@ fun ScreeningSiteMasterResponse.toScreeningSiteMasterEntity(): ScreeningSiteMast
     return ScreeningSiteMasterEntity(
         id = id,
         name = name,
-        location = location ,
-        areaCouncil = areaCouncil ,
-        serviceMode = serviceMode ,
-        fromDate = fromDate ,
+        location = location,
+        areaCouncil = areaCouncil,
+        serviceMode = serviceMode,
+        fromDate = fromDate,
         toDate = toDate,
-        teamLead = teamLead ,
-        status = status
+        teamLead = teamLead,
+        status = status,
+        email = email,
+        mobile = mobile
     )
 }
 

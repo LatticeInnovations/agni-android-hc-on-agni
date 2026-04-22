@@ -20,7 +20,9 @@ class ScreeningSiteSeeder(
                     fromDate = "2025-01-01",
                     toDate = "2025-03-31",
                     teamLead = "Dr. Sarah Naupa",
-                    status = "ACTIVE"
+                    status = "ACTIVE",
+                    email = "sarah.naupa@example.com",
+                    mobile = "+678 555 0101"
                 ),
                 ScreeningSiteMasterEntity(
                     id = "site-002",
@@ -31,7 +33,9 @@ class ScreeningSiteSeeder(
                     fromDate = "2025-02-15",
                     toDate = "2025-06-30",
                     teamLead = "Nurse Jean Pierre",
-                    status = "ACTIVE"
+                    status = "ACTIVE",
+                    email = "jean.pierre@example.com",
+                    mobile = "+678 555 0202"
                 )
             ).toTypedArray()
             screeningSiteDao.insertScreeningSiteMaster(*mockSites)
