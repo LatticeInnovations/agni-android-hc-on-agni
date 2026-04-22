@@ -1,5 +1,7 @@
 package com.heartcare.agni.ui.sitescreendashboard
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -23,6 +25,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.heartcare.agni.R
 import com.heartcare.agni.data.local.model.report.StatSubGroup
 import com.heartcare.agni.ui.common.DropdownComposable
+import com.heartcare.agni.ui.patientregistration.step3.LevelDropDownComposable
 import com.heartcare.agni.ui.sitescreendashboard.components.DateRangeBottomSheet
 import com.heartcare.agni.ui.sitescreendashboard.components.StatProgressCard
 
@@ -166,14 +169,17 @@ fun ReportsScreen(
                         style = MaterialTheme.typography.bodyMedium,
                         modifier = Modifier.padding(bottom = 8.dp)
                     )
-                    DropdownComposable(
-                        value = viewModel.selectedFacility,
-                        dropdownList = viewModel.facilityOptions,
+                    LevelDropDownComposable(
+                        value = viewModel.selectedFacility?.name ?: "",
+                        updateValue = {
+                            viewModel.selectedFacility = it
+                            viewModel.getDataOfFacility(viewModel.selectedFacility!!.code)
+                        },
                         label = "",
-                        updateValue = { viewModel.selectedFacility = it },
-                        errorText = "",
+                        dropdownList = viewModel.facilityOptions,
+                        errorText = stringResource(R.string.health_facility_required),
                         isMandatory = true,
-                        dropdownWeight = .92f
+                        isEnabled = true
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                 }
@@ -249,115 +255,145 @@ fun ReportsScreen(
                 }
             }
 
-            // Summary Card
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 16.dp),
-                shape = RoundedCornerShape(12.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(2.dp)
-                )
+            AnimatedVisibility(
+                visible = viewModel.showSummary(),
+                enter = fadeIn()
             ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text(
-                        text = stringResource(R.string.screened_count, viewModel.totalScreened),
-                        style = MaterialTheme.typography.titleMedium
-                    )
-                    Text(
-                        text = stringResource(
-                            R.string.screened_gender_breakdown,
-                            viewModel.totalMale,
-                            viewModel.totalFemale
-                        ),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.outline,
-                        modifier = Modifier.padding(bottom = 16.dp)
-                    )
-
-                    Text(
-                        text = stringResource(R.string.age_group),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.outline,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(bottom = 8.dp)
-                    )
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        viewModel.ageGroups.forEach { (range, count) ->
-                            Column(
-                                modifier = Modifier
-                                    .background(
-                                        MaterialTheme.colorScheme.surfaceVariant,
-                                        RoundedCornerShape(8.dp)
-                                    )
-                                    .padding(vertical = 12.dp)
-                                    .padding(start = 16.dp, end = 25.dp),
-                                horizontalAlignment = Alignment.Start
-                            ) {
+                if (viewModel.totalScreened > 0) {
+                    Column {
+                        // Summary Card
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 16.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(2.dp)
+                            )
+                        ) {
+                            Column(modifier = Modifier.padding(16.dp)) {
                                 Text(
-                                    text = range,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.outline
-                                )
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Text(
-                                    text = count,
+                                    text = stringResource(
+                                        R.string.screened_count,
+                                        viewModel.totalScreened
+                                    ),
                                     style = MaterialTheme.typography.titleMedium
                                 )
+                                Text(
+                                    text = stringResource(
+                                        R.string.screened_gender_breakdown,
+                                        viewModel.totalMale,
+                                        viewModel.totalFemale,
+                                        viewModel.totalOther
+                                    ),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.outline,
+                                    modifier = Modifier.padding(bottom = 16.dp)
+                                )
+
+                                Text(
+                                    text = stringResource(R.string.age_group),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.outline,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.padding(bottom = 8.dp)
+                                )
+
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    viewModel.ageGroups.forEach { (range, count) ->
+                                        Column(
+                                            modifier = Modifier
+                                                .background(
+                                                    MaterialTheme.colorScheme.surfaceVariant,
+                                                    RoundedCornerShape(8.dp)
+                                                )
+                                                .padding(vertical = 12.dp)
+                                                .padding(start = 16.dp, end = 25.dp),
+                                            horizontalAlignment = Alignment.Start
+                                        ) {
+                                            Text(
+                                                text = range,
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colorScheme.outline
+                                            )
+                                            Spacer(modifier = Modifier.height(4.dp))
+                                            Text(
+                                                text = count,
+                                                style = MaterialTheme.typography.titleMedium
+                                            )
+                                        }
+                                    }
+                                }
                             }
                         }
+
+                        // Statistics Cards
+                        StatProgressCard(
+                            title = stringResource(R.string.stat_bmi_categories),
+                            stats = viewModel.bmiStats,
+                            modifier = Modifier.padding(bottom = 16.dp)
+                        )
+
+                        StatProgressCard(
+                            title = stringResource(R.string.stat_blood_pressure),
+                            stats = viewModel.bloodPressureStats,
+                            modifier = Modifier.padding(bottom = 16.dp)
+                        )
+
+                        StatProgressCard(
+                            title = stringResource(R.string.stat_smoking_status),
+                            stats = viewModel.smokingStats,
+                            modifier = Modifier.padding(bottom = 16.dp)
+                        )
+
+                        StatProgressCard(
+                            title = stringResource(R.string.stat_blood_sugar),
+                            subGroups = listOf(
+                                StatSubGroup(fastingLabel, viewModel.bloodSugarFastingStats),
+                                StatSubGroup(randomLabel, viewModel.bloodSugarRandomStats)
+                            ),
+                            modifier = Modifier.padding(bottom = 16.dp)
+                        )
+
+                        StatProgressCard(
+                            title = stringResource(R.string.stat_total_cholesterol),
+                            stats = viewModel.cholesterolStats,
+                            modifier = Modifier.padding(bottom = 16.dp)
+                        )
+
+                        StatProgressCard(
+                            title = stringResource(R.string.stat_cvd_risk),
+                            stats = viewModel.cvdRiskStats,
+                            modifier = Modifier.padding(bottom = 16.dp)
+                        )
+
+                    }
+                } else {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(top = 60.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = stringResource(R.string.no_record_found),
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.secondary
+                        )
                     }
                 }
             }
-
-            // Statistics Cards
-            StatProgressCard(
-                title = stringResource(R.string.stat_bmi_categories),
-                stats = viewModel.bmiStats,
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
-
-            StatProgressCard(
-                title = stringResource(R.string.stat_blood_pressure),
-                stats = viewModel.bloodPressureStats,
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
-
-            StatProgressCard(
-                title = stringResource(R.string.stat_smoking_status),
-                stats = viewModel.smokingStats,
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
-
-            StatProgressCard(
-                title = stringResource(R.string.stat_blood_sugar),
-                subGroups = listOf(
-                    StatSubGroup(fastingLabel, viewModel.bloodSugarFastingStats),
-                    StatSubGroup(randomLabel, viewModel.bloodSugarRandomStats)
-                ),
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
-
-            StatProgressCard(
-                title = stringResource(R.string.stat_total_cholesterol),
-                stats = viewModel.cholesterolStats,
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
-
-            StatProgressCard(
-                title = stringResource(R.string.stat_cvd_risk),
-                stats = viewModel.cvdRiskStats,
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
         }
     }
 
     if (viewModel.showDateRangeSheet) {
         DateRangeBottomSheet(
+            selected = viewModel.selectedDateRangeLabel,
+            dateRangeStart = viewModel.dateRangeStart,
+            dateRangeEnd = viewModel.dateRangeEnd,
             onDismissRequest = { viewModel.showDateRangeSheet = false },
             onSaveClick = { rangeType, start, end ->
                 viewModel.updateDateRange(rangeType, start, end)

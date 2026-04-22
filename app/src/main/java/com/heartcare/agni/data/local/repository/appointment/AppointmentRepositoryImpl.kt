@@ -78,4 +78,28 @@ class AppointmentRepositoryImpl @Inject constructor(private val appointmentDao: 
     ): AppointmentEntity? {
         return appointmentDao.getLastCompletedAppointment(patientId)
     }
+
+    override suspend fun getAppointmentListByDateRange(
+        startOfDay: Long,
+        endOfDay: Long
+    ): List<AppointmentResponseLocal> {
+
+        return appointmentDao.getAppointmentsByDate(startOfDay, endOfDay)
+            .map { it.toAppointmentResponseLocal() }
+            .groupBy { it.patientId } // group by patient
+            .mapNotNull { (_, patientAppointments) ->
+
+                // group by createdOn
+                val earliestPerCreatedOn = patientAppointments
+                    .groupBy { it.createdOn.toddMMMyyyy() }
+                    .map { (_, sameCreatedOnList) ->
+                        sameCreatedOnList.minByOrNull { it.createdOn } // earliest in that group
+                    }
+
+                // from those, pick the latest appointment
+                earliestPerCreatedOn
+                    .filterNotNull()
+                    .maxByOrNull { it.createdOn }
+            }
+    }
 }
