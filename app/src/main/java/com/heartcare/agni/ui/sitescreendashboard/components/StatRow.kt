@@ -31,7 +31,7 @@ fun StatRow(stat: StatRowData, isLast: Boolean) {
                 modifier = Modifier.weight(1f)
             )
             Text(
-                text = stat.valueStr,
+                text = "${stat.percentage}% (F ${stat.femaleCount}, M ${stat.maleCount}, O ${stat.otherCount})",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.secondary
             )

@@ -4,17 +4,18 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.toMutableStateList
 import androidx.lifecycle.viewModelScope
 import com.heartcare.agni.base.viewmodel.BaseViewModel
 import com.heartcare.agni.data.local.enums.AppointmentStatusEnum
+import com.heartcare.agni.data.local.enums.BmiCategory
 import com.heartcare.agni.data.local.enums.DateRangeEnum
 import com.heartcare.agni.data.local.enums.GenderEnum
-import com.heartcare.agni.data.local.model.report.ServerStatDto
 import com.heartcare.agni.data.local.model.report.StatRowData
 import com.heartcare.agni.data.local.repository.appointment.AppointmentRepository
+import com.heartcare.agni.data.local.repository.cvd.records.CVDAssessmentRepository
 import com.heartcare.agni.data.local.repository.healthfacility.HealthFacilityRepository
 import com.heartcare.agni.data.local.repository.patient.PatientRepository
+import com.heartcare.agni.data.server.model.cvd.CVDResponse
 import com.heartcare.agni.data.server.model.levels.LevelResponse
 import com.heartcare.agni.di.dispatcher.IoDispatcher
 import com.heartcare.agni.ui.theme.HighRiskCircle
@@ -36,6 +37,7 @@ class ReportsViewModel @Inject constructor(
     private val patientRepository: PatientRepository,
     private val healthFacilityRepository: HealthFacilityRepository,
     private val appointmentRepository: AppointmentRepository,
+    private val cvdAssessmentRepository: CVDAssessmentRepository,
     @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) : BaseViewModel() {
 
@@ -72,7 +74,8 @@ class ReportsViewModel @Inject constructor(
 
     var ageGroups: List<Pair<String, String>> = emptyList()
 
-    var bmiStats = mutableListOf<StatRowData>()
+    var bmiTotal by mutableStateOf(0)
+    var bmiStats by mutableStateOf(mutableListOf<StatRowData>())
     var bloodPressureStats = mutableListOf<StatRowData>()
     var smokingStats = mutableListOf<StatRowData>()
     var bloodSugarFastingStats = mutableListOf<StatRowData>()
@@ -84,7 +87,6 @@ class ReportsViewModel @Inject constructor(
 
     init {
         getMasterLists()
-        fetchBmiDataFromServer()
         fetchBloodPressureData()
         fetchSmokingData()
         fetchBloodSugarData()
@@ -130,73 +132,44 @@ class ReportsViewModel @Inject constructor(
                 "45-59" to patients.filter { it.birthDate.toTimeInMilli().toAge() in 45..59 }.size.toString(),
                 "60+" to patients.filter { it.birthDate.toTimeInMilli().toAge() >= 60 }.size.toString()
             )
+
+            val cvdList = cvdAssessmentRepository.getCVDRecordByAppointmentIds(*appointments.map { it.uuid }.toTypedArray())
+            getBmiStats(cvdList)
         }
     }
 
-    private fun fetchBmiDataFromServer() {
-        val mockNetworkResponse = listOf(
-            ServerStatDto(
-                "Underweight (≤ 18.5 kg/m²)",
-                maleCount = 32,
-                femaleCount = 30,
-                severityLevel = 1
-            ),
-            ServerStatDto(
-                "Normal (18.6 - 24.9 kg/m²)",
-                maleCount = 123,
-                femaleCount = 110,
-                severityLevel = 0
-            ),
-            ServerStatDto(
-                "Overweight (25.0 - 29.9 kg/m²)",
-                maleCount = 54,
-                femaleCount = 23,
-                severityLevel = 1
-            ),
-            ServerStatDto(
-                "Obese (≥ 30.0 kg/m²)",
-                maleCount = 23,
-                femaleCount = 34,
-                severityLevel = 2
-            )
-        )
-        bmiStats = mapServerDataToUiModel(
-            totalScreened = 429,
-            rawData = mockNetworkResponse
-        ).toMutableStateList()
-    }
+    private suspend fun getBmiStats(cvdList: List<CVDResponse>) {
+        bmiTotal = cvdList.size
 
-    private fun mapServerDataToUiModel(
-        totalScreened: Int,
-        rawData: List<ServerStatDto>
-    ): List<StatRowData> {
-        return rawData.map { dto ->
-            val totalForCategory = dto.maleCount + dto.femaleCount
-            val percentage =
-                if (totalScreened > 0) totalForCategory.toFloat() / totalScreened.toFloat() else 0f
-            val percentageInt = (percentage * 100).toInt()
-            val color = when (dto.severityLevel) {
-                0 -> LowRiskCircle
-                1 -> HighRiskCircle
-                else -> VeryHighRiskCircle2
-            }
-            StatRowData(
-                label = dto.categoryName,
-                valueStr = "$percentageInt% (F ${dto.femaleCount}, M ${dto.maleCount})",
-                progress = percentage,
-                progressColor = color
+        val bmiStatsList = mutableListOf<StatRowData>()
+
+        BmiCategory.entries.forEach { bmiCategory ->
+            val bmiCVD = cvdList.filter { it.bmi in bmiCategory.min..bmiCategory.max }
+            val bmiCVDPatients = patientRepository.getPatientById(*bmiCVD.map { it.patientId }.toTypedArray() )
+
+            bmiStatsList.add(
+                StatRowData(
+                    label = bmiCategory.label,
+                    maleCount = bmiCVDPatients.filter { it.gender == GenderEnum.MALE.value }.size,
+                    femaleCount = bmiCVDPatients.filter { it.gender == GenderEnum.FEMALE.value }.size,
+                    otherCount = bmiCVDPatients.filter { it.gender == GenderEnum.OTHER.value }.size,
+                    percentage = ((bmiCVDPatients.size.toFloat() / bmiTotal) * 100).toInt(),
+                    progress = (bmiCVDPatients.size.toFloat() / bmiTotal.toFloat()),
+                    progressColor = bmiCategory.color
+                )
             )
         }
+
+        bmiStats = bmiStatsList
     }
-
-
+    
     private fun fetchBloodPressureData() {
         bloodPressureStats = mutableListOf(
-            StatRowData("Normal (< 140/90 mmHg)", "43% (F110, M 123)", 0.43f, LowRiskCircle),
-            StatRowData("High (140/90 - 159/99 mmHg)", "32% (F 23, M 54)", 0.32f, HighRiskCircle),
+            StatRowData("Normal (< 140/90 mmHg)", 123, 110, 10, 43,  0.43f, LowRiskCircle),
+            StatRowData("High (140/90 - 159/99 mmHg)", 123, 110, 10, 43, 0.32f, HighRiskCircle),
             StatRowData(
                 "Very High (≥ 160/100 mmHg)",
-                "20% (F 34, M 23)",
+                123, 110, 10, 43,
                 0.20f,
                 VeryHighRiskCircle2
             )
@@ -206,34 +179,34 @@ class ReportsViewModel @Inject constructor(
 
     private fun fetchSmokingData() {
         smokingStats = mutableListOf(
-            StatRowData("Yes", "57% (F 30, M 32)", 0.57f, VeryHighRiskCircle2),
-            StatRowData("No", "43% (F 110, M 123)", 0.43f, LowRiskCircle)
+            StatRowData("Yes", 123, 110, 10, 43, 0.57f, VeryHighRiskCircle2),
+            StatRowData("No", 123, 110, 10, 43, 0.43f, LowRiskCircle)
         )
     }
 
     private fun fetchBloodSugarData() {
         bloodSugarFastingStats = mutableListOf(
-            StatRowData("Normal", "43% (F 30, M 32)", 0.43f, LowRiskCircle),
-            StatRowData("Above Normal", "32% (F 32, M 12)", 0.32f, HighRiskCircle)
+            StatRowData("Normal", 123, 110, 10, 43, 0.43f, LowRiskCircle),
+            StatRowData("Above Normal", 123, 110, 10, 43, 0.32f, HighRiskCircle)
         )
         bloodSugarRandomStats = mutableListOf(
-            StatRowData("Normal", "43% (F 23, M 12)", 0.43f, LowRiskCircle),
-            StatRowData("Above Normal", "32% (F 45, M 23)", 0.32f, HighRiskCircle)
+            StatRowData("Normal", 123, 110, 10, 43, 0.43f, LowRiskCircle),
+            StatRowData("Above Normal", 123, 110, 10, 43, 0.32f, HighRiskCircle)
         )
     }
 
     private fun fetchCholesterolData() {
         cholesterolStats = mutableListOf(
-            StatRowData("Normal", "43% (F110, M 123)", 0.43f, LowRiskCircle),
-            StatRowData("Above Normal", "32% (F 23, M 54)", 0.32f, HighRiskCircle)
+            StatRowData("Normal", 123, 110, 10, 43, 0.43f, LowRiskCircle),
+            StatRowData("Above Normal", 123, 110, 10, 43, 0.32f, HighRiskCircle)
         )
     }
 
     private fun fetchCvdRiskData() {
         cvdRiskStats = mutableListOf(
-            StatRowData("Low (<10%)", "43% (F110, M 123)", 0.43f, LowRiskCircle),
-            StatRowData("Moderate (10-20%)", "32% (F 23, M 54)", 0.32f, HighRiskCircle),
-            StatRowData("High (>20%)", "20% (F 34, M 23)", 0.20f, VeryHighRiskCircle2)
+            StatRowData("Low (<10%)", 123, 110, 10, 43, 0.43f, LowRiskCircle),
+            StatRowData("Moderate (10-20%)", 123, 110, 10, 43, 0.32f, HighRiskCircle),
+            StatRowData("High (>20%)", 123, 110, 10, 43, 0.20f, VeryHighRiskCircle2)
         )
     }
 

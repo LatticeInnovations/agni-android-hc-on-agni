@@ -332,7 +332,7 @@ fun ReportsScreen(
 
                         // Statistics Cards
                         StatProgressCard(
-                            title = stringResource(R.string.stat_bmi_categories),
+                            title = stringResource(R.string.stat_bmi_categories, viewModel.bmiTotal),
                             stats = viewModel.bmiStats,
                             modifier = Modifier.padding(bottom = 16.dp)
                         )
