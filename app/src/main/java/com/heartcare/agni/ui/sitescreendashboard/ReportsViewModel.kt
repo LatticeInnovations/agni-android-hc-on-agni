@@ -135,11 +135,26 @@ class ReportsViewModel @Inject constructor(
             )
 
             val cvdList = cvdAssessmentRepository.getCVDRecordByAppointmentIds(*appointments.map { it.uuid }.toTypedArray())
-            getBmiStats(cvdList)
-            getBloodPressureStats(cvdList)
-            getSmokingStats(cvdList)
-            getCholesterolStats(cvdList.filter { it.cholesterol != null && !it.cholesterolUnit.isNullOrBlank() })
-            getCvdRiskStats(cvdList)
+
+            val latestCVDList = cvdList
+                .groupBy {
+                    it.patientId
+                }.map { (_, cvd) ->
+                    cvd.maxBy { it.createdOn }
+                }
+            getBmiStats(latestCVDList)
+            getBloodPressureStats(latestCVDList)
+            getSmokingStats(latestCVDList)
+            getCvdRiskStats(latestCVDList)
+
+            val latestCholesterolCVDList = cvdList
+                .filter { it.cholesterol != null && !it.cholesterolUnit.isNullOrBlank() }
+                .groupBy {
+                    it.patientId
+                }.map { (_, cvd) ->
+                    cvd.maxBy { it.createdOn }
+                }
+            getCholesterolStats(latestCholesterolCVDList)
         }
     }
 

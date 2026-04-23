@@ -87,19 +87,15 @@ class AppointmentRepositoryImpl @Inject constructor(private val appointmentDao: 
         return appointmentDao.getAppointmentsByDate(startOfDay, endOfDay)
             .map { it.toAppointmentResponseLocal() }
             .groupBy { it.patientId } // group by patient
-            .mapNotNull { (_, patientAppointments) ->
+            .flatMap { (_, patientAppointments) ->
 
-                // group by createdOn
-                val earliestPerCreatedOn = patientAppointments
-                    .groupBy { it.createdOn.toddMMMyyyy() }
-                    .map { (_, sameCreatedOnList) ->
-                        sameCreatedOnList.minByOrNull { it.createdOn } // earliest in that group
+                // group by day
+                patientAppointments
+                    .groupBy { it.slot.start.toddMMMyyyy() }
+                    .mapNotNull { (_, sameDayAppointments) ->
+                        // pick earliest appointment of that day
+                        sameDayAppointments.minByOrNull { it.createdOn }
                     }
-
-                // from those, pick the latest appointment
-                earliestPerCreatedOn
-                    .filterNotNull()
-                    .maxByOrNull { it.createdOn }
             }
     }
 }
