@@ -507,7 +507,7 @@
     <string name="stat_bmi_categories">BMI Categories (%d)</string>
     <string name="stat_blood_pressure">Blood Pressure (%d)</string>
     <string name="stat_smoking_status">Smoking Status (%d)</string>
-    <string name="stat_blood_sugar">Blood Sugar</string>
+    <string name="stat_blood_sugar">Blood Sugar (%d)</string>
     <string name="stat_total_cholesterol">Total Cholesterol (%d)</string>
     <string name="stat_cvd_risk">CVD Risk (%d)</string>
 

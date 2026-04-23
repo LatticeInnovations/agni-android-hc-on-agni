@@ -371,7 +371,7 @@ fun ReportsScreen(
                         )
 
                         StatProgressCard(
-                            title = stringResource(R.string.stat_blood_sugar),
+                            title = stringResource(R.string.stat_blood_sugar, viewModel.bloodSugarFastingTotal + viewModel.bloodSugarRandomTotal),
                             subGroups = listOf(
                                 StatSubGroup(stringResource(R.string.blood_sugar_fasting, viewModel.bloodSugarFastingTotal), viewModel.bloodSugarFastingStats),
                                 StatSubGroup(stringResource(R.string.blood_sugar_random, viewModel.bloodSugarRandomTotal), viewModel.bloodSugarRandomStats)
