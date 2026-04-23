@@ -4,6 +4,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.viewModelScope
 import com.heartcare.agni.base.viewmodel.BaseViewModel
 import com.heartcare.agni.data.local.enums.AppointmentStatusEnum
@@ -24,6 +25,7 @@ import com.heartcare.agni.data.local.repository.patient.PatientRepository
 import com.heartcare.agni.data.local.repository.vital.VitalRepository
 import com.heartcare.agni.data.server.model.cvd.CVDResponse
 import com.heartcare.agni.data.server.model.levels.LevelResponse
+import com.heartcare.agni.data.server.model.patient.PatientResponse
 import com.heartcare.agni.data.server.model.vitals.VitalResponse
 import com.heartcare.agni.di.dispatcher.IoDispatcher
 import com.heartcare.agni.ui.vitalsscreen.enums.BGEnum
@@ -139,6 +141,8 @@ class ReportsViewModel @Inject constructor(
                 "60+" to patients.filter { it.birthDate.toTimeInMilli().toAge() >= 60 }.size.toString()
             )
 
+            val patientMap = patients.associateBy { it.id }
+
             val cvdList = cvdAssessmentRepository.getCVDRecordByAppointmentIds(*appointments.map { it.uuid }.toTypedArray())
 
             val latestCVDList = cvdList
@@ -147,10 +151,10 @@ class ReportsViewModel @Inject constructor(
                 }.map { (_, cvd) ->
                     cvd.maxBy { it.createdOn }
                 }
-            getBmiStats(latestCVDList)
-            getBloodPressureStats(latestCVDList)
-            getSmokingStats(latestCVDList)
-            getCvdRiskStats(latestCVDList)
+            getBmiStats(latestCVDList, patientMap)
+            getBloodPressureStats(latestCVDList, patientMap)
+            getSmokingStats(latestCVDList, patientMap)
+            getCvdRiskStats(latestCVDList, patientMap)
 
             val latestCholesterolCVDList = cvdList
                 .filter { it.cholesterol != null && !it.cholesterolUnit.isNullOrBlank() }
@@ -159,7 +163,7 @@ class ReportsViewModel @Inject constructor(
                 }.map { (_, cvd) ->
                     cvd.maxBy { it.createdOn }
                 }
-            getCholesterolStats(latestCholesterolCVDList)
+            getCholesterolStats(latestCholesterolCVDList, patientMap)
 
             val latestVitalsList = vitalRepository.getLastVitalByAppointmentId(*appointments.map { it.uuid }.toTypedArray())
                 .filter { it.bloodGlucose != null }
@@ -168,198 +172,174 @@ class ReportsViewModel @Inject constructor(
                 }.map { (_, vitals) ->
                     vitals.maxBy { it.appUpdatedDate }
                 }
-            getBloodSugarStats(latestVitalsList)
+            getBloodSugarStats(latestVitalsList, patientMap)
         }
     }
 
-    private suspend fun getBmiStats(cvdList: List<CVDResponse>) {
+    private inline fun <T, E> buildStats(
+        source: List<T>,
+        total: Int,
+        categories: List<E>,
+        crossinline categorySelector: (T) -> E?,
+        crossinline patientIdSelector: (T) -> String,
+        crossinline label: (E) -> String,
+        crossinline color: (E) -> Color,
+        patientMap: Map<String, PatientResponse>
+    ): MutableList<StatRowData> {
+
+        return categories.map { category ->
+
+            val filtered = source.filter { categorySelector(it) == category }
+
+            val patients = filtered.mapNotNull { patientMap[patientIdSelector(it)] }
+
+            val male = patients.count { it.gender == GenderEnum.MALE.value }
+            val female = patients.count { it.gender == GenderEnum.FEMALE.value }
+            val other = patients.count { it.gender == GenderEnum.OTHER.value }
+
+            val size = patients.size
+
+            StatRowData(
+                label = label(category),
+                maleCount = male,
+                femaleCount = female,
+                otherCount = other,
+                percentage = if (total == 0) 0 else (size * 100 / total),
+                progress = if (total == 0) 0f else size.toFloat() / total,
+                progressColor = color(category)
+            )
+        }.toMutableList()
+    }
+
+    private fun getBmiStats(
+        cvdList: List<CVDResponse>,
+        patientMap: Map<String, PatientResponse>
+    ) {
         bmiTotal = cvdList.size
 
-        val bmiStatsList = mutableListOf<StatRowData>()
-
-        BmiCategory.entries.forEach { bmiCategory ->
-            val bmiCVD = cvdList.filter { it.bmi in bmiCategory.min..bmiCategory.max }
-            val bmiCVDPatients = patientRepository.getPatientById(*bmiCVD.map { it.patientId }.toTypedArray() )
-
-            bmiStatsList.add(
-                StatRowData(
-                    label = bmiCategory.label,
-                    maleCount = bmiCVDPatients.filter { it.gender == GenderEnum.MALE.value }.size,
-                    femaleCount = bmiCVDPatients.filter { it.gender == GenderEnum.FEMALE.value }.size,
-                    otherCount = bmiCVDPatients.filter { it.gender == GenderEnum.OTHER.value }.size,
-                    percentage = if (bmiTotal == 0) 0
-                    else ((bmiCVDPatients.size.toFloat() / bmiTotal) * 100).toInt(),
-                    progress = if (bmiTotal == 0) 0f
-                    else (bmiCVDPatients.size.toFloat() / bmiTotal.toFloat()),
-                    progressColor = bmiCategory.color
-                )
-            )
-        }
-
-        bmiStats = bmiStatsList
+        bmiStats = buildStats(
+            source = cvdList,
+            total = bmiTotal,
+            categories = BmiCategory.entries,
+            categorySelector = { cvd -> BmiCategory.entries.find { cvd.bmi in it.min..it.max } },
+            patientIdSelector = { it.patientId },
+            label = { it.label },
+            color = { it.color },
+            patientMap = patientMap
+        )
     }
     
-    private suspend fun getBloodPressureStats(cvdList: List<CVDResponse>) {
+    private fun getBloodPressureStats(
+        cvdList: List<CVDResponse>,
+        patientMap: Map<String, PatientResponse>
+    ) {
         bloodPressureTotal = cvdList.size
 
-        val bpStatsList = mutableListOf<StatRowData>()
-
-        BpCategory.entries.forEach { category ->
-            val bpCVD = cvdList.filter { BpCategory.from(it.bpSystolic, it.bpDiastolic) == category }
-            val bpPatients = patientRepository.getPatientById(*bpCVD.map { it.patientId }.toTypedArray())
-
-            bpStatsList.add(
-                StatRowData(
-                    label = category.label,
-                    maleCount = bpPatients.count { it.gender == GenderEnum.MALE.value },
-                    femaleCount = bpPatients.count { it.gender == GenderEnum.FEMALE.value },
-                    otherCount = bpPatients.count { it.gender == GenderEnum.OTHER.value },
-                    percentage = if (bloodPressureTotal == 0) 0
-                    else ((bpPatients.size.toFloat() / bloodPressureTotal) * 100).toInt(),
-                    progress = if (bloodPressureTotal == 0) 0f
-                    else (bpPatients.size.toFloat() / bloodPressureTotal.toFloat()),
-                    progressColor = category.color
-                )
-            )
-        }
-
-        bloodPressureStats = bpStatsList
+        bloodPressureStats = buildStats(
+            source = cvdList,
+            total = bloodPressureTotal,
+            categories = BpCategory.entries,
+            categorySelector = { BpCategory.from(it.bpSystolic, it.bpDiastolic) },
+            patientIdSelector = { it.patientId },
+            label = { it.label },
+            color = { it.color },
+            patientMap = patientMap
+        )
     }
 
-    private suspend fun getSmokingStats(cvdList: List<CVDResponse>) {
+    private fun getSmokingStats(
+        cvdList: List<CVDResponse>,
+        patientMap: Map<String, PatientResponse>
+    ) {
         smokingTotal = cvdList.size
 
-        val smokingList = mutableListOf<StatRowData>()
-
-        YesNoEnum.entries.forEach { category ->
-            val smokerCVD = cvdList.filter { it.smoker == category.code }
-            val smokerPatients = patientRepository.getPatientById(*smokerCVD.map { it.patientId }.toTypedArray())
-
-            smokingList.add(
-                StatRowData(
-                    label = category.display,
-                    maleCount = smokerPatients.count { it.gender == GenderEnum.MALE.value },
-                    femaleCount = smokerPatients.count { it.gender == GenderEnum.FEMALE.value },
-                    otherCount = smokerPatients.count { it.gender == GenderEnum.OTHER.value },
-                    percentage = if (smokingTotal == 0) 0
-                    else ((smokerPatients.size.toFloat() / smokingTotal) * 100).toInt(),
-                    progress = if (smokingTotal == 0) 0f
-                    else (smokerPatients.size.toFloat() / smokingTotal.toFloat()),
-                    progressColor = category.color
-                )
-            )
-        }
-
-        smokingStats = smokingList
+        smokingStats = buildStats(
+            source = cvdList,
+            total = smokingTotal,
+            categories = YesNoEnum.entries,
+            categorySelector = { YesNoEnum.entries.find { e -> e.code == it.smoker } },
+            patientIdSelector = { it.patientId },
+            label = { it.display },
+            color = { it.color },
+            patientMap = patientMap
+        )
     }
 
-    private suspend fun getBloodSugarStats(vitalsList: List<VitalResponse>) {
+    private fun getBloodSugarStats(
+        vitalsList: List<VitalResponse>,
+        patientMap: Map<String, PatientResponse>
+    ) {
         val fastingVitalsList = vitalsList.filter { it.bloodGlucose!!.type == BGEnum.FASTING.value }
         bloodSugarFastingTotal = fastingVitalsList.size
 
-        val fastingStatsList = mutableListOf<StatRowData>()
-
-        BloodSugarCategory.entries.forEach { category ->
-            val filtered = fastingVitalsList.filter { BloodSugarCategory.from(it.bloodGlucose!!.value, it.bloodGlucose.unit, BloodSugarType.FASTING) == category }
-            val patients = patientRepository.getPatientById(*filtered.map { it.patientId }.toTypedArray())
-
-            fastingStatsList.add(
-                StatRowData(
-                    label = category.label,
-                    maleCount = patients.count { it.gender == GenderEnum.MALE.value },
-                    femaleCount = patients.count { it.gender == GenderEnum.FEMALE.value },
-                    otherCount = patients.count { it.gender == GenderEnum.OTHER.value },
-                    percentage = if (bloodSugarFastingTotal == 0) 0
-                    else ((patients.size.toFloat() / bloodSugarFastingTotal) * 100).toInt(),
-                    progress = if (bloodSugarFastingTotal == 0) 0f
-                    else (patients.size.toFloat() / bloodSugarFastingTotal.toFloat()),
-                    progressColor = category.color
-                )
-            )
-        }
-
-        bloodSugarFastingStats = fastingStatsList
+        bloodSugarFastingStats = buildStats(
+            source = fastingVitalsList,
+            total = bloodSugarFastingTotal,
+            categories = BloodSugarCategory.entries,
+            categorySelector = {
+                BloodSugarCategory.from(it.bloodGlucose!!.value, it.bloodGlucose.unit, BloodSugarType.FASTING)
+            },
+            patientIdSelector = { it.patientId },
+            label = { it.label },
+            color = { it.color },
+            patientMap = patientMap
+        )
 
         val randomVitalsList = vitalsList.filter { it.bloodGlucose!!.type == BGEnum.RANDOM.value }
         bloodSugarRandomTotal = randomVitalsList.size
 
-        val randomStatsList = mutableListOf<StatRowData>()
-
-        BloodSugarCategory.entries.forEach { category ->
-            val filtered = randomVitalsList.filter { BloodSugarCategory.from(it.bloodGlucose!!.value, it.bloodGlucose.unit, BloodSugarType.RANDOM) == category }
-            val patients = patientRepository.getPatientById(*filtered.map { it.patientId }.toTypedArray())
-
-            randomStatsList.add(
-                StatRowData(
-                    label = category.label,
-                    maleCount = patients.count { it.gender == GenderEnum.MALE.value },
-                    femaleCount = patients.count { it.gender == GenderEnum.FEMALE.value },
-                    otherCount = patients.count { it.gender == GenderEnum.OTHER.value },
-                    percentage = if (bloodSugarRandomTotal == 0) 0
-                    else ((patients.size.toFloat() / bloodSugarRandomTotal) * 100).toInt(),
-                    progress = if (bloodSugarRandomTotal == 0) 0f
-                    else (patients.size.toFloat() / bloodSugarRandomTotal.toFloat()),
-                    progressColor = category.color
-                )
-            )
-        }
-
-        bloodSugarRandomStats = randomStatsList
+        bloodSugarRandomStats = buildStats(
+            source = randomVitalsList,
+            total = bloodSugarRandomTotal,
+            categories = BloodSugarCategory.entries,
+            categorySelector = {
+                BloodSugarCategory.from(it.bloodGlucose!!.value, it.bloodGlucose.unit, BloodSugarType.RANDOM)
+            },
+            patientIdSelector = { it.patientId },
+            label = { it.label },
+            color = { it.color },
+            patientMap = patientMap
+        )
     }
 
-    private suspend fun getCholesterolStats(cvdList: List<CVDResponse>) {
+    private fun getCholesterolStats(
+        cvdList: List<CVDResponse>,
+        patientMap: Map<String, PatientResponse>
+    ) {
         cholesterolTotal = cvdList.size
 
-        val statsList = mutableListOf<StatRowData>()
-
-        CholesterolCategory.entries.forEach { category ->
-            val filtered = cvdList.filter { CholesterolCategory.from(it.cholesterol!!, it.cholesterolUnit!!) == category }
-            val patients = patientRepository.getPatientById(*filtered.map { it.patientId }.toTypedArray())
-
-            statsList.add(
-                StatRowData(
-                    label = category.label,
-                    maleCount = patients.count { it.gender == GenderEnum.MALE.value },
-                    femaleCount = patients.count { it.gender == GenderEnum.FEMALE.value },
-                    otherCount = patients.count { it.gender == GenderEnum.OTHER.value },
-                    percentage = if (cholesterolTotal == 0) 0
-                    else ((patients.size.toFloat() / cholesterolTotal) * 100).toInt(),
-                    progress = if (cholesterolTotal == 0) 0f
-                    else (patients.size.toFloat() / cholesterolTotal.toFloat()),
-                    progressColor = category.color
-                )
-            )
-        }
-
-        cholesterolStats = statsList
+        cholesterolStats = buildStats(
+            source = cvdList,
+            total = cholesterolTotal,
+            categories = CholesterolCategory.entries,
+            categorySelector = {
+                CholesterolCategory.from(it.cholesterol!!, it.cholesterolUnit!!)
+            },
+            patientIdSelector = { it.patientId },
+            label = { it.label },
+            color = { it.color },
+            patientMap = patientMap
+        )
     }
 
-    private suspend fun getCvdRiskStats(cvdList: List<CVDResponse>) {
+    private fun getCvdRiskStats(
+        cvdList: List<CVDResponse>,
+        patientMap: Map<String, PatientResponse>
+    ) {
         cvdRiskTotal = cvdList.size
 
-        val statsList = mutableListOf<StatRowData>()
-
-        CvdRiskCategory.entries.forEach { category ->
-
-            val filtered = cvdList.filter { category.matches(it.risk) }
-            val patients = patientRepository.getPatientById(*filtered.map { it.patientId }.toTypedArray())
-
-            statsList.add(
-                StatRowData(
-                    label = category.label,
-                    maleCount = patients.count { it.gender == GenderEnum.MALE.value },
-                    femaleCount = patients.count { it.gender == GenderEnum.FEMALE.value },
-                    otherCount = patients.count { it.gender == GenderEnum.OTHER.value },
-                    percentage = if (cvdRiskTotal == 0) 0
-                    else ((patients.size.toFloat() / cvdRiskTotal) * 100).toInt(),
-                    progress = if (cvdRiskTotal == 0) 0f
-                    else (patients.size.toFloat() / cvdRiskTotal.toFloat()),
-                    progressColor = category.color
-                )
-            )
-        }
-
-        cvdRiskStats = statsList
+        cvdRiskStats = buildStats(
+            source = cvdList,
+            total = cvdRiskTotal,
+            categories = CvdRiskCategory.entries,
+            categorySelector = { cvd ->
+                CvdRiskCategory.entries.find { it.matches(cvd.risk) }
+            },
+            patientIdSelector = { it.patientId },
+            label = { it.label },
+            color = { it.color },
+            patientMap = patientMap
+        )
     }
 
     fun updateDateRange(rangeType: String, start: Date?, end: Date?) {
