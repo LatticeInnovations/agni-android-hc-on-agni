@@ -1,17 +1,24 @@
 package com.heartcare.agni.utils.common
 
+import com.heartcare.agni.data.local.roomdb.dao.ScreeningSiteDao
+import com.heartcare.agni.data.local.roomdb.entities.campaign.ScreeningSiteMasterEntity
+
 import com.heartcare.agni.data.local.enums.AppointmentStatusEnum
 import com.heartcare.agni.data.local.enums.AppointmentTypeEnum
 import com.heartcare.agni.data.local.enums.ChangeTypeEnum
+import com.heartcare.agni.data.local.enums.GenericTypeEnum
 import com.heartcare.agni.data.local.enums.LastVisit
+import com.heartcare.agni.data.local.enums.RecordType
 import com.heartcare.agni.data.local.model.appointment.AppointmentInfo
 import com.heartcare.agni.data.local.model.appointment.AppointmentResponseLocal
 import com.heartcare.agni.data.local.model.patch.ChangeRequest
 import com.heartcare.agni.data.local.repository.appointment.AppointmentRepository
 import com.heartcare.agni.data.local.repository.generic.GenericRepository
 import com.heartcare.agni.data.local.repository.patient.lastupdated.PatientLastUpdatedRepository
+import com.heartcare.agni.data.local.repository.cvd.records.CVDAssessmentRepository
 import com.heartcare.agni.data.local.repository.preference.PreferenceRepository
 import com.heartcare.agni.data.local.repository.schedule.ScheduleRepository
+import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toTimeInMilli
 import com.heartcare.agni.data.local.roomdb.entities.patient.PatientAndIdentifierAndAppointmentEntity
 import com.heartcare.agni.data.local.roomdb.entities.patient.PatientAndIdentifierEntity
 import com.heartcare.agni.data.server.model.patient.PatientLastUpdatedResponse
@@ -67,7 +74,7 @@ object Queries {
                 scheduleRepository.updateSchedule(
                     scheduleResponse.copy(
                         bookedSlots = scheduleResponse.bookedSlots!! + 1
-                    )
+                    ), RecordType.FACILITY
                 )
             } else {
                 val uuid = UUIDBuilder.generateUUID()
@@ -95,7 +102,8 @@ object Queries {
                     hospitalId = null,
                     hospitalFhirId = null,
                     hospitalName = null,
-                    hospitalCode = null
+                    hospitalCode = null,
+                    campaignId = null
                 )
                 scheduleRepository.insertSchedule(
                     schedule.copy(
@@ -107,7 +115,7 @@ object Queries {
                         hospitalFhirId = null,
                         hospitalName = user.hospitalName,
                         hospitalCode = user.hospitalCode
-                    )
+                    ), RecordType.FACILITY
                 )
                 genericRepository.insertSchedule(
                     schedule
@@ -143,7 +151,9 @@ object Queries {
                         hospitalFhirId = null,
                         hospitalId = user.hospitalId.toString(),
                         hospitalName = user.hospitalName,
-                        hospitalCode = user.hospitalCode
+                        hospitalCode = user.hospitalCode,
+                        campaignId = null,
+                        recordType = RecordType.FACILITY
                     )
                 ).also {
                     genericRepository.insertAppointment(
@@ -168,7 +178,8 @@ object Queries {
                             hospitalId = null,
                             hospitalName = null,
                             hospitalCode = null,
-                            appUpdatedDate = Date()
+                            appUpdatedDate = Date(),
+                            campaignId = null
                         )
                     )
                     updatePatientLastUpdated(
@@ -224,7 +235,8 @@ object Queries {
                             hospitalId = null,
                             hospitalName = null,
                             hospitalCode = null,
-                            appUpdatedDate = Date()
+                            appUpdatedDate = Date(),
+                            campaignId = null
                         )
                     )
                 } else {
@@ -316,20 +328,33 @@ object Queries {
             )
             if (appointmentResponseLocal.appointmentId.isNullOrBlank()) {
                 val user = preferenceRepository.getUserDetails()!!
+                val isCampaign = appointmentResponseLocal.recordType == RecordType.SCREENING_SITE
+                val resolvedScheduleId = if (isCampaign && !appointmentResponseLocal.campaignId.isNullOrEmpty()) {
+                    scheduleRepository.getCampaignScheduleByStartTime(
+                        appointmentResponseLocal.scheduleId.time,
+                        appointmentResponseLocal.campaignId
+                    )?.scheduleId
+                        ?: scheduleRepository.getCampaignScheduleByCampaign(
+                            appointmentResponseLocal.campaignId
+                        )?.uuid!!
+                } else {
+                    scheduleRepository.getScheduleByStartTime(
+                        appointmentResponseLocal.scheduleId.time,
+                        user.hospitalCode
+                    )?.scheduleId
+                        ?: scheduleRepository.getScheduleByStartTime(
+                            appointmentResponseLocal.scheduleId.time,
+                            user.hospitalCode
+                        )?.uuid!!
+                }
+                val genericType = if (isCampaign) GenericTypeEnum.CAMPAIGN_APPOINTMENT else GenericTypeEnum.APPOINTMENT
                 genericRepository.insertAppointment(
                     AppointmentResponse(
                         appointmentId = null,
                         createdOn = appointmentResponseLocal.createdOn,
                         uuid = appointmentResponseLocal.uuid,
                         patientFhirId = patient.fhirId ?: patient.id,
-                        scheduleId = scheduleRepository.getScheduleByStartTime(
-                            appointmentResponseLocal.scheduleId.time,
-                            user.hospitalCode
-                        )?.scheduleId
-                            ?: scheduleRepository.getScheduleByStartTime(
-                                appointmentResponseLocal.scheduleId.time,
-                                user.hospitalCode
-                            )?.uuid!!,
+                        scheduleId = resolvedScheduleId,
                         slot = appointmentResponseLocal.slot,
                         status = AppointmentStatusEnum.IN_PROGRESS.value,
                         appointmentType = appointmentResponseLocal.appointmentType,
@@ -341,8 +366,10 @@ object Queries {
                         hospitalId = null,
                         hospitalName = null,
                         hospitalCode = null,
-                        appUpdatedDate = Date()
-                    )
+                        appUpdatedDate = Date(),
+                        campaignId = appointmentResponseLocal.campaignId
+                    ),
+                    type = genericType
                 )
             } else {
                 genericRepository.insertOrUpdateAppointmentPatch(
@@ -434,15 +461,195 @@ object Queries {
     suspend fun getAppointment(
         patientId: String,
         hospitalCode: String,
+        campaignId: String? = null,
         appointmentRepository: AppointmentRepository
     ): AppointmentResponseLocal? {
-        return appointmentRepository
-            .getAppointmentListByDate(Date().toTodayStartDate(), Date().toEndOfDay())
-            .sortedBy { it.createdOn }
-            .firstOrNull { appointmentEntity ->
-                appointmentEntity.patientId == patientId &&
-                        appointmentEntity.status != AppointmentStatusEnum.CANCELLED.value &&
-                        appointmentEntity.hospitalCode == hospitalCode
+        return if (campaignId != null) {
+            appointmentRepository.loadAppointmentForCampaign(patientId, campaignId)
+        } else {
+            appointmentRepository
+                .getAppointmentListByDate(Date().toTodayStartDate(), Date().toEndOfDay())
+                .sortedBy { it.createdOn }
+                .firstOrNull { appointmentEntity ->
+                    appointmentEntity.patientId == patientId &&
+                            appointmentEntity.status != AppointmentStatusEnum.CANCELLED.value &&
+                            appointmentEntity.hospitalCode == hospitalCode
+                }
+        }
+    }
+
+    /** Screening Site Master Data with Seeding Logic */
+    internal suspend fun getScreeningSites(
+        screeningSiteDao: ScreeningSiteDao
+    ): List<ScreeningSiteMasterEntity> {
+        return screeningSiteDao.getScreeningSiteMaster()
+    }
+
+    /** Facility specific logic path (Day-wise) */
+    internal suspend fun addPatientToFacilityQueue(
+        patient: PatientResponse,
+        scheduleRepository: ScheduleRepository,
+        genericRepository: GenericRepository,
+        preferenceRepository: PreferenceRepository,
+        appointmentRepository: AppointmentRepository,
+        patientLastUpdatedRepository: PatientLastUpdatedRepository,
+        addedToQueue: (List<Long>) -> Unit
+    ) {
+        addPatientToQueue(
+            patient,
+            scheduleRepository,
+            genericRepository,
+            preferenceRepository,
+            appointmentRepository,
+            patientLastUpdatedRepository,
+            addedToQueue
+        )
+    }
+
+    /** Campaign specific logic path (Full Campaign Duration) */
+    internal suspend fun addPatientToCampaignQueue(
+        patient: PatientResponse,
+        campaignId: String,
+        scheduleRepository: ScheduleRepository,
+        genericRepository: GenericRepository,
+        appointmentRepository: AppointmentRepository,
+        addedToQueue: (List<Long>) -> Unit
+    ) {
+        val existingAppointment = appointmentRepository.loadAppointmentForCampaign(patient.id, campaignId)
+        
+        if (existingAppointment != null) {
+            Timber.d("Patient already has an appointment for this campaign: ${existingAppointment.uuid}")
+            addedToQueue(listOf(1L)) 
+            return
+        }
+
+        val selectedSlot = Date().toSlotStartTime()
+        var scheduleId = Date(selectedSlot.toCurrentTimeInMillis(Date()))
+        
+        scheduleRepository.getCampaignScheduleByCampaign(campaignId).let { scheduleResponse ->
+            if (scheduleResponse != null) {
+                scheduleId = scheduleResponse.planningHorizon.start
+                scheduleRepository.updateSchedule(
+                    scheduleResponse.copy(bookedSlots = (scheduleResponse.bookedSlots ?: 0) + 1),
+                    RecordType.SCREENING_SITE
+                )
+            } else {
+                val uuid = UUIDBuilder.generateUUID()
+                val schedule = ScheduleResponse(
+                    uuid = uuid,
+                    scheduleId = null,
+                    planningHorizon = Slot(
+                        start = scheduleId,
+                        end = Date(selectedSlot.to30MinutesAfter(Date()))
+                    ),
+                    bookedSlots = 1,
+                    roleId = null,
+                    active = true,
+                    practitionerId = null,
+                    hospitalId = null,
+                    hospitalFhirId = null,
+                    hospitalName = null,
+                    hospitalCode = null,
+                    campaignId = campaignId
+                )
+                scheduleRepository.insertSchedule(schedule, RecordType.SCREENING_SITE)
+                genericRepository.insertSchedule(schedule, GenericTypeEnum.CAMPAIGN_SCHEDULE)
             }
+        }.also {
+            val appointmentId = UUIDBuilder.generateUUID()
+            val createdOn = Date()
+            val slot = Slot(
+                start = Date(Date().toAppointmentTime().toCurrentTimeInMillis(Date())),
+                end = Date(Date().toAppointmentTime().to5MinutesAfter(Date()))
+            )
+            
+            addedToQueue(
+                appointmentRepository.addAppointment(
+                    AppointmentResponseLocal(
+                        appointmentId = null,
+                        uuid = appointmentId,
+                        patientId = patient.id,
+                        scheduleId = scheduleId,
+                        createdOn = createdOn,
+                        slot = slot,
+                        status = AppointmentStatusEnum.WALK_IN.value,
+                        appointmentType = AppointmentTypeEnum.WALK_IN.code,
+                        inProgressTime = null,
+                        roleId = null,
+                        slotId = null,
+                        practitionerId = null,
+                        hospitalFhirId = null,
+                        hospitalId = null,
+                        hospitalName = null,
+                        hospitalCode = null,
+                        campaignId = campaignId,
+                        recordType = RecordType.SCREENING_SITE
+                    )
+                ).also {
+                    genericRepository.insertAppointment(
+                        AppointmentResponse(
+                            uuid = appointmentId,
+                            createdOn = createdOn,
+                            appointmentId = null,
+                            patientFhirId = patient.fhirId ?: patient.id,
+                            scheduleId = scheduleId.time.toString(),
+                            slot = slot,
+                            status = AppointmentStatusEnum.WALK_IN.value,
+                            appointmentType = AppointmentTypeEnum.WALK_IN.code,
+                            inProgressTime = null,
+                            roleId = null,
+                            slotId = null,
+                            practitionerId = null,
+                            hospitalFhirId = null,
+                            hospitalId = null,
+                            hospitalName = null,
+                            hospitalCode = null,
+                            campaignId = campaignId,
+                            appUpdatedDate = Date()
+                        ),
+                        type = GenericTypeEnum.CAMPAIGN_APPOINTMENT
+                    )
+                }
+            )
+        }
+    }
+
+    /** Context-aware Appointment Info Loading for Campaigns */
+    internal suspend fun loadCampaignAppointmentInfo(
+        patientId: String,
+        campaignId: String,
+        appointmentRepository: AppointmentRepository,
+        cvdAssessmentRepository: CVDAssessmentRepository,
+        screeningSiteDao: ScreeningSiteDao
+    ): AppointmentInfo {
+        val appointmentResponse = appointmentRepository.loadAppointmentForCampaign(patientId, campaignId)
+        
+        val latestCvd = cvdAssessmentRepository.getLatestCVDForCampaign(patientId, campaignId)
+        val screeningSite = screeningSiteDao.getScreeningSiteById(campaignId)
+        
+        var isDuplicateCVDForCampaign = false
+        if (latestCvd != null && screeningSite != null) {
+            val fromDateMilli = screeningSite.fromDate.toTimeInMilli()
+            val toDateMilli = screeningSite.toDate.toTimeInMilli()
+            val currentTime = Date().time
+            if (currentTime in fromDateMilli..toDateMilli) {
+                isDuplicateCVDForCampaign = true
+            }
+        }
+
+        val canAddAssessment = appointmentResponse != null && 
+                               appointmentResponse.status == AppointmentStatusEnum.WALK_IN.value &&
+                               !isDuplicateCVDForCampaign
+
+        val isAppointmentCompleted = appointmentResponse?.status == AppointmentStatusEnum.COMPLETED.value
+
+        return AppointmentInfo(
+            appointment = appointmentResponse,
+            existsInOtherHospital = false,
+            canAddAssessment = canAddAssessment,
+            isAppointmentCompleted = isAppointmentCompleted,
+            ifAllSlotsBooked = false, // Campaign logic typically bypasses strict slot limits
+            isDuplicateCVDForCampaign = isDuplicateCVDForCampaign
+        )
     }
 }

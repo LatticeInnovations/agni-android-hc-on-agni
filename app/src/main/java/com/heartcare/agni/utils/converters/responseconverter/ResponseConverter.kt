@@ -2,6 +2,7 @@ package com.heartcare.agni.utils.converters.responseconverter
 
 import com.heartcare.agni.data.local.enums.IdentifierIgnoreEnum
 import com.heartcare.agni.data.local.enums.PrescriptionType
+import com.heartcare.agni.data.local.enums.RecordType
 import com.heartcare.agni.data.local.model.InterventionItem
 import com.heartcare.agni.data.local.model.InterventionResponseLocal
 import com.heartcare.agni.data.local.model.appointment.AppointmentResponseLocal
@@ -11,6 +12,8 @@ import com.heartcare.agni.data.local.model.examination.ExaminationResponseLocal
 import com.heartcare.agni.data.local.model.prescription.MedicationLocal
 import com.heartcare.agni.data.local.model.prescription.PrescriptionResponseLocal
 import com.heartcare.agni.data.local.roomdb.dao.AppointmentDao
+import com.heartcare.agni.data.local.roomdb.dao.CampaignAppointmentDao
+import com.heartcare.agni.data.local.roomdb.dao.CampaignScheduleDao
 import com.heartcare.agni.data.local.roomdb.dao.ExaminationDao
 import com.heartcare.agni.data.local.roomdb.dao.InterventionDao
 import com.heartcare.agni.data.local.roomdb.dao.MedicationDao
@@ -19,6 +22,8 @@ import com.heartcare.agni.data.local.roomdb.dao.RiskPredictionDao
 import com.heartcare.agni.data.local.roomdb.dao.ScheduleDao
 import com.heartcare.agni.data.local.roomdb.entities.allergy.AllergyEntity
 import com.heartcare.agni.data.local.roomdb.entities.appointment.AppointmentEntity
+import com.heartcare.agni.data.local.roomdb.entities.campaign.CampaignAppointmentEntity
+import com.heartcare.agni.data.local.roomdb.entities.campaign.CampaignScheduleEntity
 import com.heartcare.agni.data.local.roomdb.entities.campaign.ScreeningSiteMasterEntity
 import com.heartcare.agni.data.local.roomdb.entities.cvd.CVDEntity
 import com.heartcare.agni.data.local.roomdb.entities.diagnosis.DiagnosisEntity
@@ -323,7 +328,25 @@ internal fun ScheduleResponse.toScheduleEntity(): ScheduleEntity {
         hospitalId = hospitalId,
         hospitalFhirId = hospitalFhirId,
         hospitalName = hospitalName!!,
-        hospitalCode = hospitalCode!!,
+        hospitalCode = hospitalCode!!
+    )
+}
+
+internal fun ScheduleResponse.toCampaignScheduleEntity(): CampaignScheduleEntity {
+    return CampaignScheduleEntity(
+        id = uuid,
+        scheduleFhirId = scheduleId,
+        startTime = planningHorizon.start,
+        endTime = planningHorizon.end,
+        bookedSlots = bookedSlots ?: 0,
+        roleId = roleId,
+        active = active ?: true,
+        practitionerId = practitionerId,
+        hospitalId = hospitalId,
+        hospitalFhirId = hospitalFhirId,
+        hospitalName = hospitalName,
+        hospitalCode = hospitalCode,
+        campaignId = campaignId!!
     )
 }
 
@@ -343,6 +366,26 @@ internal fun ScheduleEntity.toScheduleResponse(): ScheduleResponse {
         hospitalFhirId = hospitalFhirId,
         hospitalName = hospitalName,
         hospitalCode = hospitalCode
+    )
+}
+
+internal fun CampaignScheduleEntity.toScheduleResponse(): ScheduleResponse {
+    return ScheduleResponse(
+        uuid = id,
+        scheduleId = scheduleFhirId,
+        bookedSlots = bookedSlots,
+        planningHorizon = Slot(
+            start = startTime,
+            end = endTime
+        ),
+        roleId = roleId,
+        active = active,
+        practitionerId = practitionerId,
+        hospitalId = hospitalId,
+        hospitalFhirId = hospitalFhirId,
+        hospitalName = hospitalName,
+        hospitalCode = hospitalCode,
+        campaignId = campaignId
     )
 }
 
@@ -372,6 +415,32 @@ internal suspend fun AppointmentResponse.toAppointmentEntity(
     )
 }
 
+internal suspend fun AppointmentResponse.toCampaignAppointmentEntity(
+    patientDao: PatientDao,
+    campaignScheduleDao: CampaignScheduleDao
+): CampaignAppointmentEntity {
+    return CampaignAppointmentEntity(
+        id = uuid,
+        appointmentFhirId = appointmentId,
+        createdOn = createdOn,
+        patientId = patientDao.getPatientIdByFhirId(patientFhirId)!!,
+        scheduleId = campaignScheduleDao.getScheduleStartTimeByFhirId(scheduleId) ?: Date(),
+        status = status,
+        startTime = slot.start,
+        endTime = slot.end,
+        appointmentType = appointmentType,
+        inProgressTime = inProgressTime,
+        roleId = roleId,
+        slotId = slotId,
+        practitionerId = practitionerId,
+        hospitalFhirId = hospitalFhirId,
+        hospitalId = hospitalId,
+        hospitalName = hospitalName,
+        hospitalCode = hospitalCode,
+        campaignId = campaignId!!
+    )
+}
+
 internal suspend fun AppointmentEntity.toAppointmentResponse(
     scheduleDao: ScheduleDao,
     hospitalCode: String
@@ -397,6 +466,7 @@ internal suspend fun AppointmentEntity.toAppointmentResponse(
         hospitalId = null,
         hospitalName = null,
         hospitalCode = null,
+        campaignId = null,
         appUpdatedDate = Date()
     )
 }
@@ -421,7 +491,58 @@ internal fun AppointmentEntity.toAppointmentResponseLocal(): AppointmentResponse
         hospitalFhirId = hospitalFhirId,
         hospitalId = hospitalId,
         hospitalName = hospitalName,
-        hospitalCode = hospitalCode
+        hospitalCode = hospitalCode,
+        campaignId = null,
+        recordType = RecordType.FACILITY
+    )
+}
+
+internal fun CampaignAppointmentEntity.toAppointmentResponseLocal(): AppointmentResponseLocal {
+    return AppointmentResponseLocal(
+        uuid = id,
+        createdOn = createdOn,
+        appointmentId = appointmentFhirId,
+        patientId = patientId,
+        scheduleId = scheduleId,
+        slot = Slot(
+            start = startTime,
+            end = endTime
+        ),
+        status = status,
+        appointmentType = appointmentType,
+        inProgressTime = inProgressTime,
+        roleId = roleId,
+        slotId = slotId,
+        practitionerId = practitionerId,
+        hospitalFhirId = hospitalFhirId,
+        hospitalId = hospitalId,
+        hospitalName = hospitalName,
+        hospitalCode = hospitalCode,
+        campaignId = campaignId,
+        recordType = RecordType.SCREENING_SITE
+    )
+}
+
+internal fun AppointmentResponseLocal.toCampaignAppointmentEntity(): CampaignAppointmentEntity {
+    return CampaignAppointmentEntity(
+        id = uuid,
+        appointmentFhirId = appointmentId,
+        createdOn = createdOn,
+        patientId = patientId,
+        scheduleId = scheduleId,
+        status = status,
+        startTime = slot.start,
+        endTime = slot.end,
+        appointmentType = appointmentType,
+        inProgressTime = inProgressTime,
+        roleId = roleId,
+        slotId = slotId,
+        practitionerId = practitionerId,
+        hospitalFhirId = hospitalFhirId,
+        hospitalId = hospitalId,
+        hospitalName = hospitalName,
+        hospitalCode = hospitalCode,
+        campaignId = campaignId ?: ""
     )
 }
 
@@ -490,7 +611,8 @@ internal fun CVDResponse.toCVDEntity(): CVDEntity {
     return CVDEntity(
         cvdFhirId = cvdFhirId,
         cvdUuid = cvdUuid,
-        appointmentId = appointmentId,
+        appointmentId = if (campaignId.isNullOrEmpty()) appointmentId else null,
+        campaignAppointmentId = if (!campaignId.isNullOrEmpty()) appointmentId else null,
         patientId = patientId,
         bmi = bmi,
         bpDiastolic = bpDiastolic,
@@ -510,6 +632,7 @@ internal fun CVDResponse.toCVDEntity(): CVDEntity {
         chiefComplaint = chiefComplaint,
         screeningDate = screeningDate,
         heartAttackHistory = heartAttackHistory,
+        campaignId = campaignId
     )
 }
 
@@ -517,6 +640,7 @@ internal fun CVDResponse.toCVDEntity(): CVDEntity {
 internal suspend fun CVDResponse.toCVDEntity(
     patientDao: PatientDao,
     appointmentDao: AppointmentDao,
+    campaignAppointmentDao: CampaignAppointmentDao,
     riskPredictionDao: RiskPredictionDao
 ): CVDEntity {
     val patient =
@@ -545,7 +669,8 @@ internal suspend fun CVDResponse.toCVDEntity(
     return CVDEntity(
         cvdFhirId = cvdFhirId,
         cvdUuid = cvdUuid,
-        appointmentId = appointmentDao.getAppointmentIdByFhirId(appointmentId),
+        appointmentId = if (campaignId.isNullOrEmpty()) appointmentDao.getAppointmentIdByFhirId(appointmentId) else null,
+        campaignAppointmentId = if (!campaignId.isNullOrEmpty()) campaignAppointmentDao.getAppointmentIdByFhirId(appointmentId) else null,
         patientId = patientDao.getPatientIdByFhirId(patientId)!!,
         bmi = bmi,
         bpDiastolic = bpDiastolic,
@@ -564,7 +689,8 @@ internal suspend fun CVDResponse.toCVDEntity(
         weightUnit = weightUnit,
         chiefComplaint = chiefComplaint,
         screeningDate = screeningDate,
-        heartAttackHistory = heartAttackHistory
+        heartAttackHistory = heartAttackHistory,
+        campaignId = campaignId
     )
 }
 
@@ -572,7 +698,7 @@ internal fun CVDEntity.toCVDResponse(): CVDResponse {
     return CVDResponse(
         cvdFhirId = cvdFhirId,
         cvdUuid = cvdUuid,
-        appointmentId = appointmentId,
+        appointmentId = if (campaignId.isNullOrEmpty()) appointmentId!! else campaignAppointmentId!!,
         patientId = patientId,
         bmi = bmi,
         bpDiastolic = bpDiastolic,
@@ -592,7 +718,8 @@ internal fun CVDEntity.toCVDResponse(): CVDResponse {
         weightUnit = weightUnit,
         chiefComplaint = chiefComplaint,
         screeningDate = screeningDate,
-        heartAttackHistory = heartAttackHistory
+        heartAttackHistory = heartAttackHistory,
+        campaignId = campaignId
     )
 }
 
@@ -1498,5 +1625,35 @@ fun HealthFacilityEntity.toLevelResponse(): LevelResponse {
         precedingLevelId = islandId,
         secondaryName = null,
         status = "active"
+    )
+}
+
+internal suspend fun CampaignAppointmentEntity.toCampaignAppointmentResponse(
+    patientDao: PatientDao,
+    campaignScheduleDao: CampaignScheduleDao
+): AppointmentResponse {
+    return AppointmentResponse(
+        uuid = id,
+        createdOn = createdOn,
+        appointmentId = appointmentFhirId,
+        patientFhirId = patientId,
+        scheduleId = campaignScheduleDao.getFhirIdByStartTime(scheduleId, campaignId)
+            ?: campaignScheduleDao.getScheduleByStartTime(scheduleId.time, campaignId)!!.id,
+        slot = Slot(
+            start = startTime,
+            end = endTime
+        ),
+        status = status,
+        appointmentType = appointmentType,
+        inProgressTime = inProgressTime,
+        roleId = null,
+        slotId = null,
+        practitionerId = null,
+        hospitalFhirId = null,
+        hospitalId = null,
+        hospitalName = null,
+        hospitalCode = null,
+        campaignId = campaignId,
+        appUpdatedDate = Date()
     )
 }

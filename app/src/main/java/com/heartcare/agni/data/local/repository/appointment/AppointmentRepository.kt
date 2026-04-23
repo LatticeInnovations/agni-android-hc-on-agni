@@ -31,4 +31,9 @@ interface AppointmentRepository {
     suspend fun getLastCompletedAppointment(
         patientId: String
     ): AppointmentEntity?
+
+    suspend fun loadAppointmentForCampaign(
+        patientId: String,
+        campaignId: String
+    ): AppointmentResponseLocal?
 }

@@ -16,7 +16,7 @@ interface CVDDao {
     @Query("SELECT * FROM CVDEntity WHERE patientId=:patientId ORDER BY createdOn DESC")
     fun getCVDRecords(patientId: String): List<CVDEntity>
 
-    @Query("SELECT * FROM CVDEntity WHERE appointmentId IN (:appointmentIds) ORDER BY createdOn DESC")
+    @Query("SELECT * FROM CVDEntity WHERE appointmentId IN (:appointmentIds) OR campaignAppointmentId IN (:appointmentIds) ORDER BY createdOn DESC")
     fun getCVDRecordsByAppointmentIds(vararg appointmentIds: String): List<CVDEntity>
 
     @Query("SELECT * FROM CVDEntity WHERE patientId=:patientId AND createdOn BETWEEN :startTime AND :endTime")
@@ -35,4 +35,8 @@ interface CVDDao {
     @Transaction
     @Query("DELETE FROM CVDEntity WHERE cvdUuid=:id")
     suspend fun deleteCVD(id: String): Int
+
+    @Transaction
+    @Query("SELECT * FROM CVDEntity WHERE patientId = :patientId AND campaignId = :campaignId ORDER BY createdOn DESC LIMIT 1")
+    suspend fun getLatestCVDForCampaign(patientId: String, campaignId: String): CVDEntity?
 }

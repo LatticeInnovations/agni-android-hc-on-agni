@@ -8,5 +8,6 @@ interface CVDAssessmentRepository {
     suspend fun getCVDRecordByAppointmentIds(vararg appointmentIds: String): List<CVDResponse>
     suspend fun getTodayCVDRecord(patientId: String, startTime: Long, endTime: Long): CVDResponse?
     suspend fun getCVDRecordByScreeningDate(patientId: String, startTime: Long, endTime: Long): CVDResponse?
+    suspend fun getLatestCVDForCampaign(patientId: String, campaignId: String): CVDResponse?
     suspend fun updateCVDRecord(cvdResponse: CVDResponse): Int
 }

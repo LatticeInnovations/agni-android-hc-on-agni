@@ -67,6 +67,21 @@ class PreferenceStorageImpl(private val sharedPreferences: SharedPreferences) : 
         PREF_LAST_VITAL_SYNC_TIME,
         0L
     )
+    override var lastCampaignScheduleSyncTime by LongPreference(
+        sharedPreferences,
+        PREF_LAST_CAMPAIGN_SCHEDULE_SYNC_TIME,
+        0L
+    )
+    override var lastCampaignAppointmentSyncTime by LongPreference(
+        sharedPreferences,
+        PREF_LAST_CAMPAIGN_APPOINTMENT_SYNC_TIME,
+        0L
+    )
+    override var lastCampaignCVDSyncTime by LongPreference(
+        sharedPreferences,
+        PREF_LAST_CAMPAIGN_CVD_SYNC_TIME,
+        0L
+    )
     override var lastDiagnosisSyncTime by LongPreference(
         sharedPreferences,
         PREF_LAST_DIAGNOSIS_SYNC_TIME,
@@ -207,6 +222,9 @@ class PreferenceStorageImpl(private val sharedPreferences: SharedPreferences) : 
         const val PREF_LAST_HEALTH_FACILITY_SYNC_TIME = "pref_last_health_facility_sync_time"
         const val PREF_LAST_REFERRAL_SYNC_TIME = "pref_last_referral_sync_time"
         const val PREF_LAST_SCREENING_SITE_MASTER_SYNC_TIME = "pref_last_screening_site_master_sync_time"
+        const val PREF_LAST_CAMPAIGN_SCHEDULE_SYNC_TIME = "pref_last_campaign_schedule_sync_time"
+        const val PREF_LAST_CAMPAIGN_APPOINTMENT_SYNC_TIME = "pref_last_campaign_appointment_sync_time"
+        const val PREF_LAST_CAMPAIGN_CVD_SYNC_TIME = "pref_last_campaign_cvd_sync_time"
         const val PREF_IS_SCREENING_SITE_SEEDED = "pref_is_screening_site_seeded"
     }
 }

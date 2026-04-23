@@ -1,6 +1,7 @@
 package com.heartcare.agni.data.server.repository.sync
 
 import com.heartcare.agni.data.local.enums.GenericTypeEnum
+import com.heartcare.agni.data.local.enums.RecordType
 import com.heartcare.agni.data.local.enums.SyncType
 import com.heartcare.agni.data.local.roomdb.dao.AllergyDao
 import com.heartcare.agni.data.local.roomdb.dao.AppointmentDao
@@ -25,6 +26,8 @@ import com.heartcare.agni.data.local.roomdb.dao.ScheduleDao
 import com.heartcare.agni.data.local.roomdb.dao.ScreeningSiteDao
 import com.heartcare.agni.data.local.roomdb.dao.TobaccoCessationDao
 import com.heartcare.agni.data.local.roomdb.dao.VitalDao
+import com.heartcare.agni.data.local.roomdb.dao.CampaignScheduleDao
+import com.heartcare.agni.data.local.roomdb.dao.CampaignAppointmentDao
 import com.heartcare.agni.data.local.roomdb.entities.generic.GenericEntity
 import com.heartcare.agni.data.local.roomdb.entities.patient.IdentifierEntity
 import com.heartcare.agni.data.local.roomdb.entities.prescription.PrescriptionDirectionsEntity
@@ -60,6 +63,7 @@ import com.heartcare.agni.utils.constants.ErrorConstants.DUPLICATE_RECORD
 import com.heartcare.agni.utils.converters.responseconverter.toAllergyEntity
 import com.heartcare.agni.utils.converters.responseconverter.toAppointmentEntity
 import com.heartcare.agni.utils.converters.responseconverter.toCVDEntity
+import com.heartcare.agni.utils.converters.responseconverter.toCampaignScheduleEntity
 import com.heartcare.agni.utils.converters.responseconverter.toDiagnosisEntity
 import com.heartcare.agni.utils.converters.responseconverter.toDiagnosisMasterEntity
 import com.heartcare.agni.utils.converters.responseconverter.toExaminationEntity
@@ -84,6 +88,7 @@ import com.heartcare.agni.utils.converters.responseconverter.toRiskFactorEntity
 import com.heartcare.agni.utils.converters.responseconverter.toScheduleEntity
 import com.heartcare.agni.utils.converters.responseconverter.toTobaccoCessationEntity
 import com.heartcare.agni.utils.converters.responseconverter.toScreeningSiteMasterEntity
+import com.heartcare.agni.utils.converters.responseconverter.toCampaignAppointmentEntity
 import com.heartcare.agni.utils.converters.responseconverter.toVitalEntity
 import java.util.UUID
 
@@ -110,7 +115,9 @@ open class SyncRepositoryDatabaseTransactions(
     private val examinationDao: ExaminationDao,
     private val healthFacilityDao: HealthFacilityDao,
     private val referralDao: ReferralDao,
-    private val screeningSiteDao: ScreeningSiteDao
+    private val screeningSiteDao: ScreeningSiteDao,
+    private val campaignScheduleDao: CampaignScheduleDao,
+    private val campaignAppointmentDao: CampaignAppointmentDao
 ) {
 
 
@@ -199,21 +206,39 @@ open class SyncRepositoryDatabaseTransactions(
         )
     }
 
-    protected suspend fun insertSchedule(body: List<ScheduleResponse>) {
-        scheduleDao.insertScheduleEntity(*body.map { scheduleResponse ->
-            scheduleResponse.toScheduleEntity()
-        }.toTypedArray())
+    protected suspend fun insertSchedule(
+        body: List<ScheduleResponse>,
+        recordType: RecordType? = RecordType.FACILITY
+    ) {
+        if (recordType == RecordType.SCREENING_SITE) {
+            campaignScheduleDao.insertScheduleEntity(*body.map { scheduleResponse ->
+                scheduleResponse.toCampaignScheduleEntity()
+            }.toTypedArray())
+        } else {
+            scheduleDao.insertScheduleEntity(*body.map { scheduleResponse ->
+                scheduleResponse.toScheduleEntity()
+            }.toTypedArray())
+        }
     }
 
-    protected suspend fun insertAppointment(body: List<AppointmentResponse>) {
-        appointmentDao.insertAppointmentEntity(*body.map { appointmentResponse ->
-            appointmentResponse.toAppointmentEntity(patientDao, scheduleDao)
-        }.toTypedArray())
+    protected suspend fun insertAppointment(
+        body: List<AppointmentResponse>,
+        recordType: RecordType? = RecordType.FACILITY
+    ) {
+        if (recordType == RecordType.SCREENING_SITE) {
+            campaignAppointmentDao.insertAppointmentEntity(*body.map { appointmentResponse ->
+                appointmentResponse.toCampaignAppointmentEntity(patientDao, campaignScheduleDao)
+            }.toTypedArray())
+        } else {
+            appointmentDao.insertAppointmentEntity(*body.map { appointmentResponse ->
+                appointmentResponse.toAppointmentEntity(patientDao, scheduleDao)
+            }.toTypedArray())
+        }
     }
 
     protected suspend fun insertCVD(body: List<CVDResponse>) {
         cvdDao.insertCVDRecord(*body.map { cvdResponse ->
-            cvdResponse.toCVDEntity(patientDao, appointmentDao, riskPredictionDao)
+            cvdResponse.toCVDEntity(patientDao, appointmentDao, campaignAppointmentDao, riskPredictionDao)
         }.toTypedArray())
     }
 
@@ -290,16 +315,23 @@ open class SyncRepositoryDatabaseTransactions(
 
     protected suspend fun insertScheduleFhirId(
         listOfGenericEntities: List<GenericEntity>,
-        body: List<CreateResponse>
+        body: List<CreateResponse>,
+        genericTypeEnum: GenericTypeEnum
     ): Int {
         val idsToDelete = mutableSetOf<String>()
         idsToDelete.addAll(listOfGenericEntities.map { genericEntity -> genericEntity.id })
         body.forEach { createResponse ->
             when (createResponse.error) {
                 null, ErrorConstants.SCHEDULE_EXISTS -> {
-                    scheduleDao.updateScheduleFhirId(
-                        createResponse.id!!, createResponse.fhirId!!
-                    )
+                    if (genericTypeEnum== GenericTypeEnum.CAMPAIGN_SCHEDULE) {
+                        campaignScheduleDao.updateScheduleFhirId(
+                            createResponse.id!!, createResponse.fhirId!!
+                        )
+                    }else{
+                        scheduleDao.updateScheduleFhirId(
+                            createResponse.id!!, createResponse.fhirId!!
+                        )
+                    }
                 }
 
                 else -> {
@@ -312,15 +344,24 @@ open class SyncRepositoryDatabaseTransactions(
 
     protected suspend fun insertAppointmentFhirId(
         listOfGenericEntities: List<GenericEntity>,
-        body: List<CreateResponse>
+        body: List<CreateResponse>,
+        genericTypeEnum: GenericTypeEnum
+
     ): Int {
         val idsToDelete = mutableSetOf<String>()
         idsToDelete.addAll(listOfGenericEntities.map { genericEntity -> genericEntity.id })
         body.forEach { createResponse ->
             if (createResponse.error == null) {
-                appointmentDao.updateAppointmentFhirId(
-                    createResponse.id!!, createResponse.fhirId!!
-                )
+                if (genericTypeEnum== GenericTypeEnum.CAMPAIGN_APPOINTMENT) {
+                    campaignAppointmentDao.updateAppointmentFhirId(
+                        createResponse.id!!, createResponse.fhirId!!
+                    )
+                }else{
+                    campaignAppointmentDao.updateAppointmentFhirId(
+                        createResponse.id!!, createResponse.fhirId!!
+                    )
+                }
+
             } else {
                 idsToDelete.remove(createResponse.id)
             }

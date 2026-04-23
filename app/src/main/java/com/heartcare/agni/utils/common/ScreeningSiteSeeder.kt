@@ -4,7 +4,9 @@ import com.heartcare.agni.data.local.repository.preference.PreferenceRepository
 import com.heartcare.agni.data.local.roomdb.dao.ScreeningSiteDao
 import com.heartcare.agni.data.local.roomdb.entities.campaign.ScreeningSiteMasterEntity
 
-class ScreeningSiteSeeder(
+import javax.inject.Inject
+
+class ScreeningSiteSeeder @Inject constructor(
     private val screeningSiteDao: ScreeningSiteDao,
     private val preferenceRepository: PreferenceRepository
 ) {
@@ -17,8 +19,8 @@ class ScreeningSiteSeeder(
                     location = "",
                     areaCouncil = "Tanna Council",
                     serviceMode = "Outreach",
-                    fromDate = "2025-01-01",
-                    toDate = "2025-03-31",
+                    fromDate = "2026-04-23",
+                    toDate = "2026-04-25",
                     teamLead = "Dr. Sarah Naupa",
                     status = "ACTIVE",
                     email = "sarah.naupa@example.com",
@@ -30,8 +32,8 @@ class ScreeningSiteSeeder(
                     location = "Central Market",
                     areaCouncil = "Vila City",
                     serviceMode = "Mobile",
-                    fromDate = "2025-02-15",
-                    toDate = "2025-06-30",
+                    fromDate = "2026-04-23",
+                    toDate = "2026-04-25",
                     teamLead = "Nurse Jean Pierre",
                     status = "ACTIVE",
                     email = "jean.pierre@example.com",
