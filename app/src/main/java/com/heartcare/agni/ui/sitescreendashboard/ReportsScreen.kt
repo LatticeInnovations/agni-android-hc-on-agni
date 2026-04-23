@@ -40,17 +40,6 @@ fun ReportsScreen(
         stringResource(R.string.tab_division)
     )
 
-    val fastingLabel = stringResource(R.string.blood_sugar_fasting)
-    val randomLabel = stringResource(R.string.blood_sugar_random)
-    val customRange = stringResource(R.string.custom_range)
-
-    // Initialise date range label once with localised default
-    LaunchedEffect(Unit) {
-        if (viewModel.selectedDateRangeLabel.isEmpty()) {
-            viewModel.selectedDateRangeLabel = customRange
-        }
-    }
-
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -352,8 +341,8 @@ fun ReportsScreen(
                         StatProgressCard(
                             title = stringResource(R.string.stat_blood_sugar),
                             subGroups = listOf(
-                                StatSubGroup(fastingLabel, viewModel.bloodSugarFastingStats),
-                                StatSubGroup(randomLabel, viewModel.bloodSugarRandomStats)
+                                StatSubGroup(stringResource(R.string.blood_sugar_fasting, viewModel.bloodSugarFastingTotal), viewModel.bloodSugarFastingStats),
+                                StatSubGroup(stringResource(R.string.blood_sugar_random, viewModel.bloodSugarRandomTotal), viewModel.bloodSugarRandomStats)
                             ),
                             modifier = Modifier.padding(bottom = 16.dp)
                         )

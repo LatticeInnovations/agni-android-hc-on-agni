@@ -512,8 +512,8 @@
     <string name="stat_cvd_risk">CVD Risk (%d)</string>
 
     <!-- Blood Sugar Sub-group Headings -->
-    <string name="blood_sugar_fasting">Fasting</string>
-    <string name="blood_sugar_random">Random</string>
+    <string name="blood_sugar_fasting">Fasting (%d)</string>
+    <string name="blood_sugar_random">Random (%d)</string>
 
     <!-- Download Report Sheet -->
     <string name="download_report">Download report</string>
