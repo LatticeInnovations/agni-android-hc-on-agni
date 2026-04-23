@@ -530,5 +530,7 @@
     <string name="last_90_days">Last 90 days</string>
     <string name="start_date">Start date</string>
     <string name="end_date">End date</string>
+
     <string name="duplicate_campaign_record_error">Record already exists for the campaign</string>
+    <string name="qr_not_generated_yet">QR is not generated yet.</string>
 </resources>
