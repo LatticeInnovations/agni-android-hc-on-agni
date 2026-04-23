@@ -8,5 +8,6 @@ data class AppointmentInfo(
     val existsInOtherHospital: Boolean,
     val canAddAssessment: Boolean,
     val isAppointmentCompleted: Boolean,
-    val ifAllSlotsBooked: Boolean
+    val ifAllSlotsBooked: Boolean,
+    val isDuplicateCVDForCampaign: Boolean = false
 )

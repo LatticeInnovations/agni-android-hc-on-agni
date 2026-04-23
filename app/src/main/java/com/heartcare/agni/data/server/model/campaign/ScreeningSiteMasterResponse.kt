@@ -11,5 +11,7 @@ data class ScreeningSiteMasterResponse(
     val fromDate: String,
     val toDate: String,
     val teamLead: String,
-    val status: String
+    val status: String,
+    val email: String,
+    val mobile: String
 )

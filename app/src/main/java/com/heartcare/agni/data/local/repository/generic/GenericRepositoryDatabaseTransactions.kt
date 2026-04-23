@@ -8,6 +8,8 @@ import com.heartcare.agni.data.local.roomdb.dao.AppointmentDao
 import com.heartcare.agni.data.local.roomdb.dao.GenericDao
 import com.heartcare.agni.data.local.roomdb.dao.PatientDao
 import com.heartcare.agni.data.local.roomdb.dao.ScheduleDao
+import com.heartcare.agni.data.local.roomdb.dao.CampaignScheduleDao
+import com.heartcare.agni.data.local.roomdb.dao.CampaignAppointmentDao
 import com.heartcare.agni.data.local.roomdb.entities.generic.GenericEntity
 import com.heartcare.agni.data.server.model.allergy.AllergyResponse
 import com.heartcare.agni.data.server.model.cvd.CVDResponse
@@ -38,7 +40,9 @@ open class GenericRepositoryDatabaseTransactions(
     private val genericDao: GenericDao,
     private val patientDao: PatientDao,
     private val scheduleDao: ScheduleDao,
-    private val appointmentDao: AppointmentDao
+    private val appointmentDao: AppointmentDao,
+    private val campaignScheduleDao: CampaignScheduleDao,
+    private val campaignAppointmentDao: CampaignAppointmentDao
 ) {
 
     protected suspend fun insertPatientGenericEntity(
@@ -180,7 +184,8 @@ open class GenericRepositoryDatabaseTransactions(
     protected suspend fun insertScheduleGenericEntity(
         scheduleGenericEntity: GenericEntity?,
         scheduleResponse: ScheduleResponse,
-        uuid: String
+        uuid: String,
+        type: GenericTypeEnum = GenericTypeEnum.SCHEDULE
     ): Long {
         return if (scheduleGenericEntity != null) {
             genericDao.insertGenericEntity(
@@ -192,7 +197,7 @@ open class GenericRepositoryDatabaseTransactions(
                     id = uuid,
                     patientId = scheduleResponse.uuid,
                     payload = scheduleResponse.toJson(),
-                    type = GenericTypeEnum.SCHEDULE,
+                    type = type,
                     syncType = SyncType.POST
                 )
             )[0]
@@ -202,7 +207,8 @@ open class GenericRepositoryDatabaseTransactions(
     protected suspend fun insertAppointmentGenericEntity(
         appointmentGenericEntity: GenericEntity?,
         appointmentResponse: AppointmentResponse,
-        uuid: String
+        uuid: String,
+        type: GenericTypeEnum = GenericTypeEnum.APPOINTMENT
     ): Long {
         return if (appointmentGenericEntity != null) {
             genericDao.insertGenericEntity(
@@ -214,7 +220,7 @@ open class GenericRepositoryDatabaseTransactions(
                     id = uuid,
                     patientId = appointmentResponse.uuid,
                     payload = appointmentResponse.toJson(),
-                    type = GenericTypeEnum.APPOINTMENT,
+                    type = type,
                     syncType = SyncType.POST
                 )
             )[0]
@@ -226,6 +232,7 @@ open class GenericRepositoryDatabaseTransactions(
         cvdResponse: CVDResponse,
         uuid: String
     ): Long {
+        val type = if (cvdResponse.campaignId != null) GenericTypeEnum.CAMPAIGN_CVD else GenericTypeEnum.CVD
         return if (cvdGenericEntity != null) {
             genericDao.insertGenericEntity(
                 cvdGenericEntity.copy(payload = cvdResponse.toJson())
@@ -236,7 +243,7 @@ open class GenericRepositoryDatabaseTransactions(
                     id = uuid,
                     patientId = cvdResponse.cvdUuid,
                     payload = cvdResponse.toJson(),
-                    type = GenericTypeEnum.CVD,
+                    type = type,
                     syncType = SyncType.POST
                 )
             )[0]
@@ -831,11 +838,13 @@ open class GenericRepositoryDatabaseTransactions(
     }
 
     private suspend fun getScheduleFhirIdById(scheduleId: String): String? {
-        return scheduleDao.getScheduleById(scheduleId)[0].scheduleFhirId
+        return scheduleDao.getScheduleById(scheduleId).firstOrNull()?.scheduleFhirId
+            ?: campaignScheduleDao.getScheduleById(scheduleId).firstOrNull()?.scheduleFhirId
     }
 
     private suspend fun getAppointmentFhirIdById(appointmentId: String): String? {
-        return appointmentDao.getAppointmentById(appointmentId)[0].appointmentFhirId
+        return appointmentDao.getAppointmentById(appointmentId).firstOrNull()?.appointmentFhirId
+            ?: campaignAppointmentDao.getAppointmentById(appointmentId).firstOrNull()?.appointmentFhirId
     }
 
     protected suspend fun insertPatientLastUpdatedGenericEntity(

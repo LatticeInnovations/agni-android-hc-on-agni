@@ -11,21 +11,38 @@ import retrofit2.http.PATCH
 import retrofit2.http.POST
 import retrofit2.http.QueryMap
 
+import retrofit2.http.Path
+
 @JvmSuppressWildcards
 interface ScheduleAndAppointmentApiService {
 
-    @GET("Schedule")
-    suspend fun getScheduleList(@QueryMap(encoded = true) map: Map<String, String>?): Response<BaseResponse<List<ScheduleResponse>>>
+    @GET("{endPoint}")
+    suspend fun getScheduleList(
+        @Path("endPoint", encoded = true) endPoint: String,
+        @QueryMap(encoded = true) map: Map<String, String>?
+    ): Response<BaseResponse<List<ScheduleResponse>>>
 
-    @POST("Schedule")
-    suspend fun postScheduleData(@Body scheduleResponses: List<Any>): Response<BaseResponse<List<CreateResponse>>>
+    @POST("{endPoint}")
+    suspend fun postScheduleData(
+        @Path("endPoint", encoded = true) endPoint: String,
+        @Body scheduleResponses: List<Any>
+    ): Response<BaseResponse<List<CreateResponse>>>
 
-    @GET("Appointment")
-    suspend fun getAppointmentList(@QueryMap(encoded = true) map: Map<String, String>?): Response<BaseResponse<List<AppointmentResponse>>>
+    @GET("{endPoint}")
+    suspend fun getAppointmentList(
+        @Path("endPoint", encoded = true) endPoint: String,
+        @QueryMap(encoded = true) map: Map<String, String>?
+    ): Response<BaseResponse<List<AppointmentResponse>>>
 
-    @POST("Appointment")
-    suspend fun createAppointment(@Body appointmentResponse: List<Any>): Response<BaseResponse<List<CreateResponse>>>
+    @POST("{endPoint}")
+    suspend fun createAppointment(
+        @Path("endPoint", encoded = true) endPoint: String,
+        @Body appointmentResponse: List<Any>
+    ): Response<BaseResponse<List<CreateResponse>>>
 
-    @PATCH("Appointment")
-    suspend fun patchListOfChanges(@Body patchLogs: List<Map<String, Any>>): Response<BaseResponse<List<CreateResponse>>>
+    @PATCH("{endPoint}")
+    suspend fun patchListOfChanges(
+        @Path("endPoint", encoded = true) endPoint: String,
+        @Body patchLogs: List<Map<String, Any>>
+    ): Response<BaseResponse<List<CreateResponse>>>
 }

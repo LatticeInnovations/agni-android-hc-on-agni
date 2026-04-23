@@ -2,6 +2,7 @@ package com.heartcare.agni.data.local.model.appointment
 
 import android.os.Parcelable
 import androidx.annotation.Keep
+import com.heartcare.agni.data.local.enums.RecordType
 import com.heartcare.agni.data.server.model.scheduleandappointment.Slot
 import kotlinx.parcelize.Parcelize
 import java.util.Date
@@ -24,5 +25,7 @@ data class AppointmentResponseLocal(
     val hospitalFhirId: String?,
     val hospitalId: String?,
     val hospitalName: String?,
-    val hospitalCode: String?
+    val hospitalCode: String?,
+    val campaignId: String? = null,
+    val recordType: RecordType? = RecordType.FACILITY
 ) : Parcelable

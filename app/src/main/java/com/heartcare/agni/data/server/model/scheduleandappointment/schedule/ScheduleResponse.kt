@@ -18,5 +18,6 @@ data class ScheduleResponse(
     val hospitalId: String?,
     val hospitalFhirId: String?,
     val hospitalName: String?,
-    val hospitalCode: String?
+    val hospitalCode: String?,
+    val campaignId: String? = null
 ) : Parcelable

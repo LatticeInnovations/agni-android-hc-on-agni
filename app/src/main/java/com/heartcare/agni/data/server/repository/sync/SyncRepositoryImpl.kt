@@ -2,6 +2,7 @@ package com.heartcare.agni.data.server.repository.sync
 
 import com.google.gson.internal.LinkedTreeMap
 import com.heartcare.agni.data.local.enums.GenericTypeEnum
+import com.heartcare.agni.data.local.enums.RecordType
 import com.heartcare.agni.data.local.enums.SyncType
 import com.heartcare.agni.data.local.model.diagnosis.DiagnosisData
 import com.heartcare.agni.data.local.repository.crashlytics.CrashlyticsLogger
@@ -9,6 +10,8 @@ import com.heartcare.agni.data.local.repository.preference.PreferenceRepository
 import com.heartcare.agni.data.local.roomdb.dao.AllergyDao
 import com.heartcare.agni.data.local.roomdb.dao.AppointmentDao
 import com.heartcare.agni.data.local.roomdb.dao.CVDDao
+import com.heartcare.agni.data.local.roomdb.dao.CampaignAppointmentDao
+import com.heartcare.agni.data.local.roomdb.dao.CampaignScheduleDao
 import com.heartcare.agni.data.local.roomdb.dao.DiagnosisDao
 import com.heartcare.agni.data.local.roomdb.dao.ExaminationDao
 import com.heartcare.agni.data.local.roomdb.dao.FamilyHistoryDao
@@ -136,6 +139,8 @@ class SyncRepositoryImpl @Inject constructor(
     healthFacilityDao: HealthFacilityDao,
     referralDao: ReferralDao,
     screeningSiteDao: ScreeningSiteDao,
+    campaignScheduleDao: CampaignScheduleDao,
+    campaignAppointmentDao: CampaignAppointmentDao,
     private val crashlyticsLogger: CrashlyticsLogger
 ) : SyncRepository, SyncRepositoryDatabaseTransactions(
     patientDao,
@@ -160,7 +165,9 @@ class SyncRepositoryImpl @Inject constructor(
     examinationDao,
     healthFacilityDao,
     referralDao,
-    screeningSiteDao
+    screeningSiteDao,
+    campaignScheduleDao,
+    campaignAppointmentDao
 ) {
 
     override suspend fun getAndInsertListPatientData(
@@ -602,19 +609,20 @@ class SyncRepositoryImpl @Inject constructor(
         return try {
             ApiResponseConverter.convert(
                 scheduleAndAppointmentApiService.getScheduleList(
+                    EndPoints.SCHEDULE,
                     map
                 ), true
             ).run {
                 when (this) {
                     is ApiContinueResponse -> {
                         //Insert Schedule Data
-                        insertSchedule(body)
+                        insertSchedule(body, RecordType.FACILITY)
                         //Call for next batch data
                         getAndInsertSchedule(offset + COUNT_VALUE)
                     }
 
                     is ApiEndResponse -> {
-                        insertSchedule(body)
+                        insertSchedule(body, RecordType.FACILITY)
                         preferenceRepository.setLastSyncSchedule(Date().time)
                         this
                     }
@@ -641,6 +649,56 @@ class SyncRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun getAndInsertCampaignSchedule(offset: Int): ResponseMapper<List<ScheduleResponse>> {
+        val map = mutableMapOf<String, String>()
+        map[COUNT] = COUNT_VALUE.toString()
+        map[OFFSET] = offset.toString()
+        map[SORT] = "-$ID"
+        if (preferenceRepository.getLastSyncCampaignSchedule() != 0L) map[LAST_UPDATED] = String.format(
+            GREATER_THAN_BUILDER, preferenceRepository.getLastSyncCampaignSchedule().toTimeStampDate()
+        )
+
+        return try {
+            ApiResponseConverter.convert(
+                scheduleAndAppointmentApiService.getScheduleList(
+                    EndPoints.CAMPAIGN_SCHEDULE,
+                    map
+                ), true
+            ).run {
+                when (this) {
+                    is ApiContinueResponse -> {
+                        insertSchedule(body, RecordType.SCREENING_SITE)
+                        getAndInsertCampaignSchedule(offset + COUNT_VALUE)
+                    }
+
+                    is ApiEndResponse -> {
+                        insertSchedule(body, RecordType.SCREENING_SITE)
+                        preferenceRepository.setLastSyncCampaignSchedule(Date().time)
+                        this
+                    }
+
+                    else -> this
+                }
+            }
+        } catch (e: Exception) {
+            Timber.e(e, e.localizedMessage)
+            crashlyticsLogger.logException(
+                e,
+                "getAndInsertCampaignSchedule function failed.",
+                mapOf(
+                    Pair(
+                        USER_ID,
+                        preferenceRepository.getUserDetails()?.userId ?: ERROR_FETCHING_USER_DETAILS
+                    )
+                )
+            )
+            ApiErrorResponse(
+                statusCode = 0,
+                errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
+            )
+        }
+    }
+
     override suspend fun getAndInsertAppointment(offset: Int): ResponseMapper<List<AppointmentResponse>> {
         val map = mutableMapOf<String, String>()
         map[COUNT] = COUNT_VALUE.toString()
@@ -653,19 +711,20 @@ class SyncRepositoryImpl @Inject constructor(
         return try {
             ApiResponseConverter.convert(
                 scheduleAndAppointmentApiService.getAppointmentList(
+                    EndPoints.APPOINTMENT,
                     map
                 ), true
             ).run {
                 when (this) {
                     is ApiContinueResponse -> {
                         //Insert Appointment Data
-                        insertAppointment(body)
+                        insertAppointment(body, RecordType.FACILITY)
                         //Call for next batch data
                         getAndInsertAppointment(offset + COUNT_VALUE)
                     }
 
                     is ApiEndResponse -> {
-                        insertAppointment(body)
+                        insertAppointment(body, RecordType.FACILITY)
                         preferenceRepository.setLastSyncAppointment(Date().time)
                         this
                     }
@@ -685,6 +744,93 @@ class SyncRepositoryImpl @Inject constructor(
                     )
                 )
             )
+            ApiErrorResponse(
+                statusCode = 0,
+                errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
+            )
+        }
+    }
+
+    override suspend fun getAndInsertCampaignAppointment(offset: Int): ResponseMapper<List<AppointmentResponse>> {
+        val map = mutableMapOf<String, String>()
+        map[COUNT] = COUNT_VALUE.toString()
+        map[OFFSET] = offset.toString()
+        map[SORT] = "-$ID"
+        if (preferenceRepository.getLastSyncCampaignAppointment() != 0L) map[LAST_UPDATED] = String.format(
+            GREATER_THAN_BUILDER, preferenceRepository.getLastSyncCampaignAppointment().toTimeStampDate()
+        )
+
+        return try {
+            ApiResponseConverter.convert(
+                scheduleAndAppointmentApiService.getAppointmentList(
+                    EndPoints.CAMPAIGN_APPOINTMENT,
+                    map
+                ), true
+            ).run {
+                when (this) {
+                    is ApiContinueResponse -> {
+                        insertAppointment(body, RecordType.SCREENING_SITE)
+                        getAndInsertCampaignAppointment(offset + COUNT_VALUE)
+                    }
+
+                    is ApiEndResponse -> {
+                        insertAppointment(body, RecordType.SCREENING_SITE)
+                        preferenceRepository.setLastSyncCampaignAppointment(Date().time)
+                        this
+                    }
+
+                    else -> this
+                }
+            }
+        } catch (e: Exception) {
+            Timber.e(e, e.localizedMessage)
+            crashlyticsLogger.logException(
+                e,
+                "getAndInsertCampaignAppointment function failed.",
+                mapOf(
+                    Pair(
+                        USER_ID,
+                        preferenceRepository.getUserDetails()?.userId ?: ERROR_FETCHING_USER_DETAILS
+                    )
+                )
+            )
+            ApiErrorResponse(
+                statusCode = 0,
+                errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
+            )
+        }
+    }
+
+    override suspend fun getAndInsertCampaignCVD(offset: Int): ResponseMapper<List<CVDResponse>> {
+        val map = mutableMapOf<String, String>()
+        map[COUNT] = COUNT_VALUE.toString()
+        map[OFFSET] = offset.toString()
+        map[SORT] = "-$ID"
+        if (preferenceRepository.getLastSyncCampaignCVD() != 0L) map[LAST_UPDATED] = String.format(
+            GREATER_THAN_BUILDER, preferenceRepository.getLastSyncCampaignCVD().toTimeStampDate()
+        )
+
+        return try {
+            ApiResponseConverter.convert(
+                cvdApiService.getCVD(EndPoints.CAMPAIGN_CVD, map), true
+            ).run {
+                when (this) {
+                    is ApiContinueResponse -> {
+                        insertCVD(body)
+                        getAndInsertCampaignCVD(offset + COUNT_VALUE)
+                    }
+
+                    is ApiEndResponse -> {
+                        insertCVD(body)
+                        preferenceRepository.setLastSyncCampaignCVD(Date().time)
+                        this
+                    }
+
+                    else -> this
+                }
+            }
+        } catch (e: Exception) {
+            Timber.e(e, e.localizedMessage)
             ApiErrorResponse(
                 statusCode = 0,
                 errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
@@ -738,7 +884,7 @@ class SyncRepositoryImpl @Inject constructor(
         return try {
             ApiResponseConverter.convert(
                 cvdApiService.getCVD(
-                    map
+                    EndPoints.CVD, map
                 ), true
             ).run {
                 when (this) {
@@ -985,14 +1131,18 @@ class SyncRepositoryImpl @Inject constructor(
             ).let { listOfGenericEntity ->
                 if (listOfGenericEntity.isEmpty()) ApiEmptyResponse()
                 else ApiResponseConverter.convert(
-                    scheduleAndAppointmentApiService.postScheduleData(listOfGenericEntity.map {
-                        it.payload.fromJson<LinkedTreeMap<*, *>>()
-                            .mapToObject(ScheduleResponse::class.java)!!
-                    })
+                    scheduleAndAppointmentApiService.postScheduleData(
+                        EndPoints.SCHEDULE,
+                        listOfGenericEntity.map {
+                            it.payload.fromJson<LinkedTreeMap<*, *>>()
+                                .mapToObject(ScheduleResponse::class.java)!!
+                        }
+                    )
                 ).run {
                     when (this) {
                         is ApiEndResponse -> {
-                            insertScheduleFhirId(listOfGenericEntity, body).let { deletedRows ->
+                            insertScheduleFhirId(listOfGenericEntity, body,
+                                GenericTypeEnum.SCHEDULE).let { deletedRows ->
                                 if (deletedRows > 0) sendSchedulePostData() else this
                             }
                         }
@@ -1020,6 +1170,52 @@ class SyncRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun sendCampaignSchedulePostData(): ResponseMapper<List<CreateResponse>> {
+        return try {
+            genericDao.getSameTypeGenericEntityPayload(
+                genericTypeEnum = GenericTypeEnum.CAMPAIGN_SCHEDULE, syncType = SyncType.POST
+            ).let { listOfGenericEntity ->
+                if (listOfGenericEntity.isEmpty()) ApiEmptyResponse()
+                else ApiResponseConverter.convert(
+                    scheduleAndAppointmentApiService.postScheduleData(
+                        EndPoints.CAMPAIGN_SCHEDULE,
+                        listOfGenericEntity.map {
+                            it.payload.fromJson<LinkedTreeMap<*, *>>()
+                                .mapToObject(ScheduleResponse::class.java)!!
+                        }
+                    )
+                ).run {
+                    when (this) {
+                        is ApiEndResponse -> {
+                            insertScheduleFhirId(listOfGenericEntity, body,
+                                GenericTypeEnum.CAMPAIGN_SCHEDULE).let { deletedRows ->
+                                if (deletedRows > 0) sendCampaignSchedulePostData() else this
+                            }
+                        }
+
+                        else -> this
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            Timber.e(e, e.localizedMessage)
+            crashlyticsLogger.logException(
+                e,
+                "sendCampaignSchedulePostData function failed.",
+                mapOf(
+                    Pair(
+                        USER_ID,
+                        preferenceRepository.getUserDetails()?.userId ?: ERROR_FETCHING_USER_DETAILS
+                    )
+                )
+            )
+            ApiErrorResponse(
+                statusCode = 0,
+                errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
+            )
+        }
+    }
+
     override suspend fun sendAppointmentPostData(): ResponseMapper<List<CreateResponse>> {
         return try {
             genericDao.getSameTypeGenericEntityPayload(
@@ -1027,14 +1223,18 @@ class SyncRepositoryImpl @Inject constructor(
             ).let { listOfGenericEntity ->
                 if (listOfGenericEntity.isEmpty()) ApiEmptyResponse()
                 else ApiResponseConverter.convert(
-                    scheduleAndAppointmentApiService.createAppointment(listOfGenericEntity.map {
-                        it.payload.fromJson<LinkedTreeMap<*, *>>()
-                            .mapToObject(AppointmentResponse::class.java)!!
-                    })
+                    scheduleAndAppointmentApiService.createAppointment(
+                        EndPoints.APPOINTMENT,
+                        listOfGenericEntity.map {
+                            it.payload.fromJson<LinkedTreeMap<*, *>>()
+                                .mapToObject(AppointmentResponse::class.java)!!
+                        }
+                    )
                 ).run {
                     when (this) {
                         is ApiEndResponse -> {
-                            insertAppointmentFhirId(listOfGenericEntity, body).let { deletedRows ->
+                            insertAppointmentFhirId(listOfGenericEntity, body,
+                                GenericTypeEnum.APPOINTMENT).let { deletedRows ->
                                 if (deletedRows > 0) sendAppointmentPostData() else this
                             }
                         }
@@ -1062,6 +1262,52 @@ class SyncRepositoryImpl @Inject constructor(
         }
     }
 
+
+    override suspend fun sendCampaignAppointmentPostData(): ResponseMapper<List<CreateResponse>> {
+        return try {
+            genericDao.getSameTypeGenericEntityPayload(
+                genericTypeEnum = GenericTypeEnum.CAMPAIGN_APPOINTMENT, syncType = SyncType.POST
+            ).let { listOfGenericEntity ->
+                if (listOfGenericEntity.isEmpty()) ApiEmptyResponse()
+                else ApiResponseConverter.convert(
+                    scheduleAndAppointmentApiService.createAppointment(
+                        EndPoints.CAMPAIGN_APPOINTMENT,
+                        listOfGenericEntity.map {
+                            it.payload.fromJson<LinkedTreeMap<*, *>>()
+                                .mapToObject(AppointmentResponse::class.java)!!
+                        }
+                    )
+                ).run {
+                    when (this) {
+                        is ApiEndResponse -> {
+                            insertAppointmentFhirId(listOfGenericEntity, body,
+                                GenericTypeEnum.CAMPAIGN_APPOINTMENT).let { deletedRows ->
+                                if (deletedRows > 0) sendCampaignAppointmentPostData() else this
+                            }
+                        }
+
+                        else -> this
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            Timber.e(e, e.localizedMessage)
+            crashlyticsLogger.logException(
+                e,
+                "sendCampaignAppointmentPostData function failed.",
+                mapOf(
+                    Pair(
+                        USER_ID,
+                        preferenceRepository.getUserDetails()?.userId ?: ERROR_FETCHING_USER_DETAILS
+                    )
+                )
+            )
+            ApiErrorResponse(
+                statusCode = 0,
+                errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
+            )
+        }
+    }
 
     override suspend fun sendPatientLastUpdatePostData(): ResponseMapper<List<CreateResponse>> {
         return try {
@@ -1113,9 +1359,8 @@ class SyncRepositoryImpl @Inject constructor(
             ).let { listOfGenericEntity ->
                 if (listOfGenericEntity.isEmpty()) ApiEmptyResponse()
                 else ApiResponseConverter.convert(
-                    cvdApiService.createCVD(listOfGenericEntity.map {
-                        it.payload.fromJson<LinkedTreeMap<*, *>>()
-                            .mapToObject(CVDResponse::class.java)!!
+                    cvdApiService.createCVD(EndPoints.CVD, listOfGenericEntity.map {
+                        it.payload.fromJson<LinkedTreeMap<*, *>>().mapToObject(CVDResponse::class.java)!!
                     })
                 ).run {
                     when (this) {
@@ -1134,6 +1379,47 @@ class SyncRepositoryImpl @Inject constructor(
             crashlyticsLogger.logException(
                 e,
                 "sendCVDPostData function failed.",
+                mapOf(
+                    Pair(
+                        USER_ID,
+                        preferenceRepository.getUserDetails()?.userId ?: ERROR_FETCHING_USER_DETAILS
+                    )
+                )
+            )
+            ApiErrorResponse(
+                statusCode = 0,
+                errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
+            )
+        }
+    }
+
+    override suspend fun sendCampaignCVDPostData(): ResponseMapper<List<CreateResponse>> {
+        return try {
+            genericDao.getSameTypeGenericEntityPayload(
+                genericTypeEnum = GenericTypeEnum.CAMPAIGN_CVD, syncType = SyncType.POST
+            ).let { listOfGenericEntity ->
+                if (listOfGenericEntity.isEmpty()) ApiEmptyResponse()
+                else ApiResponseConverter.convert(
+                    cvdApiService.createCVD(EndPoints.CAMPAIGN_CVD, listOfGenericEntity.map {
+                        it.payload.fromJson<LinkedTreeMap<*, *>>().mapToObject(CVDResponse::class.java)!!
+                    })
+                ).run {
+                    when (this) {
+                        is ApiEndResponse -> {
+                            insertCVDFhirId(listOfGenericEntity, body).let { deletedRows ->
+                                if (deletedRows > 0) sendCampaignCVDPostData() else this
+                            }
+                        }
+
+                        else -> this
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            Timber.e(e, e.localizedMessage)
+            crashlyticsLogger.logException(
+                e,
+                "sendCampaignCVDPostData function failed.",
                 mapOf(
                     Pair(
                         USER_ID,
@@ -1684,7 +1970,8 @@ class SyncRepositoryImpl @Inject constructor(
                 else {
                     ApiResponseConverter.convert(
                         scheduleAndAppointmentApiService.patchListOfChanges(
-                            listOfGenericEntity.map { it.payload.fromJson() })
+                            EndPoints.PATCH_LOGS,
+                            listOfGenericEntity.map { it.payload.fromJson<Map<String, Any>>() })
                     ).run {
                         when (this) {
                             is ApiEndResponse -> {

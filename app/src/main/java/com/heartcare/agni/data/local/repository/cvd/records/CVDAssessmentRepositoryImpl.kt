@@ -23,6 +23,7 @@ class CVDAssessmentRepositoryImpl@Inject constructor(
         return cvdDao.getCVDRecordsByAppointmentIds(*appointmentIds).map { it.toCVDResponse() }
     }
 
+
     override suspend fun getTodayCVDRecord(
         patientId: String,
         startTime: Long,
@@ -37,6 +38,10 @@ class CVDAssessmentRepositoryImpl@Inject constructor(
         endTime: Long
     ): CVDResponse? {
         return cvdDao.getCVDRecordByScreeningDate(patientId, startTime, endTime)?.toCVDResponse()
+    }
+    
+    override suspend fun getLatestCVDForCampaign(patientId: String, campaignId: String): CVDResponse? {
+        return cvdDao.getLatestCVDForCampaign(patientId, campaignId)?.toCVDResponse()
     }
 
     override suspend fun updateCVDRecord(cvdResponse: CVDResponse): Int {
