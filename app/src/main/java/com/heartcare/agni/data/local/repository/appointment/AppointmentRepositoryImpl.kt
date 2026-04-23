@@ -116,6 +116,7 @@ class AppointmentRepositoryImpl @Inject constructor(
                         sameDayAppointments.minByOrNull { it.createdOn }
                     }
             }
+    }
             
     override suspend fun loadAppointmentForCampaign(
         patientId: String,
