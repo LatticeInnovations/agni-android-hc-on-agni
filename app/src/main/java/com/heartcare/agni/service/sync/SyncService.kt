@@ -26,6 +26,7 @@ class SyncService(
 
     private lateinit var patientDownloadJob: Deferred<ResponseMapper<Any>?>
     private lateinit var scheduleDownloadJob: Deferred<ResponseMapper<Any>?>
+    private lateinit var campaignScheduleDownloadJob: Deferred<ResponseMapper<Any>?>
     private lateinit var appointmentPatchJob: Deferred<ResponseMapper<Any>?>
     private lateinit var prescriptionPatchJob: Deferred<ResponseMapper<Any>?>
     private lateinit var interventionPatchJob: Deferred<ResponseMapper<Any>?>
@@ -45,46 +46,19 @@ class SyncService(
         if (CheckNetwork.isInternetAvailable(context)) {
             coroutineScope {
                 awaitAll(
-                    async {
-                        uploadPatientAndScheduleJob(logout)
-                    },
-                    async {
-                        patchPatient(logout)
-                    },
-                    async {
-                        patchPrescription(logout)
-                    },
-                    async {
-                        patchIntervention(logout)
-                    },
-                    async {
-                        patchExamination(logout)
-                    },
-                    async {
-                        uploadPatientLastUpdatedData(logout)
-                    },
-                    async {
-                        downloadLevelsRecord(logout)
-                    },
-                    async {
-                        downloadDiagnosisMasterList(logout)
-                    },
-                    async {
-                        downloadMedicationTiming(logout)
-                    },
-                    async {
-                        downloadMedication(logout)
-                    },
-                    async {
-                        downloadInterventionMasterList(logout)
-                    },
-                    async {
-                        downloadExaminationMasterList(logout)
-                    }
-                   // ,
-//                    async {
-//                        downloadScreeningSiteMasterList(logout)
-//                    }
+                    async { uploadPatientAndScheduleJob(logout) },
+                    async { patchPatient(logout) },
+                    async { patchPrescription(logout) },
+                    async { patchIntervention(logout) },
+                    async { patchExamination(logout) },
+                    async { uploadPatientLastUpdatedData(logout) },
+                    async { downloadLevelsRecord(logout) },
+                    async { downloadDiagnosisMasterList(logout) },
+                    async { downloadMedicationTiming(logout) },
+                    async { downloadMedication(logout) },
+                    async { downloadInterventionMasterList(logout) },
+                    async { downloadExaminationMasterList(logout) },
+//                    async { downloadScreeningSiteMasterList(logout) }
                 )
             }
         }
@@ -106,6 +80,9 @@ class SyncService(
                 async {
                     uploadSchedule(logout)
                 }
+//                , async {
+//                    uploadCampaignSchedule(logout)
+//                }
             ).all { responseMapper ->
                 responseMapper is ApiEmptyResponse
             }.apply {
@@ -137,6 +114,9 @@ class SyncService(
                     scheduleDownloadJob = async {
                         downloadSchedule(logout)
                     }
+//                    campaignScheduleDownloadJob = async {
+//                        downloadCampaignSchedule(logout)
+//                    }
                     downloadAppointmentJob(logout)
                 }
             }
@@ -154,7 +134,8 @@ class SyncService(
         coroutineScope {
             awaitAll(
                 patientDownloadJob,
-                scheduleDownloadJob
+                scheduleDownloadJob,
+//                campaignScheduleDownloadJob
             ).all { responseMapper -> responseMapper is ApiEndResponse }.apply {
                 if (this) {
                     downloadAppointment(logout)
@@ -195,14 +176,20 @@ class SyncService(
         }
     }
 
+    /** Upload Campaign Schedule */
+    private suspend fun uploadCampaignSchedule(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
+        return checkAuthenticationStatus(syncRepository.sendCampaignSchedulePostData(), logout)
+    }
+
     /** Upload Appointment */
     private suspend fun uploadAppointment(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
         val response = checkAuthenticationStatus(
             syncRepository.sendAppointmentPostData(),
             logout
         )
+        val campaignResponse = uploadCampaignAppointment(logout)
         coroutineScope {
-            if (response is ApiEmptyResponse) {
+            if (response is ApiEmptyResponse || campaignResponse is ApiEmptyResponse) {
                 // Run all update jobs concurrently
                 val jobs = listOf(
                     async { updateFhirIdInCVD(logout) },
@@ -250,6 +237,17 @@ class SyncService(
     /** Upload Vital */
     private suspend fun uploadVital(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
         return checkAuthenticationStatus(syncRepository.sendVitalPostData(), logout)
+    }
+
+
+    /** Upload Campaign Appointment */
+    private suspend fun uploadCampaignAppointment(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
+        return checkAuthenticationStatus(syncRepository.sendCampaignAppointmentPostData(), logout)
+    }
+
+    /** Upload Campaign CVD */
+    private suspend fun uploadCampaignCVD(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
+        return checkAuthenticationStatus(syncRepository.sendCampaignCVDPostData(), logout)
     }
 
     /** Upload Prior Dx */
@@ -373,6 +371,10 @@ class SyncService(
                 syncRepository.getAndInsertAppointment(0),
                 logout
             )
+//            val campaignResponse = downloadCampaignAppointment(logout)
+
+
+//            if (response is ApiEmptyResponse || response is ApiEndResponse  || campaignResponse is ApiEmptyResponse || campaignResponse is ApiEndResponse) {
             if (response is ApiEmptyResponse || response is ApiEndResponse) {
                 val jobs = listOf(
                     async { downloadPatientLastUpdated(logout) },
@@ -400,6 +402,7 @@ class SyncService(
                         downloadExamination(logout)
                     },
                     async { downloadReferral(logout) },
+//                    async { downloadCampaignCVD(logout) }
                 )
                 jobs.awaitAll()
             }
@@ -484,6 +487,21 @@ class SyncService(
     /** Download Vitals*/
     private suspend fun downloadVitals(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
         return checkAuthenticationStatus(syncRepository.getAndInsertListVitalData(0), logout)
+    }
+
+    /** Download Campaign Schedule */
+    private suspend fun downloadCampaignSchedule(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
+        return checkAuthenticationStatus(syncRepository.getAndInsertCampaignSchedule(0), logout)
+    }
+
+    /** Download Campaign Appointment */
+    private suspend fun downloadCampaignAppointment(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
+        return checkAuthenticationStatus(syncRepository.getAndInsertCampaignAppointment(0), logout)
+    }
+
+    /** Download Campaign CVD */
+    private suspend fun downloadCampaignCVD(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
+        return checkAuthenticationStatus(syncRepository.getAndInsertCampaignCVD(0), logout)
     }
 
     /** Download Levels Data */

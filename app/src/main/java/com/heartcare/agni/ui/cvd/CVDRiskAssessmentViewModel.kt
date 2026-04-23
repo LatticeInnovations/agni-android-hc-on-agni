@@ -8,7 +8,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.heartcare.agni.data.local.enums.AppointmentStatusEnum
 import com.heartcare.agni.data.local.enums.AppointmentTypeEnum
+import com.heartcare.agni.data.local.enums.RecordType
 import com.heartcare.agni.data.local.enums.YesNoEnum
+import com.heartcare.agni.data.local.model.appointment.AppointmentInfo
 import com.heartcare.agni.data.local.model.appointment.AppointmentResponseLocal
 import com.heartcare.agni.data.local.model.config.RiskConfig
 import com.heartcare.agni.data.local.model.config.RiskItem
@@ -34,6 +36,9 @@ import com.heartcare.agni.utils.common.Queries.checkAndUpdateAppointmentStatusTo
 import com.heartcare.agni.utils.common.Queries.getAppointment
 import com.heartcare.agni.utils.common.Queries.getInProgressCompletedAppointmentIds
 import com.heartcare.agni.utils.common.Queries.loadAppointmentInfo
+import com.heartcare.agni.utils.common.Queries.loadCampaignAppointmentInfo
+import com.heartcare.agni.data.local.roomdb.dao.ScreeningSiteDao
+import com.heartcare.agni.data.local.roomdb.entities.campaign.ScreeningSiteMasterEntity
 import com.heartcare.agni.utils.common.Queries.updatePatientLastUpdated
 import com.heartcare.agni.utils.converters.responseconverter.NameConverter.getFullName
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.plusMinusDays
@@ -63,6 +68,7 @@ class CVDRiskAssessmentViewModel @Inject constructor(
     private val patientLastUpdatedRepository: PatientLastUpdatedRepository,
     private val remoteConfigRepository: RemoteConfigRepository,
     private val referralRepository: ReferralRepository,
+    private val screeningSiteDao: ScreeningSiteDao,
     @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) : ViewModel() {
     val user = preferenceRepository.getUserDetails()!!
@@ -111,6 +117,7 @@ class CVDRiskAssessmentViewModel @Inject constructor(
     private val maxNumberOfAppointmentsInADay = 250
     var showAppointmentCompletedDialog by mutableStateOf(false)
     var isAppointmentCompleted by mutableStateOf(false)
+    var isCampaignDuplicateCVD by mutableStateOf(false)
     var existsInOtherHospital by mutableStateOf(false)
 
     var screeningDate by mutableStateOf(Date())
@@ -125,25 +132,87 @@ class CVDRiskAssessmentViewModel @Inject constructor(
     var showFollowUpDialog by mutableStateOf(false)
     var isReferralAlreadyExists by mutableStateOf(false)
 
+    var screeningSites by mutableStateOf<List<ScreeningSiteMasterEntity>>(listOf())
+    var selectedCampaignId by mutableStateOf<String?>(null)
+
     init {
         viewModelScope.launch(ioDispatcher) {
             riskConfig.value = remoteConfigRepository.getRiskConfig()
         }
+        getScreeningSites()
     }
 
+    fun getScreeningSites() {
+        viewModelScope.launch(ioDispatcher) {
+            screeningSites = Queries.getScreeningSites(screeningSiteDao)
+        }
+    }
     fun getAppointmentInfo(
         callback: () -> Unit
     ) {
         viewModelScope.launch(ioDispatcher) {
-            val info = loadAppointmentInfo(
-                patientId = patient!!.id,
+            val patientId = patient?.id ?: return@launch
+
+            //  Get facility info (today)
+            val facilityInfo = loadAppointmentInfo(
+                patientId = patientId,
                 hospitalCode = user.hospitalCode,
                 maxNumberOfAppointmentsInADay = maxNumberOfAppointmentsInADay,
                 appointmentRepository = appointmentRepository
             )
+
+            //  Find latest campaign appointment and check if it blocks us
+            val latestCampaignAppointment = appointmentRepository.getAppointmentsOfPatient(patientId)
+                .filter { it.recordType == RecordType.SCREENING_SITE }
+                .maxByOrNull { it.createdOn }
+
+            var campaignInfo: AppointmentInfo? = null
+            if (latestCampaignAppointment != null && latestCampaignAppointment.campaignId != null) {
+                campaignInfo = loadCampaignAppointmentInfo(
+                    patientId = patientId,
+                    campaignId = latestCampaignAppointment.campaignId,
+                    appointmentRepository = appointmentRepository,
+                    cvdAssessmentRepository = cvdAssessmentRepository,
+                    screeningSiteDao = screeningSiteDao
+                )
+            }
+
+            //  Determine final info based on context and blocks
+            val info = when {
+                // If blocked by an active campaign CVD record, prioritize this state
+                campaignInfo != null && campaignInfo.isDuplicateCVDForCampaign -> {
+                    selectedCampaignId = latestCampaignAppointment!!.campaignId
+                    campaignInfo
+                }
+                // If a campaign site is explicitly selected in UI
+                selectedCampaignId != null -> {
+                    loadCampaignAppointmentInfo(
+                        patientId = patientId,
+                        campaignId = selectedCampaignId!!,
+                        appointmentRepository = appointmentRepository,
+                        cvdAssessmentRepository = cvdAssessmentRepository,
+                        screeningSiteDao = screeningSiteDao
+                    )
+                }
+                // If a facility appointment exists for today
+                facilityInfo.appointment != null -> {
+                    facilityInfo
+                }
+                // If we found a campaign context from a previous appointment (even if not blocked)
+                campaignInfo != null -> {
+                    selectedCampaignId = latestCampaignAppointment!!.campaignId
+                    campaignInfo
+                }
+                // Default to facility
+                else -> {
+                    facilityInfo
+                }
+            }
+
             appointment = info.appointment
             existsInOtherHospital = info.existsInOtherHospital
             canAddAssessment = info.canAddAssessment
+            isCampaignDuplicateCVD = info.isDuplicateCVDForCampaign
             isAppointmentCompleted = info.isAppointmentCompleted
             ifAllSlotsBooked = info.ifAllSlotsBooked
             callback()
@@ -287,7 +356,8 @@ class CVDRiskAssessmentViewModel @Inject constructor(
             chiefComplaint = chiefComplaint.trim().ifBlank { null },
             screeningDate = screeningDate,
             heartAttackHistory = YesNoEnum.codeFromDisplay(previousHeartAttack),
-            practitionerName = null
+            practitionerName = null,
+            campaignId = selectedCampaignId
         )
     }
 
@@ -298,6 +368,7 @@ class CVDRiskAssessmentViewModel @Inject constructor(
             appointmentResponseLocal = getAppointment(
                 patientId = patient!!.id,
                 hospitalCode = user.hospitalCode,
+                campaignId = selectedCampaignId,
                 appointmentRepository = appointmentRepository
             )
             val cvdResponse = getCVDRecord(
@@ -326,6 +397,7 @@ class CVDRiskAssessmentViewModel @Inject constructor(
             appointmentResponseLocal = getAppointment(
                 patientId = patient!!.id,
                 hospitalCode = user.hospitalCode,
+                campaignId = selectedCampaignId,
                 appointmentRepository = appointmentRepository
             )
             updatePatientLastUpdated(
@@ -336,7 +408,9 @@ class CVDRiskAssessmentViewModel @Inject constructor(
             val appointmentDate =
                 cvdResponse.createdOn.plusMinusDays(getRiskItem(riskPercentage.toInt()).appointmentDays)
             isReferralAlreadyExists = checkIfReferralExists(appointmentResponseLocal!!.uuid)
-            followUpDate = createFollowUpAppointment(date = appointmentDate)
+            if (selectedCampaignId==null) {
+                followUpDate = createFollowUpAppointment(date = appointmentDate)
+            }
             saved()
         }
     }
@@ -368,15 +442,26 @@ class CVDRiskAssessmentViewModel @Inject constructor(
         addedToQueue: (List<Long>) -> Unit
     ) {
         viewModelScope.launch(ioDispatcher) {
-            Queries.addPatientToQueue(
-                patient,
-                scheduleRepository,
-                genericRepository,
-                preferenceRepository,
-                appointmentRepository,
-                patientLastUpdatedRepository,
-                addedToQueue
-            )
+            if (selectedCampaignId != null) {
+                Queries.addPatientToCampaignQueue(
+                    patient,
+                    selectedCampaignId!!,
+                    scheduleRepository,
+                    genericRepository,
+                    appointmentRepository,
+                    addedToQueue
+                )
+            } else {
+                Queries.addPatientToFacilityQueue(
+                    patient,
+                    scheduleRepository,
+                    genericRepository,
+                    preferenceRepository,
+                    appointmentRepository,
+                    patientLastUpdatedRepository,
+                    addedToQueue
+                )
+            }
         }
     }
 
@@ -494,7 +579,8 @@ class CVDRiskAssessmentViewModel @Inject constructor(
                     hospitalFhirId = null,
                     hospitalId = user.hospitalId.toString(),
                     hospitalName = user.hospitalName,
-                    hospitalCode = user.hospitalCode
+                    hospitalCode = user.hospitalCode,
+                    campaignId = null
                 )
             ).also {
                 genericRepository.insertAppointment(
@@ -515,7 +601,8 @@ class CVDRiskAssessmentViewModel @Inject constructor(
                         hospitalId = null,
                         hospitalName = null,
                         hospitalCode = null,
-                        appUpdatedDate = Date()
+                        appUpdatedDate = Date(),
+                        campaignId = null
                     )
                 )
                 val patientLastUpdatedResponse = PatientLastUpdatedResponse(
@@ -561,7 +648,8 @@ class CVDRiskAssessmentViewModel @Inject constructor(
             hospitalId = null,
             hospitalFhirId = null,
             hospitalName = null,
-            hospitalCode = null
+            hospitalCode = null,
+            campaignId = null
         )
         scheduleRepository.insertSchedule(
             schedule.copy(

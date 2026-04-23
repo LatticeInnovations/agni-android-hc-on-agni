@@ -5,12 +5,17 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import com.heartcare.agni.data.local.roomdb.entities.appointment.AppointmentEntity
+import com.heartcare.agni.data.local.roomdb.entities.campaign.CampaignAppointmentEntity
 import com.heartcare.agni.data.local.roomdb.entities.patient.PatientEntity
 import java.util.Date
 
 @Keep
 @Entity(
-    indices = [Index("patientId"), Index("appointmentId")],
+    indices = [
+        Index("patientId"),
+        Index("appointmentId"),
+        Index("campaignAppointmentId")
+    ],
     primaryKeys = ["cvdUuid"],
     foreignKeys = [
         ForeignKey(
@@ -22,13 +27,19 @@ import java.util.Date
             entity = AppointmentEntity::class,
             parentColumns = ["id"],
             childColumns = ["appointmentId"]
+        ),
+        ForeignKey(
+            entity = CampaignAppointmentEntity::class,
+            parentColumns = ["id"],
+            childColumns = ["campaignAppointmentId"]
         )
     ]
 )
 data class CVDEntity(
     val cvdFhirId: String?,
     val cvdUuid: String,
-    val appointmentId: String,
+    val appointmentId: String?,
+    val campaignAppointmentId: String?,
     val patientId: String,
     val bmi: Double,
     val bpDiastolic: Int,
@@ -47,5 +58,6 @@ data class CVDEntity(
     val weightUnit: String,
     val chiefComplaint: String?,
     val screeningDate: Date,
-    val heartAttackHistory: Int
+    val heartAttackHistory: Int,
+    val campaignId: String?
 )

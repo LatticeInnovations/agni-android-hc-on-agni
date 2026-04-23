@@ -96,7 +96,6 @@ import com.heartcare.agni.ui.theme.VeryHighRiskDarkContainer
 import com.heartcare.agni.ui.theme.VeryHighRiskLightContainer
 import com.heartcare.agni.utils.constants.NavControllerConstants.PATIENT
 import com.heartcare.agni.utils.constants.NavControllerConstants.REFERRAL_FROM_CVD
-import com.heartcare.agni.utils.constants.ScreenSiteConstants.SITE_LIST
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toddMMMyyyy
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toddMMYYYYString
 import kotlinx.coroutines.CoroutineScope
@@ -131,7 +130,6 @@ fun CVDRiskAssessmentScreen(
         context = context,
         onCVDLoaded = { currentStep = 2 }
     )
-
 
     AddBackHandler(viewModel, navController, pagerState, scope)
     Scaffold(
@@ -195,14 +193,22 @@ fun CVDRiskAssessmentScreen(
                                         1 -> {
                                             ScreeningSiteListContent(
                                                 modifier = Modifier.fillMaxSize(),
-                                                sites =SITE_LIST,
+                                                sites = viewModel.screeningSites.map { it.name },
                                                 selectedSite = selectedSite,
-                                                onSiteSelected = { selectedSite = it },
+                                                onSiteSelected = { siteName ->
+                                                    selectedSite = siteName
+                                                    viewModel.selectedCampaignId = viewModel.screeningSites.find { it.name == siteName }?.id
+                                                },
                                                 onBackClick = {
                                                     currentStep = 0
+                                                    viewModel.selectedCampaignId = null
                                                 },
                                                 onContinueClick = {
-                                                    currentStep = 2
+                                                    if (selectedSite != null) {
+                                                        viewModel.getAppointmentInfo {
+                                                            currentStep = 2
+                                                        }
+                                                    }
                                                 }
                                             )
                                         }
@@ -221,7 +227,15 @@ fun CVDRiskAssessmentScreen(
         },
         bottomBar = {
             if (currentStep == 2)
-            CVDBottomAppBar(viewModel, focusManager, scope, pagerState, snackBarHostState, context)
+            CVDBottomAppBar(viewModel, focusManager, scope, pagerState, snackBarHostState, context, onNavigate = {
+                navigateToRecordsAfterSaving(
+                    viewModel,
+                    scope,
+                    pagerState,
+                    snackBarHostState,
+                   context
+                )
+            })
         }
     )
     if (viewModel.selectedRecord != null) {
@@ -239,7 +253,16 @@ fun CVDRiskAssessmentScreen(
         scope = scope,
         pagerState = pagerState,
         snackBarHostState = snackBarHostState,
-        context = context
+        context = context,
+        onNavigate = {
+            navigateToRecordsAfterSaving(
+                viewModel,
+                scope,
+                pagerState,
+                snackBarHostState,
+                context
+            )
+        }
     )
 }
 
@@ -305,7 +328,8 @@ private fun CVDBottomAppBar(
     scope: CoroutineScope,
     pagerState: PagerState,
     snackBarHostState: SnackbarHostState,
-    context: Context
+    context: Context,
+    onNavigate: () -> Unit
 ) {
     if (pagerState.currentPage == 0) {
         Column {
@@ -342,7 +366,8 @@ private fun CVDBottomAppBar(
                                     viewModel,
                                     scope,
                                     snackBarHostState,
-                                    context
+                                    context,
+                                    onNavigate
                                 )
                             } else {
                                 scope.launch {
@@ -427,7 +452,8 @@ private fun handleSaveButtonClick(
     viewModel: CVDRiskAssessmentViewModel,
     scope: CoroutineScope,
     snackBarHostState: SnackbarHostState,
-    context: Context
+    context: Context,
+    onNavigate: () -> Unit
 ) {
     viewModel.checkIfCVDExistsForScreenDate(
         exists = {
@@ -453,8 +479,16 @@ private fun handleSaveButtonClick(
 
                             viewModel.ifAllSlotsBooked -> viewModel.showAllSlotsBookedDialog = true
 
+                            viewModel.isCampaignDuplicateCVD -> {
+                                scope.launch {
+                                    snackBarHostState.showSnackbar(
+                                        context.getString(R.string.duplicate_campaign_record_error)
+                                    )
+                                }
+                            }
+
                             viewModel.canAddAssessment -> {
-                                saveCVD(viewModel)
+                                saveCVD(viewModel,onNavigate)
                             }
 
                             viewModel.isAppointmentCompleted -> viewModel.showAppointmentCompletedDialog = true
@@ -693,10 +727,11 @@ private fun Dialogs(
     scope: CoroutineScope,
     pagerState: PagerState,
     snackBarHostState: SnackbarHostState,
-    context: Context
+    context: Context,
+    onNavigate: () -> Unit
 ) {
     if (viewModel.showAddToQueueDialog) {
-        AddToQueueComposable(viewModel)
+        AddToQueueComposable(viewModel,onNavigate)
     }
     if (viewModel.ifAllSlotsBooked) {
         AllSlotsBookedDialog {
@@ -722,7 +757,8 @@ private fun Dialogs(
 
 @Composable
 private fun AddToQueueComposable(
-    viewModel: CVDRiskAssessmentViewModel
+    viewModel: CVDRiskAssessmentViewModel,
+    onNavigate: () -> Unit
 ) {
     CustomDialog(
         title = if (viewModel.appointment != null) stringResource(id = R.string.patient_arrived_question) else stringResource(
@@ -741,7 +777,7 @@ private fun AddToQueueComposable(
                     viewModel.appointment!!,
                     updated = {
                         viewModel.showAddToQueueDialog = false
-                        saveCVD(viewModel)
+                        saveCVD(viewModel,onNavigate)
                     }
                 )
             } else {
@@ -752,7 +788,7 @@ private fun AddToQueueComposable(
                         viewModel.patient!!,
                         addedToQueue = {
                             viewModel.showAddToQueueDialog = false
-                            saveCVD(viewModel)
+                            saveCVD(viewModel,onNavigate)
                         }
                     )
                 }
@@ -762,11 +798,15 @@ private fun AddToQueueComposable(
 }
 
 private fun saveCVD(
-    viewModel: CVDRiskAssessmentViewModel
+    viewModel: CVDRiskAssessmentViewModel,
+    onNavigate: ()-> Unit
 ) {
     viewModel.saveCVDRecord(
         saved = {
-            viewModel.showFollowUpDialog = true
+            viewModel.showFollowUpDialog = viewModel.selectedCampaignId==null  // follow up only for facility
+            if (!viewModel.selectedCampaignId.isNullOrBlank()){
+                onNavigate()
+            }
         }
     )
 }

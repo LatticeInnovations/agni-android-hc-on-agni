@@ -28,5 +28,6 @@ data class AppointmentResponse(
     val hospitalId: String?,
     val hospitalName: String?,
     val hospitalCode: String?,
+    val campaignId: String? = null,
     val appUpdatedDate: Date?
 ) : Parcelable

@@ -44,11 +44,13 @@ interface GenericRepository {
 
     suspend fun insertSchedule(
         scheduleResponse: ScheduleResponse,
+        type: GenericTypeEnum = GenericTypeEnum.SCHEDULE,
         uuid: String = UUIDBuilder.generateUUID()
     ): Long
 
     suspend fun insertAppointment(
         appointmentResponse: AppointmentResponse,
+        type: GenericTypeEnum = GenericTypeEnum.APPOINTMENT,
         uuid: String = UUIDBuilder.generateUUID()
     ): Long
 

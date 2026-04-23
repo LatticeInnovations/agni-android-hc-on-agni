@@ -159,6 +159,8 @@ class FhirApp : Application() {
             fhirAppDatabase.getHealthFacilityDao(),
             fhirAppDatabase.getReferralDao(),
             fhirAppDatabase.getScreeningSiteMasterDao(),
+            fhirAppDatabase.getCampaignScheduleDao(),
+            fhirAppDatabase.getCampaignAppointmentDao(),
             crashlyticsLogger
         )
         /* To load dummy data for Screen site
@@ -171,7 +173,9 @@ class FhirApp : Application() {
             fhirAppDatabase.getGenericDao(),
             fhirAppDatabase.getPatientDao(),
             fhirAppDatabase.getScheduleDao(),
-            fhirAppDatabase.getAppointmentDao()
+            fhirAppDatabase.getAppointmentDao(),
+            fhirAppDatabase.getCampaignScheduleDao(),
+            fhirAppDatabase.getCampaignAppointmentDao()
         )
 
         if (!this::_workRequestBuilder.isInitialized) {

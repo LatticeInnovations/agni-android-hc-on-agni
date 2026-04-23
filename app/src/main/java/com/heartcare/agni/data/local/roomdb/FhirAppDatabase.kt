@@ -10,6 +10,8 @@ import com.heartcare.agni.BuildConfig
 import com.heartcare.agni.data.local.roomdb.dao.AllergyDao
 import com.heartcare.agni.data.local.roomdb.dao.AppointmentDao
 import com.heartcare.agni.data.local.roomdb.dao.CVDDao
+import com.heartcare.agni.data.local.roomdb.dao.CampaignAppointmentDao
+import com.heartcare.agni.data.local.roomdb.dao.CampaignScheduleDao
 import com.heartcare.agni.data.local.roomdb.dao.DiagnosisDao
 import com.heartcare.agni.data.local.roomdb.dao.ExaminationDao
 import com.heartcare.agni.data.local.roomdb.dao.FamilyHistoryDao
@@ -28,6 +30,7 @@ import com.heartcare.agni.data.local.roomdb.dao.ReferralDao
 import com.heartcare.agni.data.local.roomdb.dao.RiskFactorDao
 import com.heartcare.agni.data.local.roomdb.dao.RiskPredictionDao
 import com.heartcare.agni.data.local.roomdb.dao.ScheduleDao
+import com.heartcare.agni.data.local.roomdb.dao.ScreeningSiteDao
 import com.heartcare.agni.data.local.roomdb.dao.SearchDao
 import com.heartcare.agni.data.local.roomdb.dao.TobaccoCessationDao
 import com.heartcare.agni.data.local.roomdb.dao.VitalDao
@@ -61,7 +64,8 @@ import com.heartcare.agni.data.local.roomdb.entities.search.SearchEntity
 import com.heartcare.agni.data.local.roomdb.entities.search.SearchHistoryEntity
 import com.heartcare.agni.data.local.roomdb.entities.tobacco.TobaccoCessationEntity
 import com.heartcare.agni.data.local.roomdb.entities.vitals.VitalEntity
-import com.heartcare.agni.data.local.roomdb.dao.ScreeningSiteDao
+import com.heartcare.agni.data.local.roomdb.entities.campaign.CampaignAppointmentEntity
+import com.heartcare.agni.data.local.roomdb.entities.campaign.CampaignScheduleEntity
 import com.heartcare.agni.data.local.roomdb.entities.campaign.ScreeningSiteMasterEntity
 import com.heartcare.agni.data.local.roomdb.typeconverters.DiagnosisTypeConverter
 import com.heartcare.agni.data.local.roomdb.typeconverters.TypeConverter
@@ -103,7 +107,9 @@ import java.util.UUID
         ExaminationEntity::class,
         ReferralEntity::class,
         HealthFacilityEntity::class,
-        ScreeningSiteMasterEntity::class
+        ScreeningSiteMasterEntity::class,
+        CampaignScheduleEntity::class,
+        CampaignAppointmentEntity::class
     ],
     views = [PrescriptionDirectionAndMedicineView::class],
     version = 3,
@@ -141,6 +147,8 @@ abstract class FhirAppDatabase : RoomDatabase() {
     abstract fun getReferralDao(): ReferralDao
     abstract fun getHealthFacilityDao(): HealthFacilityDao
     abstract fun getScreeningSiteMasterDao(): ScreeningSiteDao
+    abstract fun getCampaignScheduleDao(): CampaignScheduleDao
+    abstract fun getCampaignAppointmentDao(): CampaignAppointmentDao
 
     companion object {
         @Volatile

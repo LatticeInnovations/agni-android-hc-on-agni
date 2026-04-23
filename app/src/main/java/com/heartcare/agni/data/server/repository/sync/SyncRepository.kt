@@ -43,6 +43,9 @@ interface SyncRepository {
     suspend fun getAndInsertAppointment(offset: Int): ResponseMapper<List<AppointmentResponse>>
     suspend fun getAndInsertPatientLastUpdatedData(): ResponseMapper<List<PatientLastUpdatedResponse>>
     suspend fun getAndInsertCVD(offset: Int): ResponseMapper<List<CVDResponse>>
+    suspend fun getAndInsertCampaignSchedule(offset: Int): ResponseMapper<List<ScheduleResponse>>
+    suspend fun getAndInsertCampaignAppointment(offset: Int): ResponseMapper<List<AppointmentResponse>>
+    suspend fun getAndInsertCampaignCVD(offset: Int): ResponseMapper<List<CVDResponse>>
     suspend fun getAndInsertListVitalData(offset: Int): ResponseMapper<List<VitalResponse>>
     suspend fun getAndInsertListDiagnosisData(offset: Int): ResponseMapper<List<DiagnosisResponse>>
     suspend fun getAndInsertLevelsData(offset: Int): ResponseMapper<List<LevelResponse>>
@@ -64,6 +67,9 @@ interface SyncRepository {
     suspend fun sendAppointmentPostData(): ResponseMapper<List<CreateResponse>>
     suspend fun sendPatientLastUpdatePostData(): ResponseMapper<List<CreateResponse>>
     suspend fun sendCVDPostData(): ResponseMapper<List<CreateResponse>>
+    suspend fun sendCampaignSchedulePostData(): ResponseMapper<List<CreateResponse>>
+    suspend fun sendCampaignAppointmentPostData(): ResponseMapper<List<CreateResponse>>
+    suspend fun sendCampaignCVDPostData(): ResponseMapper<List<CreateResponse>>
     suspend fun sendVitalPostData(): ResponseMapper<List<CreateResponse>>
     suspend fun sendDiagnosisPostData(): ResponseMapper<List<CreateResponse>>
     suspend fun sendPriorDxPostData(): ResponseMapper<List<CreateResponse>>
