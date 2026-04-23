@@ -8,6 +8,7 @@ import androidx.lifecycle.viewModelScope
 import com.heartcare.agni.base.viewmodel.BaseViewModel
 import com.heartcare.agni.data.local.enums.AppointmentStatusEnum
 import com.heartcare.agni.data.local.enums.BmiCategory
+import com.heartcare.agni.data.local.enums.BpCategory
 import com.heartcare.agni.data.local.enums.DateRangeEnum
 import com.heartcare.agni.data.local.enums.GenderEnum
 import com.heartcare.agni.data.local.model.report.StatRowData
@@ -76,7 +77,8 @@ class ReportsViewModel @Inject constructor(
 
     var bmiTotal by mutableStateOf(0)
     var bmiStats by mutableStateOf(mutableListOf<StatRowData>())
-    var bloodPressureStats = mutableListOf<StatRowData>()
+    var bloodPressureTotal by mutableStateOf(0)
+    var bloodPressureStats by mutableStateOf(mutableListOf<StatRowData>())
     var smokingStats = mutableListOf<StatRowData>()
     var bloodSugarFastingStats = mutableListOf<StatRowData>()
     var bloodSugarRandomStats = mutableListOf<StatRowData>()
@@ -87,7 +89,6 @@ class ReportsViewModel @Inject constructor(
 
     init {
         getMasterLists()
-        fetchBloodPressureData()
         fetchSmokingData()
         fetchBloodSugarData()
         fetchCholesterolData()
@@ -135,6 +136,7 @@ class ReportsViewModel @Inject constructor(
 
             val cvdList = cvdAssessmentRepository.getCVDRecordByAppointmentIds(*appointments.map { it.uuid }.toTypedArray())
             getBmiStats(cvdList)
+            getBloodPressureStats(cvdList)
         }
     }
 
@@ -153,8 +155,10 @@ class ReportsViewModel @Inject constructor(
                     maleCount = bmiCVDPatients.filter { it.gender == GenderEnum.MALE.value }.size,
                     femaleCount = bmiCVDPatients.filter { it.gender == GenderEnum.FEMALE.value }.size,
                     otherCount = bmiCVDPatients.filter { it.gender == GenderEnum.OTHER.value }.size,
-                    percentage = ((bmiCVDPatients.size.toFloat() / bmiTotal) * 100).toInt(),
-                    progress = (bmiCVDPatients.size.toFloat() / bmiTotal.toFloat()),
+                    percentage = if (bmiTotal == 0) 0
+                    else ((bmiCVDPatients.size.toFloat() / bmiTotal) * 100).toInt(),
+                    progress = if (bmiTotal == 0) 0f
+                    else (bmiCVDPatients.size.toFloat() / bmiTotal.toFloat()),
                     progressColor = bmiCategory.color
                 )
             )
@@ -163,17 +167,31 @@ class ReportsViewModel @Inject constructor(
         bmiStats = bmiStatsList
     }
     
-    private fun fetchBloodPressureData() {
-        bloodPressureStats = mutableListOf(
-            StatRowData("Normal (< 140/90 mmHg)", 123, 110, 10, 43,  0.43f, LowRiskCircle),
-            StatRowData("High (140/90 - 159/99 mmHg)", 123, 110, 10, 43, 0.32f, HighRiskCircle),
-            StatRowData(
-                "Very High (≥ 160/100 mmHg)",
-                123, 110, 10, 43,
-                0.20f,
-                VeryHighRiskCircle2
+    private suspend fun getBloodPressureStats(cvdList: List<CVDResponse>) {
+        bloodPressureTotal = cvdList.size
+
+        val bpStatsList = mutableListOf<StatRowData>()
+
+        BpCategory.entries.forEach { category ->
+            val bpCVD = cvdList.filter { BpCategory.from(it.bpSystolic, it.bpDiastolic) == category }
+            val bpPatients = patientRepository.getPatientById(*bpCVD.map { it.patientId }.toTypedArray())
+
+            bpStatsList.add(
+                StatRowData(
+                    label = category.label,
+                    maleCount = bpPatients.count { it.gender == GenderEnum.MALE.value },
+                    femaleCount = bpPatients.count { it.gender == GenderEnum.FEMALE.value },
+                    otherCount = bpPatients.count { it.gender == GenderEnum.OTHER.value },
+                    percentage = if (bloodPressureTotal == 0) 0
+                    else ((bpPatients.size.toFloat() / bloodPressureTotal) * 100).toInt(),
+                    progress = if (bloodPressureTotal == 0) 0f
+                    else (bpPatients.size.toFloat() / bloodPressureTotal.toFloat()),
+                    progressColor = category.color
+                )
             )
-        )
+        }
+
+        bloodPressureStats = bpStatsList
     }
 
 
@@ -228,7 +246,6 @@ class ReportsViewModel @Inject constructor(
                 dateRangeEnd = end!!
             }
         }
-
-        getDataOfFacility(selectedFacility!!.code)
+        selectedFacility?.code?.let { getDataOfFacility(it) }
     }
 }

@@ -3,7 +3,7 @@ package com.heartcare.agni.data.local.enums
 import androidx.compose.ui.graphics.Color
 import com.heartcare.agni.ui.theme.HighRiskCircle
 import com.heartcare.agni.ui.theme.LowRiskCircle
-import com.heartcare.agni.ui.theme.VeryHighRiskCircle
+import com.heartcare.agni.ui.theme.VeryHighRiskCircle2
 
 enum class BmiCategory(
     val label: String,
@@ -33,7 +33,7 @@ enum class BmiCategory(
         label = "Obese (≥ 30.0 kg/m²)",
         min = 30.0,
         max = Double.MAX_VALUE,
-        color = VeryHighRiskCircle
+        color = VeryHighRiskCircle2
     );
 
     fun matches(bmi: Double): Boolean {

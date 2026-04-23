@@ -338,7 +338,7 @@ fun ReportsScreen(
                         )
 
                         StatProgressCard(
-                            title = stringResource(R.string.stat_blood_pressure),
+                            title = stringResource(R.string.stat_blood_pressure, viewModel.bloodPressureTotal),
                             stats = viewModel.bloodPressureStats,
                             modifier = Modifier.padding(bottom = 16.dp)
                         )
