@@ -27,6 +27,8 @@ import com.heartcare.agni.data.local.roomdb.dao.ReferralDao
 import com.heartcare.agni.data.local.roomdb.dao.ScreeningSiteDao
 import com.heartcare.agni.data.local.roomdb.dao.TobaccoCessationDao
 import com.heartcare.agni.data.local.roomdb.dao.VitalDao
+import com.heartcare.agni.data.local.roomdb.dao.CampaignScheduleDao
+import com.heartcare.agni.data.local.roomdb.dao.CampaignAppointmentDao
 import com.heartcare.agni.data.local.sharedpreferences.PreferenceStorage
 import dagger.Module
 import dagger.Provides
@@ -194,5 +196,17 @@ object DatabaseModule {
     @Provides
     fun provideScreenSiteDaoDao(fhirAppDatabase: FhirAppDatabase): ScreeningSiteDao {
         return fhirAppDatabase.getScreeningSiteMasterDao()
+    }
+
+    @Singleton
+    @Provides
+    fun provideCampaignScheduleDao(fhirAppDatabase: FhirAppDatabase): CampaignScheduleDao {
+        return fhirAppDatabase.getCampaignScheduleDao()
+    }
+
+    @Singleton
+    @Provides
+    fun provideCampaignAppointmentDao(fhirAppDatabase: FhirAppDatabase): CampaignAppointmentDao {
+        return fhirAppDatabase.getCampaignAppointmentDao()
     }
 }

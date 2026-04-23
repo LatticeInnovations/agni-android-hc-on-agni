@@ -7,6 +7,8 @@ import com.heartcare.agni.data.local.roomdb.dao.AppointmentDao
 import com.heartcare.agni.data.local.roomdb.dao.GenericDao
 import com.heartcare.agni.data.local.roomdb.dao.PatientDao
 import com.heartcare.agni.data.local.roomdb.dao.ScheduleDao
+import com.heartcare.agni.data.local.roomdb.dao.CampaignScheduleDao
+import com.heartcare.agni.data.local.roomdb.dao.CampaignAppointmentDao
 import com.heartcare.agni.data.local.roomdb.entities.generic.GenericEntity
 import com.heartcare.agni.data.server.model.allergy.AllergyResponse
 import com.heartcare.agni.data.server.model.cvd.CVDResponse
@@ -39,9 +41,18 @@ class GenericRepositoryImpl @Inject constructor(
     private val genericDao: GenericDao,
     patientDao: PatientDao,
     scheduleDao: ScheduleDao,
-    appointmentDao: AppointmentDao
+    appointmentDao: AppointmentDao,
+    campaignScheduleDao: CampaignScheduleDao,
+    campaignAppointmentDao: CampaignAppointmentDao
 ) : GenericRepository,
-    GenericRepositoryDatabaseTransactions(genericDao, patientDao, scheduleDao, appointmentDao) {
+    GenericRepositoryDatabaseTransactions(
+        genericDao,
+        patientDao,
+        scheduleDao,
+        appointmentDao,
+        campaignScheduleDao,
+        campaignAppointmentDao
+    ) {
 
     override suspend fun insertPatient(patientResponse: PatientResponse, uuid: String): Long {
         return genericDao.getGenericEntityById(
@@ -73,13 +84,13 @@ class GenericRepositoryImpl @Inject constructor(
             }
     }
 
-    override suspend fun insertSchedule(scheduleResponse: ScheduleResponse, uuid: String): Long {
+    override suspend fun insertSchedule(scheduleResponse: ScheduleResponse, type: GenericTypeEnum, uuid: String): Long {
         return genericDao.getGenericEntityById(
             patientId = scheduleResponse.uuid,
-            genericTypeEnum = GenericTypeEnum.SCHEDULE,
+            genericTypeEnum = type,
             syncType = SyncType.POST
         ).let { scheduleGenericEntity ->
-            insertScheduleGenericEntity(scheduleGenericEntity, scheduleResponse, uuid)
+            insertScheduleGenericEntity(scheduleGenericEntity, scheduleResponse, uuid, type)
         }
     }
 
@@ -88,10 +99,18 @@ class GenericRepositoryImpl @Inject constructor(
             .forEach { appointmentGenericEntity ->
                 updateAppointmentFhirIdInGenericEntity(appointmentGenericEntity)
             }
+        genericDao.getNotSyncedData(GenericTypeEnum.CAMPAIGN_APPOINTMENT)
+            .forEach { appointmentGenericEntity ->
+                updateAppointmentFhirIdInGenericEntity(appointmentGenericEntity)
+            }
     }
 
     override suspend fun updateAppointmentFhirIdInPatch() {
         genericDao.getNotSyncedData(GenericTypeEnum.APPOINTMENT, SyncType.PATCH)
+            .forEach { appointmentGenericEntity ->
+                updateAppointmentFhirIdInGenericEntityPatch(appointmentGenericEntity)
+            }
+        genericDao.getNotSyncedData(GenericTypeEnum.CAMPAIGN_APPOINTMENT, SyncType.PATCH)
             .forEach { appointmentGenericEntity ->
                 updateAppointmentFhirIdInGenericEntityPatch(appointmentGenericEntity)
             }
@@ -181,14 +200,15 @@ class GenericRepositoryImpl @Inject constructor(
 
     override suspend fun insertAppointment(
         appointmentResponse: AppointmentResponse,
+        type: GenericTypeEnum,
         uuid: String
     ): Long {
         return genericDao.getGenericEntityById(
             patientId = appointmentResponse.uuid,
-            genericTypeEnum = GenericTypeEnum.APPOINTMENT,
+            genericTypeEnum = type,
             syncType = SyncType.POST
         ).let { appointmentGenericEntity ->
-            insertAppointmentGenericEntity(appointmentGenericEntity, appointmentResponse, uuid)
+            insertAppointmentGenericEntity(appointmentGenericEntity, appointmentResponse, uuid, type)
         }
     }
 
@@ -196,9 +216,10 @@ class GenericRepositoryImpl @Inject constructor(
         cvdResponse: CVDResponse,
         uuid: String
     ): Long {
+        val type = if (cvdResponse.campaignId != null) GenericTypeEnum.CAMPAIGN_CVD else GenericTypeEnum.CVD
         return genericDao.getGenericEntityById(
             patientId = cvdResponse.cvdUuid,
-            genericTypeEnum = GenericTypeEnum.CVD,
+            genericTypeEnum = type,
             syncType = SyncType.POST
         ).let { cvdGenericEntity ->
             insertCVDGenericEntity(cvdGenericEntity, cvdResponse, uuid)

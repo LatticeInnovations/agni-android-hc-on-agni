@@ -29,5 +29,6 @@ data class CVDResponse(
     val weightUnit: String,
     val chiefComplaint: String?,
     val screeningDate: Date,
-    val heartAttackHistory: Int
+    val heartAttackHistory: Int,
+    val campaignId: String?
 )

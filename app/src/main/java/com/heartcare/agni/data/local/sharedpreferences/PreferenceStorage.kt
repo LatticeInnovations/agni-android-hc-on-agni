@@ -28,6 +28,9 @@ interface PreferenceStorage {
     var lastAppointmentSyncTime: Long
     var lastCVDSyncTime: Long
     var lastVitalSyncTime: Long
+    var lastCampaignScheduleSyncTime: Long
+    var lastCampaignAppointmentSyncTime: Long
+    var lastCampaignCVDSyncTime: Long
 
     var lastDiagnosisSyncTime: Long
 

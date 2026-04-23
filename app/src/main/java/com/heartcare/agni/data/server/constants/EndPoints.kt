@@ -15,4 +15,11 @@ object EndPoints {
     const val INTERVENTION = "intervention"
     const val EXAMINATION = "examination"
     const val REFERRAL = "referral"
+    const val CVD = "CVD"
+    const val SCHEDULE = "Schedule"
+    const val APPOINTMENT = "Appointment"
+    const val CAMPAIGN_SCHEDULE = "campaign/Schedule"
+    const val CAMPAIGN_APPOINTMENT = "campaign/Appointment"
+    const val CAMPAIGN_CVD = "campaign/CVD"
+    const val PATCH_LOGS = "Schedule/AppLog"
 }

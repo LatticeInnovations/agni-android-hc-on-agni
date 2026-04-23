@@ -143,6 +143,8 @@ private fun RecordDetailsComposable(
             .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
+        val siteName = viewModel.screeningSites.find { it.id == record.campaignId }?.name
+
         Column {
             Text(
                 text = stringResource(R.string.percentage, record.risk.toString()),
@@ -154,9 +156,18 @@ private fun RecordDetailsComposable(
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+            siteName?.let {
+                Text(
+                    text = it,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = 4.dp)
+                )
+            }
         }
+
         Spacer(Modifier.weight(1f))
-        if (record.risk >= 10) {
+        if (record.risk >= 10 && siteName==null) {
             if (referralExists) {
                 Text(
                     text = stringResource(R.string.referred),
