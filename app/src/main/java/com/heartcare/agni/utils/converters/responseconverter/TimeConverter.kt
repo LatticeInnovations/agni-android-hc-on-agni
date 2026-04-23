@@ -464,4 +464,9 @@ object TimeConverter {
     fun Date.toAppointmentEndTime(): Date {
         return Date(this.time + TimeUnit.MINUTES.toMillis(5))
     }
+
+    fun Date.toDateRange(): String {
+        val formatter = SimpleDateFormat("dd MMM, yyyy", Locale.getDefault())
+        return formatter.format(this)
+    }
 }
