@@ -344,7 +344,7 @@ fun ReportsScreen(
                         )
 
                         StatProgressCard(
-                            title = stringResource(R.string.stat_smoking_status),
+                            title = stringResource(R.string.stat_smoking_status, viewModel.smokingTotal),
                             stats = viewModel.smokingStats,
                             modifier = Modifier.padding(bottom = 16.dp)
                         )

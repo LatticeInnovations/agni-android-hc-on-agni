@@ -11,6 +11,7 @@ import com.heartcare.agni.data.local.enums.BmiCategory
 import com.heartcare.agni.data.local.enums.BpCategory
 import com.heartcare.agni.data.local.enums.DateRangeEnum
 import com.heartcare.agni.data.local.enums.GenderEnum
+import com.heartcare.agni.data.local.enums.YesNoEnum
 import com.heartcare.agni.data.local.model.report.StatRowData
 import com.heartcare.agni.data.local.repository.appointment.AppointmentRepository
 import com.heartcare.agni.data.local.repository.cvd.records.CVDAssessmentRepository
@@ -79,7 +80,8 @@ class ReportsViewModel @Inject constructor(
     var bmiStats by mutableStateOf(mutableListOf<StatRowData>())
     var bloodPressureTotal by mutableStateOf(0)
     var bloodPressureStats by mutableStateOf(mutableListOf<StatRowData>())
-    var smokingStats = mutableListOf<StatRowData>()
+    var smokingTotal by mutableStateOf(0)
+    var smokingStats by mutableStateOf(mutableListOf<StatRowData>())
     var bloodSugarFastingStats = mutableListOf<StatRowData>()
     var bloodSugarRandomStats = mutableListOf<StatRowData>()
     var cholesterolStats = mutableListOf<StatRowData>()
@@ -89,7 +91,6 @@ class ReportsViewModel @Inject constructor(
 
     init {
         getMasterLists()
-        fetchSmokingData()
         fetchBloodSugarData()
         fetchCholesterolData()
         fetchCvdRiskData()
@@ -137,6 +138,7 @@ class ReportsViewModel @Inject constructor(
             val cvdList = cvdAssessmentRepository.getCVDRecordByAppointmentIds(*appointments.map { it.uuid }.toTypedArray())
             getBmiStats(cvdList)
             getBloodPressureStats(cvdList)
+            getSmokingStats(cvdList)
         }
     }
 
@@ -194,12 +196,31 @@ class ReportsViewModel @Inject constructor(
         bloodPressureStats = bpStatsList
     }
 
+    private suspend fun getSmokingStats(cvdList: List<CVDResponse>) {
+        smokingTotal = cvdList.size
 
-    private fun fetchSmokingData() {
-        smokingStats = mutableListOf(
-            StatRowData("Yes", 123, 110, 10, 43, 0.57f, VeryHighRiskCircle2),
-            StatRowData("No", 123, 110, 10, 43, 0.43f, LowRiskCircle)
-        )
+        val smokingList = mutableListOf<StatRowData>()
+
+        YesNoEnum.entries.forEach { category ->
+            val smokerCVD = cvdList.filter { it.smoker == category.code }
+            val smokerPatients = patientRepository.getPatientById(*smokerCVD.map { it.patientId }.toTypedArray())
+
+            smokingList.add(
+                StatRowData(
+                    label = category.display,
+                    maleCount = smokerPatients.count { it.gender == GenderEnum.MALE.value },
+                    femaleCount = smokerPatients.count { it.gender == GenderEnum.FEMALE.value },
+                    otherCount = smokerPatients.count { it.gender == GenderEnum.OTHER.value },
+                    percentage = if (smokingTotal == 0) 0
+                    else ((smokerPatients.size.toFloat() / smokingTotal) * 100).toInt(),
+                    progress = if (smokingTotal == 0) 0f
+                    else (smokerPatients.size.toFloat() / smokingTotal.toFloat()),
+                    progressColor = category.color
+                )
+            )
+        }
+
+        smokingStats = smokingList
     }
 
     private fun fetchBloodSugarData() {
