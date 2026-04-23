@@ -359,7 +359,7 @@ fun ReportsScreen(
                         )
 
                         StatProgressCard(
-                            title = stringResource(R.string.stat_total_cholesterol),
+                            title = stringResource(R.string.stat_total_cholesterol, viewModel.cholesterolTotal),
                             stats = viewModel.cholesterolStats,
                             modifier = Modifier.padding(bottom = 16.dp)
                         )

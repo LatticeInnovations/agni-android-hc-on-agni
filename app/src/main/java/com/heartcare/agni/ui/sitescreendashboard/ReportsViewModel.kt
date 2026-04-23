@@ -9,6 +9,7 @@ import com.heartcare.agni.base.viewmodel.BaseViewModel
 import com.heartcare.agni.data.local.enums.AppointmentStatusEnum
 import com.heartcare.agni.data.local.enums.BmiCategory
 import com.heartcare.agni.data.local.enums.BpCategory
+import com.heartcare.agni.data.local.enums.CholesterolCategory
 import com.heartcare.agni.data.local.enums.DateRangeEnum
 import com.heartcare.agni.data.local.enums.GenderEnum
 import com.heartcare.agni.data.local.enums.YesNoEnum
@@ -84,7 +85,8 @@ class ReportsViewModel @Inject constructor(
     var smokingStats by mutableStateOf(mutableListOf<StatRowData>())
     var bloodSugarFastingStats = mutableListOf<StatRowData>()
     var bloodSugarRandomStats = mutableListOf<StatRowData>()
-    var cholesterolStats = mutableListOf<StatRowData>()
+    var cholesterolTotal by mutableStateOf(0)
+    var cholesterolStats by mutableStateOf(mutableListOf<StatRowData>())
 
     var cvdRiskStats = mutableListOf<StatRowData>()
 
@@ -92,7 +94,6 @@ class ReportsViewModel @Inject constructor(
     init {
         getMasterLists()
         fetchBloodSugarData()
-        fetchCholesterolData()
         fetchCvdRiskData()
     }
 
@@ -139,6 +140,7 @@ class ReportsViewModel @Inject constructor(
             getBmiStats(cvdList)
             getBloodPressureStats(cvdList)
             getSmokingStats(cvdList)
+            getCholesterolStats(cvdList.filter { it.cholesterol != null && !it.cholesterolUnit.isNullOrBlank() })
         }
     }
 
@@ -234,11 +236,31 @@ class ReportsViewModel @Inject constructor(
         )
     }
 
-    private fun fetchCholesterolData() {
-        cholesterolStats = mutableListOf(
-            StatRowData("Normal", 123, 110, 10, 43, 0.43f, LowRiskCircle),
-            StatRowData("Above Normal", 123, 110, 10, 43, 0.32f, HighRiskCircle)
-        )
+    private suspend fun getCholesterolStats(cvdList: List<CVDResponse>) {
+        cholesterolTotal = cvdList.size
+
+        val statsList = mutableListOf<StatRowData>()
+
+        CholesterolCategory.entries.forEach { category ->
+            val filtered = cvdList.filter { CholesterolCategory.from(it.cholesterol!!, it.cholesterolUnit!!) == category }
+            val patients = patientRepository.getPatientById(*filtered.map { it.patientId }.toTypedArray())
+
+            statsList.add(
+                StatRowData(
+                    label = category.label,
+                    maleCount = patients.count { it.gender == GenderEnum.MALE.value },
+                    femaleCount = patients.count { it.gender == GenderEnum.FEMALE.value },
+                    otherCount = patients.count { it.gender == GenderEnum.OTHER.value },
+                    percentage = if (cholesterolTotal == 0) 0
+                    else ((patients.size.toFloat() / cholesterolTotal) * 100).toInt(),
+                    progress = if (cholesterolTotal == 0) 0f
+                    else (patients.size.toFloat() / cholesterolTotal.toFloat()),
+                    progressColor = category.color
+                )
+            )
+        }
+
+        cholesterolStats = statsList
     }
 
     private fun fetchCvdRiskData() {
