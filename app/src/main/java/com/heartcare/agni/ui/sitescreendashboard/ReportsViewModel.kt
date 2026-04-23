@@ -10,6 +10,7 @@ import com.heartcare.agni.data.local.enums.AppointmentStatusEnum
 import com.heartcare.agni.data.local.enums.BmiCategory
 import com.heartcare.agni.data.local.enums.BpCategory
 import com.heartcare.agni.data.local.enums.CholesterolCategory
+import com.heartcare.agni.data.local.enums.CvdRiskCategory
 import com.heartcare.agni.data.local.enums.DateRangeEnum
 import com.heartcare.agni.data.local.enums.GenderEnum
 import com.heartcare.agni.data.local.enums.YesNoEnum
@@ -23,7 +24,6 @@ import com.heartcare.agni.data.server.model.levels.LevelResponse
 import com.heartcare.agni.di.dispatcher.IoDispatcher
 import com.heartcare.agni.ui.theme.HighRiskCircle
 import com.heartcare.agni.ui.theme.LowRiskCircle
-import com.heartcare.agni.ui.theme.VeryHighRiskCircle2
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.plusMinusDays
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toAge
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toEndOfDay
@@ -87,14 +87,12 @@ class ReportsViewModel @Inject constructor(
     var bloodSugarRandomStats = mutableListOf<StatRowData>()
     var cholesterolTotal by mutableStateOf(0)
     var cholesterolStats by mutableStateOf(mutableListOf<StatRowData>())
-
-    var cvdRiskStats = mutableListOf<StatRowData>()
-
+    var cvdRiskTotal by mutableStateOf(0)
+    var cvdRiskStats by mutableStateOf(mutableListOf<StatRowData>())
 
     init {
         getMasterLists()
         fetchBloodSugarData()
-        fetchCvdRiskData()
     }
 
     private fun getMasterLists() {
@@ -141,6 +139,7 @@ class ReportsViewModel @Inject constructor(
             getBloodPressureStats(cvdList)
             getSmokingStats(cvdList)
             getCholesterolStats(cvdList.filter { it.cholesterol != null && !it.cholesterolUnit.isNullOrBlank() })
+            getCvdRiskStats(cvdList)
         }
     }
 
@@ -263,12 +262,32 @@ class ReportsViewModel @Inject constructor(
         cholesterolStats = statsList
     }
 
-    private fun fetchCvdRiskData() {
-        cvdRiskStats = mutableListOf(
-            StatRowData("Low (<10%)", 123, 110, 10, 43, 0.43f, LowRiskCircle),
-            StatRowData("Moderate (10-20%)", 123, 110, 10, 43, 0.32f, HighRiskCircle),
-            StatRowData("High (>20%)", 123, 110, 10, 43, 0.20f, VeryHighRiskCircle2)
-        )
+    private suspend fun getCvdRiskStats(cvdList: List<CVDResponse>) {
+        cvdRiskTotal = cvdList.size
+
+        val statsList = mutableListOf<StatRowData>()
+
+        CvdRiskCategory.entries.forEach { category ->
+
+            val filtered = cvdList.filter { category.matches(it.risk) }
+            val patients = patientRepository.getPatientById(*filtered.map { it.patientId }.toTypedArray())
+
+            statsList.add(
+                StatRowData(
+                    label = category.label,
+                    maleCount = patients.count { it.gender == GenderEnum.MALE.value },
+                    femaleCount = patients.count { it.gender == GenderEnum.FEMALE.value },
+                    otherCount = patients.count { it.gender == GenderEnum.OTHER.value },
+                    percentage = if (cvdRiskTotal == 0) 0
+                    else ((patients.size.toFloat() / cvdRiskTotal) * 100).toInt(),
+                    progress = if (cvdRiskTotal == 0) 0f
+                    else (patients.size.toFloat() / cvdRiskTotal.toFloat()),
+                    progressColor = category.color
+                )
+            )
+        }
+
+        cvdRiskStats = statsList
     }
 
     fun updateDateRange(rangeType: String, start: Date?, end: Date?) {

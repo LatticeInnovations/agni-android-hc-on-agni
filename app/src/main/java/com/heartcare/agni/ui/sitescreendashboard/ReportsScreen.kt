@@ -365,7 +365,7 @@ fun ReportsScreen(
                         )
 
                         StatProgressCard(
-                            title = stringResource(R.string.stat_cvd_risk),
+                            title = stringResource(R.string.stat_cvd_risk, viewModel.cvdRiskTotal),
                             stats = viewModel.cvdRiskStats,
                             modifier = Modifier.padding(bottom = 16.dp)
                         )
