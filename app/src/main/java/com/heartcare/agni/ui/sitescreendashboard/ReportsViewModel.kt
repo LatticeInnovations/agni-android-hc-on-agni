@@ -28,6 +28,7 @@ import com.heartcare.agni.data.server.model.levels.LevelResponse
 import com.heartcare.agni.data.server.model.patient.PatientResponse
 import com.heartcare.agni.data.server.model.vitals.VitalResponse
 import com.heartcare.agni.di.dispatcher.IoDispatcher
+import com.heartcare.agni.ui.sitescreendashboard.state.ReportUiState
 import com.heartcare.agni.ui.vitalsscreen.enums.BGEnum
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.plusMinusDays
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toAge
@@ -56,6 +57,17 @@ class ReportsViewModel @Inject constructor(
     var dateRangeStart by mutableStateOf(Date(Date().plusMinusDays(-7).toTodayStartDate()))
     var dateRangeEnd by mutableStateOf(Date(Date().toEndOfDay()))
 
+    var facilityState by mutableStateOf(ReportUiState())
+    var screeningSiteState by mutableStateOf(ReportUiState())
+    var divisionState by mutableStateOf(ReportUiState())
+    val currentState: ReportUiState
+        get() = when (selectedTabIndex) {
+            0 -> screeningSiteState
+            1 -> facilityState
+            2 -> divisionState
+            else -> ReportUiState()
+        }
+
     val campaignOptions = listOf("Vila Central Outreach", "NCD Screening", "Hypertension follow-up")
     var selectedCampaign by mutableStateOf(campaignOptions.first())
 
@@ -73,30 +85,6 @@ class ReportsViewModel @Inject constructor(
     var campaignContact by mutableStateOf("sarah@moh.vu, +678 55123")
     var campaignDateRange by mutableStateOf("Mar 1 - Mar 15, 2025")
     var campaignLocation by mutableStateOf("Port Vila Central")
-
-
-    // Summary Card
-    var totalScreened by mutableIntStateOf(0)
-    var totalMale by mutableIntStateOf(0)
-    var totalFemale by mutableIntStateOf(0)
-    var totalOther by mutableIntStateOf(0)
-
-    var ageGroups: List<Pair<String, String>> = emptyList()
-
-    var bmiTotal by mutableIntStateOf(0)
-    var bmiStats by mutableStateOf(listOf<StatRowData>())
-    var bloodPressureTotal by mutableIntStateOf(0)
-    var bloodPressureStats by mutableStateOf(listOf<StatRowData>())
-    var smokingTotal by mutableIntStateOf(0)
-    var smokingStats by mutableStateOf(listOf<StatRowData>())
-    var bloodSugarFastingTotal by mutableIntStateOf(0)
-    var bloodSugarFastingStats by mutableStateOf(listOf<StatRowData>())
-    var bloodSugarRandomTotal by mutableIntStateOf(0)
-    var bloodSugarRandomStats by mutableStateOf(listOf<StatRowData>())
-    var cholesterolTotal by mutableIntStateOf(0)
-    var cholesterolStats by mutableStateOf(listOf<StatRowData>())
-    var cvdRiskTotal by mutableIntStateOf(0)
-    var cvdRiskStats by mutableStateOf(listOf<StatRowData>())
 
     init {
         getMasterLists()
@@ -129,32 +117,14 @@ class ReportsViewModel @Inject constructor(
             }
 
             val patients = patientRepository.getPatientById(*appointments.map { it.patientId }.toTypedArray())
-            totalScreened = patients.size
-            totalMale = patients.filter { it.gender == GenderEnum.MALE.value }.size
-            totalFemale = patients.filter { it.gender == GenderEnum.FEMALE.value }.size
-            totalOther = patients.filter { it.gender == GenderEnum.OTHER.value }.size
-
-            ageGroups = listOf(
-                "18-29" to patients.filter { it.birthDate.toTimeInMilli().toAge() in 18..29 }.size.toString(),
-                "30-44" to patients.filter { it.birthDate.toTimeInMilli().toAge() in 30..44 }.size.toString(),
-                "45-59" to patients.filter { it.birthDate.toTimeInMilli().toAge() in 45..59 }.size.toString(),
-                "60+" to patients.filter { it.birthDate.toTimeInMilli().toAge() >= 60 }.size.toString()
-            )
-
             val patientMap = patients.associateBy { it.id }
-
             val cvdList = cvdAssessmentRepository.getCVDRecordByAppointmentIds(*appointments.map { it.uuid }.toTypedArray())
-
             val latestCVDList = cvdList
                 .groupBy {
                     it.patientId
                 }.map { (_, cvd) ->
                     cvd.maxBy { it.createdOn }
                 }
-            getBmiStats(latestCVDList, patientMap)
-            getBloodPressureStats(latestCVDList, patientMap)
-            getSmokingStats(latestCVDList, patientMap)
-            getCvdRiskStats(latestCVDList, patientMap)
 
             val latestCholesterolCVDList = cvdList
                 .filter { it.cholesterol != null && !it.cholesterolUnit.isNullOrBlank() }
@@ -163,7 +133,6 @@ class ReportsViewModel @Inject constructor(
                 }.map { (_, cvd) ->
                     cvd.maxBy { it.createdOn }
                 }
-            getCholesterolStats(latestCholesterolCVDList, patientMap)
 
             val latestVitalsList = vitalRepository.getLastVitalByAppointmentId(*appointments.map { it.uuid }.toTypedArray())
                 .filter { it.bloodGlucose != null }
@@ -172,7 +141,54 @@ class ReportsViewModel @Inject constructor(
                 }.map { (_, vitals) ->
                     vitals.maxBy { it.appUpdatedDate }
                 }
-            getBloodSugarStats(latestVitalsList, patientMap)
+
+            val fastingVitalsList = latestVitalsList.filter { it.bloodGlucose!!.type == BGEnum.FASTING.value }
+            val randomVitalsList = latestVitalsList.filter { it.bloodGlucose!!.type == BGEnum.RANDOM.value }
+
+            val newState = ReportUiState(
+                totalScreened = patients.size,
+                totalMale = patients.count { it.gender == GenderEnum.MALE.value },
+                totalFemale = patients.count { it.gender == GenderEnum.FEMALE.value },
+                totalOther = patients.count { it.gender == GenderEnum.OTHER.value },
+
+                ageGroups = listOf(
+                    "18-29" to patients.filter { it.birthDate.toTimeInMilli().toAge() in 18..29 }.size.toString(),
+                    "30-44" to patients.filter { it.birthDate.toTimeInMilli().toAge() in 30..44 }.size.toString(),
+                    "45-59" to patients.filter { it.birthDate.toTimeInMilli().toAge() in 45..59 }.size.toString(),
+                    "60+" to patients.filter { it.birthDate.toTimeInMilli().toAge() >= 60 }.size.toString()
+                ),
+
+                bmiTotal = latestCVDList.size,
+                bmiStats = getBmiStats(latestCVDList, patientMap),
+
+                bloodPressureTotal = latestCVDList.size,
+                bloodPressureStats = getBloodPressureStats(latestCVDList, patientMap),
+
+                smokingTotal = latestCVDList.size,
+                smokingStats = getSmokingStats(latestCVDList, patientMap),
+
+                bloodSugarFastingTotal = fastingVitalsList.size,
+                bloodSugarFastingStats = getBloodSugarStats(
+                    fastingVitalsList,
+                    patientMap,
+                    BloodSugarType.FASTING
+                ),
+
+                bloodSugarRandomTotal = randomVitalsList.size,
+                bloodSugarRandomStats = getBloodSugarStats(
+                    randomVitalsList,
+                    patientMap,
+                    BloodSugarType.RANDOM
+                ),
+
+                cholesterolTotal = latestCholesterolCVDList.size,
+                cholesterolStats = getCholesterolStats(latestCholesterolCVDList, patientMap),
+
+                cvdRiskTotal = latestCVDList.size,
+                cvdRiskStats = getCvdRiskStats(latestCVDList, patientMap)
+            )
+
+            facilityState = newState
         }
     }
 
@@ -214,12 +230,10 @@ class ReportsViewModel @Inject constructor(
     private fun getBmiStats(
         cvdList: List<CVDResponse>,
         patientMap: Map<String, PatientResponse>
-    ) {
-        bmiTotal = cvdList.size
-
-        bmiStats = buildStats(
+    ): List<StatRowData> {
+        return buildStats(
             source = cvdList,
-            total = bmiTotal,
+            total = cvdList.size,
             categories = BmiCategory.entries,
             categorySelector = { cvd -> BmiCategory.entries.find { cvd.bmi in it.min..it.max } },
             patientIdSelector = { it.patientId },
@@ -228,16 +242,14 @@ class ReportsViewModel @Inject constructor(
             patientMap = patientMap
         )
     }
-    
+
     private fun getBloodPressureStats(
         cvdList: List<CVDResponse>,
         patientMap: Map<String, PatientResponse>
-    ) {
-        bloodPressureTotal = cvdList.size
-
-        bloodPressureStats = buildStats(
+    ): List<StatRowData> {
+        return buildStats(
             source = cvdList,
-            total = bloodPressureTotal,
+            total = cvdList.size,
             categories = BpCategory.entries,
             categorySelector = { BpCategory.from(it.bpSystolic, it.bpDiastolic) },
             patientIdSelector = { it.patientId },
@@ -250,12 +262,10 @@ class ReportsViewModel @Inject constructor(
     private fun getSmokingStats(
         cvdList: List<CVDResponse>,
         patientMap: Map<String, PatientResponse>
-    ) {
-        smokingTotal = cvdList.size
-
-        smokingStats = buildStats(
+    ): List<StatRowData> {
+        return buildStats(
             source = cvdList,
-            total = smokingTotal,
+            total = cvdList.size,
             categories = YesNoEnum.entries,
             categorySelector = { YesNoEnum.entries.find { e -> e.code == it.smoker } },
             patientIdSelector = { it.patientId },
@@ -267,33 +277,19 @@ class ReportsViewModel @Inject constructor(
 
     private fun getBloodSugarStats(
         vitalsList: List<VitalResponse>,
-        patientMap: Map<String, PatientResponse>
-    ) {
-        val fastingVitalsList = vitalsList.filter { it.bloodGlucose!!.type == BGEnum.FASTING.value }
-        bloodSugarFastingTotal = fastingVitalsList.size
-
-        bloodSugarFastingStats = buildStats(
-            source = fastingVitalsList,
-            total = bloodSugarFastingTotal,
+        patientMap: Map<String, PatientResponse>,
+        type: BloodSugarType
+    ): List<StatRowData> {
+        return buildStats(
+            source = vitalsList,
+            total = vitalsList.size,
             categories = BloodSugarCategory.entries,
             categorySelector = {
-                BloodSugarCategory.from(it.bloodGlucose!!.value, it.bloodGlucose.unit, BloodSugarType.FASTING)
-            },
-            patientIdSelector = { it.patientId },
-            label = { it.label },
-            color = { it.color },
-            patientMap = patientMap
-        )
-
-        val randomVitalsList = vitalsList.filter { it.bloodGlucose!!.type == BGEnum.RANDOM.value }
-        bloodSugarRandomTotal = randomVitalsList.size
-
-        bloodSugarRandomStats = buildStats(
-            source = randomVitalsList,
-            total = bloodSugarRandomTotal,
-            categories = BloodSugarCategory.entries,
-            categorySelector = {
-                BloodSugarCategory.from(it.bloodGlucose!!.value, it.bloodGlucose.unit, BloodSugarType.RANDOM)
+                BloodSugarCategory.from(
+                    it.bloodGlucose!!.value,
+                    it.bloodGlucose.unit,
+                    type
+                )
             },
             patientIdSelector = { it.patientId },
             label = { it.label },
@@ -305,12 +301,10 @@ class ReportsViewModel @Inject constructor(
     private fun getCholesterolStats(
         cvdList: List<CVDResponse>,
         patientMap: Map<String, PatientResponse>
-    ) {
-        cholesterolTotal = cvdList.size
-
-        cholesterolStats = buildStats(
+    ): List<StatRowData> {
+        return buildStats(
             source = cvdList,
-            total = cholesterolTotal,
+            total = cvdList.size,
             categories = CholesterolCategory.entries,
             categorySelector = {
                 CholesterolCategory.from(it.cholesterol!!, it.cholesterolUnit!!)
@@ -325,12 +319,10 @@ class ReportsViewModel @Inject constructor(
     private fun getCvdRiskStats(
         cvdList: List<CVDResponse>,
         patientMap: Map<String, PatientResponse>
-    ) {
-        cvdRiskTotal = cvdList.size
-
-        cvdRiskStats = buildStats(
+    ): List<StatRowData> {
+        return buildStats(
             source = cvdList,
-            total = cvdRiskTotal,
+            total = cvdList.size,
             categories = CvdRiskCategory.entries,
             categorySelector = { cvd ->
                 CvdRiskCategory.entries.find { it.matches(cvd.risk) }
