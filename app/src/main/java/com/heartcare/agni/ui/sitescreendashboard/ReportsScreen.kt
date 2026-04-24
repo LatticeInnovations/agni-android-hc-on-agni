@@ -31,6 +31,7 @@ import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -41,6 +42,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.heartcare.agni.R
 import com.heartcare.agni.data.local.enums.DateRangeEnum
+import com.heartcare.agni.data.local.enums.LevelsEnum.Companion.getLevelsDisplay
 import com.heartcare.agni.data.local.model.report.StatSubGroup
 import com.heartcare.agni.ui.common.DropdownComposable
 import com.heartcare.agni.ui.patientregistration.step3.LevelDropDownComposable
@@ -200,24 +202,30 @@ fun ReportsScreen(
                     )
                     DropdownComposable(
                         value = viewModel.selectedDivisionType,
-                        dropdownList = viewModel.divisionTypeOptions,
+                        dropdownList = getLevelsDisplay(),
                         label = "",
-                        updateValue = { viewModel.selectedDivisionType = it },
+                        updateValue = {
+                            viewModel.selectedDivisionType = it
+                            viewModel.getDivisionOptions()
+                        },
                         errorText = "",
                         isMandatory = true,
                         dropdownWeight = .92f
                     )
                     Spacer(modifier = Modifier.height(8.dp))
-                    DropdownComposable(
-                        value = viewModel.selectedDivisionName,
-                        dropdownList = viewModel.divisionNameOptions,
-                        label = "",
-                        updateValue = { viewModel.selectedDivisionName = it },
-                        errorText = "",
-                        isMandatory = true,
-                        dropdownWeight = .92f
-
-                    )
+                    key(viewModel.selectedDivisionType) {
+                        LevelDropDownComposable(
+                            value = viewModel.selectedDivision?.name ?: "",
+                            updateValue = {
+                                viewModel.selectedDivision = it
+                            },
+                            label = "",
+                            dropdownList = viewModel.divisionOptions,
+                            errorText = stringResource(R.string.required),
+                            isMandatory = true,
+                            isEnabled = true
+                        )
+                    }
                     Spacer(modifier = Modifier.height(16.dp))
                 }
             }

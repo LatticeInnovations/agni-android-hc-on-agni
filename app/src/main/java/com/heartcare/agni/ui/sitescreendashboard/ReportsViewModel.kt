@@ -16,11 +16,13 @@ import com.heartcare.agni.data.local.enums.CholesterolCategory
 import com.heartcare.agni.data.local.enums.CvdRiskCategory
 import com.heartcare.agni.data.local.enums.DateRangeEnum
 import com.heartcare.agni.data.local.enums.GenderEnum
+import com.heartcare.agni.data.local.enums.LevelsEnum
 import com.heartcare.agni.data.local.enums.YesNoEnum
 import com.heartcare.agni.data.local.model.report.StatRowData
 import com.heartcare.agni.data.local.repository.appointment.AppointmentRepository
 import com.heartcare.agni.data.local.repository.cvd.records.CVDAssessmentRepository
 import com.heartcare.agni.data.local.repository.healthfacility.HealthFacilityRepository
+import com.heartcare.agni.data.local.repository.levels.LevelRepository
 import com.heartcare.agni.data.local.repository.patient.PatientRepository
 import com.heartcare.agni.data.local.repository.preference.PreferenceRepository
 import com.heartcare.agni.data.local.repository.vital.VitalRepository
@@ -46,6 +48,7 @@ import java.util.Date
 class ReportsViewModel @Inject constructor(
     private val patientRepository: PatientRepository,
     private val healthFacilityRepository: HealthFacilityRepository,
+    private val levelRepository: LevelRepository,
     private val appointmentRepository: AppointmentRepository,
     private val cvdAssessmentRepository: CVDAssessmentRepository,
     private val vitalRepository: VitalRepository,
@@ -77,12 +80,9 @@ class ReportsViewModel @Inject constructor(
     var facilityOptions : List<LevelResponse> by mutableStateOf(emptyList())
     var selectedFacility : LevelResponse? by mutableStateOf(null)
 
-    val divisionTypeOptions = listOf("Province", "Island", "Area Council", "Village")
-    var selectedDivisionType by mutableStateOf(divisionTypeOptions.first())
-
-    val divisionNameOptions = listOf("Shefa province", "Torba province","Efate Island","Malampa Council","Pango Village")
-    var selectedDivisionName by mutableStateOf(divisionNameOptions.first())
-
+    var selectedDivisionType by mutableStateOf(LevelsEnum.AREA_COUNCIL.display)
+    var divisionOptions: List<LevelResponse> by mutableStateOf(emptyList())
+    var selectedDivision: LevelResponse? by mutableStateOf(null)
 
     var campaignPractitionerName by mutableStateOf("Dr. Sarah Naupa")
     var campaignContact by mutableStateOf("sarah@moh.vu, +678 55123")
@@ -98,6 +98,18 @@ class ReportsViewModel @Inject constructor(
             facilityOptions = healthFacilityRepository.getHealthFacilityInLevelResponse()
             selectedFacility = facilityOptions.find { it.code == user.hospitalCode }
             selectedFacility?.code?.let { getDataOfFacility(it) }
+
+            getDivisionOptions(false)
+            val userIslandId = facilityOptions.find { it.code == user.hospitalCode }!!.precedingLevelId!!
+            val userIsland = levelRepository.getLevelListByFhirIds(userIslandId)[0]
+            selectedDivision = levelRepository.getLevelListByFhirIds(userIsland.precedingLevelId!!)[0]
+        }
+    }
+
+    fun getDivisionOptions(resetSelection: Boolean = true) {
+        viewModelScope.launch(ioDispatcher) {
+            divisionOptions = levelRepository.getLevels(LevelsEnum.getCodeFromDisplay(selectedDivisionType))
+            if (resetSelection) selectedDivision = null
         }
     }
 
@@ -105,7 +117,7 @@ class ReportsViewModel @Inject constructor(
         return when (selectedTabIndex) {
             0 -> true
             1 -> selectedFacility != null
-            2 -> true
+            2 -> selectedDivision != null
             else -> false
         }
     }
