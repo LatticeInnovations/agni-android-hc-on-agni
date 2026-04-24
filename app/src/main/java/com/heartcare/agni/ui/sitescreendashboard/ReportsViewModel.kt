@@ -22,6 +22,7 @@ import com.heartcare.agni.data.local.repository.appointment.AppointmentRepositor
 import com.heartcare.agni.data.local.repository.cvd.records.CVDAssessmentRepository
 import com.heartcare.agni.data.local.repository.healthfacility.HealthFacilityRepository
 import com.heartcare.agni.data.local.repository.patient.PatientRepository
+import com.heartcare.agni.data.local.repository.preference.PreferenceRepository
 import com.heartcare.agni.data.local.repository.vital.VitalRepository
 import com.heartcare.agni.data.server.model.cvd.CVDResponse
 import com.heartcare.agni.data.server.model.levels.LevelResponse
@@ -48,8 +49,10 @@ class ReportsViewModel @Inject constructor(
     private val appointmentRepository: AppointmentRepository,
     private val cvdAssessmentRepository: CVDAssessmentRepository,
     private val vitalRepository: VitalRepository,
+    preferenceRepository: PreferenceRepository,
     @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) : BaseViewModel() {
+    val user = preferenceRepository.getUserDetails()!!
 
     var selectedTabIndex by mutableIntStateOf(0)
     var showDateRangeSheet by mutableStateOf(false)
@@ -93,6 +96,8 @@ class ReportsViewModel @Inject constructor(
     private fun getMasterLists() {
         viewModelScope.launch(ioDispatcher) {
             facilityOptions = healthFacilityRepository.getHealthFacilityInLevelResponse()
+            selectedFacility = facilityOptions.find { it.code == user.hospitalCode }
+            selectedFacility?.code?.let { getDataOfFacility(it) }
         }
     }
 
