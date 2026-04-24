@@ -4,28 +4,63 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.toMutableStateList
+import androidx.compose.ui.graphics.Color
+import androidx.lifecycle.viewModelScope
 import com.heartcare.agni.base.viewmodel.BaseViewModel
-import com.heartcare.agni.data.local.model.report.ServerStatDto
+import com.heartcare.agni.data.local.enums.AppointmentStatusEnum
+import com.heartcare.agni.data.local.enums.BloodSugarCategory
+import com.heartcare.agni.data.local.enums.BloodSugarType
+import com.heartcare.agni.data.local.enums.BmiCategory
+import com.heartcare.agni.data.local.enums.BpCategory
+import com.heartcare.agni.data.local.enums.CholesterolCategory
+import com.heartcare.agni.data.local.enums.CvdRiskCategory
+import com.heartcare.agni.data.local.enums.DateRangeEnum
+import com.heartcare.agni.data.local.enums.GenderEnum
+import com.heartcare.agni.data.local.enums.YesNoEnum
 import com.heartcare.agni.data.local.model.report.StatRowData
-import com.heartcare.agni.ui.theme.HighRiskCircle
-import com.heartcare.agni.ui.theme.LowRiskCircle
-import com.heartcare.agni.ui.theme.VeryHighRiskCircle2
+import com.heartcare.agni.data.local.repository.appointment.AppointmentRepository
+import com.heartcare.agni.data.local.repository.cvd.records.CVDAssessmentRepository
+import com.heartcare.agni.data.local.repository.healthfacility.HealthFacilityRepository
+import com.heartcare.agni.data.local.repository.patient.PatientRepository
+import com.heartcare.agni.data.local.repository.vital.VitalRepository
+import com.heartcare.agni.data.server.model.cvd.CVDResponse
+import com.heartcare.agni.data.server.model.levels.LevelResponse
+import com.heartcare.agni.data.server.model.patient.PatientResponse
+import com.heartcare.agni.data.server.model.vitals.VitalResponse
+import com.heartcare.agni.di.dispatcher.IoDispatcher
+import com.heartcare.agni.ui.vitalsscreen.enums.BGEnum
+import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.plusMinusDays
+import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toAge
+import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toEndOfDay
+import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toTimeInMilli
+import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toTodayStartDate
 import dagger.hilt.android.lifecycle.HiltViewModel
 import jakarta.inject.Inject
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.launch
+import java.util.Date
 
 @HiltViewModel
-class ReportsViewModel @Inject constructor() : BaseViewModel() {
+class ReportsViewModel @Inject constructor(
+    private val patientRepository: PatientRepository,
+    private val healthFacilityRepository: HealthFacilityRepository,
+    private val appointmentRepository: AppointmentRepository,
+    private val cvdAssessmentRepository: CVDAssessmentRepository,
+    private val vitalRepository: VitalRepository,
+    @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher
+) : BaseViewModel() {
 
     var selectedTabIndex by mutableIntStateOf(0)
     var showDateRangeSheet by mutableStateOf(false)
-    var selectedDateRangeLabel by mutableStateOf("")
+    var selectedDateRangeLabel by mutableStateOf(DateRangeEnum.LAST_7_DAYS.label)
+    var dateRangeStart by mutableStateOf(Date(Date().plusMinusDays(-7).toTodayStartDate()))
+    var dateRangeEnd by mutableStateOf(Date(Date().toEndOfDay()))
 
     val campaignOptions = listOf("Vila Central Outreach", "NCD Screening", "Hypertension follow-up")
     var selectedCampaign by mutableStateOf(campaignOptions.first())
 
-    val facilityOptions = listOf("Luganville Hispital", "Lenakel Hospital", "Norsup Hospital")
-    var selectedFacility by mutableStateOf(facilityOptions.first())
+    var facilityOptions : List<LevelResponse> by mutableStateOf(emptyList())
+    var selectedFacility : LevelResponse? by mutableStateOf(null)
 
     val divisionTypeOptions = listOf("Province", "Island", "Area Council", "Village")
     var selectedDivisionType by mutableStateOf(divisionTypeOptions.first())
@@ -41,146 +76,290 @@ class ReportsViewModel @Inject constructor() : BaseViewModel() {
 
 
     // Summary Card
-    var totalScreened by mutableStateOf("1,247")
-    var totalMale by mutableStateOf("664")
-    var totalFemale by mutableStateOf("583")
+    var totalScreened by mutableIntStateOf(0)
+    var totalMale by mutableIntStateOf(0)
+    var totalFemale by mutableIntStateOf(0)
+    var totalOther by mutableIntStateOf(0)
 
-    val ageGroups = listOf(
-        "18-29" to "198",
-        "30-44" to "412",
-        "45-59" to "389",
-        "60+" to "248"
-    )
+    var ageGroups: List<Pair<String, String>> = emptyList()
 
-
-    var bmiStats = mutableListOf<StatRowData>()
-    var bloodPressureStats = mutableListOf<StatRowData>()
-    var smokingStats = mutableListOf<StatRowData>()
-    var bloodSugarFastingStats = mutableListOf<StatRowData>()
-    var bloodSugarRandomStats = mutableListOf<StatRowData>()
-    var cholesterolStats = mutableListOf<StatRowData>()
-
-    var cvdRiskStats = mutableListOf<StatRowData>()
-
+    var bmiTotal by mutableIntStateOf(0)
+    var bmiStats by mutableStateOf(listOf<StatRowData>())
+    var bloodPressureTotal by mutableIntStateOf(0)
+    var bloodPressureStats by mutableStateOf(listOf<StatRowData>())
+    var smokingTotal by mutableIntStateOf(0)
+    var smokingStats by mutableStateOf(listOf<StatRowData>())
+    var bloodSugarFastingTotal by mutableIntStateOf(0)
+    var bloodSugarFastingStats by mutableStateOf(listOf<StatRowData>())
+    var bloodSugarRandomTotal by mutableIntStateOf(0)
+    var bloodSugarRandomStats by mutableStateOf(listOf<StatRowData>())
+    var cholesterolTotal by mutableIntStateOf(0)
+    var cholesterolStats by mutableStateOf(listOf<StatRowData>())
+    var cvdRiskTotal by mutableIntStateOf(0)
+    var cvdRiskStats by mutableStateOf(listOf<StatRowData>())
 
     init {
-        fetchBmiDataFromServer()
-        fetchBloodPressureData()
-        fetchSmokingData()
-        fetchBloodSugarData()
-        fetchCholesterolData()
-        fetchCvdRiskData()
+        getMasterLists()
     }
 
-    private fun fetchBmiDataFromServer() {
-        val mockNetworkResponse = listOf(
-            ServerStatDto(
-                "Underweight (≤ 18.5 kg/m²)",
-                maleCount = 32,
-                femaleCount = 30,
-                severityLevel = 1
-            ),
-            ServerStatDto(
-                "Normal (18.6 - 24.9 kg/m²)",
-                maleCount = 123,
-                femaleCount = 110,
-                severityLevel = 0
-            ),
-            ServerStatDto(
-                "Overweight (25.0 - 29.9 kg/m²)",
-                maleCount = 54,
-                femaleCount = 23,
-                severityLevel = 1
-            ),
-            ServerStatDto(
-                "Obese (≥ 30.0 kg/m²)",
-                maleCount = 23,
-                femaleCount = 34,
-                severityLevel = 2
-            )
-        )
-        bmiStats = mapServerDataToUiModel(
-            totalScreened = 429,
-            rawData = mockNetworkResponse
-        ).toMutableStateList()
+    private fun getMasterLists() {
+        viewModelScope.launch(ioDispatcher) {
+            facilityOptions = healthFacilityRepository.getHealthFacilityInLevelResponse()
+        }
     }
 
-    private fun mapServerDataToUiModel(
-        totalScreened: Int,
-        rawData: List<ServerStatDto>
-    ): List<StatRowData> {
-        return rawData.map { dto ->
-            val totalForCategory = dto.maleCount + dto.femaleCount
-            val percentage =
-                if (totalScreened > 0) totalForCategory.toFloat() / totalScreened.toFloat() else 0f
-            val percentageInt = (percentage * 100).toInt()
-            val color = when (dto.severityLevel) {
-                0 -> LowRiskCircle
-                1 -> HighRiskCircle
-                else -> VeryHighRiskCircle2
+    fun showSummary(): Boolean {
+        return when (selectedTabIndex) {
+            0 -> true
+            1 -> selectedFacility != null
+            2 -> true
+            else -> false
+        }
+    }
+
+    fun getDataOfFacility(hospitalCode: String) {
+        viewModelScope.launch(ioDispatcher) {
+            val appointments = appointmentRepository.getAppointmentListByDateRange(
+                startOfDay = dateRangeStart.time,
+                endOfDay = dateRangeEnd.time
+            ).filter { appointmentResponseLocal ->
+                (appointmentResponseLocal.status == AppointmentStatusEnum.IN_PROGRESS.value ||
+                        appointmentResponseLocal.status == AppointmentStatusEnum.COMPLETED.value)
+                        && appointmentResponseLocal.hospitalCode == hospitalCode
             }
-            StatRowData(
-                label = dto.categoryName,
-                valueStr = "$percentageInt% (F ${dto.femaleCount}, M ${dto.maleCount})",
-                progress = percentage,
-                progressColor = color
+
+            val patients = patientRepository.getPatientById(*appointments.map { it.patientId }.toTypedArray())
+            totalScreened = patients.size
+            totalMale = patients.filter { it.gender == GenderEnum.MALE.value }.size
+            totalFemale = patients.filter { it.gender == GenderEnum.FEMALE.value }.size
+            totalOther = patients.filter { it.gender == GenderEnum.OTHER.value }.size
+
+            ageGroups = listOf(
+                "18-29" to patients.filter { it.birthDate.toTimeInMilli().toAge() in 18..29 }.size.toString(),
+                "30-44" to patients.filter { it.birthDate.toTimeInMilli().toAge() in 30..44 }.size.toString(),
+                "45-59" to patients.filter { it.birthDate.toTimeInMilli().toAge() in 45..59 }.size.toString(),
+                "60+" to patients.filter { it.birthDate.toTimeInMilli().toAge() >= 60 }.size.toString()
             )
+
+            val patientMap = patients.associateBy { it.id }
+
+            val cvdList = cvdAssessmentRepository.getCVDRecordByAppointmentIds(*appointments.map { it.uuid }.toTypedArray())
+
+            val latestCVDList = cvdList
+                .groupBy {
+                    it.patientId
+                }.map { (_, cvd) ->
+                    cvd.maxBy { it.createdOn }
+                }
+            getBmiStats(latestCVDList, patientMap)
+            getBloodPressureStats(latestCVDList, patientMap)
+            getSmokingStats(latestCVDList, patientMap)
+            getCvdRiskStats(latestCVDList, patientMap)
+
+            val latestCholesterolCVDList = cvdList
+                .filter { it.cholesterol != null && !it.cholesterolUnit.isNullOrBlank() }
+                .groupBy {
+                    it.patientId
+                }.map { (_, cvd) ->
+                    cvd.maxBy { it.createdOn }
+                }
+            getCholesterolStats(latestCholesterolCVDList, patientMap)
+
+            val latestVitalsList = vitalRepository.getLastVitalByAppointmentId(*appointments.map { it.uuid }.toTypedArray())
+                .filter { it.bloodGlucose != null }
+                .groupBy {
+                    it.patientId
+                }.map { (_, vitals) ->
+                    vitals.maxBy { it.appUpdatedDate }
+                }
+            getBloodSugarStats(latestVitalsList, patientMap)
         }
     }
 
+    private inline fun <T, E> buildStats(
+        source: List<T>,
+        total: Int,
+        categories: List<E>,
+        crossinline categorySelector: (T) -> E?,
+        crossinline patientIdSelector: (T) -> String,
+        crossinline label: (E) -> String,
+        crossinline color: (E) -> Color,
+        patientMap: Map<String, PatientResponse>
+    ): MutableList<StatRowData> {
 
-    private fun fetchBloodPressureData() {
-        bloodPressureStats = mutableListOf(
-            StatRowData("Normal (< 140/90 mmHg)", "43% (F110, M 123)", 0.43f, LowRiskCircle),
-            StatRowData("High (140/90 - 159/99 mmHg)", "32% (F 23, M 54)", 0.32f, HighRiskCircle),
+        return categories.map { category ->
+
+            val filtered = source.filter { categorySelector(it) == category }
+
+            val patients = filtered.mapNotNull { patientMap[patientIdSelector(it)] }
+
+            val male = patients.count { it.gender == GenderEnum.MALE.value }
+            val female = patients.count { it.gender == GenderEnum.FEMALE.value }
+            val other = patients.count { it.gender == GenderEnum.OTHER.value }
+
+            val size = patients.size
+
             StatRowData(
-                "Very High (≥ 160/100 mmHg)",
-                "20% (F 34, M 23)",
-                0.20f,
-                VeryHighRiskCircle2
+                label = label(category),
+                maleCount = male,
+                femaleCount = female,
+                otherCount = other,
+                percentage = if (total == 0) 0 else (size * 100 / total),
+                progress = if (total == 0) 0f else size.toFloat() / total,
+                progressColor = color(category)
             )
+        }.toMutableList()
+    }
+
+    private fun getBmiStats(
+        cvdList: List<CVDResponse>,
+        patientMap: Map<String, PatientResponse>
+    ) {
+        bmiTotal = cvdList.size
+
+        bmiStats = buildStats(
+            source = cvdList,
+            total = bmiTotal,
+            categories = BmiCategory.entries,
+            categorySelector = { cvd -> BmiCategory.entries.find { cvd.bmi in it.min..it.max } },
+            patientIdSelector = { it.patientId },
+            label = { it.label },
+            color = { it.color },
+            patientMap = patientMap
+        )
+    }
+    
+    private fun getBloodPressureStats(
+        cvdList: List<CVDResponse>,
+        patientMap: Map<String, PatientResponse>
+    ) {
+        bloodPressureTotal = cvdList.size
+
+        bloodPressureStats = buildStats(
+            source = cvdList,
+            total = bloodPressureTotal,
+            categories = BpCategory.entries,
+            categorySelector = { BpCategory.from(it.bpSystolic, it.bpDiastolic) },
+            patientIdSelector = { it.patientId },
+            label = { it.label },
+            color = { it.color },
+            patientMap = patientMap
         )
     }
 
+    private fun getSmokingStats(
+        cvdList: List<CVDResponse>,
+        patientMap: Map<String, PatientResponse>
+    ) {
+        smokingTotal = cvdList.size
 
-    private fun fetchSmokingData() {
-        smokingStats = mutableListOf(
-            StatRowData("Yes", "57% (F 30, M 32)", 0.57f, VeryHighRiskCircle2),
-            StatRowData("No", "43% (F 110, M 123)", 0.43f, LowRiskCircle)
+        smokingStats = buildStats(
+            source = cvdList,
+            total = smokingTotal,
+            categories = YesNoEnum.entries,
+            categorySelector = { YesNoEnum.entries.find { e -> e.code == it.smoker } },
+            patientIdSelector = { it.patientId },
+            label = { it.display },
+            color = { it.color },
+            patientMap = patientMap
         )
     }
 
-    private fun fetchBloodSugarData() {
-        bloodSugarFastingStats = mutableListOf(
-            StatRowData("Normal", "43% (F 30, M 32)", 0.43f, LowRiskCircle),
-            StatRowData("Above Normal", "32% (F 32, M 12)", 0.32f, HighRiskCircle)
+    private fun getBloodSugarStats(
+        vitalsList: List<VitalResponse>,
+        patientMap: Map<String, PatientResponse>
+    ) {
+        val fastingVitalsList = vitalsList.filter { it.bloodGlucose!!.type == BGEnum.FASTING.value }
+        bloodSugarFastingTotal = fastingVitalsList.size
+
+        bloodSugarFastingStats = buildStats(
+            source = fastingVitalsList,
+            total = bloodSugarFastingTotal,
+            categories = BloodSugarCategory.entries,
+            categorySelector = {
+                BloodSugarCategory.from(it.bloodGlucose!!.value, it.bloodGlucose.unit, BloodSugarType.FASTING)
+            },
+            patientIdSelector = { it.patientId },
+            label = { it.label },
+            color = { it.color },
+            patientMap = patientMap
         )
-        bloodSugarRandomStats = mutableListOf(
-            StatRowData("Normal", "43% (F 23, M 12)", 0.43f, LowRiskCircle),
-            StatRowData("Above Normal", "32% (F 45, M 23)", 0.32f, HighRiskCircle)
+
+        val randomVitalsList = vitalsList.filter { it.bloodGlucose!!.type == BGEnum.RANDOM.value }
+        bloodSugarRandomTotal = randomVitalsList.size
+
+        bloodSugarRandomStats = buildStats(
+            source = randomVitalsList,
+            total = bloodSugarRandomTotal,
+            categories = BloodSugarCategory.entries,
+            categorySelector = {
+                BloodSugarCategory.from(it.bloodGlucose!!.value, it.bloodGlucose.unit, BloodSugarType.RANDOM)
+            },
+            patientIdSelector = { it.patientId },
+            label = { it.label },
+            color = { it.color },
+            patientMap = patientMap
         )
     }
 
-    private fun fetchCholesterolData() {
-        cholesterolStats = mutableListOf(
-            StatRowData("Normal", "43% (F110, M 123)", 0.43f, LowRiskCircle),
-            StatRowData("Above Normal", "32% (F 23, M 54)", 0.32f, HighRiskCircle)
+    private fun getCholesterolStats(
+        cvdList: List<CVDResponse>,
+        patientMap: Map<String, PatientResponse>
+    ) {
+        cholesterolTotal = cvdList.size
+
+        cholesterolStats = buildStats(
+            source = cvdList,
+            total = cholesterolTotal,
+            categories = CholesterolCategory.entries,
+            categorySelector = {
+                CholesterolCategory.from(it.cholesterol!!, it.cholesterolUnit!!)
+            },
+            patientIdSelector = { it.patientId },
+            label = { it.label },
+            color = { it.color },
+            patientMap = patientMap
         )
     }
 
-    private fun fetchCvdRiskData() {
-        cvdRiskStats = mutableListOf(
-            StatRowData("Low (<10%)", "43% (F110, M 123)", 0.43f, LowRiskCircle),
-            StatRowData("Moderate (10-20%)", "32% (F 23, M 54)", 0.32f, HighRiskCircle),
-            StatRowData("High (>20%)", "20% (F 34, M 23)", 0.20f, VeryHighRiskCircle2)
+    private fun getCvdRiskStats(
+        cvdList: List<CVDResponse>,
+        patientMap: Map<String, PatientResponse>
+    ) {
+        cvdRiskTotal = cvdList.size
+
+        cvdRiskStats = buildStats(
+            source = cvdList,
+            total = cvdRiskTotal,
+            categories = CvdRiskCategory.entries,
+            categorySelector = { cvd ->
+                CvdRiskCategory.entries.find { it.matches(cvd.risk) }
+            },
+            patientIdSelector = { it.patientId },
+            label = { it.label },
+            color = { it.color },
+            patientMap = patientMap
         )
     }
 
-    fun updateDateRange(rangeType: String, start: String?, end: String?) {
-        selectedDateRangeLabel = if (rangeType == "Custom range" && start != null && end != null) {
-            "$start - $end"
-        } else {
-            rangeType
+    fun updateDateRange(rangeType: String, start: Date?, end: Date?) {
+        selectedDateRangeLabel = rangeType
+        dateRangeEnd = Date(Date().toEndOfDay())
+        when (rangeType) {
+            DateRangeEnum.LAST_7_DAYS.label -> {
+                dateRangeStart = Date(Date().plusMinusDays(-7).toTodayStartDate())
+            }
+            DateRangeEnum.LAST_30_DAYS.label -> {
+                dateRangeStart = Date(Date().plusMinusDays(-30).toTodayStartDate())
+            }
+            DateRangeEnum.LAST_90_DAYS.label -> {
+                dateRangeStart = Date(Date().plusMinusDays(-90).toTodayStartDate())
+            }
+            DateRangeEnum.CUSTOM_RANGE.label -> {
+                dateRangeStart = start!!
+                dateRangeEnd = end!!
+            }
         }
+        selectedFacility?.code?.let { getDataOfFacility(it) }
     }
 }

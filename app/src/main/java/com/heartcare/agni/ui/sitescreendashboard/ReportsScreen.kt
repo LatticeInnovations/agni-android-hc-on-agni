@@ -1,17 +1,36 @@
 package com.heartcare.agni.ui.sitescreendashboard
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.outlined.LocationOn
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
+import androidx.compose.material3.Text
+import androidx.compose.material3.surfaceColorAtElevation
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -21,10 +40,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.heartcare.agni.R
+import com.heartcare.agni.data.local.enums.DateRangeEnum
 import com.heartcare.agni.data.local.model.report.StatSubGroup
 import com.heartcare.agni.ui.common.DropdownComposable
+import com.heartcare.agni.ui.patientregistration.step3.LevelDropDownComposable
 import com.heartcare.agni.ui.sitescreendashboard.components.DateRangeBottomSheet
 import com.heartcare.agni.ui.sitescreendashboard.components.StatProgressCard
+import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toDateRange
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -36,17 +58,6 @@ fun ReportsScreen(
         stringResource(R.string.tab_facility),
         stringResource(R.string.tab_division)
     )
-
-    val fastingLabel = stringResource(R.string.blood_sugar_fasting)
-    val randomLabel = stringResource(R.string.blood_sugar_random)
-    val customRange = stringResource(R.string.custom_range)
-
-    // Initialise date range label once with localised default
-    LaunchedEffect(Unit) {
-        if (viewModel.selectedDateRangeLabel.isEmpty()) {
-            viewModel.selectedDateRangeLabel = customRange
-        }
-    }
 
     Column(
         modifier = Modifier
@@ -166,14 +177,17 @@ fun ReportsScreen(
                         style = MaterialTheme.typography.bodyMedium,
                         modifier = Modifier.padding(bottom = 8.dp)
                     )
-                    DropdownComposable(
-                        value = viewModel.selectedFacility,
-                        dropdownList = viewModel.facilityOptions,
+                    LevelDropDownComposable(
+                        value = viewModel.selectedFacility?.name ?: "",
+                        updateValue = {
+                            viewModel.selectedFacility = it
+                            viewModel.getDataOfFacility(viewModel.selectedFacility!!.code)
+                        },
                         label = "",
-                        updateValue = { viewModel.selectedFacility = it },
-                        errorText = "",
+                        dropdownList = viewModel.facilityOptions,
+                        errorText = stringResource(R.string.health_facility_required),
                         isMandatory = true,
-                        dropdownWeight = .92f
+                        isEnabled = true
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                 }
@@ -228,136 +242,179 @@ fun ReportsScreen(
                             color = MaterialTheme.colorScheme.outline
                         )
                     }
-                    OutlinedButton(
-                        onClick = { viewModel.showDateRangeSheet = true },
-                        shape = RoundedCornerShape(8.dp),
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
+
+                    Column(
+                        horizontalAlignment = Alignment.End
                     ) {
-                        Text(
-                            text = viewModel.selectedDateRangeLabel,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            style = MaterialTheme.typography.labelLarge
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Icon(
-                            imageVector = Icons.Default.ArrowDropDown,
-                            contentDescription = null,
-                            modifier = Modifier.size(16.dp),
-                            tint = MaterialTheme.colorScheme.onSurface
-                        )
-                    }
-                }
-            }
+                        OutlinedButton(
+                            onClick = { viewModel.showDateRangeSheet = true },
+                            shape = RoundedCornerShape(8.dp),
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
+                        ) {
+                            Text(
+                                text = viewModel.selectedDateRangeLabel,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                style = MaterialTheme.typography.labelLarge
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Icon(
+                                imageVector = Icons.Default.ArrowDropDown,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp),
+                                tint = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
 
-            // Summary Card
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 16.dp),
-                shape = RoundedCornerShape(12.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(2.dp)
-                )
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text(
-                        text = stringResource(R.string.screened_count, viewModel.totalScreened),
-                        style = MaterialTheme.typography.titleMedium
-                    )
-                    Text(
-                        text = stringResource(
-                            R.string.screened_gender_breakdown,
-                            viewModel.totalMale,
-                            viewModel.totalFemale
-                        ),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.outline,
-                        modifier = Modifier.padding(bottom = 16.dp)
-                    )
-
-                    Text(
-                        text = stringResource(R.string.age_group),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.outline,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(bottom = 8.dp)
-                    )
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        viewModel.ageGroups.forEach { (range, count) ->
-                            Column(
-                                modifier = Modifier
-                                    .background(
-                                        MaterialTheme.colorScheme.surfaceVariant,
-                                        RoundedCornerShape(8.dp)
-                                    )
-                                    .padding(vertical = 12.dp)
-                                    .padding(start = 16.dp, end = 25.dp),
-                                horizontalAlignment = Alignment.Start
-                            ) {
-                                Text(
-                                    text = range,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.outline
-                                )
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Text(
-                                    text = count,
-                                    style = MaterialTheme.typography.titleMedium
-                                )
-                            }
+                        if (viewModel.selectedDateRangeLabel == DateRangeEnum.CUSTOM_RANGE.label) {
+                            Text(
+                                text = "${viewModel.dateRangeStart.toDateRange()} - ${viewModel.dateRangeEnd.toDateRange()}",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.outline
+                            )
                         }
                     }
                 }
             }
 
-            // Statistics Cards
-            StatProgressCard(
-                title = stringResource(R.string.stat_bmi_categories),
-                stats = viewModel.bmiStats,
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
+            AnimatedVisibility(
+                visible = viewModel.showSummary(),
+                enter = fadeIn()
+            ) {
+                if (viewModel.totalScreened > 0) {
+                    Column {
+                        // Summary Card
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 16.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(2.dp)
+                            )
+                        ) {
+                            Column(modifier = Modifier.padding(16.dp)) {
+                                Text(
+                                    text = stringResource(
+                                        R.string.screened_count,
+                                        viewModel.totalScreened
+                                    ),
+                                    style = MaterialTheme.typography.titleMedium
+                                )
+                                Text(
+                                    text = stringResource(
+                                        R.string.screened_gender_breakdown,
+                                        viewModel.totalMale,
+                                        viewModel.totalFemale,
+                                        viewModel.totalOther
+                                    ),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.outline,
+                                    modifier = Modifier.padding(bottom = 16.dp)
+                                )
 
-            StatProgressCard(
-                title = stringResource(R.string.stat_blood_pressure),
-                stats = viewModel.bloodPressureStats,
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
+                                Text(
+                                    text = stringResource(R.string.age_group),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.outline,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.padding(bottom = 8.dp)
+                                )
 
-            StatProgressCard(
-                title = stringResource(R.string.stat_smoking_status),
-                stats = viewModel.smokingStats,
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    viewModel.ageGroups.forEach { (range, count) ->
+                                        Column(
+                                            modifier = Modifier
+                                                .background(
+                                                    MaterialTheme.colorScheme.surfaceVariant,
+                                                    RoundedCornerShape(8.dp)
+                                                )
+                                                .padding(vertical = 12.dp)
+                                                .padding(start = 16.dp, end = 25.dp),
+                                            horizontalAlignment = Alignment.Start
+                                        ) {
+                                            Text(
+                                                text = range,
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colorScheme.outline
+                                            )
+                                            Spacer(modifier = Modifier.height(4.dp))
+                                            Text(
+                                                text = count,
+                                                style = MaterialTheme.typography.titleMedium
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
 
-            StatProgressCard(
-                title = stringResource(R.string.stat_blood_sugar),
-                subGroups = listOf(
-                    StatSubGroup(fastingLabel, viewModel.bloodSugarFastingStats),
-                    StatSubGroup(randomLabel, viewModel.bloodSugarRandomStats)
-                ),
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
+                        // Statistics Cards
+                        StatProgressCard(
+                            title = stringResource(R.string.stat_bmi_categories, viewModel.bmiTotal),
+                            stats = viewModel.bmiStats,
+                            modifier = Modifier.padding(bottom = 16.dp)
+                        )
 
-            StatProgressCard(
-                title = stringResource(R.string.stat_total_cholesterol),
-                stats = viewModel.cholesterolStats,
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
+                        StatProgressCard(
+                            title = stringResource(R.string.stat_blood_pressure, viewModel.bloodPressureTotal),
+                            stats = viewModel.bloodPressureStats,
+                            modifier = Modifier.padding(bottom = 16.dp)
+                        )
 
-            StatProgressCard(
-                title = stringResource(R.string.stat_cvd_risk),
-                stats = viewModel.cvdRiskStats,
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
+                        StatProgressCard(
+                            title = stringResource(R.string.stat_smoking_status, viewModel.smokingTotal),
+                            stats = viewModel.smokingStats,
+                            modifier = Modifier.padding(bottom = 16.dp)
+                        )
+
+                        StatProgressCard(
+                            title = stringResource(R.string.stat_blood_sugar, viewModel.bloodSugarFastingTotal + viewModel.bloodSugarRandomTotal),
+                            subGroups = listOf(
+                                StatSubGroup(stringResource(R.string.blood_sugar_fasting, viewModel.bloodSugarFastingTotal), viewModel.bloodSugarFastingStats),
+                                StatSubGroup(stringResource(R.string.blood_sugar_random, viewModel.bloodSugarRandomTotal), viewModel.bloodSugarRandomStats)
+                            ),
+                            modifier = Modifier.padding(bottom = 16.dp)
+                        )
+
+                        StatProgressCard(
+                            title = stringResource(R.string.stat_total_cholesterol, viewModel.cholesterolTotal),
+                            stats = viewModel.cholesterolStats,
+                            modifier = Modifier.padding(bottom = 16.dp)
+                        )
+
+                        StatProgressCard(
+                            title = stringResource(R.string.stat_cvd_risk, viewModel.cvdRiskTotal),
+                            stats = viewModel.cvdRiskStats,
+                            modifier = Modifier.padding(bottom = 16.dp)
+                        )
+
+                    }
+                } else {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(top = 60.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = stringResource(R.string.no_record_found),
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.secondary
+                        )
+                    }
+                }
+            }
         }
     }
 
     if (viewModel.showDateRangeSheet) {
         DateRangeBottomSheet(
+            selected = viewModel.selectedDateRangeLabel,
+            dateRangeStart = viewModel.dateRangeStart,
+            dateRangeEnd = viewModel.dateRangeEnd,
             onDismissRequest = { viewModel.showDateRangeSheet = false },
             onSaveClick = { rangeType, start, end ->
                 viewModel.updateDateRange(rangeType, start, end)

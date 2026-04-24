@@ -98,6 +98,26 @@ class AppointmentRepositoryImpl @Inject constructor(
         return appointmentDao.getLastCompletedAppointment(patientId)
     }
 
+    override suspend fun getAppointmentListByDateRange(
+        startOfDay: Long,
+        endOfDay: Long
+    ): List<AppointmentResponseLocal> {
+
+        return appointmentDao.getAppointmentsByDate(startOfDay, endOfDay)
+            .map { it.toAppointmentResponseLocal() }
+            .groupBy { it.patientId } // group by patient
+            .flatMap { (_, patientAppointments) ->
+
+                // group by day
+                patientAppointments
+                    .groupBy { it.slot.start.toddMMMyyyy() }
+                    .mapNotNull { (_, sameDayAppointments) ->
+                        // pick earliest appointment of that day
+                        sameDayAppointments.minByOrNull { it.createdOn }
+                    }
+            }
+    }
+            
     override suspend fun loadAppointmentForCampaign(
         patientId: String,
         campaignId: String

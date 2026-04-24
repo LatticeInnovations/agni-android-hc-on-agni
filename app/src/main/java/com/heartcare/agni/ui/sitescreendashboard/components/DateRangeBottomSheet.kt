@@ -1,6 +1,5 @@
 package com.heartcare.agni.ui.sitescreendashboard.components
 
-
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -39,22 +38,28 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.heartcare.agni.R
+import com.heartcare.agni.data.local.enums.DateRangeEnum
+import com.heartcare.agni.data.local.enums.DateRangeEnum.Companion.getDateRangeOptions
 import com.heartcare.agni.ui.common.DatePickerDialog
+import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toEndOfDay
+import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toTodayStartDate
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DateRangeBottomSheet(
+    selected: String,
+    dateRangeStart: Date,
+    dateRangeEnd: Date,
     onDismissRequest: () -> Unit,
-    onSaveClick: (rangeType:String,startDate: String?,endDate: String?) -> Unit
+    onSaveClick: (rangeType: String, startDate: Date?, endDate: Date?) -> Unit
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    var selectedRange by remember { mutableStateOf("Custom range") }
-    var startDate by remember { mutableStateOf("01 Jan, 2025") }
-    var endDate by remember { mutableStateOf("31 Mar, 2025") }
+    var selectedRange by remember { mutableStateOf(selected) }
+    var startDate by remember { mutableStateOf(dateRangeStart) }
+    var endDate by remember { mutableStateOf(dateRangeEnd) }
 
     var showStartDatePicker by remember { mutableStateOf(false) }
     var showEndDatePicker by remember { mutableStateOf(false) }
@@ -91,16 +96,7 @@ fun DateRangeBottomSheet(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Options
-            val customRange = stringResource(R.string.custom_range)
-            val options = listOf(
-                stringResource(R.string.last_7_days),
-                stringResource(R.string.last_30_days),
-                stringResource(R.string.last_90_days),
-                customRange
-            )
-            if (selectedRange.isEmpty()) selectedRange = customRange
-            options.forEach { option ->
+            getDateRangeOptions().forEach { option ->
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
@@ -118,7 +114,7 @@ fun DateRangeBottomSheet(
             }
 
             // Custom Range Selection
-            if (selectedRange == stringResource(R.string.custom_range)) {
+            if (selectedRange == DateRangeEnum.CUSTOM_RANGE.label) {
                 Spacer(modifier = Modifier.height(16.dp))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -126,7 +122,7 @@ fun DateRangeBottomSheet(
                 ) {
                     Box(modifier = Modifier.weight(1f)) {
                         OutlinedTextField(
-                            value = startDate,
+                            value = dateFormatter.format(startDate),
                             onValueChange = {},
                             readOnly = true,
                             enabled = false,
@@ -151,7 +147,7 @@ fun DateRangeBottomSheet(
                     }
                     Box(modifier = Modifier.weight(1f)) {
                         OutlinedTextField(
-                            value = endDate,
+                            value = dateFormatter.format(endDate),
                             onValueChange = {},
                             readOnly = true,
                             enabled = false,
@@ -184,7 +180,7 @@ fun DateRangeBottomSheet(
                 onClick = {
                     onSaveClick(
                         selectedRange,
-                        if (selectedRange ==customRangeTxt) startDate else null,
+                        if (selectedRange == customRangeTxt) startDate else null,
                         if (selectedRange == customRangeTxt) endDate else null
                     )
                     onDismissRequest()
@@ -200,17 +196,17 @@ fun DateRangeBottomSheet(
         DatePickerDialog(
             selectableDates = object : SelectableDates {
                 override fun isSelectableDate(utcTimeMillis: Long): Boolean {
-                    val endMillis = try { dateFormatter.parse(endDate)?.time ?: Long.MAX_VALUE } catch(_: Exception) { Long.MAX_VALUE }
+                    val endMillis = endDate.time
                     // Allow start date to be earlier than or exactly the same as end date
                     return utcTimeMillis <= endMillis
                 }
             },
-            initialSelectedDate = try { dateFormatter.parse(startDate) ?: Date() } catch(_: Exception) { Date() },
+            initialSelectedDate = startDate,
             dismissBtnText = stringResource(R.string.cancel),
             confirmBtnText = stringResource(R.string.ok),
             dismiss = { showStartDatePicker = false },
             confirm = { selected ->
-                startDate = dateFormatter.format(selected)
+                startDate = Date(selected.toTodayStartDate())
                 showStartDatePicker = false
             }
         )
@@ -220,17 +216,17 @@ fun DateRangeBottomSheet(
         DatePickerDialog(
             selectableDates = object : SelectableDates {
                 override fun isSelectableDate(utcTimeMillis: Long): Boolean {
-                    val startMillis = try { dateFormatter.parse(startDate)?.time ?: 0L } catch(_: Exception) { 0L }
+                    val startMillis = startDate.time
                     // Allow end date to be later than or exactly the same as start date
                     return utcTimeMillis >= startMillis
                 }
             },
-            initialSelectedDate = try { dateFormatter.parse(endDate) ?: Date() } catch(_: Exception) { Date() },
+            initialSelectedDate = endDate,
             dismissBtnText = stringResource(R.string.cancel),
             confirmBtnText = stringResource(R.string.ok),
             dismiss = { showEndDatePicker = false },
             confirm = { selected ->
-                endDate = dateFormatter.format(selected)
+                endDate = Date(selected.toEndOfDay())
                 showEndDatePicker = false
             }
         )
