@@ -59,9 +59,6 @@ class ReportsViewModel @Inject constructor(
 
     var selectedTabIndex by mutableIntStateOf(0)
     var showDateRangeSheet by mutableStateOf(false)
-    var selectedDateRangeLabel by mutableStateOf(DateRangeEnum.LAST_7_DAYS.label)
-    var dateRangeStart by mutableStateOf(Date(Date().plusMinusDays(-7).toTodayStartDate()))
-    var dateRangeEnd by mutableStateOf(Date(Date().toEndOfDay()))
 
     var facilityState by mutableStateOf(ReportUiState())
     var screeningSiteState by mutableStateOf(ReportUiState())
@@ -122,11 +119,16 @@ class ReportsViewModel @Inject constructor(
         }
     }
 
-    fun getDataOfFacility(hospitalCode: String) {
+    fun getDataOfFacility(
+        hospitalCode: String,
+        rangeType: String = DateRangeEnum.LAST_7_DAYS.label,
+        startDate: Date = Date(Date().plusMinusDays(-7).toTodayStartDate()),
+        endDate: Date = Date(Date().toEndOfDay())
+    ) {
         viewModelScope.launch(ioDispatcher) {
             val appointments = appointmentRepository.getAppointmentListByDateRange(
-                startOfDay = dateRangeStart.time,
-                endOfDay = dateRangeEnd.time
+                startOfDay = startDate.time,
+                endOfDay = endDate.time
             ).filter { appointmentResponseLocal ->
                 (appointmentResponseLocal.status == AppointmentStatusEnum.IN_PROGRESS.value ||
                         appointmentResponseLocal.status == AppointmentStatusEnum.COMPLETED.value)
@@ -163,6 +165,9 @@ class ReportsViewModel @Inject constructor(
             val randomVitalsList = latestVitalsList.filter { it.bloodGlucose!!.type == BGEnum.RANDOM.value }
 
             val newState = ReportUiState(
+                selectedDateRangeLabel = rangeType,
+                dateRangeStart = startDate,
+                dateRangeEnd = endDate,
                 totalScreened = patients.size,
                 totalMale = patients.count { it.gender == GenderEnum.MALE.value },
                 totalFemale = patients.count { it.gender == GenderEnum.FEMALE.value },
@@ -352,23 +357,27 @@ class ReportsViewModel @Inject constructor(
     }
 
     fun updateDateRange(rangeType: String, start: Date?, end: Date?) {
-        selectedDateRangeLabel = rangeType
-        dateRangeEnd = Date(Date().toEndOfDay())
+        var endDate = Date(Date().toEndOfDay())
+        var startDate = Date()
         when (rangeType) {
             DateRangeEnum.LAST_7_DAYS.label -> {
-                dateRangeStart = Date(Date().plusMinusDays(-7).toTodayStartDate())
+                startDate = Date(Date().plusMinusDays(-7).toTodayStartDate())
             }
             DateRangeEnum.LAST_30_DAYS.label -> {
-                dateRangeStart = Date(Date().plusMinusDays(-30).toTodayStartDate())
+                startDate = Date(Date().plusMinusDays(-30).toTodayStartDate())
             }
             DateRangeEnum.LAST_90_DAYS.label -> {
-                dateRangeStart = Date(Date().plusMinusDays(-90).toTodayStartDate())
+                startDate = Date(Date().plusMinusDays(-90).toTodayStartDate())
             }
             DateRangeEnum.CUSTOM_RANGE.label -> {
-                dateRangeStart = start!!
-                dateRangeEnd = end!!
+                startDate = start!!
+                endDate = end!!
             }
         }
-        selectedFacility?.code?.let { getDataOfFacility(it) }
+        when(selectedTabIndex) {
+            1 -> {
+                selectedFacility?.code?.let { getDataOfFacility(it, rangeType, startDate, endDate) }
+            }
+        }
     }
 }

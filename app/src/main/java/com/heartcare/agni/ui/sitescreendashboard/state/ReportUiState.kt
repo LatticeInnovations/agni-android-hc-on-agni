@@ -1,8 +1,16 @@
 package com.heartcare.agni.ui.sitescreendashboard.state
 
+import com.heartcare.agni.data.local.enums.DateRangeEnum
 import com.heartcare.agni.data.local.model.report.StatRowData
+import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.plusMinusDays
+import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toEndOfDay
+import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toTodayStartDate
+import java.util.Date
 
 data class ReportUiState(
+    val selectedDateRangeLabel: String = DateRangeEnum.LAST_7_DAYS.label,
+    val dateRangeStart: Date = Date(Date().plusMinusDays(-7).toTodayStartDate()),
+    val dateRangeEnd: Date = Date(Date().toEndOfDay()),
     val totalScreened: Int = 0,
     val totalMale: Int = 0,
     val totalFemale: Int = 0,

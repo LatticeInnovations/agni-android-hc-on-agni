@@ -260,7 +260,7 @@ fun ReportsScreen(
                             border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
                         ) {
                             Text(
-                                text = viewModel.selectedDateRangeLabel,
+                                text = viewModel.currentState.selectedDateRangeLabel,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 style = MaterialTheme.typography.labelLarge
                             )
@@ -273,9 +273,9 @@ fun ReportsScreen(
                             )
                         }
 
-                        if (viewModel.selectedDateRangeLabel == DateRangeEnum.CUSTOM_RANGE.label) {
+                        if (viewModel.currentState.selectedDateRangeLabel == DateRangeEnum.CUSTOM_RANGE.label) {
                             Text(
-                                text = "${viewModel.dateRangeStart.toDateRange()} - ${viewModel.dateRangeEnd.toDateRange()}",
+                                text = "${viewModel.currentState.dateRangeStart.toDateRange()} - ${viewModel.currentState.dateRangeEnd.toDateRange()}",
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.outline
                             )
@@ -420,9 +420,9 @@ fun ReportsScreen(
 
     if (viewModel.showDateRangeSheet) {
         DateRangeBottomSheet(
-            selected = viewModel.selectedDateRangeLabel,
-            dateRangeStart = viewModel.dateRangeStart,
-            dateRangeEnd = viewModel.dateRangeEnd,
+            selected = viewModel.currentState.selectedDateRangeLabel,
+            dateRangeStart = viewModel.currentState.dateRangeStart,
+            dateRangeEnd = viewModel.currentState.dateRangeEnd,
             onDismissRequest = { viewModel.showDateRangeSheet = false },
             onSaveClick = { rangeType, start, end ->
                 viewModel.updateDateRange(rangeType, start, end)
