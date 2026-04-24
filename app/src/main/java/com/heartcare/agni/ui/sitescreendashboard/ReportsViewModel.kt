@@ -18,6 +18,7 @@ import com.heartcare.agni.data.local.enums.DateRangeEnum
 import com.heartcare.agni.data.local.enums.GenderEnum
 import com.heartcare.agni.data.local.enums.LevelsEnum
 import com.heartcare.agni.data.local.enums.YesNoEnum
+import com.heartcare.agni.data.local.model.appointment.AppointmentResponseLocal
 import com.heartcare.agni.data.local.model.report.StatRowData
 import com.heartcare.agni.data.local.repository.appointment.AppointmentRepository
 import com.heartcare.agni.data.local.repository.cvd.records.CVDAssessmentRepository
@@ -135,82 +136,12 @@ class ReportsViewModel @Inject constructor(
                         && appointmentResponseLocal.hospitalCode == selectedFacility!!.code
             }
 
-            val patients = patientRepository.getPatientById(*appointments.map { it.patientId }.toTypedArray())
-            val patientMap = patients.associateBy { it.id }
-            val cvdList = cvdAssessmentRepository.getCVDRecordByAppointmentIds(*appointments.map { it.uuid }.toTypedArray())
-            val latestCVDList = cvdList
-                .groupBy {
-                    it.patientId
-                }.map { (_, cvd) ->
-                    cvd.maxBy { it.createdOn }
-                }
-
-            val latestCholesterolCVDList = cvdList
-                .filter { it.cholesterol != null && !it.cholesterolUnit.isNullOrBlank() }
-                .groupBy {
-                    it.patientId
-                }.map { (_, cvd) ->
-                    cvd.maxBy { it.createdOn }
-                }
-
-            val latestVitalsList = vitalRepository.getLastVitalByAppointmentId(*appointments.map { it.uuid }.toTypedArray())
-                .filter { it.bloodGlucose != null }
-                .groupBy {
-                    it.patientId
-                }.map { (_, vitals) ->
-                    vitals.maxBy { it.appUpdatedDate }
-                }
-
-            val fastingVitalsList = latestVitalsList.filter { it.bloodGlucose!!.type == BGEnum.FASTING.value }
-            val randomVitalsList = latestVitalsList.filter { it.bloodGlucose!!.type == BGEnum.RANDOM.value }
-
-            val newState = ReportUiState(
-                selectedDateRangeLabel = rangeType,
-                dateRangeStart = startDate,
-                dateRangeEnd = endDate,
-                totalScreened = patients.size,
-                totalMale = patients.count { it.gender == GenderEnum.MALE.value },
-                totalFemale = patients.count { it.gender == GenderEnum.FEMALE.value },
-                totalOther = patients.count { it.gender == GenderEnum.OTHER.value },
-
-                ageGroups = listOf(
-                    "18-29" to patients.filter { it.birthDate.toTimeInMilli().toAge() in 18..29 }.size.toString(),
-                    "30-44" to patients.filter { it.birthDate.toTimeInMilli().toAge() in 30..44 }.size.toString(),
-                    "45-59" to patients.filter { it.birthDate.toTimeInMilli().toAge() in 45..59 }.size.toString(),
-                    "60+" to patients.filter { it.birthDate.toTimeInMilli().toAge() >= 60 }.size.toString()
-                ),
-
-                bmiTotal = latestCVDList.size,
-                bmiStats = getBmiStats(latestCVDList, patientMap),
-
-                bloodPressureTotal = latestCVDList.size,
-                bloodPressureStats = getBloodPressureStats(latestCVDList, patientMap),
-
-                smokingTotal = latestCVDList.size,
-                smokingStats = getSmokingStats(latestCVDList, patientMap),
-
-                bloodSugarFastingTotal = fastingVitalsList.size,
-                bloodSugarFastingStats = getBloodSugarStats(
-                    fastingVitalsList,
-                    patientMap,
-                    BloodSugarType.FASTING
-                ),
-
-                bloodSugarRandomTotal = randomVitalsList.size,
-                bloodSugarRandomStats = getBloodSugarStats(
-                    randomVitalsList,
-                    patientMap,
-                    BloodSugarType.RANDOM
-                ),
-
-                cholesterolTotal = latestCholesterolCVDList.size,
-                cholesterolStats = getCholesterolStats(latestCholesterolCVDList, patientMap),
-
-                cvdRiskTotal = latestCVDList.size,
-                cvdRiskStats = getCvdRiskStats(latestCVDList, patientMap)
+            facilityState = getReportData(
+                rangeType = rangeType,
+                startDate = startDate,
+                endDate = endDate,
+                appointments = appointments
             )
-
-            facilityState = newState
         }
     }
 
@@ -233,83 +164,97 @@ class ReportsViewModel @Inject constructor(
                         appointmentResponseLocal.patientId in patientIdsInDivision
             }
 
-            val patients = patientRepository.getPatientById(*appointments.map { it.patientId }.toTypedArray())
-            val patientMap = patients.associateBy { it.id }
-            val cvdList = cvdAssessmentRepository.getCVDRecordByAppointmentIds(*appointments.map { it.uuid }.toTypedArray())
-            val latestCVDList = cvdList
-                .groupBy {
-                    it.patientId
-                }.map { (_, cvd) ->
-                    cvd.maxBy { it.createdOn }
-                }
-
-            val latestCholesterolCVDList = cvdList
-                .filter { it.cholesterol != null && !it.cholesterolUnit.isNullOrBlank() }
-                .groupBy {
-                    it.patientId
-                }.map { (_, cvd) ->
-                    cvd.maxBy { it.createdOn }
-                }
-
-            val latestVitalsList = vitalRepository.getLastVitalByAppointmentId(*appointments.map { it.uuid }.toTypedArray())
-                .filter { it.bloodGlucose != null }
-                .groupBy {
-                    it.patientId
-                }.map { (_, vitals) ->
-                    vitals.maxBy { it.appUpdatedDate }
-                }
-
-            val fastingVitalsList = latestVitalsList.filter { it.bloodGlucose!!.type == BGEnum.FASTING.value }
-            val randomVitalsList = latestVitalsList.filter { it.bloodGlucose!!.type == BGEnum.RANDOM.value }
-
-            val newState = ReportUiState(
-                selectedDateRangeLabel = rangeType,
-                dateRangeStart = startDate,
-                dateRangeEnd = endDate,
-                totalScreened = patients.size,
-                totalMale = patients.count { it.gender == GenderEnum.MALE.value },
-                totalFemale = patients.count { it.gender == GenderEnum.FEMALE.value },
-                totalOther = patients.count { it.gender == GenderEnum.OTHER.value },
-
-                ageGroups = listOf(
-                    "18-29" to patients.filter { it.birthDate.toTimeInMilli().toAge() in 18..29 }.size.toString(),
-                    "30-44" to patients.filter { it.birthDate.toTimeInMilli().toAge() in 30..44 }.size.toString(),
-                    "45-59" to patients.filter { it.birthDate.toTimeInMilli().toAge() in 45..59 }.size.toString(),
-                    "60+" to patients.filter { it.birthDate.toTimeInMilli().toAge() >= 60 }.size.toString()
-                ),
-
-                bmiTotal = latestCVDList.size,
-                bmiStats = getBmiStats(latestCVDList, patientMap),
-
-                bloodPressureTotal = latestCVDList.size,
-                bloodPressureStats = getBloodPressureStats(latestCVDList, patientMap),
-
-                smokingTotal = latestCVDList.size,
-                smokingStats = getSmokingStats(latestCVDList, patientMap),
-
-                bloodSugarFastingTotal = fastingVitalsList.size,
-                bloodSugarFastingStats = getBloodSugarStats(
-                    fastingVitalsList,
-                    patientMap,
-                    BloodSugarType.FASTING
-                ),
-
-                bloodSugarRandomTotal = randomVitalsList.size,
-                bloodSugarRandomStats = getBloodSugarStats(
-                    randomVitalsList,
-                    patientMap,
-                    BloodSugarType.RANDOM
-                ),
-
-                cholesterolTotal = latestCholesterolCVDList.size,
-                cholesterolStats = getCholesterolStats(latestCholesterolCVDList, patientMap),
-
-                cvdRiskTotal = latestCVDList.size,
-                cvdRiskStats = getCvdRiskStats(latestCVDList, patientMap)
+            divisionState = getReportData(
+                rangeType = rangeType,
+                startDate = startDate,
+                endDate = endDate,
+                appointments = appointments
             )
-
-            divisionState = newState
         }
+    }
+
+    private suspend fun getReportData(
+        rangeType: String,
+        startDate: Date,
+        endDate: Date,
+        appointments: List<AppointmentResponseLocal>
+    ): ReportUiState {
+        val patients = patientRepository.getPatientById(*appointments.map { it.patientId }.toTypedArray())
+        val patientMap = patients.associateBy { it.id }
+        val cvdList = cvdAssessmentRepository.getCVDRecordByAppointmentIds(*appointments.map { it.uuid }.toTypedArray())
+        val latestCVDList = cvdList
+            .groupBy {
+                it.patientId
+            }.map { (_, cvd) ->
+                cvd.maxBy { it.createdOn }
+            }
+
+        val latestCholesterolCVDList = cvdList
+            .filter { it.cholesterol != null && !it.cholesterolUnit.isNullOrBlank() }
+            .groupBy {
+                it.patientId
+            }.map { (_, cvd) ->
+                cvd.maxBy { it.createdOn }
+            }
+
+        val latestVitalsList = vitalRepository.getLastVitalByAppointmentId(*appointments.map { it.uuid }.toTypedArray())
+            .filter { it.bloodGlucose != null }
+            .groupBy {
+                it.patientId
+            }.map { (_, vitals) ->
+                vitals.maxBy { it.appUpdatedDate }
+            }
+
+        val fastingVitalsList = latestVitalsList.filter { it.bloodGlucose!!.type == BGEnum.FASTING.value }
+        val randomVitalsList = latestVitalsList.filter { it.bloodGlucose!!.type == BGEnum.RANDOM.value }
+
+        val newState = ReportUiState(
+            selectedDateRangeLabel = rangeType,
+            dateRangeStart = startDate,
+            dateRangeEnd = endDate,
+            totalScreened = patients.size,
+            totalMale = patients.count { it.gender == GenderEnum.MALE.value },
+            totalFemale = patients.count { it.gender == GenderEnum.FEMALE.value },
+            totalOther = patients.count { it.gender == GenderEnum.OTHER.value },
+
+            ageGroups = listOf(
+                "18-29" to patients.filter { it.birthDate.toTimeInMilli().toAge() in 18..29 }.size.toString(),
+                "30-44" to patients.filter { it.birthDate.toTimeInMilli().toAge() in 30..44 }.size.toString(),
+                "45-59" to patients.filter { it.birthDate.toTimeInMilli().toAge() in 45..59 }.size.toString(),
+                "60+" to patients.filter { it.birthDate.toTimeInMilli().toAge() >= 60 }.size.toString()
+            ),
+
+            bmiTotal = latestCVDList.size,
+            bmiStats = getBmiStats(latestCVDList, patientMap),
+
+            bloodPressureTotal = latestCVDList.size,
+            bloodPressureStats = getBloodPressureStats(latestCVDList, patientMap),
+
+            smokingTotal = latestCVDList.size,
+            smokingStats = getSmokingStats(latestCVDList, patientMap),
+
+            bloodSugarFastingTotal = fastingVitalsList.size,
+            bloodSugarFastingStats = getBloodSugarStats(
+                fastingVitalsList,
+                patientMap,
+                BloodSugarType.FASTING
+            ),
+
+            bloodSugarRandomTotal = randomVitalsList.size,
+            bloodSugarRandomStats = getBloodSugarStats(
+                randomVitalsList,
+                patientMap,
+                BloodSugarType.RANDOM
+            ),
+
+            cholesterolTotal = latestCholesterolCVDList.size,
+            cholesterolStats = getCholesterolStats(latestCholesterolCVDList, patientMap),
+
+            cvdRiskTotal = latestCVDList.size,
+            cvdRiskStats = getCvdRiskStats(latestCVDList, patientMap)
+        )
+
+        return newState
     }
 
     private inline fun <T, E> buildStats(
