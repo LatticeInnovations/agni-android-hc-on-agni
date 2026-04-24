@@ -24,4 +24,8 @@ class VitalRepositoryImpl @Inject constructor(
     override suspend fun updateVital(vitalResponse: VitalResponse): Int {
         return vitalDao.updateVitalData(vitalResponse.toVitalEntity())
     }
+
+    override suspend fun getLatestVitalForCampaign(patientId: String, campaignId: String): VitalResponse? {
+        return vitalDao.getLatestVitalForCampaign(patientId, campaignId)?.toVitalResponse()
+    }
 }

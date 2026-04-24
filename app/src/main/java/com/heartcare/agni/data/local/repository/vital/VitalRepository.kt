@@ -7,4 +7,5 @@ interface VitalRepository {
     suspend fun getLastVitalByAppointmentId(vararg appointmentIds: String): List<VitalResponse>
     suspend fun getVitalByAppointmentId(appointmentId: String): List<VitalResponse>
     suspend fun updateVital(vitalResponse: VitalResponse): Int
+    suspend fun getLatestVitalForCampaign(patientId: String, campaignId: String): VitalResponse?
 }

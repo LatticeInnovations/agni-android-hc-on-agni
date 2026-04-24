@@ -250,6 +250,11 @@ class SyncService(
         return checkAuthenticationStatus(syncRepository.sendCampaignCVDPostData(), logout)
     }
 
+    /** Upload Campaign Vital */
+    private suspend fun uploadCampaignVital(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
+        return checkAuthenticationStatus(syncRepository.sendCampaignVitalPostData(), logout)
+    }
+
     /** Upload Prior Dx */
     private suspend fun uploadPriorDx(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
         return checkAuthenticationStatus(syncRepository.sendPriorDxPostData(), logout)
@@ -614,13 +619,17 @@ class SyncService(
     /** Update Appointment FHIR ID in CVD */
     private suspend fun updateFhirIdInCVD(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
         genericRepository.updateCVDFhirIds()
-        return uploadCVD(logout)
+        val cvdResponse = uploadCVD(logout)
+        uploadCampaignCVD(logout)
+        return cvdResponse
     }
 
     /** Update Appointment FHIR ID in Vitals */
     private suspend fun updateFhirIdInVital(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
         genericRepository.updateVitalFhirId()
-        return uploadVital(logout)
+        val vitalResponse = uploadVital(logout)
+        uploadCampaignVital(logout)
+        return vitalResponse
     }
 
     /** Update Appointment FHIR ID in Diagnosis */

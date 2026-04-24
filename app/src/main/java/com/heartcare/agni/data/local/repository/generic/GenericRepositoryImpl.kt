@@ -121,9 +121,17 @@ class GenericRepositoryImpl @Inject constructor(
             .forEach { cvdGenericEntity ->
                 updateCVDFhirIdInGenericEntity(cvdGenericEntity)
             }
+        genericDao.getNotSyncedData(GenericTypeEnum.CAMPAIGN_CVD)
+            .forEach { cvdGenericEntity ->
+                updateCVDFhirIdInGenericEntity(cvdGenericEntity)
+            }
     }
     override suspend fun updateVitalFhirId() {
         genericDao.getNotSyncedData(GenericTypeEnum.VITAL)
+            .forEach { vitalGenericEntity ->
+                updateVitalFhirIdInGenericEntity(vitalGenericEntity)
+            }
+        genericDao.getNotSyncedData(GenericTypeEnum.CAMPAIGN_VITAL)
             .forEach { vitalGenericEntity ->
                 updateVitalFhirIdInGenericEntity(vitalGenericEntity)
             }
@@ -354,9 +362,10 @@ class GenericRepositoryImpl @Inject constructor(
         vitalResponse: VitalResponse,
         uuid: String
     ): Long {
+        val type = if (vitalResponse.campaignId != null) GenericTypeEnum.CAMPAIGN_VITAL else GenericTypeEnum.VITAL
         return genericDao.getGenericEntityById(
             patientId = vitalResponse.uuid,
-            genericTypeEnum = GenericTypeEnum.VITAL,
+            genericTypeEnum = type,
             syncType = SyncType.POST
         ).let {
             insertVitalGenericEntity(vitalResponse, it, uuid)

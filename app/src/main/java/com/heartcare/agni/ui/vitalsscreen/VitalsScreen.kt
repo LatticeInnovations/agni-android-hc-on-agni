@@ -91,6 +91,8 @@ import com.heartcare.agni.ui.vitalsscreen.components.LineChartViewGlucose
 import com.heartcare.agni.ui.vitalsscreen.components.SegmentedButtonForVital
 import com.heartcare.agni.ui.vitalsscreen.enums.BGEnum
 import com.heartcare.agni.ui.vitalsscreen.enums.VitalsTrendEnum
+import com.heartcare.agni.utils.constants.NavControllerConstants.CAMPAIGN_APPOINTMENT_ID
+import com.heartcare.agni.utils.constants.NavControllerConstants.CAMPAIGN_ID
 import com.heartcare.agni.utils.constants.NavControllerConstants.PATIENT
 import com.heartcare.agni.utils.constants.VitalConstants.ALL
 import com.heartcare.agni.utils.constants.VitalConstants.CVD_RECORD
@@ -181,6 +183,7 @@ fun VitalsScreen(navController: NavController, vitalsViewModel: VitalsViewModel 
                     onTypeSelected = { selectedType = it },
                     onContinueClick = {
                         if (selectedType == RecordType.FACILITY) {
+                            vitalsViewModel.selectedCampaignId = null
                             handleAddVitalLogic(vitalsViewModel, navController, scope, snackBarHostState, context)
                         } else if (selectedType == RecordType.SCREENING_SITE) {
                             currentStep = 2
@@ -189,17 +192,56 @@ fun VitalsScreen(navController: NavController, vitalsViewModel: VitalsViewModel 
                 )
                 2 -> ScreeningSiteListContent(
                     modifier = Modifier.padding(paddingValues).fillMaxSize(),
-                    sites = listOf(
-                        "Shefa Vaccine Drive",
-                        "Tanna Island Outreach Q2",
-                        "Torba Nutrition Program",
-                        "Santo Malaria Prevention"
-                    ),
+                    sites = vitalsViewModel.screeningSites.map { it.name },
                     selectedSite = selectedSite,
                     onSiteSelected = { selectedSite = it },
                     onBackClick = { currentStep = 1 },
                     onContinueClick = {
-                        handleAddVitalLogic(vitalsViewModel, navController, scope, snackBarHostState, context)
+                        val siteId = vitalsViewModel.screeningSites
+                            .find { it.name == selectedSite }?.id
+                        if (siteId != null) {
+                            vitalsViewModel.selectedCampaignId = siteId
+                            vitalsViewModel.getAppointmentInfo {
+                                scope.launch {
+                                    when {
+                                        vitalsViewModel.hasExistingCampaignVitalRecord -> {
+                                            navController.currentBackStackEntry?.savedStateHandle?.apply {
+                                                set(PATIENT, vitalsViewModel.patient)
+                                                set(CAMPAIGN_ID, vitalsViewModel.selectedCampaignId)
+                                                set(CAMPAIGN_APPOINTMENT_ID, vitalsViewModel.appointment?.uuid)
+                                            }
+                                            navController.navigate(Screen.AddVitalsScreen.route)
+                                        }
+                                        vitalsViewModel.canAddAssessment -> {
+                                            navController.currentBackStackEntry?.savedStateHandle?.apply {
+                                                set(PATIENT, vitalsViewModel.patient)
+                                                set(CAMPAIGN_ID, vitalsViewModel.selectedCampaignId)
+                                                set(CAMPAIGN_APPOINTMENT_ID, vitalsViewModel.appointment?.uuid)
+                                            }
+                                            navController.navigate(Screen.AddVitalsScreen.route)
+                                        }
+                                        else -> {
+                                            if (vitalsViewModel.selectedCampaignId != null) {
+                                                vitalsViewModel.addPatientToCampaignQueue(
+                                                    vitalsViewModel.patient!!,
+                                                    vitalsViewModel.selectedCampaignId!!
+                                                ) {
+                                                    vitalsViewModel.showAddToQueueDialog = false
+                                                    scope.launch {
+                                                        navController.currentBackStackEntry?.savedStateHandle?.apply {
+                                                            set(PATIENT, vitalsViewModel.patient)
+                                                            set(CAMPAIGN_ID, vitalsViewModel.selectedCampaignId)
+                                                            set(CAMPAIGN_APPOINTMENT_ID, vitalsViewModel.appointment?.uuid)
+                                                        }
+                                                        navController.navigate(Screen.AddVitalsScreen.route)
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
                 )
             }
@@ -229,11 +271,7 @@ fun VitalsScreen(navController: NavController, vitalsViewModel: VitalsViewModel 
                                 .fillMaxWidth(),
                             onClick = {
                                 if (vitalsViewModel.patient!!.patientDeceasedReason.isNullOrBlank()) {
-                                    if (vitalsViewModel.todayVital != null && !vitalsViewModel.existsInOtherHospital) {
-                                        handleAddVitalLogic(vitalsViewModel, navController, scope, snackBarHostState, context)
-                                    } else {
-                                        currentStep = 1
-                                    }
+                                    currentStep = 1
                                 } else {
                                     scope.launch {
                                         snackBarHostState.showSnackbar(
@@ -284,10 +322,11 @@ private fun handleAddVitalLogic(
 
                 viewModel.canAddAssessment -> {
                     coroutineScope.launch {
-                        navController.currentBackStackEntry?.savedStateHandle?.set(
-                            PATIENT,
-                            viewModel.patient
-                        )
+                        navController.currentBackStackEntry?.savedStateHandle?.apply {
+                            set(PATIENT, viewModel.patient)
+                            set(CAMPAIGN_ID, viewModel.selectedCampaignId)
+                            set(CAMPAIGN_APPOINTMENT_ID, viewModel.appointment?.uuid)
+                        }
                         navController.navigate(Screen.AddVitalsScreen.route)
                     }
                 }
@@ -412,6 +451,7 @@ fun HandleLaunchedEffect(vitalsViewModel: VitalsViewModel, navController: NavCon
                 patient?.let {
                     getAppointmentInfo {}
                     getVitalsAndCVDRecords()
+                    loadActiveScreeningSites()
                 }
             }
             msg = navController.currentBackStackEntry?.savedStateHandle?.get<String>(
@@ -868,6 +908,14 @@ private fun VitalsCardLayout(
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onPrimaryContainer
             )
+            vital.screeningSiteName?.let {
+                Text(
+                    modifier = Modifier.padding(top = 4.dp),
+                    text = it,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
             Text(
                 modifier = Modifier.padding(top = 4.dp),
                 text = vital.practitionerName ?: stringResource(id = R.string.dash),
@@ -1017,8 +1065,14 @@ private fun CVDRecordCardLayout(
                         text = cvdResponse.createdOn.convertedDate().convertDateFormat(),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onPrimaryContainer
-
                     )
+                    cvdResponse.screeningSiteName?.let {
+                        Text(
+                            text = it,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
                     Text(
                         text = cvdResponse.practitionerName ?: stringResource(id = R.string.dash),
                         style = MaterialTheme.typography.bodySmall

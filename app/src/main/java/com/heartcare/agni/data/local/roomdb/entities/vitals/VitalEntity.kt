@@ -5,18 +5,29 @@ import androidx.room.Embedded
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
+import com.heartcare.agni.data.local.roomdb.entities.campaign.CampaignAppointmentEntity
 import com.heartcare.agni.data.local.roomdb.entities.patient.PatientEntity
 import java.util.Date
 
 @Keep
 @Entity(
-    indices = [Index("fhirId"), Index("patientId"), Index("appointmentId")],
+    indices = [
+        Index("fhirId"),
+        Index("patientId"),
+        Index("appointmentId"),
+        Index("campaignAppointmentId")
+    ],
     primaryKeys = ["uuid"],
     foreignKeys = [
         ForeignKey(
             entity = PatientEntity::class,
             parentColumns = arrayOf("id"),
             childColumns = arrayOf("patientId")
+        ),
+        ForeignKey(
+            entity = CampaignAppointmentEntity::class,
+            parentColumns = arrayOf("id"),
+            childColumns = arrayOf("campaignAppointmentId")
         )
     ]
 )
@@ -24,7 +35,9 @@ data class VitalEntity(
     val uuid: String,
     val fhirId: String?,
     val patientId: String,
-    val appointmentId: String,
+    val appointmentId: String?,              // nullable — facility appointment
+    val campaignAppointmentId: String?,      // nullable — campaign appointment FK
+    val campaignId: String?,                 // nullable — screening site identifier
     val appUpdatedDate: Date,
     val practitionerName: String?,
 

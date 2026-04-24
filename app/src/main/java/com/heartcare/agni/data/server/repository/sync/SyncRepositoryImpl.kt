@@ -1476,6 +1476,47 @@ class SyncRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun sendCampaignVitalPostData(): ResponseMapper<List<CreateResponse>> {
+        return try {
+            genericDao.getSameTypeGenericEntityPayload(
+                genericTypeEnum = GenericTypeEnum.CAMPAIGN_VITAL, syncType = SyncType.POST
+            ).let { listOfGenericEntity ->
+                if (listOfGenericEntity.isEmpty()) ApiEmptyResponse()
+                else ApiResponseConverter.convert(
+                    vitalApiService.createData(VITAL, listOfGenericEntity.map {
+                        it.payload.fromJson<LinkedTreeMap<*, *>>()
+                            .mapToObject(VitalResponse::class.java)!!
+                    })
+                ).run {
+                    when (this) {
+                        is ApiEndResponse -> {
+                            insertVitalFhirId(
+                                listOfGenericEntity, body
+                            ).let { deletedRows -> if (deletedRows > 0) sendCampaignVitalPostData() else this }
+                        }
+
+                        else -> this
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            crashlyticsLogger.logException(
+                e,
+                "sendCampaignVitalPostData function failed.",
+                mapOf(
+                    Pair(
+                        USER_ID,
+                        preferenceRepository.getUserDetails()?.userId ?: ERROR_FETCHING_USER_DETAILS
+                    )
+                )
+            )
+            ApiErrorResponse(
+                statusCode = 0,
+                errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
+            )
+        }
+    }
+
     override suspend fun sendDiagnosisPostData(): ResponseMapper<List<CreateResponse>> {
         return try {
             genericDao.getSameTypeGenericEntityPayload(

@@ -143,7 +143,7 @@ private fun RecordDetailsComposable(
             .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        val siteName = viewModel.screeningSites.find { it.id == record.campaignId }?.name
+        val siteName = record.screeningSiteName
 
         Column {
             Text(

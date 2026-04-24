@@ -18,6 +18,7 @@ import com.heartcare.agni.data.local.repository.patient.lastupdated.PatientLastU
 import com.heartcare.agni.data.local.repository.cvd.records.CVDAssessmentRepository
 import com.heartcare.agni.data.local.repository.preference.PreferenceRepository
 import com.heartcare.agni.data.local.repository.schedule.ScheduleRepository
+import com.heartcare.agni.data.local.repository.vital.VitalRepository
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toTimeInMilli
 import com.heartcare.agni.data.local.roomdb.entities.patient.PatientAndIdentifierAndAppointmentEntity
 import com.heartcare.agni.data.local.roomdb.entities.patient.PatientAndIdentifierEntity
@@ -41,8 +42,6 @@ import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toTod
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toddMMMyyyy
 import timber.log.Timber
 import java.util.Date
-import kotlin.collections.component1
-import kotlin.collections.component2
 
 object Queries {
     internal suspend fun addPatientToQueue(
@@ -397,16 +396,23 @@ object Queries {
         patientId: String,
         appointmentRepository: AppointmentRepository
     ): List<String> {
-        return appointmentRepository.getAppointmentsOfPatient(patientId)
-            .filter {
-                it.status == AppointmentStatusEnum.IN_PROGRESS.value
-                        || it.status == AppointmentStatusEnum.COMPLETED.value
+        val standardAppointments = appointmentRepository.getAppointmentsOfPatient(patientId)
+            .filter { appointment ->
+                appointment.status == AppointmentStatusEnum.IN_PROGRESS.value
+                        || appointment.status == AppointmentStatusEnum.COMPLETED.value
             }
-            .groupBy {
-                it.slot.start.toddMMMyyyy()
+
+        val campaignAppointments = appointmentRepository.getCampaignAppointmentsOfPatient(patientId)
+            .filter { appointment ->
+                appointment.status == AppointmentStatusEnum.WALK_IN.value
             }
-            .map { (_, appointments) ->
-                appointments.minBy { it.createdOn }.uuid
+
+        return (standardAppointments + campaignAppointments)
+            .groupBy { appointment ->
+                appointment.slot.start.toddMMMyyyy()
+            }
+            .map { entry ->
+                entry.value.minBy { it.createdOn }.uuid
             }
     }
 
@@ -478,11 +484,15 @@ object Queries {
         }
     }
 
-    /** Screening Site Master Data with Seeding Logic */
+    /** Screening Site Master Data — returns only active sites within today's date range */
     internal suspend fun getScreeningSites(
         screeningSiteDao: ScreeningSiteDao
     ): List<ScreeningSiteMasterEntity> {
-        return screeningSiteDao.getScreeningSiteMaster()
+        val now = Date().time
+        return screeningSiteDao.getActiveScreeningSites()
+            .filter { site ->
+                now in site.fromDate.toTimeInMilli()..site.toDate.toTimeInMilli()
+            }
     }
 
     /** Facility specific logic path (Day-wise) */
@@ -525,12 +535,13 @@ object Queries {
 
         val selectedSlot = Date().toSlotStartTime()
         var scheduleId = Date(selectedSlot.toCurrentTimeInMillis(Date()))
-        
+        var scheduleFhirId: String? = null
         scheduleRepository.getCampaignScheduleByCampaign(campaignId).let { scheduleResponse ->
             if (scheduleResponse != null) {
                 scheduleId = scheduleResponse.planningHorizon.start
+                scheduleFhirId= scheduleResponse.scheduleId
                 scheduleRepository.updateSchedule(
-                    scheduleResponse.copy(bookedSlots = (scheduleResponse.bookedSlots ?: 0) + 1),
+                    scheduleResponse.copy(bookedSlots = (scheduleResponse.bookedSlots!!) + 1),
                     RecordType.SCREENING_SITE
                 )
             } else {
@@ -539,12 +550,20 @@ object Queries {
                     uuid = uuid,
                     scheduleId = null,
                     planningHorizon = Slot(
-                        start = scheduleId,
-                        end = Date(selectedSlot.to30MinutesAfter(Date()))
+                        start = Date(
+                            selectedSlot.toCurrentTimeInMillis(
+                                Date()
+                            )
+                        ),
+                        end = Date(
+                            selectedSlot.to30MinutesAfter(
+                                Date()
+                            )
+                        )
                     ),
-                    bookedSlots = 1,
+                    bookedSlots = null,
                     roleId = null,
-                    active = true,
+                    active = null,
                     practitionerId = null,
                     hospitalId = null,
                     hospitalFhirId = null,
@@ -552,7 +571,10 @@ object Queries {
                     hospitalCode = null,
                     campaignId = campaignId
                 )
-                scheduleRepository.insertSchedule(schedule, RecordType.SCREENING_SITE)
+                scheduleRepository.insertSchedule(schedule.copy(
+                    bookedSlots =  1,
+                    active = true
+                ), RecordType.SCREENING_SITE)
                 genericRepository.insertSchedule(schedule, GenericTypeEnum.CAMPAIGN_SCHEDULE)
             }
         }.also {
@@ -592,7 +614,7 @@ object Queries {
                             createdOn = createdOn,
                             appointmentId = null,
                             patientFhirId = patient.fhirId ?: patient.id,
-                            scheduleId = scheduleId.time.toString(),
+                            scheduleId = scheduleFhirId?: scheduleRepository.getCampaignScheduleByStartTime(scheduleId.time, campaignId)?.uuid!!,
                             slot = slot,
                             status = AppointmentStatusEnum.WALK_IN.value,
                             appointmentType = AppointmentTypeEnum.WALK_IN.code,
@@ -652,4 +674,38 @@ object Queries {
             isDuplicateCVDForCampaign = isDuplicateCVDForCampaign
         )
     }
+
+    /** Campaign-specific Vital Info — detects if a vital record exists within the campaign window */
+    internal suspend fun loadCampaignVitalInfo(
+        patientId: String,
+        campaignId: String,
+        appointmentRepository: AppointmentRepository,
+        vitalRepository: VitalRepository,
+        screeningSiteDao: ScreeningSiteDao
+    ): CampaignVitalInfo {
+        val appointment = appointmentRepository.loadAppointmentForCampaign(patientId, campaignId)
+        val existingVital = vitalRepository.getLatestVitalForCampaign(patientId, campaignId)
+        val screeningSite = screeningSiteDao.getScreeningSiteById(campaignId)
+
+        val isWithinCampaignWindow = if (screeningSite != null) {
+            val now = Date().time
+            now in screeningSite.fromDate.toTimeInMilli()..screeningSite.toDate.toTimeInMilli()
+        } else false
+
+        // hasExistingRecord = true means UPDATE mode (load existing vital into form)
+        val hasExistingRecord = existingVital != null && isWithinCampaignWindow
+
+        return CampaignVitalInfo(
+            appointment = appointment,
+            existingVital = existingVital,
+            hasExistingRecord = hasExistingRecord
+        )
+    }
 }
+
+/** Holds campaign-specific vital state returned from loadCampaignVitalInfo */
+data class CampaignVitalInfo(
+    val appointment: AppointmentResponseLocal?,
+    val existingVital: com.heartcare.agni.data.server.model.vitals.VitalResponse?,
+    val hasExistingRecord: Boolean  // true = update mode; false = create new
+)

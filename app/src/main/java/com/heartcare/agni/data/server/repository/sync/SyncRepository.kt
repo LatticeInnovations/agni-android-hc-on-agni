@@ -70,6 +70,7 @@ interface SyncRepository {
     suspend fun sendCampaignSchedulePostData(): ResponseMapper<List<CreateResponse>>
     suspend fun sendCampaignAppointmentPostData(): ResponseMapper<List<CreateResponse>>
     suspend fun sendCampaignCVDPostData(): ResponseMapper<List<CreateResponse>>
+    suspend fun sendCampaignVitalPostData(): ResponseMapper<List<CreateResponse>>
     suspend fun sendVitalPostData(): ResponseMapper<List<CreateResponse>>
     suspend fun sendDiagnosisPostData(): ResponseMapper<List<CreateResponse>>
     suspend fun sendPriorDxPostData(): ResponseMapper<List<CreateResponse>>

@@ -13,17 +13,22 @@ import com.heartcare.agni.data.local.repository.patient.lastupdated.PatientLastU
 import com.heartcare.agni.data.local.repository.preference.PreferenceRepository
 import com.heartcare.agni.data.local.repository.schedule.ScheduleRepository
 import com.heartcare.agni.data.local.repository.vital.VitalRepository
+import com.heartcare.agni.data.local.roomdb.dao.ScreeningSiteDao
+import com.heartcare.agni.data.local.roomdb.entities.campaign.ScreeningSiteMasterEntity
 import com.heartcare.agni.data.server.model.cvd.CVDResponse
 import com.heartcare.agni.data.server.model.patient.PatientResponse
 import com.heartcare.agni.data.server.model.vitals.VitalResponse
 import com.heartcare.agni.di.dispatcher.IoDispatcher
 import com.heartcare.agni.utils.common.Queries
+import com.heartcare.agni.utils.common.Queries.getAppointment
 import com.heartcare.agni.utils.common.Queries.getInProgressCompletedAppointmentIds
 import com.heartcare.agni.utils.common.Queries.loadAppointmentInfo
+import com.heartcare.agni.utils.common.Queries.loadCampaignVitalInfo
 import com.heartcare.agni.utils.constants.VitalConstants.ALL
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.isToday
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
+import com.heartcare.agni.data.local.repository.config.RemoteConfigRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -39,6 +44,7 @@ class VitalsViewModel @Inject constructor(
     private val scheduleRepository: ScheduleRepository,
     private val patientLastUpdatedRepository: PatientLastUpdatedRepository,
     private val cvdAssessmentRepository: CVDAssessmentRepository,
+    private val screeningSiteDao: ScreeningSiteDao,
     @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) : ViewModel() {
     val user = preferenceRepository.getUserDetails()!!
@@ -72,21 +78,54 @@ class VitalsViewModel @Inject constructor(
     var previousRecords by mutableStateOf(listOf<CVDResponse>())
     val kg = "kg"
 
+    var selectedCampaignId by mutableStateOf<String?>(null)
+    var screeningSites by mutableStateOf(listOf<ScreeningSiteMasterEntity>())
+    var existingCampaignVital by mutableStateOf<VitalResponse?>(null)
+    var hasExistingCampaignVitalRecord by mutableStateOf(false)
+
+    internal fun loadActiveScreeningSites() {
+        viewModelScope.launch(ioDispatcher) {
+            screeningSites = Queries.getScreeningSites(screeningSiteDao)
+        }
+    }
+
     internal fun getAppointmentInfo(
         callback: () -> Unit
     ) {
         viewModelScope.launch(ioDispatcher) {
-            val info = loadAppointmentInfo(
-                patientId = patient!!.id,
-                hospitalCode = user.hospitalCode,
-                maxNumberOfAppointmentsInADay = maxNumberOfAppointmentsInADay,
-                appointmentRepository = appointmentRepository
-            )
-            appointment = info.appointment
-            existsInOtherHospital = info.existsInOtherHospital
-            canAddAssessment = info.canAddAssessment
-            isAppointmentCompleted = info.isAppointmentCompleted
-            ifAllSlotsBooked = info.ifAllSlotsBooked
+            val campaignId = selectedCampaignId
+            if (campaignId != null) {
+                // Campaign path
+                val info = loadCampaignVitalInfo(
+                    patientId = patient!!.id,
+                    campaignId = campaignId,
+                    appointmentRepository = appointmentRepository,
+                    vitalRepository = vitalRepository,
+                    screeningSiteDao = screeningSiteDao
+                )
+                appointment = info.appointment
+                existingCampaignVital = info.existingVital
+                hasExistingCampaignVitalRecord = info.hasExistingRecord
+                canAddAssessment = info.appointment != null && !info.hasExistingRecord
+                existsInOtherHospital = false
+                isAppointmentCompleted = false
+                ifAllSlotsBooked = false
+            } else {
+                // Facility path
+                val info = loadAppointmentInfo(
+                    patientId = patient!!.id,
+                    hospitalCode = user.hospitalCode,
+                    maxNumberOfAppointmentsInADay = maxNumberOfAppointmentsInADay,
+                    appointmentRepository = appointmentRepository
+                )
+                appointment = info.appointment
+                existsInOtherHospital = info.existsInOtherHospital
+                canAddAssessment = info.canAddAssessment
+                isAppointmentCompleted = info.isAppointmentCompleted
+                ifAllSlotsBooked = info.ifAllSlotsBooked
+                existingCampaignVital = null
+                hasExistingCampaignVitalRecord = false
+            }
             callback()
         }
     }
@@ -95,11 +134,22 @@ class VitalsViewModel @Inject constructor(
         viewModelScope.launch(ioDispatcher) {
             val appointmentIds =
                 getInProgressCompletedAppointmentIds(patient!!.id, appointmentRepository)
-            vitals.value = vitalRepository.getLastVitalByAppointmentId(*appointmentIds.toTypedArray()).also {
+            
+            // Load all screening sites once for mapping names
+            val allSites = screeningSiteDao.getScreeningSiteMaster()
+            val siteMap = allSites.associateBy { it.id }
+
+            vitals.value = vitalRepository.getLastVitalByAppointmentId(*appointmentIds.toTypedArray()).map { vital ->
+                vital.copy(screeningSiteName = vital.campaignId?.let { siteMap[it]?.name })
+            }.also {
                 todayVital = it.firstOrNull { vital -> isToday(vital.appUpdatedDate) }
             }
+            
             isVitalExist = vitals.value.isNotEmpty()
-            previousRecords = cvdAssessmentRepository.getCVDRecordByAppointmentIds(*appointmentIds.toTypedArray())
+            
+            previousRecords = cvdAssessmentRepository.getCVDRecordByAppointmentIds(*appointmentIds.toTypedArray()).map { cvd ->
+                cvd.copy(screeningSiteName = cvd.campaignId?.let { siteMap[it]?.name })
+            }
         }
     }
 
@@ -115,7 +165,44 @@ class VitalsViewModel @Inject constructor(
                 preferenceRepository,
                 appointmentRepository,
                 patientLastUpdatedRepository,
-                addedToQueue
+                addedToQueue = { ids ->
+                    viewModelScope.launch(ioDispatcher) {
+                        appointment = getAppointment(
+                            patientId = patient.id,
+                            hospitalCode = user.hospitalCode,
+                            appointmentRepository = appointmentRepository
+                        )
+                        addedToQueue(ids)
+                    }
+                }
+            )
+        }
+    }
+
+    /** Enroll a patient in a campaign queue (creates new appointment + schedule) */
+    internal fun addPatientToCampaignQueue(
+        patient: PatientResponse,
+        campaignId: String,
+        addedToQueue: (List<Long>) -> Unit
+    ) {
+        viewModelScope.launch(ioDispatcher) {
+            Queries.addPatientToCampaignQueue(
+                patient = patient,
+                campaignId = campaignId,
+                scheduleRepository = scheduleRepository,
+                genericRepository = genericRepository,
+                appointmentRepository = appointmentRepository,
+                addedToQueue = { ids ->
+                    viewModelScope.launch(ioDispatcher) {
+                        appointment = getAppointment(
+                            patientId = patient.id,
+                            hospitalCode = user.hospitalCode,
+                            campaignId = campaignId,
+                            appointmentRepository = appointmentRepository
+                        )
+                        addedToQueue(ids)
+                    }
+                }
             )
         }
     }

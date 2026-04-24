@@ -45,6 +45,7 @@ class AddVitalsViewModel @Inject constructor(
     var isLaunched by mutableStateOf(false)
     var patient by mutableStateOf<PatientResponse?>(null)
     var appointmentResponseLocal by mutableStateOf<AppointmentResponseLocal?>(null)
+    var selectedCampaignId by mutableStateOf<String?>(null)
 
     var todayVital by mutableStateOf<VitalResponse?>(null)
 
@@ -99,12 +100,19 @@ class AddVitalsViewModel @Inject constructor(
 
     fun getTodayVital(patientId: String) {
         viewModelScope.launch(ioDispatcher) {
-            val appointmentIds =
-                getInProgressCompletedAppointmentIds(patientId, appointmentRepository)
-            todayVital =
-                vitalRepository.getLastVitalByAppointmentId(*appointmentIds.toTypedArray()).firstOrNull {
-                    isToday(it.appUpdatedDate)
-                }
+            if (selectedCampaignId != null) {
+                // Load the latest vital for this specific campaign site
+                todayVital = vitalRepository.getLatestVitalForCampaign(patientId, selectedCampaignId!!)
+            } else {
+                // Standard facility-based today's vital lookup
+                val appointmentIds =
+                    getInProgressCompletedAppointmentIds(patientId, appointmentRepository)
+                todayVital =
+                    vitalRepository.getLastVitalByAppointmentId(*appointmentIds.toTypedArray()).firstOrNull {
+                        isToday(it.appUpdatedDate)
+                    }
+            }
+            
             todayVital?.let { vital ->
                 vital.bloodGlucose?.run {
                     selectedBloodGlucoseUnit = bloodGlucoseUnits.indexOf(unit)
@@ -199,8 +207,10 @@ class AddVitalsViewModel @Inject constructor(
             appointmentResponseLocal = getAppointment(
                 patientId = patient!!.id,
                 hospitalCode = user.hospitalCode,
+                campaignId = selectedCampaignId,
                 appointmentRepository = appointmentRepository
             )
+            
             var uuid = UUIDBuilder.generateUUID()
             var fhirId: String? = null
             todayVital?.let {
@@ -212,23 +222,26 @@ class AddVitalsViewModel @Inject constructor(
                 vitalResponse.copy(
                     appointmentId = appointmentResponseLocal!!.uuid,
                     patientId = patient!!.id,
-                    practitionerName = getFullName(
+                    practitionerName = if (selectedCampaignId==null)getFullName(
                         user.firstName,
                         user.lastName
-                    ),
-                    fhirId = fhirId
+                    ) else null,
+                    fhirId = fhirId,
+                    campaignId = selectedCampaignId,
                 )
             ).also {
                 genericRepository.insertVital(vitalResponse)
-                checkAndUpdateAppointmentStatusToInProgress(
-                    inProgressTime = vitalResponse.appUpdatedDate,
-                    patient = patient!!,
-                    appointmentResponseLocal = appointmentResponseLocal!!,
-                    appointmentRepository = appointmentRepository,
-                    scheduleRepository = scheduleRepository,
-                    genericRepository = genericRepository,
-                    preferenceRepository = preferenceRepository
-                )
+                if (selectedCampaignId==null) {
+                    checkAndUpdateAppointmentStatusToInProgress(
+                        inProgressTime = vitalResponse.appUpdatedDate,
+                        patient = patient!!,
+                        appointmentResponseLocal = appointmentResponseLocal!!,
+                        appointmentRepository = appointmentRepository,
+                        scheduleRepository = scheduleRepository,
+                        genericRepository = genericRepository,
+                        preferenceRepository = preferenceRepository
+                    )
+                }
                 updatePatientLastUpdated(
                     patient!!.id,
                     patientLastUpdatedRepository,

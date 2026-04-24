@@ -255,6 +255,7 @@ open class GenericRepositoryDatabaseTransactions(
         genericEntity: GenericEntity?,
         uuid: String
     ): Long {
+        val type = if (vitalResponse.campaignId != null) GenericTypeEnum.CAMPAIGN_VITAL else GenericTypeEnum.VITAL
         return if (genericEntity != null) {
             genericDao.insertGenericEntity(
                 genericEntity.copy(payload = vitalResponse.toJson())
@@ -264,7 +265,7 @@ open class GenericRepositoryDatabaseTransactions(
                 GenericEntity(
                     id = uuid, patientId = vitalResponse.uuid,
                     payload = vitalResponse.toJson(),
-                    type = GenericTypeEnum.VITAL,
+                    type = type,
                     syncType = SyncType.POST
                 )
             )[0]
