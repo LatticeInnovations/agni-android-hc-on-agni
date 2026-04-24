@@ -94,12 +94,13 @@ class ReportsViewModel @Inject constructor(
         viewModelScope.launch(ioDispatcher) {
             facilityOptions = healthFacilityRepository.getHealthFacilityInLevelResponse()
             selectedFacility = facilityOptions.find { it.code == user.hospitalCode }
-            selectedFacility?.code?.let { getDataOfFacility(it) }
+            getDataOfFacility()
 
             getDivisionOptions(false)
             val userIslandId = facilityOptions.find { it.code == user.hospitalCode }!!.precedingLevelId!!
             val userIsland = levelRepository.getLevelListByFhirIds(userIslandId)[0]
             selectedDivision = levelRepository.getLevelListByFhirIds(userIsland.precedingLevelId!!)[0]
+            getDataOfDivision()
         }
     }
 
@@ -120,10 +121,9 @@ class ReportsViewModel @Inject constructor(
     }
 
     fun getDataOfFacility(
-        hospitalCode: String,
-        rangeType: String = DateRangeEnum.LAST_7_DAYS.label,
-        startDate: Date = Date(Date().plusMinusDays(-7).toTodayStartDate()),
-        endDate: Date = Date(Date().toEndOfDay())
+        rangeType: String = facilityState.selectedDateRangeLabel,
+        startDate: Date = facilityState.dateRangeStart,
+        endDate: Date = facilityState.dateRangeEnd
     ) {
         viewModelScope.launch(ioDispatcher) {
             val appointments = appointmentRepository.getAppointmentListByDateRange(
@@ -132,7 +132,7 @@ class ReportsViewModel @Inject constructor(
             ).filter { appointmentResponseLocal ->
                 (appointmentResponseLocal.status == AppointmentStatusEnum.IN_PROGRESS.value ||
                         appointmentResponseLocal.status == AppointmentStatusEnum.COMPLETED.value)
-                        && appointmentResponseLocal.hospitalCode == hospitalCode
+                        && appointmentResponseLocal.hospitalCode == selectedFacility!!.code
             }
 
             val patients = patientRepository.getPatientById(*appointments.map { it.patientId }.toTypedArray())
@@ -211,6 +211,104 @@ class ReportsViewModel @Inject constructor(
             )
 
             facilityState = newState
+        }
+    }
+
+    fun getDataOfDivision(
+        rangeType: String = divisionState.selectedDateRangeLabel,
+        startDate: Date = divisionState.dateRangeStart,
+        endDate: Date = divisionState.dateRangeEnd
+    ) {
+        viewModelScope.launch(ioDispatcher) {
+            val patientIdsInDivision = patientRepository.getPatientIdsByDivision(
+                divisionType = LevelsEnum.getCodeFromDisplay(selectedDivisionType),
+                divisionId = selectedDivision?.fhirId ?: ""
+            ).toSet()
+            val appointments = appointmentRepository.getAppointmentListByDateRange(
+                startOfDay = startDate.time,
+                endOfDay = endDate.time
+            ).filter { appointmentResponseLocal ->
+                (appointmentResponseLocal.status == AppointmentStatusEnum.IN_PROGRESS.value ||
+                        appointmentResponseLocal.status == AppointmentStatusEnum.COMPLETED.value) &&
+                        appointmentResponseLocal.patientId in patientIdsInDivision
+            }
+
+            val patients = patientRepository.getPatientById(*appointments.map { it.patientId }.toTypedArray())
+            val patientMap = patients.associateBy { it.id }
+            val cvdList = cvdAssessmentRepository.getCVDRecordByAppointmentIds(*appointments.map { it.uuid }.toTypedArray())
+            val latestCVDList = cvdList
+                .groupBy {
+                    it.patientId
+                }.map { (_, cvd) ->
+                    cvd.maxBy { it.createdOn }
+                }
+
+            val latestCholesterolCVDList = cvdList
+                .filter { it.cholesterol != null && !it.cholesterolUnit.isNullOrBlank() }
+                .groupBy {
+                    it.patientId
+                }.map { (_, cvd) ->
+                    cvd.maxBy { it.createdOn }
+                }
+
+            val latestVitalsList = vitalRepository.getLastVitalByAppointmentId(*appointments.map { it.uuid }.toTypedArray())
+                .filter { it.bloodGlucose != null }
+                .groupBy {
+                    it.patientId
+                }.map { (_, vitals) ->
+                    vitals.maxBy { it.appUpdatedDate }
+                }
+
+            val fastingVitalsList = latestVitalsList.filter { it.bloodGlucose!!.type == BGEnum.FASTING.value }
+            val randomVitalsList = latestVitalsList.filter { it.bloodGlucose!!.type == BGEnum.RANDOM.value }
+
+            val newState = ReportUiState(
+                selectedDateRangeLabel = rangeType,
+                dateRangeStart = startDate,
+                dateRangeEnd = endDate,
+                totalScreened = patients.size,
+                totalMale = patients.count { it.gender == GenderEnum.MALE.value },
+                totalFemale = patients.count { it.gender == GenderEnum.FEMALE.value },
+                totalOther = patients.count { it.gender == GenderEnum.OTHER.value },
+
+                ageGroups = listOf(
+                    "18-29" to patients.filter { it.birthDate.toTimeInMilli().toAge() in 18..29 }.size.toString(),
+                    "30-44" to patients.filter { it.birthDate.toTimeInMilli().toAge() in 30..44 }.size.toString(),
+                    "45-59" to patients.filter { it.birthDate.toTimeInMilli().toAge() in 45..59 }.size.toString(),
+                    "60+" to patients.filter { it.birthDate.toTimeInMilli().toAge() >= 60 }.size.toString()
+                ),
+
+                bmiTotal = latestCVDList.size,
+                bmiStats = getBmiStats(latestCVDList, patientMap),
+
+                bloodPressureTotal = latestCVDList.size,
+                bloodPressureStats = getBloodPressureStats(latestCVDList, patientMap),
+
+                smokingTotal = latestCVDList.size,
+                smokingStats = getSmokingStats(latestCVDList, patientMap),
+
+                bloodSugarFastingTotal = fastingVitalsList.size,
+                bloodSugarFastingStats = getBloodSugarStats(
+                    fastingVitalsList,
+                    patientMap,
+                    BloodSugarType.FASTING
+                ),
+
+                bloodSugarRandomTotal = randomVitalsList.size,
+                bloodSugarRandomStats = getBloodSugarStats(
+                    randomVitalsList,
+                    patientMap,
+                    BloodSugarType.RANDOM
+                ),
+
+                cholesterolTotal = latestCholesterolCVDList.size,
+                cholesterolStats = getCholesterolStats(latestCholesterolCVDList, patientMap),
+
+                cvdRiskTotal = latestCVDList.size,
+                cvdRiskStats = getCvdRiskStats(latestCVDList, patientMap)
+            )
+
+            divisionState = newState
         }
     }
 
@@ -375,9 +473,8 @@ class ReportsViewModel @Inject constructor(
             }
         }
         when(selectedTabIndex) {
-            1 -> {
-                selectedFacility?.code?.let { getDataOfFacility(it, rangeType, startDate, endDate) }
-            }
+            1 -> getDataOfFacility(rangeType, startDate, endDate)
+            2 -> getDataOfDivision(rangeType, startDate, endDate)
         }
     }
 }

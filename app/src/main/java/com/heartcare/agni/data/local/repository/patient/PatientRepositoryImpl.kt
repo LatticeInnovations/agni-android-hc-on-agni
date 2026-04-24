@@ -7,6 +7,7 @@ import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.liveData
 import androidx.paging.map
+import com.heartcare.agni.data.local.enums.LevelsEnum
 import com.heartcare.agni.data.local.roomdb.dao.PatientDao
 import com.heartcare.agni.data.server.model.patient.PatientResponse
 import com.heartcare.agni.utils.constants.Paging.PAGE_SIZE
@@ -39,6 +40,19 @@ class PatientRepositoryImpl @Inject constructor(private val patientDao: PatientD
     override suspend fun getPatientById(vararg patientId: String): List<PatientResponse> {
         return patientDao.getPatientDataById(*patientId).map { patientAndIdentifierEntity ->
             patientAndIdentifierEntity.toPatientResponse()
+        }
+    }
+
+    override suspend fun getPatientIdsByDivision(
+        divisionType: String,
+        divisionId: String
+    ): List<String> {
+        return when(divisionType) {
+            LevelsEnum.PROVINCE.levelType -> patientDao.getPatientByProvinceId(divisionId)
+            LevelsEnum.AREA_COUNCIL.levelType -> patientDao.getPatientByAreaCouncilId(divisionId)
+            LevelsEnum.ISLAND.levelType -> patientDao.getPatientByIslandId(divisionId)
+            LevelsEnum.VILLAGE.levelType -> patientDao.getPatientByVillageId(divisionId)
+            else -> emptyList()
         }
     }
 }

@@ -47,4 +47,16 @@ interface PatientDao {
     @Transaction
     @Query("SELECT id FROM PatientEntity WHERE fhirId=:fhirId")
     suspend fun getPatientIdByFhirId(fhirId: String): String?
+
+    @Query("SELECT id FROM PatientEntity WHERE province=:provinceId")
+    suspend fun getPatientByProvinceId(provinceId: String): List<String>
+
+    @Query("SELECT id FROM PatientEntity WHERE areaCouncil=:areaCouncilId")
+    suspend fun getPatientByAreaCouncilId(areaCouncilId: String): List<String>
+
+    @Query("SELECT id FROM PatientEntity WHERE island=:islandId")
+    suspend fun getPatientByIslandId(islandId: String): List<String>
+
+    @Query("SELECT id FROM PatientEntity WHERE village=:villageId")
+    suspend fun getPatientByVillageId(villageId: String): List<String>
 }

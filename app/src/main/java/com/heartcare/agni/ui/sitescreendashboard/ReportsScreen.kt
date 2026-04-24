@@ -183,7 +183,7 @@ fun ReportsScreen(
                         value = viewModel.selectedFacility?.name ?: "",
                         updateValue = {
                             viewModel.selectedFacility = it
-                            viewModel.getDataOfFacility(viewModel.selectedFacility!!.code)
+                            viewModel.getDataOfFacility()
                         },
                         label = "",
                         dropdownList = viewModel.facilityOptions,
@@ -218,6 +218,7 @@ fun ReportsScreen(
                             value = viewModel.selectedDivision?.name ?: "",
                             updateValue = {
                                 viewModel.selectedDivision = it
+                                viewModel.getDataOfDivision()
                             },
                             label = "",
                             dropdownList = viewModel.divisionOptions,
