@@ -392,15 +392,17 @@ class CVDRiskAssessmentViewModel @Inject constructor(
                 )
             )
             genericRepository.insertCVDRecord(cvdResponse)
-            checkAndUpdateAppointmentStatusToInProgress(
-                inProgressTime = cvdResponse.createdOn,
-                patient = patient!!,
-                appointmentResponseLocal = appointmentResponseLocal!!,
-                appointmentRepository = appointmentRepository,
-                scheduleRepository = scheduleRepository,
-                genericRepository = genericRepository,
-                preferenceRepository = preferenceRepository
-            )
+            if (selectedCampaignId==null) {
+                checkAndUpdateAppointmentStatusToInProgress(
+                    inProgressTime = cvdResponse.createdOn,
+                    patient = patient!!,
+                    appointmentResponseLocal = appointmentResponseLocal!!,
+                    appointmentRepository = appointmentRepository,
+                    scheduleRepository = scheduleRepository,
+                    genericRepository = genericRepository,
+                    preferenceRepository = preferenceRepository
+                )
+            }
             appointmentResponseLocal = getAppointment(
                 patientId = patient!!.id,
                 hospitalCode = user.hospitalCode,

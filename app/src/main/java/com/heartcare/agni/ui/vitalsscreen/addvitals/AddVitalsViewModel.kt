@@ -160,6 +160,7 @@ class AddVitalsViewModel @Inject constructor(
                 ?: appointmentResponseLocal!!.uuid,
             patientId = patient!!.fhirId ?: patient!!.id,
             practitionerName = null,
+            campaignId = selectedCampaignId,
             appUpdatedDate = appUpdatedDate,
             bloodGlucose = if (bloodGlucose.isBlank()) null else
                 UnitValue(
@@ -226,8 +227,7 @@ class AddVitalsViewModel @Inject constructor(
                         user.firstName,
                         user.lastName
                     ) else null,
-                    fhirId = fhirId,
-                    campaignId = selectedCampaignId,
+                    fhirId = fhirId
                 )
             ).also {
                 genericRepository.insertVital(vitalResponse)
