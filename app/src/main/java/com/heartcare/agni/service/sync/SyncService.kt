@@ -385,6 +385,7 @@ class SyncService(
                     async { downloadPatientLastUpdated(logout) },
                     async { downloadCVD(logout) },
                     async { downloadVitals(logout) },
+                    async { downloadCampaignVitals(logout) },
                     async { downloadPriorDx(logout) },
                     async { downloadHistoryMedication(logout) },
                     async { downloadFamilyHistory(logout) },
@@ -492,6 +493,9 @@ class SyncService(
     /** Download Vitals*/
     private suspend fun downloadVitals(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
         return checkAuthenticationStatus(syncRepository.getAndInsertListVitalData(0), logout)
+    }
+    private suspend fun downloadCampaignVitals(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
+        return checkAuthenticationStatus(syncRepository.getAndInsertCampaignVitalData(0), logout)
     }
 
     /** Download Campaign Schedule */

@@ -835,6 +835,7 @@ internal suspend fun VitalResponse.toVitalEntity(
         patientId = patientDao.getPatientIdByFhirId(patientId)!!,
         appointmentId = if (campaignId.isNullOrEmpty()) appointmentDao.getAppointmentIdByFhirId(appointmentId) else null,
         campaignAppointmentId = if (!campaignId.isNullOrEmpty()) campaignAppointmentDao.getAppointmentIdByFhirId(appointmentId) else null,
+        campaignId = campaignId
     )
 }
 

@@ -59,6 +59,9 @@ interface PreferenceRepository {
     /** Last Sync Vital */
     fun setLastSyncVital(long: Long)
     fun getLastSyncVital(): Long
+    /** Last Sync Campaign Vital */
+    fun setLastSyncCampaignVital(long: Long)
+    fun getLastSyncCampaignVital(): Long
 
     /** Last Sync Campaign Schedule */
     fun setLastSyncCampaignSchedule(long: Long)
