@@ -19,11 +19,11 @@ interface CVDDao {
     @Query("SELECT * FROM CVDEntity WHERE appointmentId IN (:appointmentIds) OR campaignAppointmentId IN (:appointmentIds) ORDER BY createdOn DESC")
     fun getCVDRecordsByAppointmentIds(vararg appointmentIds: String): List<CVDEntity>
 
-    @Query("SELECT * FROM CVDEntity WHERE patientId=:patientId AND createdOn BETWEEN :startTime AND :endTime")
-    fun getTodayCVDRecords(patientId: String, startTime: Long, endTime: Long): CVDEntity?
+    @Query("SELECT * FROM CVDEntity WHERE patientId=:patientId AND createdOn BETWEEN :startTime AND :endTime AND ((:campaignId IS NULL AND campaignId IS NULL) OR (campaignId = :campaignId))")
+    fun getTodayCVDRecords(patientId: String, startTime: Long, endTime: Long, campaignId: String?): CVDEntity?
 
-    @Query("SELECT * FROM CVDEntity WHERE patientId=:patientId AND screeningDate BETWEEN :startTime AND :endTime")
-    fun getCVDRecordByScreeningDate(patientId: String, startTime: Long, endTime: Long): CVDEntity?
+    @Query("SELECT * FROM CVDEntity WHERE patientId=:patientId AND screeningDate BETWEEN :startTime AND :endTime AND ((:campaignId IS NULL AND campaignId IS NULL) OR (campaignId = :campaignId))")
+    fun getCVDRecordByScreeningDate(patientId: String, startTime: Long, endTime: Long, campaignId: String?): CVDEntity?
 
     @Update(onConflict = OnConflictStrategy.REPLACE)
     fun updateCVDRecord(cvdEntity: CVDEntity): Int

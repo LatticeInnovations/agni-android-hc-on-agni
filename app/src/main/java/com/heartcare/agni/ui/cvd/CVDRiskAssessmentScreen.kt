@@ -118,7 +118,6 @@ fun CVDRiskAssessmentScreen(
     }
     val focusManager = LocalFocusManager.current
     var selectedSite by remember { mutableStateOf<String?>(null) }
-    var selectedType by remember { mutableStateOf<RecordType?>(null) }
 
     HandleLaunchedEffect(
         viewModel = viewModel,
@@ -177,14 +176,16 @@ fun CVDRiskAssessmentScreen(
                                         0 -> {
                                             RecordTypeSelectionContent(
                                                 modifier = Modifier.fillMaxSize(),
-                                                selectedType = selectedType,
-                                                onTypeSelected = { selectedType = it },
+                                                selectedType = viewModel.selectedType,
+                                                onTypeSelected = { viewModel.selectedType = it },
                                                 onContinueClick = {
-                                                    if (selectedType == RecordType.FACILITY) {
+                                                    if (viewModel.selectedType == RecordType.FACILITY) {
+                                                        viewModel.getTodayCVDAssessment()
                                                         viewModel.currentStep = 2
-                                                    } else if (selectedType == RecordType.SCREENING_SITE) {
+                                                    } else if (viewModel.selectedType == RecordType.SCREENING_SITE) {
                                                         viewModel.currentStep = 1
                                                     }
+
                                                 }
                                             )
                                         }
@@ -203,6 +204,7 @@ fun CVDRiskAssessmentScreen(
                                                 },
                                                 onContinueClick = {
                                                     if (selectedSite != null) {
+                                                        viewModel.getTodayCVDAssessment()
                                                         viewModel.getAppointmentInfo {
                                                             viewModel.currentStep = 2
                                                         }
@@ -282,7 +284,7 @@ private fun HandleLaunchedEffect(
             viewModel.getAppointmentInfo(callback = {})
             viewModel.isLaunched = true
         }
-        viewModel.getTodayCVDAssessment()
+
         navController.currentBackStackEntry?.savedStateHandle?.let { handle ->
             if (handle.remove<Boolean>(REFERRAL_FROM_CVD) == true){
                 navigateToRecordsAfterSaving(
@@ -448,7 +450,7 @@ private fun handleSaveButtonClick(
     context: Context,
     onNavigate: () -> Unit
 ) {
-    viewModel.checkIfCVDExistsForScreenDate(
+    viewModel.checkIfCVDExistsForScreeningDate(
         exists = {
             if (it) {
                 scope.launch {

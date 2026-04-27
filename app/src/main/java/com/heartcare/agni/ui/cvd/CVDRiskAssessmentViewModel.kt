@@ -10,7 +10,6 @@ import com.heartcare.agni.data.local.enums.AppointmentStatusEnum
 import com.heartcare.agni.data.local.enums.AppointmentTypeEnum
 import com.heartcare.agni.data.local.enums.RecordType
 import com.heartcare.agni.data.local.enums.YesNoEnum
-import com.heartcare.agni.data.local.model.appointment.AppointmentInfo
 import com.heartcare.agni.data.local.model.appointment.AppointmentResponseLocal
 import com.heartcare.agni.data.local.model.config.RiskConfig
 import com.heartcare.agni.data.local.model.config.RiskItem
@@ -37,6 +36,7 @@ import com.heartcare.agni.utils.common.Queries
 import com.heartcare.agni.utils.common.Queries.checkAndUpdateAppointmentStatusToInProgress
 import com.heartcare.agni.utils.common.Queries.getAppointment
 import com.heartcare.agni.utils.common.Queries.getInProgressCompletedAppointmentIds
+import com.heartcare.agni.utils.common.Queries.getScreenSiteAppointmentIds
 import com.heartcare.agni.utils.common.Queries.loadAppointmentInfo
 import com.heartcare.agni.utils.common.Queries.loadCampaignAppointmentInfo
 import com.heartcare.agni.utils.common.Queries.updatePatientLastUpdated
@@ -138,11 +138,15 @@ class CVDRiskAssessmentViewModel @Inject constructor(
     var isScreeningSiteEnabled by mutableStateOf(false)
     var currentStep by  mutableIntStateOf(2)
 
+    var selectedType by mutableStateOf<RecordType?>(null)
+
     init {
         viewModelScope.launch(ioDispatcher) {
             riskConfig.value = remoteConfigRepository.getRiskConfig()
+            getRecords()
         }
         getScreeningSites()
+
     }
 
     fun getScreeningSites() {
@@ -166,61 +170,25 @@ class CVDRiskAssessmentViewModel @Inject constructor(
     ) {
         viewModelScope.launch(ioDispatcher) {
             val patientId = patient?.id ?: return@launch
+            val campaignId = selectedCampaignId
 
-            //  Get facility info (today)
-            val facilityInfo = loadAppointmentInfo(
-                patientId = patientId,
-                hospitalCode = user.hospitalCode,
-                maxNumberOfAppointmentsInADay = maxNumberOfAppointmentsInADay,
-                appointmentRepository = appointmentRepository
-            )
-
-            //  Find latest campaign appointment and check if it blocks us
-            val latestCampaignAppointment = appointmentRepository.getAppointmentsOfPatient(patientId)
-                .filter { it.recordType == RecordType.SCREENING_SITE }
-                .maxByOrNull { it.createdOn }
-
-            var campaignInfo: AppointmentInfo? = null
-            if (latestCampaignAppointment != null && latestCampaignAppointment.campaignId != null) {
-                campaignInfo = loadCampaignAppointmentInfo(
+            val info = if (campaignId != null) {
+                // Campaign path - load info for THIS specific site
+                loadCampaignAppointmentInfo(
                     patientId = patientId,
-                    campaignId = latestCampaignAppointment.campaignId,
+                    campaignId = campaignId,
                     appointmentRepository = appointmentRepository,
                     cvdAssessmentRepository = cvdAssessmentRepository,
                     screeningSiteDao = screeningSiteDao
                 )
-            }
-
-            //  Determine final info based on context and blocks
-            val info = when {
-                // If blocked by an active campaign CVD record, prioritize this state
-                campaignInfo != null && campaignInfo.isDuplicateCVDForCampaign -> {
-                    selectedCampaignId = latestCampaignAppointment!!.campaignId
-                    campaignInfo
-                }
-                // If a campaign site is explicitly selected in UI
-                selectedCampaignId != null -> {
-                    loadCampaignAppointmentInfo(
-                        patientId = patientId,
-                        campaignId = selectedCampaignId!!,
-                        appointmentRepository = appointmentRepository,
-                        cvdAssessmentRepository = cvdAssessmentRepository,
-                        screeningSiteDao = screeningSiteDao
-                    )
-                }
-                // If a facility appointment exists for today
-                facilityInfo.appointment != null -> {
-                    facilityInfo
-                }
-                // If we found a campaign context from a previous appointment (even if not blocked)
-                campaignInfo != null -> {
-                    selectedCampaignId = latestCampaignAppointment!!.campaignId
-                    campaignInfo
-                }
-                // Default to facility
-                else -> {
-                    facilityInfo
-                }
+            } else {
+                // Facility path - load today's facility info
+                loadAppointmentInfo(
+                    patientId = patientId,
+                    hospitalCode = user.hospitalCode,
+                    maxNumberOfAppointmentsInADay = maxNumberOfAppointmentsInADay,
+                    appointmentRepository = appointmentRepository
+                )
             }
 
             appointment = info.appointment
@@ -268,16 +236,38 @@ class CVDRiskAssessmentViewModel @Inject constructor(
                 !heightInCMError && !heightInFeetError && !heightInInchError &&
                 !weightError && !cholesterolError
     }
-
     fun getTodayCVDAssessment() {
         viewModelScope.launch(ioDispatcher) {
-            getRecords()
-            previousRecordsWithReferralStatus.map { it.first }.firstOrNull()?.let { record ->
+
+            val records = previousRecordsWithReferralStatus.map { it.first }
+
+            val selectedRecord = when (selectedType) {
+
+                RecordType.FACILITY -> {
+                    records
+                        .filter {
+                            it.createdOn.time in Date().toTodayStartDate()..Date().toEndOfDay() && it.campaignId ==null
+                        }
+                        .minByOrNull { it.createdOn }
+                }
+
+                RecordType.SCREENING_SITE -> {
+                    records
+                        .filter { it.campaignId == selectedCampaignId }
+                        .minByOrNull { it.createdOn }
+                }
+
+                else -> null
+            }
+
+            selectedRecord?.let { record ->
                 isDiabetic = YesNoEnum.displayFromCode(record.diabetic)
                 isSmoker = YesNoEnum.displayFromCode(record.smoker)
                 previousHeartAttack = YesNoEnum.displayFromCode(record.heartAttackHistory)
+
                 weight = record.weight.toString()
                 selectedWeightUnitIndex = weightUnits.indexOf(record.weightUnit)
+
                 if (record.heightCm != null) {
                     heightInCM = record.heightCm.toString()
                     selectedHeightUnitIndex = 0
@@ -286,19 +276,18 @@ class CVDRiskAssessmentViewModel @Inject constructor(
                     heightInInch = record.heightInch?.toString() ?: ""
                     selectedHeightUnitIndex = 1
                 }
+
                 getBmi()
-                if (record.createdOn.time in Date().toTodayStartDate()..Date().toEndOfDay()) {
-                    todayCVD = record
-                    screeningDate = record.screeningDate
-                    chiefComplaint = record.chiefComplaint ?: ""
-                    systolic = record.bpSystolic.toString()
-                    diastolic = record.bpDiastolic.toString()
-                    cholesterol = record.cholesterol?.toString() ?: ""
-                    selectedCholesterolIndex =
-                        if (record.cholesterolUnit.isNullOrBlank()) 0 else cholesterolUnits.indexOf(
-                            record.cholesterolUnit
-                        )
-                }
+                todayCVD = record
+                screeningDate = record.screeningDate
+                chiefComplaint = record.chiefComplaint ?: ""
+                systolic = record.bpSystolic.toString()
+                diastolic = record.bpDiastolic.toString()
+                cholesterol = record.cholesterol?.toString() ?: ""
+
+                selectedCholesterolIndex =
+                    if (record.cholesterolUnit.isNullOrBlank()) 0
+                    else cholesterolUnits.indexOf(record.cholesterolUnit)
             }
         }
     }
@@ -328,12 +317,13 @@ class CVDRiskAssessmentViewModel @Inject constructor(
     private suspend fun getRecords() {
         val appointmentIds =
             getInProgressCompletedAppointmentIds(patient!!.id, appointmentRepository)
-        
+        val campaignAppointmentIds = getScreenSiteAppointmentIds(patient!!.id, appointmentRepository)
+
         val allSites = screeningSiteDao.getScreeningSiteMaster()
         val siteMap = allSites.associateBy { it.id }
 
         previousRecordsWithReferralStatus =
-            cvdAssessmentRepository.getCVDRecordByAppointmentIds(*appointmentIds.toTypedArray())
+            cvdAssessmentRepository.getCVDRecordByAppointmentIds(*(campaignAppointmentIds+appointmentIds).toTypedArray())
                 .map { cvdResponse ->
                     val recordWithSiteName = cvdResponse.copy(
                         screeningSiteName = cvdResponse.campaignId?.let { siteMap[it]?.name }
@@ -433,7 +423,9 @@ class CVDRiskAssessmentViewModel @Inject constructor(
             if (selectedCampaignId==null) {
                 followUpDate = createFollowUpAppointment(date = appointmentDate)
             }
+            getRecords()
             saved()
+
         }
     }
 
@@ -506,7 +498,7 @@ class CVDRiskAssessmentViewModel @Inject constructor(
         }
     }
 
-    fun checkIfCVDExistsForScreenDate(
+    fun checkIfCVDExistsForScreeningDate(
         exists: (Boolean) -> Unit
     ) {
         viewModelScope.launch(ioDispatcher) {
@@ -515,7 +507,8 @@ class CVDRiskAssessmentViewModel @Inject constructor(
                         cvdAssessmentRepository.getCVDRecordByScreeningDate(
                             patient!!.id,
                             screeningDate.toTodayStartDate(),
-                            screeningDate.toEndOfDay()
+                            screeningDate.toEndOfDay(),
+                            selectedCampaignId
                         ) != null
             )
         }

@@ -402,19 +402,22 @@ object Queries {
                 appointment.status == AppointmentStatusEnum.IN_PROGRESS.value
                         || appointment.status == AppointmentStatusEnum.COMPLETED.value
             }
-
-        val campaignAppointments = appointmentRepository.getCampaignAppointmentsOfPatient(patientId)
+        return standardAppointments.groupBy { appointment -> appointment.slot.start.toddMMMyyyy() }
+            .map { (_, appointments) ->
+                appointments.minBy { it.createdOn }.uuid
+            }
+    }
+    suspend fun getScreenSiteAppointmentIds(
+        patientId: String,
+        appointmentRepository: AppointmentRepository
+    ): List<String> {
+        val appointments = appointmentRepository.getCampaignAppointmentsOfPatient(patientId)
             .filter { appointment ->
                 appointment.status == AppointmentStatusEnum.WALK_IN.value
             }
+        return appointments.map { it.uuid }
 
-        return (standardAppointments + campaignAppointments)
-            .groupBy { appointment ->
-                appointment.slot.start.toddMMMyyyy()
-            }
-            .map { entry ->
-                entry.value.minBy { it.createdOn }.uuid
-            }
+
     }
 
     suspend fun loadAppointmentInfo(
