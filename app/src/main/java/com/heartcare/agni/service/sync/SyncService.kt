@@ -58,7 +58,7 @@ class SyncService(
                     async { downloadMedication(logout) },
                     async { downloadInterventionMasterList(logout) },
                     async { downloadExaminationMasterList(logout) },
-//                    async { downloadScreeningSiteMasterList(logout) }
+                    async { downloadScreeningSiteMasterList(logout) }
                 )
             }
         }
@@ -624,7 +624,7 @@ class SyncService(
     private suspend fun updateFhirIdInCVD(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
         genericRepository.updateCVDFhirIds()
         val cvdResponse = uploadCVD(logout)
-        uploadCampaignCVD(logout)
+//        uploadCampaignCVD(logout)
         return cvdResponse
     }
 
@@ -632,7 +632,7 @@ class SyncService(
     private suspend fun updateFhirIdInVital(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
         genericRepository.updateVitalFhirId()
         val vitalResponse = uploadVital(logout)
-        uploadCampaignVital(logout)
+//        uploadCampaignVital(logout)
         return vitalResponse
     }
 

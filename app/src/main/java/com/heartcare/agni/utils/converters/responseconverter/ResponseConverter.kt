@@ -25,7 +25,10 @@ import com.heartcare.agni.data.local.roomdb.entities.appointment.AppointmentEnti
 import com.heartcare.agni.data.local.roomdb.entities.campaign.CampaignAppointmentEntity
 import com.heartcare.agni.data.local.roomdb.entities.campaign.CampaignScheduleEntity
 import com.heartcare.agni.data.local.roomdb.entities.campaign.ScreeningSiteMasterEntity
+import com.heartcare.agni.data.local.roomdb.entities.campaign.StaffEntity
 import com.heartcare.agni.data.local.roomdb.entities.cvd.CVDEntity
+import com.heartcare.agni.data.server.model.campaign.ScreeningSiteMasterResponse
+import com.heartcare.agni.data.server.model.campaign.StaffResponse
 import com.heartcare.agni.data.local.roomdb.entities.diagnosis.DiagnosisEntity
 import com.heartcare.agni.data.local.roomdb.entities.diagnosis.DiagnosisLocal
 import com.heartcare.agni.data.local.roomdb.entities.diagnosis.DiagnosisMasterEntity
@@ -66,7 +69,6 @@ import com.heartcare.agni.data.local.roomdb.entities.vitals.Measurement
 import com.heartcare.agni.data.local.roomdb.entities.vitals.VitalEntity
 import com.heartcare.agni.data.local.roomdb.views.PrescriptionDirectionAndMedicineView
 import com.heartcare.agni.data.server.model.allergy.AllergyResponse
-import com.heartcare.agni.data.server.model.campaign.ScreeningSiteMasterResponse
 import com.heartcare.agni.data.server.model.cvd.CVDResponse
 import com.heartcare.agni.data.server.model.diagnosis.DiagnosisMasterResponse
 import com.heartcare.agni.data.server.model.diagnosis.DiagnosisResponse
@@ -1432,10 +1434,18 @@ fun ScreeningSiteMasterResponse.toScreeningSiteMasterEntity(): ScreeningSiteMast
         serviceMode = serviceMode,
         fromDate = fromDate,
         toDate = toDate,
-        teamLead = teamLead,
         status = status,
+        staff = staff.map { it.toStaffEntity() }
+    )
+}
+
+fun StaffResponse.toStaffEntity(): StaffEntity {
+    return StaffEntity(
+        id = id,
+        name = name,
+        mobile = mobile,
         email = email,
-        mobile = mobile
+        isTeamLead = isTeamLead
     )
 }
 

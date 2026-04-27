@@ -1,6 +1,7 @@
 package com.heartcare.agni.data.server.model.campaign
 
 import androidx.annotation.Keep
+
 @Keep
 data class ScreeningSiteMasterResponse(
     val id: String,
@@ -10,8 +11,15 @@ data class ScreeningSiteMasterResponse(
     val serviceMode: String,
     val fromDate: String,
     val toDate: String,
-    val teamLead: String,
     val status: String,
+    val staff: List<StaffResponse>
+)
+
+@Keep
+data class StaffResponse(
+    val id: String,
+    val name: String,
+    val mobile: String,
     val email: String,
-    val mobile: String
+    val isTeamLead: Boolean
 )

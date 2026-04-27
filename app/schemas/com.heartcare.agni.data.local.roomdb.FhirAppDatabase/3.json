@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 3,
-    "identityHash": "3754f9644a88f4106b975bf2f0a33abb",
+    "identityHash": "07afbd8c49bf0e90950170e2dd59a9bc",
     "entities": [
       {
         "tableName": "PatientEntity",
@@ -3076,7 +3076,7 @@
       },
       {
         "tableName": "ScreeningSiteMasterEntity",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `name` TEXT NOT NULL, `location` TEXT NOT NULL, `areaCouncil` TEXT NOT NULL, `serviceMode` TEXT NOT NULL, `fromDate` TEXT NOT NULL, `toDate` TEXT NOT NULL, `teamLead` TEXT NOT NULL, `status` TEXT NOT NULL, `email` TEXT NOT NULL, `mobile` TEXT NOT NULL, PRIMARY KEY(`id`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `name` TEXT NOT NULL, `location` TEXT NOT NULL, `areaCouncil` TEXT NOT NULL, `serviceMode` TEXT NOT NULL, `fromDate` TEXT NOT NULL, `toDate` TEXT NOT NULL, `status` TEXT NOT NULL, `staff` TEXT NOT NULL, PRIMARY KEY(`id`))",
         "fields": [
           {
             "fieldPath": "id",
@@ -3121,26 +3121,14 @@
             "notNull": true
           },
           {
-            "fieldPath": "teamLead",
-            "columnName": "teamLead",
-            "affinity": "TEXT",
-            "notNull": true
-          },
-          {
             "fieldPath": "status",
             "columnName": "status",
             "affinity": "TEXT",
             "notNull": true
           },
           {
-            "fieldPath": "email",
-            "columnName": "email",
-            "affinity": "TEXT",
-            "notNull": true
-          },
-          {
-            "fieldPath": "mobile",
-            "columnName": "mobile",
+            "fieldPath": "staff",
+            "columnName": "staff",
             "affinity": "TEXT",
             "notNull": true
           }
@@ -3403,7 +3391,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '3754f9644a88f4106b975bf2f0a33abb')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '07afbd8c49bf0e90950170e2dd59a9bc')"
     ]
   }
 }

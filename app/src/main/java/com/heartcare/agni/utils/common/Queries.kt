@@ -27,6 +27,7 @@ import com.heartcare.agni.data.server.model.patient.PatientResponse
 import com.heartcare.agni.data.server.model.scheduleandappointment.Slot
 import com.heartcare.agni.data.server.model.scheduleandappointment.appointment.AppointmentResponse
 import com.heartcare.agni.data.server.model.scheduleandappointment.schedule.ScheduleResponse
+import com.heartcare.agni.data.server.model.vitals.VitalResponse
 import com.heartcare.agni.utils.builders.UUIDBuilder
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.lastMonth
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.lastThreeMonth
@@ -488,11 +489,7 @@ object Queries {
     internal suspend fun getScreeningSites(
         screeningSiteDao: ScreeningSiteDao
     ): List<ScreeningSiteMasterEntity> {
-        val now = Date().time
         return screeningSiteDao.getActiveScreeningSites()
-            .filter { site ->
-                now in site.fromDate.toTimeInMilli()..site.toDate.toTimeInMilli()
-            }
     }
 
     /** Facility specific logic path (Day-wise) */
@@ -706,6 +703,6 @@ object Queries {
 /** Holds campaign-specific vital state returned from loadCampaignVitalInfo */
 data class CampaignVitalInfo(
     val appointment: AppointmentResponseLocal?,
-    val existingVital: com.heartcare.agni.data.server.model.vitals.VitalResponse?,
+    val existingVital: VitalResponse?,
     val hasExistingRecord: Boolean  // true = update mode; false = create new
 )
