@@ -23,8 +23,12 @@ interface VitalDao {
     ): List<VitalEntity>
 
     @Transaction
-    @Query("SELECT * FROM VitalEntity WHERE appointmentId IN (:appointmentIds) ORDER BY appUpdatedDate DESC")
+    @Query("SELECT * FROM VitalEntity WHERE appointmentId IN (:appointmentIds) OR campaignAppointmentId IN (:appointmentIds) ORDER BY appUpdatedDate DESC")
     suspend fun getPastVitalsByAppointmentId(vararg appointmentIds: String): List<VitalEntity>
+
+    @Transaction
+    @Query("SELECT * FROM VitalEntity WHERE patientId = :patientId AND campaignId = :campaignId ORDER BY appUpdatedDate DESC LIMIT 1")
+    suspend fun getLatestVitalForCampaign(patientId: String, campaignId: String): VitalEntity?
 
     @Transaction
     @Query("UPDATE VitalEntity SET fhirId = :fhirId WHERE uuid = :vitalUUid")

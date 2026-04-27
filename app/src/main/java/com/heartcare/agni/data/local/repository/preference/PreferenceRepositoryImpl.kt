@@ -116,6 +116,12 @@ class PreferenceRepositoryImpl @Inject constructor(private val preferenceStorage
 
     override fun getLastSyncCampaignCVD(): Long = preferenceStorage.lastCampaignCVDSyncTime
 
+    override fun setLastSyncCampaignVital(long: Long) {
+        preferenceStorage.lastCampaignVitalSyncTime = long
+    }
+
+    override fun getLastSyncCampaignVital(): Long = preferenceStorage.lastCampaignVitalSyncTime
+
     override fun setLastSyncDiagnosis(long: Long) {
         preferenceStorage.lastDiagnosisSyncTime = long
     }

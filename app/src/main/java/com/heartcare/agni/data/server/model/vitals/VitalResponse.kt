@@ -9,6 +9,7 @@ data class VitalResponse(
     val fhirId: String?,
     val patientId: String,
     val appointmentId: String,
+    val campaignId: String? = null,
     val appUpdatedDate: Date,
     val practitionerName: String?,
     val bloodGlucose: UnitValue?,
@@ -21,5 +22,6 @@ data class VitalResponse(
     val serumPotassium: UnitValue?,
     val urineProtein: String?,
     val urineKetones: String?,
-    val others: String?
+    val others: String?,
+    val screeningSiteName: String? = null
 )

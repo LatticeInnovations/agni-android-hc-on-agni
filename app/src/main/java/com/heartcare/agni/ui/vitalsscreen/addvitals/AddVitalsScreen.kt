@@ -69,12 +69,12 @@ fun AddVitalsScreen(
 ) {
     LaunchedEffect(key1 = viewModel.isLaunched) {
         if (!viewModel.isLaunched) {
-            navController.previousBackStackEntry?.savedStateHandle
-                ?.get<PatientResponse>(PATIENT)
-                ?.let {
-                    viewModel.patient = it
-                    viewModel.getTodayVital(it.id)
-                }
+            val handle = navController.previousBackStackEntry?.savedStateHandle
+            handle?.get<PatientResponse>(PATIENT)?.let {
+                viewModel.patient = it
+                viewModel.selectedCampaignId = handle.get<String>(com.heartcare.agni.utils.constants.NavControllerConstants.CAMPAIGN_ID)
+                viewModel.getTodayVital(it.id)
+            }
             viewModel.isLaunched = true
         }
     }

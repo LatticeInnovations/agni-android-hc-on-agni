@@ -315,11 +315,18 @@ class CVDRiskAssessmentViewModel @Inject constructor(
     private suspend fun getRecords() {
         val appointmentIds =
             getInProgressCompletedAppointmentIds(patient!!.id, appointmentRepository)
+        
+        val allSites = screeningSiteDao.getScreeningSiteMaster()
+        val siteMap = allSites.associateBy { it.id }
+
         previousRecordsWithReferralStatus =
             cvdAssessmentRepository.getCVDRecordByAppointmentIds(*appointmentIds.toTypedArray())
                 .map { cvdResponse ->
+                    val recordWithSiteName = cvdResponse.copy(
+                        screeningSiteName = cvdResponse.campaignId?.let { siteMap[it]?.name }
+                    )
                     Pair(
-                        cvdResponse,
+                        recordWithSiteName,
                         checkIfReferralExists(
                             cvdResponse.appointmentId
                         )
@@ -378,22 +385,24 @@ class CVDRiskAssessmentViewModel @Inject constructor(
                 cvdResponse.copy(
                     appointmentId = appointmentResponseLocal!!.uuid,
                     patientId = patient!!.id,
-                    practitionerName = getFullName(
+                    practitionerName = if (selectedCampaignId==null)getFullName(
                         preferenceRepository.getUserDetails()!!.firstName,
                         preferenceRepository.getUserDetails()!!.lastName
-                    )
+                    )else null
                 )
             )
             genericRepository.insertCVDRecord(cvdResponse)
-            checkAndUpdateAppointmentStatusToInProgress(
-                inProgressTime = cvdResponse.createdOn,
-                patient = patient!!,
-                appointmentResponseLocal = appointmentResponseLocal!!,
-                appointmentRepository = appointmentRepository,
-                scheduleRepository = scheduleRepository,
-                genericRepository = genericRepository,
-                preferenceRepository = preferenceRepository
-            )
+            if (selectedCampaignId==null) {
+                checkAndUpdateAppointmentStatusToInProgress(
+                    inProgressTime = cvdResponse.createdOn,
+                    patient = patient!!,
+                    appointmentResponseLocal = appointmentResponseLocal!!,
+                    appointmentRepository = appointmentRepository,
+                    scheduleRepository = scheduleRepository,
+                    genericRepository = genericRepository,
+                    preferenceRepository = preferenceRepository
+                )
+            }
             appointmentResponseLocal = getAppointment(
                 patientId = patient!!.id,
                 hospitalCode = user.hospitalCode,

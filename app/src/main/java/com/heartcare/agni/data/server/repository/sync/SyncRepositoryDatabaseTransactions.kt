@@ -244,7 +244,7 @@ open class SyncRepositoryDatabaseTransactions(
 
     protected suspend fun insertVital(body: List<VitalResponse>) {
         //Insert Vital Data
-        vitalDao.insertVital(*body.map { it.toVitalEntity(patientDao, appointmentDao) }
+        vitalDao.insertVital(*body.map { it.toVitalEntity(patientDao, appointmentDao, campaignAppointmentDao) }
             .toTypedArray())
     }
 

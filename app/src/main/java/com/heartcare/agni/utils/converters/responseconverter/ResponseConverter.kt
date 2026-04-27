@@ -728,7 +728,8 @@ internal fun VitalEntity.toVitalResponse(): VitalResponse {
         uuid = uuid,
         fhirId = fhirId,
         patientId = patientId,
-        appointmentId = appointmentId,
+        appointmentId = if (campaignId.isNullOrEmpty()) appointmentId!! else campaignAppointmentId!!,
+        campaignId = campaignId,
         bloodGlucose = bloodGlucose?.run {
             UnitValue(
                 unit = unit!!,
@@ -780,7 +781,9 @@ internal fun VitalResponse.toVitalEntity(): VitalEntity {
         uuid = uuid,
         fhirId = fhirId,
         patientId = patientId,
-        appointmentId = appointmentId,
+        appointmentId = if (campaignId.isNullOrEmpty()) appointmentId else null,
+        campaignAppointmentId = if (!campaignId.isNullOrEmpty()) appointmentId else null,
+        campaignId = campaignId,
         appUpdatedDate = appUpdatedDate,
         practitionerName = practitionerName,
         bloodGlucose = bloodGlucose?.run {
@@ -825,11 +828,14 @@ internal fun VitalResponse.toVitalEntity(): VitalEntity {
 
 internal suspend fun VitalResponse.toVitalEntity(
     patientDao: PatientDao,
-    appointmentDao: AppointmentDao
+    appointmentDao: AppointmentDao,
+    campaignAppointmentDao: CampaignAppointmentDao
 ): VitalEntity {
     return this.toVitalEntity().copy(
         patientId = patientDao.getPatientIdByFhirId(patientId)!!,
-        appointmentId = appointmentDao.getAppointmentIdByFhirId(appointmentId)
+        appointmentId = if (campaignId.isNullOrEmpty()) appointmentDao.getAppointmentIdByFhirId(appointmentId) else null,
+        campaignAppointmentId = if (!campaignId.isNullOrEmpty()) campaignAppointmentDao.getAppointmentIdByFhirId(appointmentId) else null,
+        campaignId = campaignId
     )
 }
 

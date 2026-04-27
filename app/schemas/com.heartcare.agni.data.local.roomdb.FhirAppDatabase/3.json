@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 3,
-    "identityHash": "cc830b3e13c1b30d4e5e1f601e67065d",
+    "identityHash": "3754f9644a88f4106b975bf2f0a33abb",
     "entities": [
       {
         "tableName": "PatientEntity",
@@ -1265,7 +1265,7 @@
       },
       {
         "tableName": "VitalEntity",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`uuid` TEXT NOT NULL, `fhirId` TEXT, `patientId` TEXT NOT NULL, `appointmentId` TEXT NOT NULL, `appUpdatedDate` INTEGER NOT NULL, `practitionerName` TEXT, `footExamination` TEXT, `eyeExamination` TEXT, `hbA1cPercentage` REAL, `urineProtein` TEXT, `urineKetones` TEXT, `others` TEXT, `bloodGlucose_value` REAL, `bloodGlucose_unit` TEXT, `bloodGlucose_type` TEXT, `abdominalCircumference_value` REAL, `abdominalCircumference_unit` TEXT, `hipCircumference_value` REAL, `hipCircumference_unit` TEXT, `serumCreatinine_value` REAL, `serumCreatinine_unit` TEXT, `serumPotassium_value` REAL, `serumPotassium_unit` TEXT, PRIMARY KEY(`uuid`), FOREIGN KEY(`patientId`) REFERENCES `PatientEntity`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`uuid` TEXT NOT NULL, `fhirId` TEXT, `patientId` TEXT NOT NULL, `appointmentId` TEXT, `campaignAppointmentId` TEXT, `campaignId` TEXT, `appUpdatedDate` INTEGER NOT NULL, `practitionerName` TEXT, `footExamination` TEXT, `eyeExamination` TEXT, `hbA1cPercentage` REAL, `urineProtein` TEXT, `urineKetones` TEXT, `others` TEXT, `bloodGlucose_value` REAL, `bloodGlucose_unit` TEXT, `bloodGlucose_type` TEXT, `abdominalCircumference_value` REAL, `abdominalCircumference_unit` TEXT, `hipCircumference_value` REAL, `hipCircumference_unit` TEXT, `serumCreatinine_value` REAL, `serumCreatinine_unit` TEXT, `serumPotassium_value` REAL, `serumPotassium_unit` TEXT, PRIMARY KEY(`uuid`), FOREIGN KEY(`patientId`) REFERENCES `PatientEntity`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION , FOREIGN KEY(`campaignAppointmentId`) REFERENCES `CampaignAppointmentEntity`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION )",
         "fields": [
           {
             "fieldPath": "uuid",
@@ -1287,8 +1287,17 @@
           {
             "fieldPath": "appointmentId",
             "columnName": "appointmentId",
-            "affinity": "TEXT",
-            "notNull": true
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "campaignAppointmentId",
+            "columnName": "campaignAppointmentId",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "campaignId",
+            "columnName": "campaignId",
+            "affinity": "TEXT"
           },
           {
             "fieldPath": "appUpdatedDate",
@@ -1420,6 +1429,15 @@
             ],
             "orders": [],
             "createSql": "CREATE INDEX IF NOT EXISTS `index_VitalEntity_appointmentId` ON `${TABLE_NAME}` (`appointmentId`)"
+          },
+          {
+            "name": "index_VitalEntity_campaignAppointmentId",
+            "unique": false,
+            "columnNames": [
+              "campaignAppointmentId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_VitalEntity_campaignAppointmentId` ON `${TABLE_NAME}` (`campaignAppointmentId`)"
           }
         ],
         "foreignKeys": [
@@ -1429,6 +1447,17 @@
             "onUpdate": "NO ACTION",
             "columns": [
               "patientId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          },
+          {
+            "table": "CampaignAppointmentEntity",
+            "onDelete": "NO ACTION",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "campaignAppointmentId"
             ],
             "referencedColumns": [
               "id"
@@ -3374,7 +3403,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'cc830b3e13c1b30d4e5e1f601e67065d')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '3754f9644a88f4106b975bf2f0a33abb')"
     ]
   }
 }

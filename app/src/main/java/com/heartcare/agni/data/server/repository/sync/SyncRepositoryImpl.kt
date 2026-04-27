@@ -47,6 +47,7 @@ import com.heartcare.agni.data.server.api.VitalApiService
 import com.heartcare.agni.data.server.constants.ConstantValues.COUNT_VALUE
 import com.heartcare.agni.data.server.constants.ConstantValues.DEFAULT_MAX_COUNT_VALUE
 import com.heartcare.agni.data.server.constants.EndPoints
+import com.heartcare.agni.data.server.constants.EndPoints.CAMPAIGN_VITAL
 import com.heartcare.agni.data.server.constants.EndPoints.MEDICATION_REQUEST
 import com.heartcare.agni.data.server.constants.EndPoints.PATIENT
 import com.heartcare.agni.data.server.constants.EndPoints.VITAL
@@ -973,6 +974,56 @@ class SyncRepositoryImpl @Inject constructor(
                 errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
             )
         }
+    }override suspend fun getAndInsertCampaignVitalData(offset: Int): ResponseMapper<List<VitalResponse>> {
+        val map = mutableMapOf<String, String>()
+        map[COUNT] = COUNT_VALUE.toString()
+        map[OFFSET] = offset.toString()
+        map[SORT] = "-$ID"
+        if (preferenceRepository.getLastSyncCampaignVital() != 0L) map[LAST_UPDATED] = String.format(
+            GREATER_THAN_BUILDER, preferenceRepository.getLastSyncCampaignVital().toTimeStampDate()
+        )
+
+        return try {
+            ApiResponseConverter.convert(
+                vitalApiService.getListData(
+                    CAMPAIGN_VITAL, map
+                ), true
+            ).run {
+                when (this) {
+                    is ApiContinueResponse -> {
+                        //Insert Patient
+                        insertVital(body)
+                        //Call for next batch data
+                        getAndInsertCampaignVitalData(offset + COUNT_VALUE)
+                    }
+
+                    is ApiEndResponse -> {
+                        insertVital(body)
+                        //Set Last Update Time
+                        preferenceRepository.setLastSyncCampaignVital(Date().time)
+                        this
+                    }
+
+                    else -> this
+                }
+            }
+        } catch (e: Exception) {
+            Timber.e(e, e.localizedMessage)
+            crashlyticsLogger.logException(
+                e,
+                "getAndInsertListVitalData function failed.",
+                mapOf(
+                    Pair(
+                        USER_ID,
+                        preferenceRepository.getUserDetails()?.userId ?: ERROR_FETCHING_USER_DETAILS
+                    )
+                )
+            )
+            ApiErrorResponse(
+                statusCode = 0,
+                errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
+            )
+        }
     }
 
     override suspend fun getAndInsertListDiagnosisData(offset: Int): ResponseMapper<List<DiagnosisResponse>> {
@@ -1462,6 +1513,47 @@ class SyncRepositoryImpl @Inject constructor(
             crashlyticsLogger.logException(
                 e,
                 "sendVitalPostData function failed.",
+                mapOf(
+                    Pair(
+                        USER_ID,
+                        preferenceRepository.getUserDetails()?.userId ?: ERROR_FETCHING_USER_DETAILS
+                    )
+                )
+            )
+            ApiErrorResponse(
+                statusCode = 0,
+                errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
+            )
+        }
+    }
+
+    override suspend fun sendCampaignVitalPostData(): ResponseMapper<List<CreateResponse>> {
+        return try {
+            genericDao.getSameTypeGenericEntityPayload(
+                genericTypeEnum = GenericTypeEnum.CAMPAIGN_VITAL, syncType = SyncType.POST
+            ).let { listOfGenericEntity ->
+                if (listOfGenericEntity.isEmpty()) ApiEmptyResponse()
+                else ApiResponseConverter.convert(
+                    vitalApiService.createData(CAMPAIGN_VITAL, listOfGenericEntity.map {
+                        it.payload.fromJson<LinkedTreeMap<*, *>>()
+                            .mapToObject(VitalResponse::class.java)!!
+                    })
+                ).run {
+                    when (this) {
+                        is ApiEndResponse -> {
+                            insertVitalFhirId(
+                                listOfGenericEntity, body
+                            ).let { deletedRows -> if (deletedRows > 0) sendCampaignVitalPostData() else this }
+                        }
+
+                        else -> this
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            crashlyticsLogger.logException(
+                e,
+                "sendCampaignVitalPostData function failed.",
                 mapOf(
                     Pair(
                         USER_ID,

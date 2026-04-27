@@ -30,4 +30,6 @@ object NavControllerConstants {
     const val REFERRAL_SAVED = "referral_saved"
     const val REFERRAL = "referral"
     const val REFERRAL_FROM_CVD = "referral_from_CVD"
+    const val CAMPAIGN_ID = "campaign_id"
+    const val CAMPAIGN_APPOINTMENT_ID = "campaign_appointment_id"
 }

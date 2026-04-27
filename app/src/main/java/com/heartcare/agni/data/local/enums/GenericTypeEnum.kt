@@ -22,5 +22,6 @@ enum class GenericTypeEnum(val number: Int, val value: String) {
     REFERRAL(19, "referral"),
     CAMPAIGN_APPOINTMENT(20, "Campaign_Appointment"),
     CAMPAIGN_SCHEDULE(21, "Campaign_Schedule"),
-    CAMPAIGN_CVD(22, "Campaign_CVD_Record");
+    CAMPAIGN_CVD(22, "Campaign_CVD_Record"),
+    CAMPAIGN_VITAL(23, "Campaign_Vital_Record");
 }
