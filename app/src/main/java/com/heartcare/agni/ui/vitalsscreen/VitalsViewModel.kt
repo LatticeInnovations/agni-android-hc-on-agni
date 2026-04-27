@@ -22,6 +22,7 @@ import com.heartcare.agni.di.dispatcher.IoDispatcher
 import com.heartcare.agni.utils.common.Queries
 import com.heartcare.agni.utils.common.Queries.getAppointment
 import com.heartcare.agni.utils.common.Queries.getInProgressCompletedAppointmentIds
+import com.heartcare.agni.utils.common.Queries.getScreenSiteAppointmentIds
 import com.heartcare.agni.utils.common.Queries.loadAppointmentInfo
 import com.heartcare.agni.utils.common.Queries.loadCampaignVitalInfo
 import com.heartcare.agni.utils.constants.VitalConstants.ALL
@@ -140,14 +141,14 @@ class VitalsViewModel @Inject constructor(
 
     internal fun getVitalsAndCVDRecords() {
         viewModelScope.launch(ioDispatcher) {
-            val appointmentIds =
-                getInProgressCompletedAppointmentIds(patient!!.id, appointmentRepository)
-            
+            val appointmentIds = getInProgressCompletedAppointmentIds(patient!!.id, appointmentRepository)
+            val campaignAppointmentIds = getScreenSiteAppointmentIds(patient!!.id, appointmentRepository)
+
             // Load all screening sites once for mapping names
             val allSites = screeningSiteDao.getScreeningSiteMaster()
             val siteMap = allSites.associateBy { it.id }
 
-            vitals.value = vitalRepository.getLastVitalByAppointmentId(*appointmentIds.toTypedArray()).map { vital ->
+            vitals.value = vitalRepository.getLastVitalByAppointmentId(*(campaignAppointmentIds+appointmentIds).toTypedArray()).map { vital ->
                 vital.copy(screeningSiteName = vital.campaignId?.let { siteMap[it]?.name })
             }.also {
                 todayVital = it.firstOrNull { vital -> isToday(vital.appUpdatedDate) }
@@ -155,7 +156,7 @@ class VitalsViewModel @Inject constructor(
             
             isVitalExist = vitals.value.isNotEmpty()
             
-            previousRecords = cvdAssessmentRepository.getCVDRecordByAppointmentIds(*appointmentIds.toTypedArray()).map { cvd ->
+            previousRecords = cvdAssessmentRepository.getCVDRecordByAppointmentIds(*(campaignAppointmentIds+appointmentIds).toTypedArray()).map { cvd ->
                 cvd.copy(screeningSiteName = cvd.campaignId?.let { siteMap[it]?.name })
             }
         }

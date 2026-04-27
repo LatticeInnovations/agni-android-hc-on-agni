@@ -27,17 +27,19 @@ class CVDAssessmentRepositoryImpl@Inject constructor(
     override suspend fun getTodayCVDRecord(
         patientId: String,
         startTime: Long,
-        endTime: Long
+        endTime: Long,
+        campaignId: String?
     ): CVDResponse? {
-        return cvdDao.getTodayCVDRecords(patientId, startTime, endTime)?.toCVDResponse()
+        return cvdDao.getTodayCVDRecords(patientId, startTime, endTime, campaignId)?.toCVDResponse()
     }
 
     override suspend fun getCVDRecordByScreeningDate(
         patientId: String,
         startTime: Long,
-        endTime: Long
+        endTime: Long,
+        campaignId: String?
     ): CVDResponse? {
-        return cvdDao.getCVDRecordByScreeningDate(patientId, startTime, endTime)?.toCVDResponse()
+        return cvdDao.getCVDRecordByScreeningDate(patientId, startTime, endTime, campaignId)?.toCVDResponse()
     }
     
     override suspend fun getLatestCVDForCampaign(patientId: String, campaignId: String): CVDResponse? {
