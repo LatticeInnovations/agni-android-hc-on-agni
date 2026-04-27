@@ -26,7 +26,9 @@ import com.heartcare.agni.data.local.repository.healthfacility.HealthFacilityRep
 import com.heartcare.agni.data.local.repository.levels.LevelRepository
 import com.heartcare.agni.data.local.repository.patient.PatientRepository
 import com.heartcare.agni.data.local.repository.preference.PreferenceRepository
+import com.heartcare.agni.data.local.repository.screeningsite.ScreeningSiteRepository
 import com.heartcare.agni.data.local.repository.vital.VitalRepository
+import com.heartcare.agni.data.server.model.campaign.ScreeningSiteMasterResponse
 import com.heartcare.agni.data.server.model.cvd.CVDResponse
 import com.heartcare.agni.data.server.model.levels.LevelResponse
 import com.heartcare.agni.data.server.model.patient.PatientResponse
@@ -43,6 +45,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import jakarta.inject.Inject
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.Date
 
 @HiltViewModel
@@ -53,6 +56,7 @@ class ReportsViewModel @Inject constructor(
     private val appointmentRepository: AppointmentRepository,
     private val cvdAssessmentRepository: CVDAssessmentRepository,
     private val vitalRepository: VitalRepository,
+    private val screeningSiteRepository: ScreeningSiteRepository,
     preferenceRepository: PreferenceRepository,
     @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) : BaseViewModel() {
@@ -72,8 +76,8 @@ class ReportsViewModel @Inject constructor(
             else -> ReportUiState()
         }
 
-    val campaignOptions = listOf("Vila Central Outreach", "NCD Screening", "Hypertension follow-up")
-    var selectedCampaign by mutableStateOf(campaignOptions.first())
+    var campaignOptions: List<ScreeningSiteMasterResponse> by mutableStateOf(emptyList())
+    var selectedCampaign: ScreeningSiteMasterResponse? by mutableStateOf(null)
 
     var facilityOptions : List<LevelResponse> by mutableStateOf(emptyList())
     var selectedFacility : LevelResponse? by mutableStateOf(null)
@@ -92,15 +96,32 @@ class ReportsViewModel @Inject constructor(
     }
 
     private fun getMasterLists() {
-        viewModelScope.launch(ioDispatcher) {
-            facilityOptions = healthFacilityRepository.getHealthFacilityInLevelResponse()
-            selectedFacility = facilityOptions.find { it.code == user.hospitalCode }
+        viewModelScope.launch {
+            val campaigns = withContext(ioDispatcher) {
+                screeningSiteRepository.getActiveScreeningSites().filter { site ->
+                    site.staff.any { it.id == user.fhirId && it.isTeamLead }
+                }
+            }
+            campaignOptions = campaigns
+            selectedCampaign = campaigns.firstOrNull()
+
+            val facilities = withContext(ioDispatcher) {
+                healthFacilityRepository.getHealthFacilityInLevelResponse()
+            }
+            facilityOptions = facilities
+            selectedFacility = facilities.find { it.code == user.hospitalCode }
             getDataOfFacility()
 
             getDivisionOptions(false)
-            val userIslandId = facilityOptions.find { it.code == user.hospitalCode }!!.precedingLevelId!!
-            val userIsland = levelRepository.getLevelListByFhirIds(userIslandId)[0]
-            selectedDivision = levelRepository.getLevelListByFhirIds(userIsland.precedingLevelId!!)[0]
+            val divisionData = withContext(ioDispatcher) {
+                val userIslandId = facilities.find { it.code == user.hospitalCode }!!
+                    .precedingLevelId!!
+
+                val userIsland = levelRepository.getLevelListByFhirIds(userIslandId)[0]
+
+                levelRepository.getLevelListByFhirIds(userIsland.precedingLevelId!!)[0]
+            }
+            selectedDivision = divisionData
             getDataOfDivision()
         }
     }

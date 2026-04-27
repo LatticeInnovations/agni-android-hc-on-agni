@@ -105,10 +105,11 @@ fun ReportsScreen(
                     )
                     DropdownComposable(
                         value = viewModel.selectedCampaign,
-                        dropdownList = viewModel.campaignOptions,
+                        onValueSelected = { viewModel.selectedCampaign = it },
                         label = "",
-                        updateValue = { viewModel.selectedCampaign = it },
-                        errorText = "",
+                        dropdownList = viewModel.campaignOptions,
+                        itemToString = { it.name},
+                        errorText = stringResource(R.string.required),
                         isMandatory = true,
                         dropdownWeight = .92f
                     )
