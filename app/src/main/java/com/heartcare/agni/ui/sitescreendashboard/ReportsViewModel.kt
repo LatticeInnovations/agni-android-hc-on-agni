@@ -39,6 +39,7 @@ import com.heartcare.agni.ui.vitalsscreen.enums.BGEnum
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.plusMinusDays
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toAge
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toEndOfDay
+import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toMMMddyyyyDateRange
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toTimeInMilli
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toTodayStartDate
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -86,10 +87,10 @@ class ReportsViewModel @Inject constructor(
     var divisionOptions: List<LevelResponse> by mutableStateOf(emptyList())
     var selectedDivision: LevelResponse? by mutableStateOf(null)
 
-    var campaignPractitionerName by mutableStateOf("Dr. Sarah Naupa")
-    var campaignContact by mutableStateOf("sarah@moh.vu, +678 55123")
-    var campaignDateRange by mutableStateOf("Mar 1 - Mar 15, 2025")
-    var campaignLocation by mutableStateOf("Port Vila Central")
+    var campaignPractitionerName by mutableStateOf("")
+    var campaignContact by mutableStateOf("")
+    var campaignDateRange by mutableStateOf("")
+    var campaignLocation by mutableStateOf("")
 
     init {
         getMasterLists()
@@ -104,6 +105,20 @@ class ReportsViewModel @Inject constructor(
             }
             campaignOptions = campaigns
             selectedCampaign = campaigns.firstOrNull()
+            val teamLead = selectedCampaign?.staff?.firstOrNull { it.isTeamLead }
+            campaignPractitionerName = teamLead?.name ?: ""
+
+            campaignContact = listOfNotNull(
+                teamLead?.email?.takeIf { it.isNotBlank() },
+                teamLead?.mobile?.takeIf { it.isNotBlank() }
+            ).joinToString(", ")
+
+            val start = selectedCampaign?.fromDate?.toTimeInMilli()?.let { Date(it).toMMMddyyyyDateRange() }
+            val end = selectedCampaign?.toDate?.toTimeInMilli()?.let { Date(it).toMMMddyyyyDateRange() }
+
+            campaignDateRange = listOfNotNull(start, end).joinToString(" - ")
+
+            campaignLocation = selectedCampaign?.location ?: ""
 
             val facilities = withContext(ioDispatcher) {
                 healthFacilityRepository.getHealthFacilityInLevelResponse()
