@@ -10,4 +10,5 @@ interface PatientRepository {
     suspend fun getPatientList(): LiveData<PagingData<PatientResponse>>
     suspend fun updatePatientData(patientResponse: PatientResponse): Int
     suspend fun getPatientById(vararg patientId: String): List<PatientResponse>
+    suspend fun getPatientIdsByDivision(divisionType: String, divisionId: String): List<String>
 }

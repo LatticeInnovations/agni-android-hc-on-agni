@@ -31,6 +31,7 @@ import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -41,6 +42,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.heartcare.agni.R
 import com.heartcare.agni.data.local.enums.DateRangeEnum
+import com.heartcare.agni.data.local.enums.LevelsEnum.Companion.getLevelsDisplay
 import com.heartcare.agni.data.local.model.report.StatSubGroup
 import com.heartcare.agni.ui.common.DropdownComposable
 import com.heartcare.agni.ui.patientregistration.step3.LevelDropDownComposable
@@ -181,7 +183,7 @@ fun ReportsScreen(
                         value = viewModel.selectedFacility?.name ?: "",
                         updateValue = {
                             viewModel.selectedFacility = it
-                            viewModel.getDataOfFacility(viewModel.selectedFacility!!.code)
+                            viewModel.getDataOfFacility()
                         },
                         label = "",
                         dropdownList = viewModel.facilityOptions,
@@ -200,24 +202,31 @@ fun ReportsScreen(
                     )
                     DropdownComposable(
                         value = viewModel.selectedDivisionType,
-                        dropdownList = viewModel.divisionTypeOptions,
+                        dropdownList = getLevelsDisplay(),
                         label = "",
-                        updateValue = { viewModel.selectedDivisionType = it },
+                        updateValue = {
+                            viewModel.selectedDivisionType = it
+                            viewModel.getDivisionOptions()
+                        },
                         errorText = "",
                         isMandatory = true,
                         dropdownWeight = .92f
                     )
                     Spacer(modifier = Modifier.height(8.dp))
-                    DropdownComposable(
-                        value = viewModel.selectedDivisionName,
-                        dropdownList = viewModel.divisionNameOptions,
-                        label = "",
-                        updateValue = { viewModel.selectedDivisionName = it },
-                        errorText = "",
-                        isMandatory = true,
-                        dropdownWeight = .92f
-
-                    )
+                    key(viewModel.selectedDivisionType) {
+                        LevelDropDownComposable(
+                            value = viewModel.selectedDivision?.name ?: "",
+                            updateValue = {
+                                viewModel.selectedDivision = it
+                                viewModel.getDataOfDivision()
+                            },
+                            label = "",
+                            dropdownList = viewModel.divisionOptions,
+                            errorText = stringResource(R.string.required),
+                            isMandatory = true,
+                            isEnabled = true
+                        )
+                    }
                     Spacer(modifier = Modifier.height(16.dp))
                 }
             }
@@ -252,7 +261,7 @@ fun ReportsScreen(
                             border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
                         ) {
                             Text(
-                                text = viewModel.selectedDateRangeLabel,
+                                text = viewModel.currentState.selectedDateRangeLabel,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 style = MaterialTheme.typography.labelLarge
                             )
@@ -265,9 +274,9 @@ fun ReportsScreen(
                             )
                         }
 
-                        if (viewModel.selectedDateRangeLabel == DateRangeEnum.CUSTOM_RANGE.label) {
+                        if (viewModel.currentState.selectedDateRangeLabel == DateRangeEnum.CUSTOM_RANGE.label) {
                             Text(
-                                text = "${viewModel.dateRangeStart.toDateRange()} - ${viewModel.dateRangeEnd.toDateRange()}",
+                                text = "${viewModel.currentState.dateRangeStart.toDateRange()} - ${viewModel.currentState.dateRangeEnd.toDateRange()}",
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.outline
                             )
@@ -280,7 +289,7 @@ fun ReportsScreen(
                 visible = viewModel.showSummary(),
                 enter = fadeIn()
             ) {
-                if (viewModel.totalScreened > 0) {
+                if (viewModel.currentState.totalScreened > 0) {
                     Column {
                         // Summary Card
                         Card(
@@ -296,16 +305,16 @@ fun ReportsScreen(
                                 Text(
                                     text = stringResource(
                                         R.string.screened_count,
-                                        viewModel.totalScreened
+                                        viewModel.currentState.totalScreened
                                     ),
                                     style = MaterialTheme.typography.titleMedium
                                 )
                                 Text(
                                     text = stringResource(
                                         R.string.screened_gender_breakdown,
-                                        viewModel.totalMale,
-                                        viewModel.totalFemale,
-                                        viewModel.totalOther
+                                        viewModel.currentState.totalMale,
+                                        viewModel.currentState.totalFemale,
+                                        viewModel.currentState.totalOther
                                     ),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.outline,
@@ -324,7 +333,7 @@ fun ReportsScreen(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                                 ) {
-                                    viewModel.ageGroups.forEach { (range, count) ->
+                                    viewModel.currentState.ageGroups.forEach { (range, count) ->
                                         Column(
                                             modifier = Modifier
                                                 .background(
@@ -353,41 +362,41 @@ fun ReportsScreen(
 
                         // Statistics Cards
                         StatProgressCard(
-                            title = stringResource(R.string.stat_bmi_categories, viewModel.bmiTotal),
-                            stats = viewModel.bmiStats,
+                            title = stringResource(R.string.stat_bmi_categories, viewModel.currentState.bmiTotal),
+                            stats = viewModel.currentState.bmiStats,
                             modifier = Modifier.padding(bottom = 16.dp)
                         )
 
                         StatProgressCard(
-                            title = stringResource(R.string.stat_blood_pressure, viewModel.bloodPressureTotal),
-                            stats = viewModel.bloodPressureStats,
+                            title = stringResource(R.string.stat_blood_pressure, viewModel.currentState.bloodPressureTotal),
+                            stats = viewModel.currentState.bloodPressureStats,
                             modifier = Modifier.padding(bottom = 16.dp)
                         )
 
                         StatProgressCard(
-                            title = stringResource(R.string.stat_smoking_status, viewModel.smokingTotal),
-                            stats = viewModel.smokingStats,
+                            title = stringResource(R.string.stat_smoking_status, viewModel.currentState.smokingTotal),
+                            stats = viewModel.currentState.smokingStats,
                             modifier = Modifier.padding(bottom = 16.dp)
                         )
 
                         StatProgressCard(
-                            title = stringResource(R.string.stat_blood_sugar, viewModel.bloodSugarFastingTotal + viewModel.bloodSugarRandomTotal),
+                            title = stringResource(R.string.stat_blood_sugar, viewModel.currentState.bloodSugarFastingTotal + viewModel.currentState.bloodSugarRandomTotal),
                             subGroups = listOf(
-                                StatSubGroup(stringResource(R.string.blood_sugar_fasting, viewModel.bloodSugarFastingTotal), viewModel.bloodSugarFastingStats),
-                                StatSubGroup(stringResource(R.string.blood_sugar_random, viewModel.bloodSugarRandomTotal), viewModel.bloodSugarRandomStats)
+                                StatSubGroup(stringResource(R.string.blood_sugar_fasting, viewModel.currentState.bloodSugarFastingTotal), viewModel.currentState.bloodSugarFastingStats),
+                                StatSubGroup(stringResource(R.string.blood_sugar_random, viewModel.currentState.bloodSugarRandomTotal), viewModel.currentState.bloodSugarRandomStats)
                             ),
                             modifier = Modifier.padding(bottom = 16.dp)
                         )
 
                         StatProgressCard(
-                            title = stringResource(R.string.stat_total_cholesterol, viewModel.cholesterolTotal),
-                            stats = viewModel.cholesterolStats,
+                            title = stringResource(R.string.stat_total_cholesterol, viewModel.currentState.cholesterolTotal),
+                            stats = viewModel.currentState.cholesterolStats,
                             modifier = Modifier.padding(bottom = 16.dp)
                         )
 
                         StatProgressCard(
-                            title = stringResource(R.string.stat_cvd_risk, viewModel.cvdRiskTotal),
-                            stats = viewModel.cvdRiskStats,
+                            title = stringResource(R.string.stat_cvd_risk, viewModel.currentState.cvdRiskTotal),
+                            stats = viewModel.currentState.cvdRiskStats,
                             modifier = Modifier.padding(bottom = 16.dp)
                         )
 
@@ -412,9 +421,9 @@ fun ReportsScreen(
 
     if (viewModel.showDateRangeSheet) {
         DateRangeBottomSheet(
-            selected = viewModel.selectedDateRangeLabel,
-            dateRangeStart = viewModel.dateRangeStart,
-            dateRangeEnd = viewModel.dateRangeEnd,
+            selected = viewModel.currentState.selectedDateRangeLabel,
+            dateRangeStart = viewModel.currentState.dateRangeStart,
+            dateRangeEnd = viewModel.currentState.dateRangeEnd,
             onDismissRequest = { viewModel.showDateRangeSheet = false },
             onSaveClick = { rangeType, start, end ->
                 viewModel.updateDateRange(rangeType, start, end)
