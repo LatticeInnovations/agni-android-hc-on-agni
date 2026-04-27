@@ -271,7 +271,12 @@ fun VitalsScreen(navController: NavController, vitalsViewModel: VitalsViewModel 
                                 .fillMaxWidth(),
                             onClick = {
                                 if (vitalsViewModel.patient!!.patientDeceasedReason.isNullOrBlank()) {
-                                    currentStep = 1
+                                    if (vitalsViewModel.isScreeningSiteEnabled) {
+                                        currentStep = 1
+                                    }else {
+                                        vitalsViewModel.selectedCampaignId = null
+                                        handleAddVitalLogic(vitalsViewModel, navController, scope, snackBarHostState, context)
+                                    }
                                 } else {
                                     scope.launch {
                                         snackBarHostState.showSnackbar(

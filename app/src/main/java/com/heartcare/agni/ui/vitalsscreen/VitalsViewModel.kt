@@ -28,10 +28,10 @@ import com.heartcare.agni.utils.constants.VitalConstants.ALL
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.isToday
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
-import com.heartcare.agni.data.local.repository.config.RemoteConfigRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import java.util.Date
 import javax.inject.Inject
 
@@ -80,12 +80,20 @@ class VitalsViewModel @Inject constructor(
 
     var selectedCampaignId by mutableStateOf<String?>(null)
     var screeningSites by mutableStateOf(listOf<ScreeningSiteMasterEntity>())
+    var isScreeningSiteEnabled by mutableStateOf(false)
     var existingCampaignVital by mutableStateOf<VitalResponse?>(null)
     var hasExistingCampaignVitalRecord by mutableStateOf(false)
 
     internal fun loadActiveScreeningSites() {
         viewModelScope.launch(ioDispatcher) {
-            screeningSites = Queries.getScreeningSites(screeningSiteDao)
+            val allSites = Queries.getScreeningSites(screeningSiteDao)
+            val userFhirId = user.fhirId
+            Timber.d("USERID: $userFhirId")
+            screeningSites = allSites.filter { site ->
+                site.staff.any { it.id == userFhirId }
+            }
+            isScreeningSiteEnabled = screeningSites.isNotEmpty()
+
         }
     }
 
