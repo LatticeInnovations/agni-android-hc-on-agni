@@ -117,7 +117,6 @@ fun CVDRiskAssessmentScreen(
         viewModel.tabs.size
     }
     val focusManager = LocalFocusManager.current
-    var currentStep by remember { mutableIntStateOf(0) }
     var selectedSite by remember { mutableStateOf<String?>(null) }
     var selectedType by remember { mutableStateOf<RecordType?>(null) }
 
@@ -127,8 +126,7 @@ fun CVDRiskAssessmentScreen(
         scope = scope,
         pagerState = pagerState,
         snackBarHostState = snackBarHostState,
-        context = context,
-        onCVDLoaded = { currentStep = 2 }
+        context = context
     )
 
     AddBackHandler(viewModel, navController, pagerState, scope)
@@ -175,7 +173,7 @@ fun CVDRiskAssessmentScreen(
                             0 -> {
                                 Column(modifier = Modifier.fillMaxSize()) {
 
-                                    when (currentStep) {
+                                    when (viewModel.currentStep) {
                                         0 -> {
                                             RecordTypeSelectionContent(
                                                 modifier = Modifier.fillMaxSize(),
@@ -183,9 +181,9 @@ fun CVDRiskAssessmentScreen(
                                                 onTypeSelected = { selectedType = it },
                                                 onContinueClick = {
                                                     if (selectedType == RecordType.FACILITY) {
-                                                        currentStep = 2
+                                                        viewModel.currentStep = 2
                                                     } else if (selectedType == RecordType.SCREENING_SITE) {
-                                                        currentStep = 1
+                                                        viewModel.currentStep = 1
                                                     }
                                                 }
                                             )
@@ -200,13 +198,13 @@ fun CVDRiskAssessmentScreen(
                                                     viewModel.selectedCampaignId = viewModel.screeningSites.find { it.name == siteName }?.id
                                                 },
                                                 onBackClick = {
-                                                    currentStep = 0
+                                                    viewModel.currentStep = 0
                                                     viewModel.selectedCampaignId = null
                                                 },
                                                 onContinueClick = {
                                                     if (selectedSite != null) {
                                                         viewModel.getAppointmentInfo {
-                                                            currentStep = 2
+                                                            viewModel.currentStep = 2
                                                         }
                                                     }
                                                 }
@@ -226,7 +224,7 @@ fun CVDRiskAssessmentScreen(
             }
         },
         bottomBar = {
-            if (currentStep == 2)
+            if (viewModel.currentStep == 2)
             CVDBottomAppBar(viewModel, focusManager, scope, pagerState, snackBarHostState, context, onNavigate = {
                 navigateToRecordsAfterSaving(
                     viewModel,
@@ -273,8 +271,7 @@ private fun HandleLaunchedEffect(
     scope: CoroutineScope,
     pagerState: PagerState,
     snackBarHostState: SnackbarHostState,
-    context: Context,
-    onCVDLoaded: () -> Unit
+    context: Context
 ) {
     LaunchedEffect(viewModel.isLaunched) {
         if (!viewModel.isLaunched) {
@@ -285,11 +282,7 @@ private fun HandleLaunchedEffect(
             viewModel.getAppointmentInfo(callback = {})
             viewModel.isLaunched = true
         }
-        viewModel.getTodayCVDAssessment() {
-            if (viewModel.todayCVD != null) {
-                onCVDLoaded()
-            }
-        }
+        viewModel.getTodayCVDAssessment()
         navController.currentBackStackEntry?.savedStateHandle?.let { handle ->
             if (handle.remove<Boolean>(REFERRAL_FROM_CVD) == true){
                 navigateToRecordsAfterSaving(

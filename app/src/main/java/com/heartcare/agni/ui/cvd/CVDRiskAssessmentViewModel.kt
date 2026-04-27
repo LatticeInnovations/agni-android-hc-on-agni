@@ -23,6 +23,8 @@ import com.heartcare.agni.data.local.repository.patient.lastupdated.PatientLastU
 import com.heartcare.agni.data.local.repository.preference.PreferenceRepository
 import com.heartcare.agni.data.local.repository.referral.ReferralRepository
 import com.heartcare.agni.data.local.repository.schedule.ScheduleRepository
+import com.heartcare.agni.data.local.roomdb.dao.ScreeningSiteDao
+import com.heartcare.agni.data.local.roomdb.entities.campaign.ScreeningSiteMasterEntity
 import com.heartcare.agni.data.server.model.cvd.CVDResponse
 import com.heartcare.agni.data.server.model.patient.PatientLastUpdatedResponse
 import com.heartcare.agni.data.server.model.patient.PatientResponse
@@ -37,8 +39,6 @@ import com.heartcare.agni.utils.common.Queries.getAppointment
 import com.heartcare.agni.utils.common.Queries.getInProgressCompletedAppointmentIds
 import com.heartcare.agni.utils.common.Queries.loadAppointmentInfo
 import com.heartcare.agni.utils.common.Queries.loadCampaignAppointmentInfo
-import com.heartcare.agni.data.local.roomdb.dao.ScreeningSiteDao
-import com.heartcare.agni.data.local.roomdb.entities.campaign.ScreeningSiteMasterEntity
 import com.heartcare.agni.utils.common.Queries.updatePatientLastUpdated
 import com.heartcare.agni.utils.converters.responseconverter.NameConverter.getFullName
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.plusMinusDays
@@ -135,6 +135,9 @@ class CVDRiskAssessmentViewModel @Inject constructor(
     var screeningSites by mutableStateOf<List<ScreeningSiteMasterEntity>>(listOf())
     var selectedCampaignId by mutableStateOf<String?>(null)
 
+    var isScreeningSiteEnabled by mutableStateOf(false)
+    var currentStep by  mutableIntStateOf(2)
+
     init {
         viewModelScope.launch(ioDispatcher) {
             riskConfig.value = remoteConfigRepository.getRiskConfig()
@@ -144,7 +147,18 @@ class CVDRiskAssessmentViewModel @Inject constructor(
 
     fun getScreeningSites() {
         viewModelScope.launch(ioDispatcher) {
-            screeningSites = Queries.getScreeningSites(screeningSiteDao)
+            val allSites = Queries.getScreeningSites(screeningSiteDao)
+            val userFhirId = user.fhirId
+            screeningSites = allSites.filter { site ->
+                site.staff.any { it.id == userFhirId }
+            }
+            isScreeningSiteEnabled = screeningSites.isNotEmpty()
+            currentStep = if (isScreeningSiteEnabled){
+                0
+            }else{
+                2
+            }
+
         }
     }
     fun getAppointmentInfo(
@@ -255,7 +269,7 @@ class CVDRiskAssessmentViewModel @Inject constructor(
                 !weightError && !cholesterolError
     }
 
-    fun getTodayCVDAssessment(onLoaded: () -> Unit = {}) {
+    fun getTodayCVDAssessment() {
         viewModelScope.launch(ioDispatcher) {
             getRecords()
             previousRecordsWithReferralStatus.map { it.first }.firstOrNull()?.let { record ->
@@ -286,7 +300,6 @@ class CVDRiskAssessmentViewModel @Inject constructor(
                         )
                 }
             }
-            onLoaded()
         }
     }
 
