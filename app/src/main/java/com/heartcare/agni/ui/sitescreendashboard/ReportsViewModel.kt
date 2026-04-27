@@ -93,10 +93,11 @@ class ReportsViewModel @Inject constructor(
     var campaignLocation by mutableStateOf("")
 
     init {
-        getMasterLists()
+        getCampaignList()
+        getFacilityAndDivisionList()
     }
 
-    private fun getMasterLists() {
+    private fun getCampaignList() {
         viewModelScope.launch {
             val campaigns = withContext(ioDispatcher) {
                 screeningSiteRepository.getActiveScreeningSites().filter { site ->
@@ -119,17 +120,26 @@ class ReportsViewModel @Inject constructor(
             campaignDateRange = listOfNotNull(start, end).joinToString(" - ")
 
             campaignLocation = selectedCampaign?.location ?: ""
+        }
+    }
 
+    private fun getFacilityAndDivisionList() {
+        viewModelScope.launch {
             val facilities = withContext(ioDispatcher) {
                 healthFacilityRepository.getHealthFacilityInLevelResponse()
             }
             facilityOptions = facilities
             selectedFacility = facilities.find { it.code == user.hospitalCode }
+            getDivisionList()
             getDataOfFacility()
+        }
+    }
 
+    private fun getDivisionList() {
+        viewModelScope.launch {
             getDivisionOptions(false)
             val divisionData = withContext(ioDispatcher) {
-                val userIslandId = facilities.find { it.code == user.hospitalCode }!!
+                val userIslandId = facilityOptions.find { it.code == user.hospitalCode }!!
                     .precedingLevelId!!
 
                 val userIsland = levelRepository.getLevelListByFhirIds(userIslandId)[0]
@@ -150,7 +160,7 @@ class ReportsViewModel @Inject constructor(
 
     fun showSummary(): Boolean {
         return when (selectedTabIndex) {
-            0 -> true
+            0 -> selectedCampaign != null
             1 -> selectedFacility != null
             2 -> selectedDivision != null
             else -> false
