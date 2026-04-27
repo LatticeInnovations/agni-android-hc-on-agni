@@ -94,12 +94,8 @@ class GenericRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun updateAppointmentFhirIds() {
-        genericDao.getNotSyncedData(GenericTypeEnum.APPOINTMENT)
-            .forEach { appointmentGenericEntity ->
-                updateAppointmentFhirIdInGenericEntity(appointmentGenericEntity)
-            }
-        genericDao.getNotSyncedData(GenericTypeEnum.CAMPAIGN_APPOINTMENT)
+    override suspend fun updateAppointmentFhirIds(genericTypeEnum: GenericTypeEnum) {
+        genericDao.getNotSyncedData(genericTypeEnum)
             .forEach { appointmentGenericEntity ->
                 updateAppointmentFhirIdInGenericEntity(appointmentGenericEntity)
             }
@@ -110,28 +106,16 @@ class GenericRepositoryImpl @Inject constructor(
             .forEach { appointmentGenericEntity ->
                 updateAppointmentFhirIdInGenericEntityPatch(appointmentGenericEntity)
             }
-        genericDao.getNotSyncedData(GenericTypeEnum.CAMPAIGN_APPOINTMENT, SyncType.PATCH)
-            .forEach { appointmentGenericEntity ->
-                updateAppointmentFhirIdInGenericEntityPatch(appointmentGenericEntity)
-            }
     }
 
-    override suspend fun updateCVDFhirIds() {
-        genericDao.getNotSyncedData(GenericTypeEnum.CVD)
-            .forEach { cvdGenericEntity ->
-                updateCVDFhirIdInGenericEntity(cvdGenericEntity)
-            }
-        genericDao.getNotSyncedData(GenericTypeEnum.CAMPAIGN_CVD)
+    override suspend fun updateCVDFhirIds(genericTypeEnum: GenericTypeEnum) {
+        genericDao.getNotSyncedData(genericTypeEnum)
             .forEach { cvdGenericEntity ->
                 updateCVDFhirIdInGenericEntity(cvdGenericEntity)
             }
     }
-    override suspend fun updateVitalFhirId() {
+    override suspend fun updateVitalFhirId(genericTypeEnum: GenericTypeEnum) {
         genericDao.getNotSyncedData(GenericTypeEnum.VITAL)
-            .forEach { vitalGenericEntity ->
-                updateVitalFhirIdInGenericEntity(vitalGenericEntity)
-            }
-        genericDao.getNotSyncedData(GenericTypeEnum.CAMPAIGN_VITAL)
             .forEach { vitalGenericEntity ->
                 updateVitalFhirIdInGenericEntity(vitalGenericEntity)
             }

@@ -21,7 +21,6 @@ class AppointmentRepositoryImpl @Inject constructor(
         startOfDay: Long,
         endOfDay: Long
     ): List<AppointmentResponseLocal> {
-        // For facility queue, only return facility appointments
         return appointmentDao.getAppointmentsByDate(startOfDay, endOfDay).map { it.toAppointmentResponseLocal() }
             .groupBy { it.patientId }
             .map { (_, appointments) -> appointments.minBy { it.createdOn } }
@@ -38,12 +37,13 @@ class AppointmentRepositoryImpl @Inject constructor(
     override suspend fun getAppointmentsOfPatient(
         patientId: String
     ): List<AppointmentResponseLocal> {
-        // Aggregate for a unified history view
-        val facility = appointmentDao.getAppointmentsOfPatient(patientId).map { it.toAppointmentResponseLocal() }
-        val campaign = campaignAppointmentDao.getAppointmentsOfPatient(patientId).map { it.toAppointmentResponseLocal() }
-        
-        return (facility + campaign).groupBy { it.slot.start.toddMMMyyyy() }
-            .map { (_, appointment) -> appointment.minBy { it.createdOn } }
+        return appointmentDao.getAppointmentsOfPatient(patientId).map {
+            it.toAppointmentResponseLocal()
+        }.groupBy {
+            it.slot.start.toddMMMyyyy()
+        }.map { (_, appointment) ->
+            appointment.minBy { it.createdOn }
+        }
     }
 
     override suspend fun getAppointmentsOfPatientByDate(
@@ -51,14 +51,7 @@ class AppointmentRepositoryImpl @Inject constructor(
         startOfDay: Long,
         endOfDay: Long
     ): AppointmentResponseLocal? {
-        // Check facility first
-        val facility = appointmentDao.getAppointmentOfPatientByDate(patientId, startOfDay, endOfDay)
-            .minByOrNull { it.createdOn }
-            ?.toAppointmentResponseLocal()
-        if (facility != null) return facility
-
-        // Then campaign
-        return campaignAppointmentDao.getAppointmentOfPatientByDate(patientId, startOfDay, endOfDay)
+        return appointmentDao.getAppointmentOfPatientByDate(patientId, startOfDay, endOfDay)
             .minByOrNull { it.createdOn }
             ?.toAppointmentResponseLocal()
     }
@@ -86,9 +79,7 @@ class AppointmentRepositoryImpl @Inject constructor(
         status: String
     ): List<AppointmentResponseLocal> {
         val facility = appointmentDao.getAppointmentsOfPatientByStatus(patientId, status).map { it.toAppointmentResponseLocal() }
-        val campaign = campaignAppointmentDao.getAppointmentsOfPatientByStatus(patientId, status).map { it.toAppointmentResponseLocal() }
-        
-        return (facility + campaign).groupBy { it.slot.start.toddMMMyyyy() }
+        return facility .groupBy { it.slot.start.toddMMMyyyy() }
             .map { (_, appointment) -> appointment.minBy { it.createdOn } }
     }
 
