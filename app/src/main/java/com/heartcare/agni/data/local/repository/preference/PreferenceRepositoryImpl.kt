@@ -140,11 +140,23 @@ class PreferenceRepositoryImpl @Inject constructor(private val preferenceStorage
 
     override fun getLastSyncPriorDx(): Long = preferenceStorage.lastSyncPriorDxRecord
 
+    override fun setLastSyncCampaignPriorDx(long: Long) {
+        preferenceStorage.lastSyncCampaignPriorDxRecord = long
+    }
+
+    override fun getLastSyncCampaignPriorDx(): Long = preferenceStorage.lastSyncCampaignPriorDxRecord
+
     override fun setLastSyncHistoryMedication(long: Long) {
         preferenceStorage.lastSyncHistoryMedicationRecord = long
     }
 
     override fun getLastSyncHistoryMedication(): Long = preferenceStorage.lastSyncHistoryMedicationRecord
+
+    override fun setLastSyncCampaignHistoryMedication(long: Long) {
+        preferenceStorage.lastSyncCampaignHistoryMedicationRecord = long
+    }
+
+    override fun getLastSyncCampaignHistoryMedication(): Long = preferenceStorage.lastSyncCampaignHistoryMedicationRecord
 
     override fun setLastSyncFamilyHistory(long: Long) {
         preferenceStorage.lastSyncFamilyHistoryRecord = long

@@ -16,5 +16,7 @@ data class HistoryMedicationResponse(
     val practitionerId: String?,
     val practitionerName: String?,
     val sideEffects: String?,
-    val uuid: String
+    val uuid: String,
+    val campaignId: String? = null,
+    val screeningSiteName: String?=null
 )

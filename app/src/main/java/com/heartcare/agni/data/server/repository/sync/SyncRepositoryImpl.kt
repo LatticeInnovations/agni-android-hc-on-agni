@@ -1743,6 +1743,50 @@ class SyncRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun sendCampaignHistoryMedicationPostData(): ResponseMapper<List<CreateResponse>> {
+        return try {
+            genericDao.getSameTypeGenericEntityPayload(
+                genericTypeEnum = GenericTypeEnum.CAMPAIGN_HISTORY_MEDICATION,
+                syncType = SyncType.POST
+            ).let { listOfGenericEntity ->
+                if (listOfGenericEntity.isEmpty()) ApiEmptyResponse()
+                else {
+                    ApiResponseConverter.convert(
+                        historyAndTestsApiService.postCampaignHistoryMedication(
+                            listOfGenericEntity.map {
+                                it.payload.fromJson<LinkedTreeMap<*, *>>()
+                                    .mapToObject(HistoryMedicationResponse::class.java)!!.copy(campaignId = null)
+                            }
+                        )
+                    ).apply {
+                        if (this is ApiEndResponse) {
+                            insertHistoryMedicationFhirIds(body, listOfGenericEntity)
+                                .apply {
+                                    if (this > 0) sendCampaignHistoryMedicationPostData()
+                                }
+                        }
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            Timber.e(e, e.localizedMessage)
+            crashlyticsLogger.logException(
+                e,
+                "sendCampaignHistoryMedicationPostData function failed.",
+                mapOf(
+                    Pair(
+                        USER_ID,
+                        preferenceRepository.getUserDetails()?.userId ?: ERROR_FETCHING_USER_DETAILS
+                    )
+                )
+            )
+            ApiErrorResponse(
+                statusCode = 0,
+                errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
+            )
+        }
+    }
+
     override suspend fun sendFamilyHistoryPostData(): ResponseMapper<List<CreateResponse>> {
         return try {
             genericDao.getSameTypeGenericEntityPayload(
@@ -2442,6 +2486,11 @@ class SyncRepositoryImpl @Inject constructor(
         map[COUNT] = COUNT_VALUE.toString()
         map[OFFSET] = offset.toString()
         map[SORT] = "-$ID"
+        if (preferenceRepository.getLastSyncCampaignPriorDx() != 0L) map[LAST_UPDATED] =
+            String.format(
+                GREATER_THAN_BUILDER,
+                preferenceRepository.getLastSyncCampaignPriorDx().toTimeStampDate()
+            )
 
         return try {
             ApiResponseConverter.convert(
@@ -2452,10 +2501,13 @@ class SyncRepositoryImpl @Inject constructor(
                         insertPriorDx(body)
                         getAndInsertCampaignPriorDxData(offset + COUNT_VALUE)
                     }
+
                     is ApiEndResponse -> {
+                        preferenceRepository.setLastSyncCampaignPriorDx(Date().time)
                         insertPriorDx(body)
                         this
                     }
+
                     else -> this
                 }
             }
@@ -2518,6 +2570,61 @@ class SyncRepositoryImpl @Inject constructor(
             crashlyticsLogger.logException(
                 e,
                 "getAndInsertHistoryMedicationData function failed.",
+                mapOf(
+                    Pair(
+                        USER_ID,
+                        preferenceRepository.getUserDetails()?.userId ?: ERROR_FETCHING_USER_DETAILS
+                    )
+                )
+            )
+            ApiErrorResponse(
+                statusCode = 0,
+                errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
+            )
+        }
+    }
+
+
+    override suspend fun getAndInsertCampaignHistoryMedicationData(
+        offset: Int
+    ): ResponseMapper<List<HistoryMedicationResponse>> {
+        val map = mutableMapOf<String, String>()
+        map[COUNT] = COUNT_VALUE.toString()
+        map[OFFSET] = offset.toString()
+        map[SORT] = "-$ID"
+        if (preferenceRepository.getLastSyncCampaignHistoryMedication() != 0L) map[LAST_UPDATED] =
+            String.format(
+                GREATER_THAN_BUILDER,
+                preferenceRepository.getLastSyncCampaignHistoryMedication().toTimeStampDate()
+            )
+
+        return try {
+            ApiResponseConverter.convert(
+                historyAndTestsApiService.getCampaignHistoryMedication(
+                    map
+                ), true
+            ).run {
+                when (this) {
+                    is ApiContinueResponse -> {
+                        insertHistoryMedication(body)
+                        //Call for next batch data
+                        getAndInsertCampaignHistoryMedicationData(offset + COUNT_VALUE)
+                    }
+
+                    is ApiEndResponse -> {
+                        preferenceRepository.setLastSyncCampaignHistoryMedication(Date().time)
+                        insertHistoryMedication(body)
+                        this
+                    }
+
+                    else -> this
+                }
+            }
+        } catch (e: Exception) {
+            Timber.e(e, e.localizedMessage)
+            crashlyticsLogger.logException(
+                e,
+                "getAndInsertCampaignHistoryMedicationData function failed.",
                 mapOf(
                     Pair(
                         USER_ID,

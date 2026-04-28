@@ -23,4 +23,5 @@ object EndPoints {
     const val CAMPAIGN_CVD = "campaign/CVD"
     const val CAMPAIGN_VITAL = "campaign/Vital"
     const val CAMPAIGN_PRIOR_DX = "campaign/priorDx"
+    const val CAMPAIGN_HISTORY_MEDICATION = "campaign/historyMedicine"
 }

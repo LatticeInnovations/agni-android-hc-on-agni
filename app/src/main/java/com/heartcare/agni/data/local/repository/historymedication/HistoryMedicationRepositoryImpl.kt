@@ -16,4 +16,11 @@ class HistoryMedicationRepositoryImpl @Inject constructor(
     override suspend fun getHistoryMedicationRecordsByAppointmentIds(vararg appointmentIds: String): List<HistoryMedicationResponse> {
         return historyMedicationDao.getHistoryMedicationRecordsByAppointmentIds(*appointmentIds).map { it.toHistoryMedicationResponse() }
     }
+
+    override suspend fun getLatestMedicationForCampaign(
+        patientId: String,
+        campaignId: String
+    ): HistoryMedicationResponse? {
+        return historyMedicationDao.getLatestMedicationForCampaign(patientId, campaignId)?.toHistoryMedicationResponse()
+    }
 }

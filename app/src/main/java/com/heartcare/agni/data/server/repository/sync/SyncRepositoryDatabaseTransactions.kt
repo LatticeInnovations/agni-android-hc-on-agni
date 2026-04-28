@@ -667,7 +667,7 @@ open class SyncRepositoryDatabaseTransactions(
 
     protected suspend fun insertHistoryMedication(body: List<HistoryMedicationResponse>) {
         historyMedicationDao.insertHistoryMedicationRecord(
-            *body.map { it.toHistoryMedicationEntity(patientDao, appointmentDao) }.toTypedArray()
+            *body.map { it.toHistoryMedicationEntity(patientDao, appointmentDao, campaignAppointmentDao) }.toTypedArray()
         )
     }
 

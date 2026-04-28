@@ -37,7 +37,9 @@ interface PreferenceStorage {
 
     var lastSyncLevelRecord: Long
     var lastSyncPriorDxRecord: Long
+    var lastSyncCampaignPriorDxRecord: Long
     var lastSyncHistoryMedicationRecord: Long
+    var lastSyncCampaignHistoryMedicationRecord: Long
     var lastSyncFamilyHistoryRecord: Long
     var lastSyncAllergyRecord: Long
     var lastSyncRiskFactorsRecord: Long
