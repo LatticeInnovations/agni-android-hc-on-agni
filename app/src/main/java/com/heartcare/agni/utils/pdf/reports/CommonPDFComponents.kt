@@ -1,6 +1,8 @@
 package com.heartcare.agni.utils.pdf.reports
 
 import com.heartcare.agni.ui.sitescreendashboard.state.ReportUiState
+import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toMMMMddyyyyHHmm
+import java.util.Date
 
 object CommonPDFComponents {
     fun reportPdfCss(): String {
@@ -283,8 +285,8 @@ object CommonPDFComponents {
               <div class="footer-divider"></div>
             
               <div class="footer">
-                <div>$title - Shefa province</div>
-                <div>Generated on April 8, 2026</div>
+                <div>$title</div>
+                <div>Generated on ${Date().toMMMMddyyyyHHmm()}</div>
               </div>
           </div>
         """.trimIndent()

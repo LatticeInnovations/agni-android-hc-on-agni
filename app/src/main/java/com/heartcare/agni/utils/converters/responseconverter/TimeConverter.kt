@@ -450,6 +450,11 @@ object TimeConverter {
         return sdf.format(this)
     }
 
+    fun Date.toMMMMddyyyyHHmm(): String {
+        val sdf = SimpleDateFormat("MMMM dd, yyyy HH:mm", Locale.getDefault())
+        return sdf.format(this)
+    }
+
     fun Date.toMMMddyyyyDateRange(): String {
         val sdf = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
         return sdf.format(this)

@@ -128,7 +128,8 @@ fun DownloadReportBottomSheet(
                         highLevel -> {
                             html = getHighLevelScreeningReportHTML(
                                 getMetaData(reportsViewModel),
-                                reportsViewModel.currentState
+                                reportsViewModel.currentState,
+                                getFooterData(reportsViewModel)
                             )
                             fileName = "Report"
                         }
@@ -190,6 +191,21 @@ private fun getMetaData(reportsViewModel: ReportsViewModel): String {
             "Administrative Division: ${reportsViewModel.selectedDivision?.name} ${reportsViewModel.selectedDivisionType}" +
                     "<BR />Date Range: $start - $end" +
                     "<BR />Report Generated: ${Date().toMMMMddyyyy()}"
+        }
+        else -> ""
+    }
+}
+
+private fun getFooterData(reportsViewModel: ReportsViewModel): String {
+    return when (reportsViewModel.selectedTabIndex) {
+        0 -> {
+            reportsViewModel.selectedCampaign?.name ?: ""
+        }
+        1 -> {
+            reportsViewModel.selectedFacility?.name ?: ""
+        }
+        2 -> {
+            "${reportsViewModel.selectedDivision?.name} ${reportsViewModel.selectedDivisionType}"
         }
         else -> ""
     }
