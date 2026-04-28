@@ -5,4 +5,5 @@ import com.heartcare.agni.data.server.model.priordx.PriorDxResponse
 interface PriorDxRepository {
     suspend fun insertPriorDx(vararg priorDxResponse: PriorDxResponse): List<Long>
     suspend fun getPriorDxRecordsByAppointmentIds(vararg appointmentIds: String): List<PriorDxResponse>
+    suspend fun getLatestPriorDxForCampaign(patientId: String, campaignId: String): PriorDxResponse?
 }

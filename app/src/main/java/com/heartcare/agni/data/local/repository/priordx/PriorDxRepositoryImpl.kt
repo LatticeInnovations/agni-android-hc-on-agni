@@ -16,4 +16,11 @@ class PriorDxRepositoryImpl @Inject constructor(
     override suspend fun getPriorDxRecordsByAppointmentIds(vararg appointmentIds: String): List<PriorDxResponse> {
         return priorDxDao.getPriorDxRecordsByAppointmentIds(*appointmentIds).map { it.toPriorDxResponse() }
     }
+
+    override suspend fun getLatestPriorDxForCampaign(
+        patientId: String,
+        campaignId: String
+    ): PriorDxResponse? {
+        return priorDxDao.getLatestPriorDxForCampaign(patientId, campaignId)?.toPriorDxResponse()
+    }
 }

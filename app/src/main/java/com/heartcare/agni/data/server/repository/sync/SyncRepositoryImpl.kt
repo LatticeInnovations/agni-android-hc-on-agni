@@ -1624,7 +1624,50 @@ class SyncRepositoryImpl @Inject constructor(
                         historyAndTestsApiService.postPriorDx(
                             listOfGenericEntity.map {
                                 it.payload.fromJson<LinkedTreeMap<*, *>>()
-                                    .mapToObject(PriorDxResponse::class.java)!!
+                                    .mapToObject(PriorDxResponse::class.java)!!.copy(campaignId = null)
+                            }
+                        )
+                    ).apply {
+                        if (this is ApiEndResponse) {
+                            insertPriorDxFhirIds(body, listOfGenericEntity)
+                                .apply {
+                                    if (this > 0) sendPriorDxPostData()
+                                }
+                        }
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            Timber.e(e, e.localizedMessage)
+            crashlyticsLogger.logException(
+                e,
+                "sendPriorDxPostData function failed.",
+                mapOf(
+                    Pair(
+                        USER_ID,
+                        preferenceRepository.getUserDetails()?.userId ?: ERROR_FETCHING_USER_DETAILS
+                    )
+                )
+            )
+            ApiErrorResponse(
+                statusCode = 0,
+                errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
+            )
+        }
+    }
+    override suspend fun sendCampaignPriorDxPostData(): ResponseMapper<List<CreateResponse>> {
+        return try {
+            genericDao.getSameTypeGenericEntityPayload(
+                genericTypeEnum = GenericTypeEnum.CAMPAIGN_PRIOR_DX,
+                syncType = SyncType.POST
+            ).let { listOfGenericEntity ->
+                if (listOfGenericEntity.isEmpty()) ApiEmptyResponse()
+                else {
+                    ApiResponseConverter.convert(
+                        historyAndTestsApiService.postCampaignPriorDx(
+                            listOfGenericEntity.map {
+                                it.payload.fromJson<LinkedTreeMap<*, *>>()
+                                    .mapToObject(PriorDxResponse::class.java)!!.copy(campaignId = null)
                             }
                         )
                     ).apply {
@@ -2062,8 +2105,7 @@ class SyncRepositoryImpl @Inject constructor(
                 else {
                     ApiResponseConverter.convert(
                         scheduleAndAppointmentApiService.patchListOfChanges(
-                            EndPoints.PATCH_LOGS,
-                            listOfGenericEntity.map { it.payload.fromJson<Map<String, Any>>() })
+                            listOfGenericEntity.map { it.payload.fromJson() })
                     ).run {
                         when (this) {
                             is ApiEndResponse -> {
@@ -2372,6 +2414,48 @@ class SyncRepositoryImpl @Inject constructor(
                         this
                     }
 
+                    else -> this
+                }
+            }
+        } catch (e: Exception) {
+            Timber.e(e, e.localizedMessage)
+            crashlyticsLogger.logException(
+                e,
+                "getAndInsertPriorDxData function failed.",
+                mapOf(
+                    Pair(
+                        USER_ID,
+                        preferenceRepository.getUserDetails()?.userId ?: ERROR_FETCHING_USER_DETAILS
+                    )
+                )
+            )
+            ApiErrorResponse(
+                statusCode = 0,
+                errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
+            )
+        }
+    }
+
+
+    override suspend fun getAndInsertCampaignPriorDxData(offset: Int): ResponseMapper<List<PriorDxResponse>> {
+        val map = mutableMapOf<String, String>()
+        map[COUNT] = COUNT_VALUE.toString()
+        map[OFFSET] = offset.toString()
+        map[SORT] = "-$ID"
+
+        return try {
+            ApiResponseConverter.convert(
+                historyAndTestsApiService.getCampaignPriorDx(map), true
+            ).run {
+                when (this) {
+                    is ApiContinueResponse -> {
+                        insertPriorDx(body)
+                        getAndInsertCampaignPriorDxData(offset + COUNT_VALUE)
+                    }
+                    is ApiEndResponse -> {
+                        insertPriorDx(body)
+                        this
+                    }
                     else -> this
                 }
             }

@@ -1,8 +1,6 @@
 package com.heartcare.agni.utils.common
 
-import com.heartcare.agni.data.local.roomdb.dao.ScreeningSiteDao
-import com.heartcare.agni.data.local.roomdb.entities.campaign.ScreeningSiteMasterEntity
-
+import androidx.annotation.Keep
 import com.heartcare.agni.data.local.enums.AppointmentStatusEnum
 import com.heartcare.agni.data.local.enums.AppointmentTypeEnum
 import com.heartcare.agni.data.local.enums.ChangeTypeEnum
@@ -13,17 +11,19 @@ import com.heartcare.agni.data.local.model.appointment.AppointmentInfo
 import com.heartcare.agni.data.local.model.appointment.AppointmentResponseLocal
 import com.heartcare.agni.data.local.model.patch.ChangeRequest
 import com.heartcare.agni.data.local.repository.appointment.AppointmentRepository
+import com.heartcare.agni.data.local.repository.cvd.records.CVDAssessmentRepository
 import com.heartcare.agni.data.local.repository.generic.GenericRepository
 import com.heartcare.agni.data.local.repository.patient.lastupdated.PatientLastUpdatedRepository
-import com.heartcare.agni.data.local.repository.cvd.records.CVDAssessmentRepository
 import com.heartcare.agni.data.local.repository.preference.PreferenceRepository
 import com.heartcare.agni.data.local.repository.schedule.ScheduleRepository
 import com.heartcare.agni.data.local.repository.vital.VitalRepository
-import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toTimeInMilli
+import com.heartcare.agni.data.local.roomdb.dao.ScreeningSiteDao
+import com.heartcare.agni.data.local.roomdb.entities.campaign.ScreeningSiteMasterEntity
 import com.heartcare.agni.data.local.roomdb.entities.patient.PatientAndIdentifierAndAppointmentEntity
 import com.heartcare.agni.data.local.roomdb.entities.patient.PatientAndIdentifierEntity
 import com.heartcare.agni.data.server.model.patient.PatientLastUpdatedResponse
 import com.heartcare.agni.data.server.model.patient.PatientResponse
+import com.heartcare.agni.data.server.model.priordx.PriorDxResponse
 import com.heartcare.agni.data.server.model.scheduleandappointment.Slot
 import com.heartcare.agni.data.server.model.scheduleandappointment.appointment.AppointmentResponse
 import com.heartcare.agni.data.server.model.scheduleandappointment.schedule.ScheduleResponse
@@ -39,6 +39,7 @@ import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toApp
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toCurrentTimeInMillis
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toEndOfDay
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toSlotStartTime
+import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toTimeInMilli
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toTodayStartDate
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toddMMMyyyy
 import timber.log.Timber
@@ -675,6 +676,22 @@ object Queries {
         )
     }
 
+    /** Outreach / Screening Site PriorDx Info — detects if a record exists for current campaign */
+    internal suspend fun loadCampaignPriorDxInfo(
+        patientId: String,
+        campaignId: String,
+        appointmentRepository: AppointmentRepository,
+        priorDxRepository: com.heartcare.agni.data.local.repository.priordx.PriorDxRepository
+    ): CampaignPriorDxInfo {
+        val appointment = appointmentRepository.loadAppointmentForCampaign(patientId, campaignId)
+        val existingPriorDx = priorDxRepository.getLatestPriorDxForCampaign(patientId, campaignId)
+
+        return CampaignPriorDxInfo(
+            appointment = appointment,
+            existingPriorDx = existingPriorDx,
+            hasExistingRecord = existingPriorDx != null
+        )
+    }
     /** Campaign-specific Vital Info — detects if a vital record exists within the campaign window */
     internal suspend fun loadCampaignVitalInfo(
         patientId: String,
@@ -704,8 +721,15 @@ object Queries {
 }
 
 /** Holds campaign-specific vital state returned from loadCampaignVitalInfo */
+@Keep
 data class CampaignVitalInfo(
     val appointment: AppointmentResponseLocal?,
     val existingVital: VitalResponse?,
     val hasExistingRecord: Boolean  // true = update mode; false = create new
+)
+@Keep
+data class CampaignPriorDxInfo(
+    val appointment: AppointmentResponseLocal?,
+    val existingPriorDx: PriorDxResponse?,
+    val hasExistingRecord: Boolean
 )

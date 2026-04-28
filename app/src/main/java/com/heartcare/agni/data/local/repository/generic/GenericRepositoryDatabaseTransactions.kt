@@ -298,6 +298,8 @@ open class GenericRepositoryDatabaseTransactions(
         priorDxResponse: PriorDxResponse,
         uuid: String
     ): Long {
+        val type = if (priorDxResponse.campaignId != null) GenericTypeEnum.CAMPAIGN_PRIOR_DX else GenericTypeEnum.PRIOR_DX
+
         return if (priorDxGenericEntity != null) {
             genericDao.insertGenericEntity(
                 priorDxGenericEntity.copy(payload = priorDxResponse.toJson())
@@ -308,7 +310,7 @@ open class GenericRepositoryDatabaseTransactions(
                     id = uuid,
                     patientId = priorDxResponse.priorDxUuid,
                     payload = priorDxResponse.toJson(),
-                    type = GenericTypeEnum.PRIOR_DX,
+                    type = type,
                     syncType = SyncType.POST
                 )
             )[0]

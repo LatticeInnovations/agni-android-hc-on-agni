@@ -45,6 +45,7 @@ class AddPriorDxViewModel @Inject constructor(
     val user = preferenceRepository.getUserDetails()!!
     var patient by mutableStateOf<PatientResponse?>(null)
     var appointmentResponseLocal by mutableStateOf<AppointmentResponseLocal?>(null)
+    var selectedCampaignId by mutableStateOf<String?>(null)
     var isLaunched by mutableStateOf(false)
 
     var lastPriorDx by mutableStateOf<PriorDxResponse?>(null)
@@ -56,9 +57,17 @@ class AddPriorDxViewModel @Inject constructor(
 
     fun getLastPriorDx(patientId: String) {
         viewModelScope.launch(ioDispatcher) {
-            val appointmentIds =
-                getInProgressCompletedAppointmentIds(patientId, appointmentRepository)
-            lastPriorDx = priorDxRepository.getPriorDxRecordsByAppointmentIds(*appointmentIds.toTypedArray()).firstOrNull()
+            val campaignId = selectedCampaignId
+            if (campaignId != null) {
+                // Fetch strictly for the current campaign site
+                lastPriorDx = priorDxRepository.getLatestPriorDxForCampaign(patientId, campaignId)
+            } else {
+                // Standard facility-based lookup
+                val appointmentIds =
+                    getInProgressCompletedAppointmentIds(patientId, appointmentRepository)
+                lastPriorDx = priorDxRepository.getPriorDxRecordsByAppointmentIds(*appointmentIds.toTypedArray()).firstOrNull()
+            }
+
             lastPriorDx?.let { priorDx ->
                 selectedPriorDx = mutableListOf<String>().apply {
                     if (priorDx.hasHypertension) add(PriorDiagnosis.HYPERTENSION.display)
@@ -122,7 +131,8 @@ class AddPriorDxViewModel @Inject constructor(
             patientId = patient!!.fhirId ?: patient!!.id,
             practitionerId = null,
             practitionerName = null,
-            appUpdatedDate = Date()
+            appUpdatedDate = Date(),
+            campaignId = selectedCampaignId
         )
     }
 
@@ -133,12 +143,16 @@ class AddPriorDxViewModel @Inject constructor(
             appointmentResponseLocal = getAppointment(
                 patientId = patient!!.id,
                 hospitalCode = user.hospitalCode,
+                campaignId = selectedCampaignId,
                 appointmentRepository = appointmentRepository
             )
             var uuid = UUIDBuilder.generateUUID()
             var fhirId: String? = null
             lastPriorDx?.let {
-                if (isToday(it.createdOn!!)) {
+                if (isToday(it.createdOn!!) && selectedCampaignId ==null) {
+                    uuid = it.priorDxUuid
+                    fhirId = it.priorDxFhirId
+                }else if (selectedCampaignId !=null) {
                     uuid = it.priorDxUuid
                     fhirId = it.priorDxFhirId
                 }
@@ -157,15 +171,17 @@ class AddPriorDxViewModel @Inject constructor(
                 )
             )
             genericRepository.insertPriorDxRecord(priorDxResponse.copy(createdOn = null))
-            checkAndUpdateAppointmentStatusToInProgress(
-                inProgressTime = priorDxResponse.createdOn!!,
-                patient = patient!!,
-                appointmentResponseLocal = appointmentResponseLocal!!,
-                appointmentRepository = appointmentRepository,
-                scheduleRepository = scheduleRepository,
-                genericRepository = genericRepository,
-                preferenceRepository = preferenceRepository
-            )
+            if (selectedCampaignId == null) {
+                checkAndUpdateAppointmentStatusToInProgress(
+                    inProgressTime = priorDxResponse.createdOn!!,
+                    patient = patient!!,
+                    appointmentResponseLocal = appointmentResponseLocal!!,
+                    appointmentRepository = appointmentRepository,
+                    scheduleRepository = scheduleRepository,
+                    genericRepository = genericRepository,
+                    preferenceRepository = preferenceRepository
+                )
+            }
             updatePatientLastUpdated(
                 patient!!.id,
                 patientLastUpdatedRepository,

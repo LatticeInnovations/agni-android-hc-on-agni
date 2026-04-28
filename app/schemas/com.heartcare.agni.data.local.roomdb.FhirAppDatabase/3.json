@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 3,
-    "identityHash": "07afbd8c49bf0e90950170e2dd59a9bc",
+    "identityHash": "0282f923a8de40e5fbeb06e87fa2ee9b",
     "entities": [
       {
         "tableName": "PatientEntity",
@@ -1702,7 +1702,7 @@
       },
       {
         "tableName": "PriorDxEntity",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`priorDxUuid` TEXT NOT NULL, `priorDxFhirId` TEXT, `appointmentId` TEXT NOT NULL, `cancer` TEXT, `createdOn` INTEGER NOT NULL, `hasAids` INTEGER NOT NULL, `hasAsthma` INTEGER NOT NULL, `hasCancer` INTEGER NOT NULL, `hasChronicKidneyDiseases` INTEGER NOT NULL, `hasChronicObstructivePulmonaryDisease` INTEGER NOT NULL, `hasCovid` INTEGER NOT NULL, `hasDiabetes` INTEGER NOT NULL, `hasHeartDiseases` INTEGER NOT NULL, `hasHypercholesterolaemia` INTEGER NOT NULL, `hasHypertension` INTEGER NOT NULL, `hasOthers` INTEGER NOT NULL, `hasTransientIschaemicAttack` INTEGER NOT NULL, `hasTuberculosis` INTEGER NOT NULL, `others` TEXT, `patientId` TEXT NOT NULL, `practitionerId` TEXT NOT NULL, `practitionerName` TEXT NOT NULL, PRIMARY KEY(`priorDxUuid`), FOREIGN KEY(`patientId`) REFERENCES `PatientEntity`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION , FOREIGN KEY(`appointmentId`) REFERENCES `AppointmentEntity`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`priorDxUuid` TEXT NOT NULL, `priorDxFhirId` TEXT, `appointmentId` TEXT, `campaignAppointmentId` TEXT, `cancer` TEXT, `createdOn` INTEGER NOT NULL, `hasAids` INTEGER NOT NULL, `hasAsthma` INTEGER NOT NULL, `hasCancer` INTEGER NOT NULL, `hasChronicKidneyDiseases` INTEGER NOT NULL, `hasChronicObstructivePulmonaryDisease` INTEGER NOT NULL, `hasCovid` INTEGER NOT NULL, `hasDiabetes` INTEGER NOT NULL, `hasHeartDiseases` INTEGER NOT NULL, `hasHypercholesterolaemia` INTEGER NOT NULL, `hasHypertension` INTEGER NOT NULL, `hasOthers` INTEGER NOT NULL, `hasTransientIschaemicAttack` INTEGER NOT NULL, `hasTuberculosis` INTEGER NOT NULL, `others` TEXT, `patientId` TEXT NOT NULL, `practitionerId` TEXT, `practitionerName` TEXT, `campaignId` TEXT, PRIMARY KEY(`priorDxUuid`), FOREIGN KEY(`patientId`) REFERENCES `PatientEntity`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION , FOREIGN KEY(`appointmentId`) REFERENCES `AppointmentEntity`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION , FOREIGN KEY(`campaignAppointmentId`) REFERENCES `CampaignAppointmentEntity`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION )",
         "fields": [
           {
             "fieldPath": "priorDxUuid",
@@ -1718,8 +1718,12 @@
           {
             "fieldPath": "appointmentId",
             "columnName": "appointmentId",
-            "affinity": "TEXT",
-            "notNull": true
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "campaignAppointmentId",
+            "columnName": "campaignAppointmentId",
+            "affinity": "TEXT"
           },
           {
             "fieldPath": "cancer",
@@ -1824,14 +1828,17 @@
           {
             "fieldPath": "practitionerId",
             "columnName": "practitionerId",
-            "affinity": "TEXT",
-            "notNull": true
+            "affinity": "TEXT"
           },
           {
             "fieldPath": "practitionerName",
             "columnName": "practitionerName",
-            "affinity": "TEXT",
-            "notNull": true
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "campaignId",
+            "columnName": "campaignId",
+            "affinity": "TEXT"
           }
         ],
         "primaryKey": {
@@ -1878,6 +1885,17 @@
             "onUpdate": "NO ACTION",
             "columns": [
               "appointmentId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          },
+          {
+            "table": "CampaignAppointmentEntity",
+            "onDelete": "NO ACTION",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "campaignAppointmentId"
             ],
             "referencedColumns": [
               "id"
@@ -3391,7 +3409,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '07afbd8c49bf0e90950170e2dd59a9bc')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '0282f923a8de40e5fbeb06e87fa2ee9b')"
     ]
   }
 }

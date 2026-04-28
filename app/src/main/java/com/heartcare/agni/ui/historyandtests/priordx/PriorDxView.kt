@@ -51,6 +51,7 @@ fun PriorDxView(
                     ExpandableCard(
                         createdOn = priorDx.createdOn!!,
                         practitionerName = priorDx.practitionerName ?: "",
+                        screenSiteName = priorDx.screeningSiteName,
                         listOfItems = getListOfPriorDx(priorDx),
                         isBulleted = true
                     )
