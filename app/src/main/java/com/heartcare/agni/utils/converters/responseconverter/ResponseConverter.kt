@@ -1478,6 +1478,30 @@ fun StaffResponse.toStaffEntity(): StaffEntity {
     )
 }
 
+fun ScreeningSiteMasterEntity.toScreeningSiteMasterResponse(): ScreeningSiteMasterResponse {
+    return ScreeningSiteMasterResponse(
+        id = id,
+        name = name,
+        location = location,
+        areaCouncil = areaCouncil,
+        serviceMode = serviceMode,
+        fromDate = fromDate,
+        toDate = toDate,
+        status = status,
+        staff = staff.map { it.toStaffResponse() }
+    )
+}
+
+fun StaffEntity.toStaffResponse(): StaffResponse {
+    return StaffResponse(
+        id = id,
+        name = name,
+        mobile = mobile,
+        email = email,
+        isTeamLead = isTeamLead
+    )
+}
+
 fun InterventionMasterEntity.toInterventionMasterResponse(): InterventionMasterResponse {
     return InterventionMasterResponse(
         fhirId = fhirId,

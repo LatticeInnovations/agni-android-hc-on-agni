@@ -104,3 +104,87 @@ fun DropdownComposable(
         }
     }
 }
+
+@Composable
+fun <T> DropdownComposable(
+    value: T?,
+    onValueSelected: (T?) -> Unit,
+    label: String,
+    dropdownList: List<T>,
+    itemToString: (T) -> String,
+    errorText: String,
+    isMandatory: Boolean,
+    dropdownWeight: Float = 0.85f
+) {
+    val defaultOption = stringResource(R.string.select)
+    var expanded by remember { mutableStateOf(false) }
+    var isError by remember { mutableStateOf(false) }
+
+    val displayValue = value?.let { itemToString(it) } ?: ""
+
+    Box {
+        OutlinedTextField(
+            value = displayValue,
+            onValueChange = { },
+            label = {
+                Text(
+                    text = label,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            },
+            readOnly = true,
+            modifier = Modifier.fillMaxWidth(),
+            interactionSource = remember {
+                MutableInteractionSource()
+            }.also { interactionSource ->
+                LaunchedEffect(interactionSource) {
+                    interactionSource.interactions.collect {
+                        if (it is PressInteraction.Release) {
+                            expanded = !expanded
+                        }
+                    }
+                }
+            },
+            trailingIcon = {
+                Icon(Icons.Default.ArrowDropDown, contentDescription = null)
+            },
+            supportingText = if (isError) {
+                { Text(errorText) }
+            } else null,
+            isError = isError
+        )
+
+        DropdownMenu(
+            modifier = Modifier
+                .fillMaxWidth(dropdownWeight)
+                .heightIn(0.dp, 300.dp),
+            expanded = expanded,
+            onDismissRequest = {
+                expanded = false
+                isError = value == null && isMandatory
+            },
+        ) {
+            val items = if (!isMandatory) listOf<T?>(null) + dropdownList else dropdownList
+
+            items.forEach { item ->
+                val text = item?.let { itemToString(it) } ?: defaultOption
+
+                DropdownMenuItem(
+                    onClick = {
+                        expanded = false
+                        isError = false
+                        onValueSelected(item)
+                    },
+                    text = {
+                        Text(
+                            text = text,
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                )
+            }
+        }
+    }
+}

@@ -26,7 +26,9 @@ import com.heartcare.agni.data.local.repository.healthfacility.HealthFacilityRep
 import com.heartcare.agni.data.local.repository.levels.LevelRepository
 import com.heartcare.agni.data.local.repository.patient.PatientRepository
 import com.heartcare.agni.data.local.repository.preference.PreferenceRepository
+import com.heartcare.agni.data.local.repository.screeningsite.ScreeningSiteRepository
 import com.heartcare.agni.data.local.repository.vital.VitalRepository
+import com.heartcare.agni.data.server.model.campaign.ScreeningSiteMasterResponse
 import com.heartcare.agni.data.server.model.cvd.CVDResponse
 import com.heartcare.agni.data.server.model.levels.LevelResponse
 import com.heartcare.agni.data.server.model.patient.PatientResponse
@@ -37,12 +39,14 @@ import com.heartcare.agni.ui.vitalsscreen.enums.BGEnum
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.plusMinusDays
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toAge
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toEndOfDay
+import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toMMMddyyyyDateRange
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toTimeInMilli
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toTodayStartDate
 import dagger.hilt.android.lifecycle.HiltViewModel
 import jakarta.inject.Inject
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.Date
 
 @HiltViewModel
@@ -53,6 +57,7 @@ class ReportsViewModel @Inject constructor(
     private val appointmentRepository: AppointmentRepository,
     private val cvdAssessmentRepository: CVDAssessmentRepository,
     private val vitalRepository: VitalRepository,
+    private val screeningSiteRepository: ScreeningSiteRepository,
     preferenceRepository: PreferenceRepository,
     @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) : BaseViewModel() {
@@ -72,8 +77,8 @@ class ReportsViewModel @Inject constructor(
             else -> ReportUiState()
         }
 
-    val campaignOptions = listOf("Vila Central Outreach", "NCD Screening", "Hypertension follow-up")
-    var selectedCampaign by mutableStateOf(campaignOptions.first())
+    var campaignOptions: List<ScreeningSiteMasterResponse> by mutableStateOf(emptyList())
+    var selectedCampaign: ScreeningSiteMasterResponse? by mutableStateOf(null)
 
     var facilityOptions : List<LevelResponse> by mutableStateOf(emptyList())
     var selectedFacility : LevelResponse? by mutableStateOf(null)
@@ -82,25 +87,54 @@ class ReportsViewModel @Inject constructor(
     var divisionOptions: List<LevelResponse> by mutableStateOf(emptyList())
     var selectedDivision: LevelResponse? by mutableStateOf(null)
 
-    var campaignPractitionerName by mutableStateOf("Dr. Sarah Naupa")
-    var campaignContact by mutableStateOf("sarah@moh.vu, +678 55123")
-    var campaignDateRange by mutableStateOf("Mar 1 - Mar 15, 2025")
-    var campaignLocation by mutableStateOf("Port Vila Central")
+    var campaignPractitionerName by mutableStateOf("")
+    var campaignContact by mutableStateOf("")
+    var campaignDateRange by mutableStateOf("")
+    var campaignLocation by mutableStateOf("")
 
     init {
-        getMasterLists()
+        getCampaignList()
+        getFacilityAndDivisionList()
     }
 
-    private fun getMasterLists() {
-        viewModelScope.launch(ioDispatcher) {
-            facilityOptions = healthFacilityRepository.getHealthFacilityInLevelResponse()
-            selectedFacility = facilityOptions.find { it.code == user.hospitalCode }
-            getDataOfFacility()
+    private fun getCampaignList() {
+        viewModelScope.launch {
+            val campaigns = withContext(ioDispatcher) {
+                screeningSiteRepository.getActiveScreeningSites().filter { site ->
+                    site.staff.any { it.id == user.fhirId && it.isTeamLead }
+                }
+            }
+            campaignOptions = campaigns
+            selectedCampaign = campaigns.firstOrNull()
 
+            getDataOfCampaign()
+        }
+    }
+
+    private fun getFacilityAndDivisionList() {
+        viewModelScope.launch {
+            val facilities = withContext(ioDispatcher) {
+                healthFacilityRepository.getHealthFacilityInLevelResponse()
+            }
+            facilityOptions = facilities
+            selectedFacility = facilities.find { it.code == user.hospitalCode }
+            getDivisionList()
+            getDataOfFacility()
+        }
+    }
+
+    private fun getDivisionList() {
+        viewModelScope.launch {
             getDivisionOptions(false)
-            val userIslandId = facilityOptions.find { it.code == user.hospitalCode }!!.precedingLevelId!!
-            val userIsland = levelRepository.getLevelListByFhirIds(userIslandId)[0]
-            selectedDivision = levelRepository.getLevelListByFhirIds(userIsland.precedingLevelId!!)[0]
+            val divisionData = withContext(ioDispatcher) {
+                val userIslandId = facilityOptions.find { it.code == user.hospitalCode }!!
+                    .precedingLevelId!!
+
+                val userIsland = levelRepository.getLevelListByFhirIds(userIslandId)[0]
+
+                levelRepository.getLevelListByFhirIds(userIsland.precedingLevelId!!)[0]
+            }
+            selectedDivision = divisionData
             getDataOfDivision()
         }
     }
@@ -114,10 +148,38 @@ class ReportsViewModel @Inject constructor(
 
     fun showSummary(): Boolean {
         return when (selectedTabIndex) {
-            0 -> true
+            0 -> selectedCampaign != null
             1 -> selectedFacility != null
             2 -> selectedDivision != null
             else -> false
+        }
+    }
+
+    fun getDataOfCampaign() {
+        val teamLead = selectedCampaign?.staff?.firstOrNull { it.isTeamLead }
+        campaignPractitionerName = teamLead?.name ?: ""
+
+        campaignContact = listOfNotNull(
+            teamLead?.email?.takeIf { it.isNotBlank() },
+            teamLead?.mobile?.takeIf { it.isNotBlank() }
+        ).joinToString(", ")
+
+        val start = selectedCampaign?.fromDate?.toTimeInMilli()?.let { Date(it).toMMMddyyyyDateRange() }
+        val end = selectedCampaign?.toDate?.toTimeInMilli()?.let { Date(it).toMMMddyyyyDateRange() }
+
+        campaignDateRange = listOfNotNull(start, end).joinToString(" - ")
+
+        campaignLocation = selectedCampaign?.location ?: ""
+
+        viewModelScope.launch(ioDispatcher) {
+            val appointments = appointmentRepository.getAppointmentForCampaign(selectedCampaign?.id ?: "")
+
+            screeningSiteState = getReportData(
+                rangeType = screeningSiteState.selectedDateRangeLabel,
+                startDate = screeningSiteState.dateRangeStart,
+                endDate = screeningSiteState.dateRangeEnd,
+                appointments = appointments
+            )
         }
     }
 
