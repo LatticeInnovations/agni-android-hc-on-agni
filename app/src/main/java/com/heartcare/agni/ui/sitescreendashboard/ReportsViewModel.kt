@@ -106,20 +106,8 @@ class ReportsViewModel @Inject constructor(
             }
             campaignOptions = campaigns
             selectedCampaign = campaigns.firstOrNull()
-            val teamLead = selectedCampaign?.staff?.firstOrNull { it.isTeamLead }
-            campaignPractitionerName = teamLead?.name ?: ""
 
-            campaignContact = listOfNotNull(
-                teamLead?.email?.takeIf { it.isNotBlank() },
-                teamLead?.mobile?.takeIf { it.isNotBlank() }
-            ).joinToString(", ")
-
-            val start = selectedCampaign?.fromDate?.toTimeInMilli()?.let { Date(it).toMMMddyyyyDateRange() }
-            val end = selectedCampaign?.toDate?.toTimeInMilli()?.let { Date(it).toMMMddyyyyDateRange() }
-
-            campaignDateRange = listOfNotNull(start, end).joinToString(" - ")
-
-            campaignLocation = selectedCampaign?.location ?: ""
+            getDataOfCampaign()
         }
     }
 
@@ -164,6 +152,34 @@ class ReportsViewModel @Inject constructor(
             1 -> selectedFacility != null
             2 -> selectedDivision != null
             else -> false
+        }
+    }
+
+    fun getDataOfCampaign() {
+        val teamLead = selectedCampaign?.staff?.firstOrNull { it.isTeamLead }
+        campaignPractitionerName = teamLead?.name ?: ""
+
+        campaignContact = listOfNotNull(
+            teamLead?.email?.takeIf { it.isNotBlank() },
+            teamLead?.mobile?.takeIf { it.isNotBlank() }
+        ).joinToString(", ")
+
+        val start = selectedCampaign?.fromDate?.toTimeInMilli()?.let { Date(it).toMMMddyyyyDateRange() }
+        val end = selectedCampaign?.toDate?.toTimeInMilli()?.let { Date(it).toMMMddyyyyDateRange() }
+
+        campaignDateRange = listOfNotNull(start, end).joinToString(" - ")
+
+        campaignLocation = selectedCampaign?.location ?: ""
+
+        viewModelScope.launch(ioDispatcher) {
+            val appointments = appointmentRepository.getAppointmentForCampaign(selectedCampaign?.id ?: "")
+
+            screeningSiteState = getReportData(
+                rangeType = screeningSiteState.selectedDateRangeLabel,
+                startDate = screeningSiteState.dateRangeStart,
+                endDate = screeningSiteState.dateRangeEnd,
+                appointments = appointments
+            )
         }
     }
 

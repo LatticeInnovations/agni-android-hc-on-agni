@@ -105,7 +105,10 @@ fun ReportsScreen(
                     )
                     DropdownComposable(
                         value = viewModel.selectedCampaign,
-                        onValueSelected = { viewModel.selectedCampaign = it },
+                        onValueSelected = {
+                            viewModel.selectedCampaign = it
+                            viewModel.getDataOfCampaign()
+                        },
                         label = "",
                         dropdownList = viewModel.campaignOptions,
                         itemToString = { it.name},

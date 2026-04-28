@@ -132,4 +132,8 @@ class AppointmentRepositoryImpl @Inject constructor(
         return campaignAppointmentDao.getAppointmentsOfPatient(patientId)
             .map { it.toAppointmentResponseLocal() }
     }
+
+    override suspend fun getAppointmentForCampaign(campaignId: String): List<AppointmentResponseLocal> {
+        return campaignAppointmentDao.getAppointmentByCampaign(campaignId).map { it.toAppointmentResponseLocal() }
+    }
 }
