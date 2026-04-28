@@ -21,8 +21,8 @@ object HighLevelScreeningReportPDF {
               ${reportPdfCss()}
             </head>
             <body>
-                ${reportHeaderSection(title = "High-Level Screening Report", metaData = metaData)}
-                ${getAgeGroupDistributionTable()}
+                ${reportHeaderSection(title = "High-Level Screening Report", metaData = metaData, currentState = currentState)}
+                ${getAgeGroupDistributionTable(ageGroup = currentState.ageGroups.map { (first, second) -> listOf(first, second) })}
                 ${getBMICategoriesTable()}
                 ${getBloodPressureTable()}
                 ${getSmokingStatusTable()}
@@ -35,15 +35,12 @@ object HighLevelScreeningReportPDF {
         """.trimIndent()
     }
 
-    private fun getAgeGroupDistributionTable(): String {
+    private fun getAgeGroupDistributionTable(
+        ageGroup: List<List<String>>
+    ): String {
         val table = CommonPDFComponents.buildTable(
             headers = listOf("Age Range", "Count"),
-            rows = listOf(
-                listOf("18-29", "198"),
-                listOf("30-44", "412"),
-                listOf("45-59", "389"),
-                listOf("60+", "248")
-            ),
+            rows = ageGroup,
             columnWeights = listOf("2fr", "1fr")
         )
 

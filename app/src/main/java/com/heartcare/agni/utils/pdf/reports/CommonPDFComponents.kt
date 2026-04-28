@@ -1,5 +1,7 @@
 package com.heartcare.agni.utils.pdf.reports
 
+import com.heartcare.agni.ui.sitescreendashboard.state.ReportUiState
+
 object CommonPDFComponents {
     fun reportPdfCss(): String {
         return """
@@ -196,7 +198,8 @@ object CommonPDFComponents {
 
     fun reportHeaderSection(
         title: String,
-        metaData: String = ""
+        metaData: String,
+        currentState: ReportUiState
     ): String {
         return """
           <div class="center">
@@ -209,12 +212,13 @@ object CommonPDFComponents {
         
           <div class="card">
             <div class="primary-count">
-              1247 <span>participants</span>
+              ${currentState.totalScreened} <span>participants</span>
             </div>
         
             <div class="secondary-label">
-              Male: <span>664</span>
-              Female: <span>583</span>
+              Male: <span>${currentState.totalMale}</span>
+              Female: <span>${currentState.totalFemale}</span>
+              Other: <span>${currentState.totalOther}</span>
             </div>
           </div>
         """.trimIndent()

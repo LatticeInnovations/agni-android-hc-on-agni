@@ -1,5 +1,6 @@
 package com.heartcare.agni.utils.pdf.reports
 
+import com.heartcare.agni.ui.sitescreendashboard.state.ReportUiState
 import com.heartcare.agni.utils.pdf.reports.CommonPDFComponents.buildTable
 import com.heartcare.agni.utils.pdf.reports.CommonPDFComponents.reportFooterSection
 import com.heartcare.agni.utils.pdf.reports.CommonPDFComponents.reportHeaderSection
@@ -7,7 +8,10 @@ import com.heartcare.agni.utils.pdf.reports.CommonPDFComponents.reportPdfCss
 
 object ClinicalActionReportPDF {
 
-    fun getClinicalActionReportHTML(): String {
+    fun getClinicalActionReportHTML(
+        metaData: String,
+        currentState: ReportUiState
+    ): String {
         return """
             <!DOCTYPE html>
             <html lang="en">
@@ -18,7 +22,7 @@ object ClinicalActionReportPDF {
               ${reportPdfCss()}
             </head>
             <body>
-                ${reportHeaderSection(title = "Clinical Action Report")}
+                ${reportHeaderSection(title = "Clinical Action Report", metaData, currentState)}
                 ${getTierOneInterventionSection()}
                 ${getTierTwoInterventionSection()}
                 ${getTierThreeInterventionSection()}
