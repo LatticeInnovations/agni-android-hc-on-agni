@@ -48,6 +48,7 @@ class AddMedicationViewModel @Inject constructor(
     val user = preferenceRepository.getUserDetails()!!
     var patient by mutableStateOf<PatientResponse?>(null)
     var appointmentResponseLocal by mutableStateOf<AppointmentResponseLocal?>(null)
+    var selectedCampaignId by mutableStateOf<String?>(null)
 
     var lastHistoryMedication by mutableStateOf<HistoryMedicationResponse?>(null)
     var selectedMedication by mutableStateOf(listOf<String>())
@@ -70,10 +71,19 @@ class AddMedicationViewModel @Inject constructor(
 
     fun getLastHistoryMedication(patientId: String) {
         viewModelScope.launch(ioDispatcher) {
-            val appointmentIds =
-                getInProgressCompletedAppointmentIds(patientId, appointmentRepository)
-            lastHistoryMedication =
-                historyMedicationRepository.getHistoryMedicationRecordsByAppointmentIds(*appointmentIds.toTypedArray()).firstOrNull()
+            val campaignId = selectedCampaignId
+            if (campaignId != null) {
+                // Fetch strictly for the current campaign site
+                lastHistoryMedication = historyMedicationRepository.getLatestMedicationForCampaign(patientId, campaignId)
+            } else {
+                // Standard facility-based lookup
+                val appointmentIds =
+                    getInProgressCompletedAppointmentIds(patientId, appointmentRepository)
+                lastHistoryMedication =
+                    historyMedicationRepository.getHistoryMedicationRecordsByAppointmentIds(*appointmentIds.toTypedArray()).firstOrNull {
+                        isToday(it.appUpdatedDate)
+                    }
+            }
             lastHistoryMedication?.let { historyMedication ->
                 selectedMedication = mutableListOf<String>().apply {
                     addAll(historyMedication.medicinePrescribed.map { getMedicationFromCode(it) })
@@ -112,7 +122,8 @@ class AddMedicationViewModel @Inject constructor(
             medicinePrescribed = selectedMedication.filter { it != MedicationEnum.SIDE_EFFECTS.display }
                 .map { getCodeFromMedication(it) },
             medicinePrescribedOthers = otherField.ifBlank { null },
-            sideEffects = sideEffectsField.ifBlank { null }
+            sideEffects = sideEffectsField.ifBlank { null },
+            campaignId = selectedCampaignId
         )
     }
 
@@ -123,12 +134,17 @@ class AddMedicationViewModel @Inject constructor(
             appointmentResponseLocal = getAppointment(
                 patientId = patient!!.id,
                 hospitalCode = user.hospitalCode,
+                campaignId = selectedCampaignId,
                 appointmentRepository = appointmentRepository
             )
             var uuid = UUIDBuilder.generateUUID()
             var fhirId: String? = null
             lastHistoryMedication?.let {
-                if (isToday(it.appUpdatedDate)) {
+                if (isToday(it.appUpdatedDate) && selectedCampaignId ==null) {
+                    uuid = it.uuid
+                    fhirId = it.fhirId
+                }
+                else if (selectedCampaignId !=null) {
                     uuid = it.uuid
                     fhirId = it.fhirId
                 }
@@ -147,15 +163,17 @@ class AddMedicationViewModel @Inject constructor(
                 )
             )
             genericRepository.insertHistoryMedicationRecord(historyMedicationResponse)
-            checkAndUpdateAppointmentStatusToInProgress(
-                inProgressTime = historyMedicationResponse.appUpdatedDate,
-                patient = patient!!,
-                appointmentResponseLocal = appointmentResponseLocal!!,
-                appointmentRepository = appointmentRepository,
-                scheduleRepository = scheduleRepository,
-                genericRepository = genericRepository,
-                preferenceRepository = preferenceRepository
-            )
+            if (selectedCampaignId == null) {
+                checkAndUpdateAppointmentStatusToInProgress(
+                    inProgressTime = historyMedicationResponse.appUpdatedDate,
+                    patient = patient!!,
+                    appointmentResponseLocal = appointmentResponseLocal!!,
+                    appointmentRepository = appointmentRepository,
+                    scheduleRepository = scheduleRepository,
+                    genericRepository = genericRepository,
+                    preferenceRepository = preferenceRepository
+                )
+            }
             updatePatientLastUpdated(
                 patient!!.id,
                 patientLastUpdatedRepository,

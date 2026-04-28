@@ -1071,34 +1071,45 @@ internal fun HistoryMedicationResponse.toHistoryMedicationEntity(): HistoryMedic
         fhirId = fhirId,
         adherence = adherence,
         appUpdatedDate = appUpdatedDate,
-        appointmentId = appointmentId,
+        appointmentId = if (campaignId == null) appointmentId else null,
+        campaignAppointmentId = if (campaignId != null) appointmentId else null,
         hasSideEffect = hasSideEffect,
         medicinePrescribed = medicinePrescribed,
         medicinePrescribedOthers = medicinePrescribedOthers,
         patientId = patientId,
         practitionerId = practitionerId!!,
         practitionerName = practitionerName!!,
-        sideEffects = sideEffects
+        sideEffects = sideEffects,
+        campaignId= campaignId
     )
 }
 
 suspend fun HistoryMedicationResponse.toHistoryMedicationEntity(
     patientDao: PatientDao,
-    appointmentDao: AppointmentDao
+    appointmentDao: AppointmentDao,
+    campaignAppointmentDao: CampaignAppointmentDao
 ): HistoryMedicationEntity {
+    val localAppointmentId = if (campaignId != null) {
+        campaignAppointmentDao.getAppointmentIdByFhirId(appointmentId)
+    } else {
+        appointmentDao.getAppointmentIdByFhirId(appointmentId)
+    }
+
     return HistoryMedicationEntity(
         uuid = uuid,
         fhirId = fhirId,
         adherence = adherence,
         appUpdatedDate = appUpdatedDate,
-        appointmentId = appointmentDao.getAppointmentIdByFhirId(appointmentId),
+        appointmentId = if (campaignId == null) localAppointmentId else null,
         hasSideEffect = hasSideEffect,
         medicinePrescribed = medicinePrescribed,
         medicinePrescribedOthers = medicinePrescribedOthers,
         patientId = patientDao.getPatientIdByFhirId(patientId)!!,
         practitionerId = practitionerId!!,
         practitionerName = practitionerName!!,
-        sideEffects = sideEffects
+        sideEffects = sideEffects,
+        campaignId = campaignId,
+        campaignAppointmentId = if (campaignId != null) localAppointmentId else null
     )
 }
 
@@ -1108,14 +1119,15 @@ internal fun HistoryMedicationEntity.toHistoryMedicationResponse(): HistoryMedic
         fhirId = fhirId,
         adherence = adherence,
         appUpdatedDate = appUpdatedDate,
-        appointmentId = appointmentId,
+        appointmentId = (campaignAppointmentId ?: appointmentId)!!,
         hasSideEffect = hasSideEffect,
         medicinePrescribed = medicinePrescribed,
         medicinePrescribedOthers = medicinePrescribedOthers,
         patientId = patientId,
         practitionerId = practitionerId,
         practitionerName = practitionerName,
-        sideEffects = sideEffects
+        sideEffects = sideEffects,
+        campaignId = campaignId
     )
 }
 

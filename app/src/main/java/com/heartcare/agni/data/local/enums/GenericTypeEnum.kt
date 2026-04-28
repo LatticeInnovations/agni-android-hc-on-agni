@@ -24,5 +24,6 @@ enum class GenericTypeEnum(val number: Int, val value: String) {
     CAMPAIGN_SCHEDULE(21, "Campaign_Schedule"),
     CAMPAIGN_CVD(22, "Campaign_CVD_Record"),
     CAMPAIGN_VITAL(23, "Campaign_Vital_Record"),
-    CAMPAIGN_PRIOR_DX(24, "Campaign_Prior_Dx_Record");
+    CAMPAIGN_PRIOR_DX(24, "Campaign_Prior_Dx_Record"),
+    CAMPAIGN_HISTORY_MEDICATION(25, "Campaign_History_Medication_Record");
 }

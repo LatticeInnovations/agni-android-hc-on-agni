@@ -23,7 +23,6 @@ import com.heartcare.agni.data.local.roomdb.entities.patient.PatientAndIdentifie
 import com.heartcare.agni.data.local.roomdb.entities.patient.PatientAndIdentifierEntity
 import com.heartcare.agni.data.server.model.patient.PatientLastUpdatedResponse
 import com.heartcare.agni.data.server.model.patient.PatientResponse
-import com.heartcare.agni.data.server.model.priordx.PriorDxResponse
 import com.heartcare.agni.data.server.model.scheduleandappointment.Slot
 import com.heartcare.agni.data.server.model.scheduleandappointment.appointment.AppointmentResponse
 import com.heartcare.agni.data.server.model.scheduleandappointment.schedule.ScheduleResponse
@@ -676,20 +675,21 @@ object Queries {
         )
     }
 
-    /** Outreach / Screening Site PriorDx Info — detects if a record exists for current campaign */
-    internal suspend fun loadCampaignPriorDxInfo(
+    /** Outreach / Screening Site Appointment Info — detects if a record exists for current campaign */
+    internal suspend fun loadHistoryCampaignAppointmentInfo(
         patientId: String,
         campaignId: String,
         appointmentRepository: AppointmentRepository,
-        priorDxRepository: com.heartcare.agni.data.local.repository.priordx.PriorDxRepository
-    ): CampaignPriorDxInfo {
-        val appointment = appointmentRepository.loadAppointmentForCampaign(patientId, campaignId)
-        val existingPriorDx = priorDxRepository.getLatestPriorDxForCampaign(patientId, campaignId)
-
-        return CampaignPriorDxInfo(
-            appointment = appointment,
-            existingPriorDx = existingPriorDx,
-            hasExistingRecord = existingPriorDx != null
+    ): AppointmentInfo {
+        val appointmentResponse = appointmentRepository.loadAppointmentForCampaign(patientId, campaignId)
+       return AppointmentInfo(
+            appointment = appointmentResponse,
+            existsInOtherHospital = false,
+            canAddAssessment = appointmentResponse != null &&
+                    appointmentResponse.status == AppointmentStatusEnum.WALK_IN.value,
+            isAppointmentCompleted = false,
+            ifAllSlotsBooked = false,
+            isDuplicateCVDForCampaign = false
         )
     }
     /** Campaign-specific Vital Info — detects if a vital record exists within the campaign window */
@@ -726,10 +726,4 @@ data class CampaignVitalInfo(
     val appointment: AppointmentResponseLocal?,
     val existingVital: VitalResponse?,
     val hasExistingRecord: Boolean  // true = update mode; false = create new
-)
-@Keep
-data class CampaignPriorDxInfo(
-    val appointment: AppointmentResponseLocal?,
-    val existingPriorDx: PriorDxResponse?,
-    val hasExistingRecord: Boolean
 )

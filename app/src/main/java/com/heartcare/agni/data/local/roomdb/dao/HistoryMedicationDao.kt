@@ -11,8 +11,11 @@ interface HistoryMedicationDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insertHistoryMedicationRecord(vararg historyMedicationEntity: HistoryMedicationEntity): List<Long>
 
-    @Query("SELECT * FROM HistoryMedicationEntity WHERE appointmentId IN (:appointmentIds) ORDER BY appUpdatedDate DESC")
+    @Query("SELECT * FROM HistoryMedicationEntity WHERE appointmentId IN (:appointmentIds) OR campaignAppointmentId IN (:appointmentIds) ORDER BY appUpdatedDate DESC")
     fun getHistoryMedicationRecordsByAppointmentIds(vararg appointmentIds: String): List<HistoryMedicationEntity>
+
+    @Query("SELECT * FROM HistoryMedicationEntity WHERE patientId = :patientId AND campaignId = :campaignId ORDER BY appUpdatedDate DESC LIMIT 1")
+    suspend fun getLatestMedicationForCampaign(patientId: String, campaignId: String): HistoryMedicationEntity?
 
     @Query("UPDATE HistoryMedicationEntity SET fhirId = :fhirId WHERE uuid = :id")
     suspend fun updateFhirId(id: String, fhirId: String): Int

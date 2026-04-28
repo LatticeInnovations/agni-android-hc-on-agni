@@ -53,6 +53,7 @@ fun MedicationView(
                     ExpandableCard(
                         createdOn = historyMedication.appUpdatedDate,
                         practitionerName = historyMedication.practitionerName!!,
+                        screenSiteName = historyMedication.screeningSiteName,
                         listOfItems = getListOfHistoryMedication(historyMedication),
                         isBulleted = true,
                         extraInfoComposable = historyMedication.adherence?.let {

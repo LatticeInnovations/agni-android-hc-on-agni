@@ -54,6 +54,7 @@ interface SyncRepository {
     suspend fun getAndInsertPriorDxData(offset: Int): ResponseMapper<List<PriorDxResponse>>
     suspend fun getAndInsertCampaignPriorDxData(offset: Int): ResponseMapper<List<PriorDxResponse>>
     suspend fun getAndInsertHistoryMedicationData(offset: Int): ResponseMapper<List<HistoryMedicationResponse>>
+    suspend fun getAndInsertCampaignHistoryMedicationData(offset: Int): ResponseMapper<List<HistoryMedicationResponse>>
     suspend fun getAndInsertFamilyHistoryData(offset: Int): ResponseMapper<List<FamilyHistoryResponse>>
     suspend fun getAndInsertAllergyData(offset: Int): ResponseMapper<List<AllergyResponse>>
     suspend fun getAndInsertRiskFactorData(offset: Int): ResponseMapper<List<RiskFactorResponse>>
@@ -78,6 +79,7 @@ interface SyncRepository {
     suspend fun sendPriorDxPostData(): ResponseMapper<List<CreateResponse>>
     suspend fun sendCampaignPriorDxPostData(): ResponseMapper<List<CreateResponse>>
     suspend fun sendHistoryMedicationPostData(): ResponseMapper<List<CreateResponse>>
+    suspend fun sendCampaignHistoryMedicationPostData(): ResponseMapper<List<CreateResponse>>
     suspend fun sendFamilyHistoryPostData(): ResponseMapper<List<CreateResponse>>
     suspend fun sendAllergyPostData(): ResponseMapper<List<CreateResponse>>
     suspend fun sendRiskFactorPostData(): ResponseMapper<List<CreateResponse>>

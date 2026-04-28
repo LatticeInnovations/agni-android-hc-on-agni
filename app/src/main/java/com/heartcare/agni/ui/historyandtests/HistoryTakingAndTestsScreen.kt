@@ -277,18 +277,24 @@ private suspend fun showSnackBars(
             snackBarHostState.showSnackbar(context.getString(R.string.prior_dx_saved))
         }
         if (handle.remove<Boolean>(MEDICATION_SAVED) == true) {
+            viewModel.currentStep =0
+
             snackBarHostState.showSnackbar(context.getString(R.string.medication_saved))
         }
         if (handle.remove<Boolean>(FAMILY_HISTORY_SAVED) == true) {
+            viewModel.currentStep =0
             snackBarHostState.showSnackbar(context.getString(R.string.family_history_saved))
         }
         if (handle.remove<Boolean>(ALLERGIES_SAVED) == true) {
+            viewModel.currentStep =0
             snackBarHostState.showSnackbar(context.getString(R.string.allergies_saved))
         }
         if (handle.remove<Boolean>(RISK_FACTORS_SAVED) == true) {
+            viewModel.currentStep =0
             snackBarHostState.showSnackbar(context.getString(R.string.risk_factors_saved))
         }
         if (handle.remove<Boolean>(TOBACCO_CESSATION_SAVED) == true) {
+            viewModel.currentStep =0
             snackBarHostState.showSnackbar(context.getString(R.string.tobacco_cessation_saved))
         }
     }

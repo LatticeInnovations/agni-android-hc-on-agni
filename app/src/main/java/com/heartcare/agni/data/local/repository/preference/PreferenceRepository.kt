@@ -87,9 +87,17 @@ interface PreferenceRepository {
     fun setLastSyncPriorDx(long: Long)
     fun getLastSyncPriorDx(): Long
 
+    /** Last Sync Campaign Prior Dx */
+    fun setLastSyncCampaignPriorDx(long: Long)
+    fun getLastSyncCampaignPriorDx(): Long
+
     /** Last Sync History Medication */
     fun setLastSyncHistoryMedication(long: Long)
     fun getLastSyncHistoryMedication(): Long
+
+    /** Last Sync Campaign History Medication */
+    fun setLastSyncCampaignHistoryMedication(long: Long)
+    fun getLastSyncCampaignHistoryMedication(): Long
 
     /** Last Sync Family History */
     fun setLastSyncFamilyHistory(long: Long)

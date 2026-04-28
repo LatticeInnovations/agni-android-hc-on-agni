@@ -115,7 +115,7 @@ interface GenericRepository {
     suspend fun updateVitalFhirId(genericTypeEnum: GenericTypeEnum)
     suspend fun updateDiagnosisFhirId()
     suspend fun updatePriorDxFhirId(genericTypeEnum: GenericTypeEnum)
-    suspend fun updateHistoryMedicationFhirId()
+    suspend fun updateHistoryMedicationFhirId(genericTypeEnum: GenericTypeEnum)
     suspend fun updateFamilyHistoryFhirId()
     suspend fun updateAllergyFhirId()
     suspend fun updateRiskFactorsFhirId()

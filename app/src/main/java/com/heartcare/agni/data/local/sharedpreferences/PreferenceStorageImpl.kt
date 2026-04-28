@@ -103,9 +103,19 @@ class PreferenceStorageImpl(private val sharedPreferences: SharedPreferences) : 
         PREF_LAST_PRIOR_DX_SYNC_TIME,
         0L
     )
+    override var lastSyncCampaignPriorDxRecord by LongPreference(
+        sharedPreferences,
+        PREF_LAST_CAMPAIGN_PRIOR_DX_SYNC_TIME,
+        0L
+    )
     override var lastSyncHistoryMedicationRecord by LongPreference(
         sharedPreferences,
         PREF_LAST_HISTORY_MEDICATION_SYNC_TIME,
+        0L
+    )
+    override var lastSyncCampaignHistoryMedicationRecord by LongPreference(
+        sharedPreferences,
+        PREF_LAST_CAMPAIGN_HISTORY_MEDICATION_SYNC_TIME,
         0L
     )
     override var lastSyncFamilyHistoryRecord by LongPreference(
@@ -231,6 +241,8 @@ class PreferenceStorageImpl(private val sharedPreferences: SharedPreferences) : 
         const val PREF_LAST_CAMPAIGN_APPOINTMENT_SYNC_TIME = "pref_last_campaign_appointment_sync_time"
         const val PREF_LAST_CAMPAIGN_CVD_SYNC_TIME = "pref_last_campaign_cvd_sync_time"
         const val PREF_LAST_CAMPAIGN_VITAL_SYNC_TIME = "pref_last_campaign_vital_sync_time"
+        const val PREF_LAST_CAMPAIGN_PRIOR_DX_SYNC_TIME = "pref_last_campaign_prior_dx_sync_time"
+        const val PREF_LAST_CAMPAIGN_HISTORY_MEDICATION_SYNC_TIME = "pref_last_campaign_history_medication_sync_time"
         const val PREF_IS_SCREENING_SITE_SEEDED = "pref_is_screening_site_seeded"
     }
 }

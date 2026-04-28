@@ -320,7 +320,8 @@ open class GenericRepositoryDatabaseTransactions(
     protected suspend fun insertHistoryMedicationGenericEntity(
         historyMedicationGenericEntity: GenericEntity?,
         historyMedicationResponse: HistoryMedicationResponse,
-        uuid: String
+        uuid: String,
+        type: GenericTypeEnum = GenericTypeEnum.HISTORY_MEDICATION
     ): Long {
         return if (historyMedicationGenericEntity != null) {
             genericDao.insertGenericEntity(
@@ -332,7 +333,7 @@ open class GenericRepositoryDatabaseTransactions(
                     id = uuid,
                     patientId = historyMedicationResponse.uuid,
                     payload = historyMedicationResponse.toJson(),
-                    type = GenericTypeEnum.HISTORY_MEDICATION,
+                    type = type,
                     syncType = SyncType.POST
                 )
             )[0]

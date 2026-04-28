@@ -226,7 +226,8 @@ class SyncService(
                 val jobs = listOf(
                     async { updateFhirIdInCampaignCVD(logout) },
                     async { updateFhirIdInCampaignVital(logout) },
-                    async { updateFhirIdInCampaignPriorDx(logout) }
+                    async { updateFhirIdInCampaignPriorDx(logout) },
+                    async { updateFhirIdInCampaignHistoryMedication(logout) }
                 )
 
                 // Wait for all of them to complete
@@ -278,6 +279,11 @@ class SyncService(
     /** Upload Campaign Prior Dx */
     private suspend fun uploadCampaignPriorDx(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
         return checkAuthenticationStatus(syncRepository.sendCampaignPriorDxPostData(), logout)
+    }
+
+    /** Upload Campaign History Medication */
+    private suspend fun uploadCampaignHistoryMedication(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
+        return checkAuthenticationStatus(syncRepository.sendCampaignHistoryMedicationPostData(), logout)
     }
 
     /** Upload History Medication */
@@ -441,7 +447,8 @@ class SyncService(
                     async { downloadPatientLastUpdated(logout) },
                     async { downloadCampaignCVD(logout) },
                     async { downloadCampaignVitals(logout) },
-                    async { downloadCampaignPriorDx(logout) }
+                    async { downloadCampaignPriorDx(logout) },
+                    async { downloadCampaignHistoryMedication(logout) }
                 )
                 jobs.awaitAll()
             }
@@ -539,6 +546,11 @@ class SyncService(
     /** Download Campaign Prior Dx */
     private suspend fun downloadCampaignPriorDx(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
         return checkAuthenticationStatus(syncRepository.getAndInsertCampaignPriorDxData(0), logout)
+    }
+
+    /** Download Campaign History Medication */
+    private suspend fun downloadCampaignHistoryMedication(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
+        return checkAuthenticationStatus(syncRepository.getAndInsertCampaignHistoryMedicationData(0), logout)
     }
 
     /** Download Campaign Schedule */
@@ -690,6 +702,12 @@ class SyncService(
         return uploadCampaignPriorDx(logout)
     }
 
+    /** Update Appointment FHIR ID in Campaign History Medication */
+    private suspend fun updateFhirIdInCampaignHistoryMedication(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
+        genericRepository.updateHistoryMedicationFhirId(GenericTypeEnum.CAMPAIGN_HISTORY_MEDICATION)
+        return uploadCampaignHistoryMedication(logout)
+    }
+
     /** Update Appointment FHIR ID in Diagnosis */
     private suspend fun updateFhirIdInDiagnosis(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
         genericRepository.updateDiagnosisFhirId()
@@ -704,7 +722,7 @@ class SyncService(
 
     /** Update FHIR ID in History Medication */
     private suspend fun updateFhirIdInHistoryMedication(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
-        genericRepository.updateHistoryMedicationFhirId()
+        genericRepository.updateHistoryMedicationFhirId(GenericTypeEnum.HISTORY_MEDICATION)
         return uploadHistoryMedication(logout)
     }
 
