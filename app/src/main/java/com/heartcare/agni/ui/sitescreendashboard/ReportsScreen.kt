@@ -96,200 +96,10 @@ fun ReportsScreen(
                 .padding(16.dp)
         ) {
             // Dynamic Dropdowns per Tab
-            when (viewModel.selectedTabIndex) {
-                0 -> {
-                    Text(
-                        text = stringResource(R.string.choose_screening_campaign_hint),
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.padding(bottom = 8.dp)
-                    )
-                    DropdownComposable(
-                        value = viewModel.selectedCampaign,
-                        onValueSelected = {
-                            viewModel.selectedCampaign = it
-                            viewModel.getDataOfCampaign()
-                        },
-                        label = "",
-                        dropdownList = viewModel.campaignOptions,
-                        itemToString = { it.name},
-                        errorText = stringResource(R.string.required),
-                        isMandatory = true,
-                        dropdownWeight = .92f
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    // Campaign info card
-                    if (viewModel.showSummary()) {
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(bottom = 16.dp),
-                            shape = RoundedCornerShape(12.dp),
-                            colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(2.dp)
-                            )
-                        ) {
-                            Column(modifier = Modifier.padding(16.dp)) {
-                                Text(
-                                    text = viewModel.campaignPractitionerName,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurface
-                                )
-                                Text(
-                                    text = viewModel.campaignContact,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    modifier = Modifier.padding(bottom = 12.dp)
-                                )
-
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    modifier = Modifier.padding(bottom = 8.dp)
-                                ) {
-                                    Icon(
-                                        painter = painterResource(id = R.drawable.today_icon),
-                                        contentDescription = null,
-                                        modifier = Modifier.size(14.dp),
-                                        tint = MaterialTheme.colorScheme.outline
-                                    )
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    Text(
-                                        text = viewModel.campaignDateRange,
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
-
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Icon(
-                                        imageVector = Icons.Outlined.LocationOn,
-                                        contentDescription = null,
-                                        modifier = Modifier.size(15.dp),
-                                        tint = MaterialTheme.colorScheme.outline
-                                    )
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    Text(
-                                        text = viewModel.campaignLocation,
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-
-                1 -> {
-                    Text(
-                        text = stringResource(R.string.choose_health_facility_hint),
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.padding(bottom = 8.dp)
-                    )
-                    LevelDropDownComposable(
-                        value = viewModel.selectedFacility?.name ?: "",
-                        updateValue = {
-                            viewModel.selectedFacility = it
-                            viewModel.getDataOfFacility()
-                        },
-                        label = "",
-                        dropdownList = viewModel.facilityOptions,
-                        errorText = stringResource(R.string.health_facility_required),
-                        isMandatory = true,
-                        isEnabled = true
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                }
-
-                2 -> {
-                    Text(
-                        text = stringResource(R.string.administrative_division),
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.padding(bottom = 8.dp)
-                    )
-                    DropdownComposable(
-                        value = viewModel.selectedDivisionType,
-                        dropdownList = getLevelsDisplay(),
-                        label = "",
-                        updateValue = {
-                            viewModel.selectedDivisionType = it
-                            viewModel.getDivisionOptions()
-                        },
-                        errorText = "",
-                        isMandatory = true,
-                        dropdownWeight = .92f
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    key(viewModel.selectedDivisionType) {
-                        LevelDropDownComposable(
-                            value = viewModel.selectedDivision?.name ?: "",
-                            updateValue = {
-                                viewModel.selectedDivision = it
-                                viewModel.getDataOfDivision()
-                            },
-                            label = "",
-                            dropdownList = viewModel.divisionOptions,
-                            errorText = stringResource(R.string.required),
-                            isMandatory = true,
-                            isEnabled = true
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(16.dp))
-                }
-            }
+            TabDropDownComposable(viewModel)
 
             // Date Range (not shown on Screening Site tab — campaign defines its own dates)
-            if (viewModel.selectedTabIndex != 0) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column(modifier = Modifier.weight(.4f)) {
-                        Text(
-                            text = stringResource(R.string.date_range),
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                        Text(
-                            text = stringResource(R.string.date_range_description),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.outline
-                        )
-                    }
-
-                    Column(
-                        horizontalAlignment = Alignment.End
-                    ) {
-                        OutlinedButton(
-                            onClick = { viewModel.showDateRangeSheet = true },
-                            shape = RoundedCornerShape(8.dp),
-                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
-                        ) {
-                            Text(
-                                text = viewModel.currentState.selectedDateRangeLabel,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                style = MaterialTheme.typography.labelLarge
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Icon(
-                                imageVector = Icons.Default.ArrowDropDown,
-                                contentDescription = null,
-                                modifier = Modifier.size(16.dp),
-                                tint = MaterialTheme.colorScheme.onSurface
-                            )
-                        }
-
-                        if (viewModel.currentState.selectedDateRangeLabel == DateRangeEnum.CUSTOM_RANGE.label) {
-                            Text(
-                                text = "${viewModel.currentState.dateRangeStart.toDateRange()} - ${viewModel.currentState.dateRangeEnd.toDateRange()}",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.outline
-                            )
-                        }
-                    }
-                }
-            }
+            DateRangeComposable(viewModel)
 
             AnimatedVisibility(
                 visible = viewModel.showSummary(),
@@ -435,6 +245,206 @@ fun ReportsScreen(
                 viewModel.updateDateRange(rangeType, start, end)
             }
         )
+    }
+}
+
+@Composable
+private fun TabDropDownComposable(viewModel: ReportsViewModel) {
+    when (viewModel.selectedTabIndex) {
+        0 -> {
+            Text(
+                text = stringResource(R.string.choose_screening_campaign_hint),
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+            DropdownComposable(
+                value = viewModel.selectedCampaign,
+                onValueSelected = {
+                    viewModel.selectedCampaign = it
+                    viewModel.getDataOfCampaign()
+                },
+                label = "",
+                dropdownList = viewModel.campaignOptions,
+                itemToString = { it.name},
+                errorText = stringResource(R.string.required),
+                isMandatory = true,
+                dropdownWeight = .92f
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Campaign info card
+            if (viewModel.showSummary()) {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 16.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(2.dp)
+                    )
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text(
+                            text = viewModel.campaignPractitionerName,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Text(
+                            text = viewModel.campaignContact,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(bottom = 12.dp)
+                        )
+
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(bottom = 8.dp)
+                        ) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.today_icon),
+                                contentDescription = null,
+                                modifier = Modifier.size(14.dp),
+                                tint = MaterialTheme.colorScheme.outline
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = viewModel.campaignDateRange,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Outlined.LocationOn,
+                                contentDescription = null,
+                                modifier = Modifier.size(15.dp),
+                                tint = MaterialTheme.colorScheme.outline
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = viewModel.campaignLocation,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        1 -> {
+            Text(
+                text = stringResource(R.string.choose_health_facility_hint),
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+            LevelDropDownComposable(
+                value = viewModel.selectedFacility?.name ?: "",
+                updateValue = {
+                    viewModel.selectedFacility = it
+                    viewModel.getDataOfFacility()
+                },
+                label = "",
+                dropdownList = viewModel.facilityOptions,
+                errorText = stringResource(R.string.health_facility_required),
+                isMandatory = true,
+                isEnabled = true
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+
+        2 -> {
+            Text(
+                text = stringResource(R.string.administrative_division),
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+            DropdownComposable(
+                value = viewModel.selectedDivisionType,
+                dropdownList = getLevelsDisplay(),
+                label = "",
+                updateValue = {
+                    viewModel.selectedDivisionType = it
+                    viewModel.getDivisionOptions()
+                },
+                errorText = "",
+                isMandatory = true,
+                dropdownWeight = .92f
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            key(viewModel.selectedDivisionType) {
+                LevelDropDownComposable(
+                    value = viewModel.selectedDivision?.name ?: "",
+                    updateValue = {
+                        viewModel.selectedDivision = it
+                        viewModel.getDataOfDivision()
+                    },
+                    label = "",
+                    dropdownList = viewModel.divisionOptions,
+                    errorText = stringResource(R.string.required),
+                    isMandatory = true,
+                    isEnabled = true
+                )
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+    }
+}
+
+@Composable
+private fun DateRangeComposable(viewModel: ReportsViewModel) {
+    if (viewModel.selectedTabIndex != 0) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(.4f)) {
+                Text(
+                    text = stringResource(R.string.date_range),
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                Text(
+                    text = stringResource(R.string.date_range_description),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.outline
+                )
+            }
+
+            Column(
+                horizontalAlignment = Alignment.End
+            ) {
+                OutlinedButton(
+                    onClick = { viewModel.showDateRangeSheet = true },
+                    shape = RoundedCornerShape(8.dp),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
+                ) {
+                    Text(
+                        text = viewModel.currentState.selectedDateRangeLabel,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.labelLarge
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Icon(
+                        imageVector = Icons.Default.ArrowDropDown,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp),
+                        tint = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+
+                if (viewModel.currentState.selectedDateRangeLabel == DateRangeEnum.CUSTOM_RANGE.label) {
+                    Text(
+                        text = "${viewModel.currentState.dateRangeStart.toDateRange()} - ${viewModel.currentState.dateRangeEnd.toDateRange()}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.outline
+                    )
+                }
+            }
+        }
     }
 }
 
