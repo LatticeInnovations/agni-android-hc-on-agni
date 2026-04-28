@@ -1,10 +1,13 @@
 package com.heartcare.agni.ui.historyandtests
 
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewModelScope
 import com.heartcare.agni.base.viewmodel.BaseViewModel
+import com.heartcare.agni.data.local.enums.AppointmentStatusEnum
+import com.heartcare.agni.data.local.enums.RecordType
 import com.heartcare.agni.data.local.model.appointment.AppointmentResponseLocal
 import com.heartcare.agni.data.local.repository.allergy.AllergyRepository
 import com.heartcare.agni.data.local.repository.appointment.AppointmentRepository
@@ -17,6 +20,8 @@ import com.heartcare.agni.data.local.repository.priordx.PriorDxRepository
 import com.heartcare.agni.data.local.repository.risk.RiskFactorRepository
 import com.heartcare.agni.data.local.repository.schedule.ScheduleRepository
 import com.heartcare.agni.data.local.repository.tobacco.TobaccoCessationRepository
+import com.heartcare.agni.data.local.roomdb.dao.ScreeningSiteDao
+import com.heartcare.agni.data.local.roomdb.entities.campaign.ScreeningSiteMasterEntity
 import com.heartcare.agni.data.server.model.allergy.AllergyResponse
 import com.heartcare.agni.data.server.model.family.FamilyHistoryResponse
 import com.heartcare.agni.data.server.model.historymedication.HistoryMedicationResponse
@@ -28,10 +33,12 @@ import com.heartcare.agni.di.dispatcher.IoDispatcher
 import com.heartcare.agni.utils.common.Queries
 import com.heartcare.agni.utils.common.Queries.getInProgressCompletedAppointmentIds
 import com.heartcare.agni.utils.common.Queries.loadAppointmentInfo
+import com.heartcare.agni.utils.common.Queries.loadCampaignPriorDxInfo
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.isToday
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
 
 @HiltViewModel
@@ -47,6 +54,7 @@ class HistoryTakingAndTestsViewModel @Inject constructor(
     private val allergyRepository: AllergyRepository,
     private val riskFactorRepository: RiskFactorRepository,
     private val tobaccoCessationRepository: TobaccoCessationRepository,
+    private val screeningSiteDao: ScreeningSiteDao,
     @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) : BaseViewModel() {
     var isLaunched by mutableStateOf(false)
@@ -82,22 +90,59 @@ class HistoryTakingAndTestsViewModel @Inject constructor(
     var showAppointmentCompletedDialog by mutableStateOf(false)
     var isAppointmentCompleted by mutableStateOf(false)
     var existsInOtherHospital by mutableStateOf(false)
+    
+    var selectedCampaignId by mutableStateOf<String?>(null)
+    var screeningSites by mutableStateOf(listOf<ScreeningSiteMasterEntity>())
+    var isScreeningSiteEnabled by mutableStateOf(false)
+    var currentStep by  mutableIntStateOf(0)
+    var selectedType by mutableStateOf<RecordType?>(null)
+
+    init {
+        loadActiveScreeningSites()
+    }
+    internal fun loadActiveScreeningSites() {
+        viewModelScope.launch(ioDispatcher) {
+            val allSites = Queries.getScreeningSites(screeningSiteDao)
+            val userFhirId = user.fhirId
+            Timber.d("USERID: $userFhirId")
+            screeningSites = allSites.filter { site ->
+                site.staff.any { it.id == userFhirId }
+            }
+            isScreeningSiteEnabled = screeningSites.isNotEmpty()
+        }
+    }
 
     internal fun getAppointmentInfo(
         callback: () -> Unit
     ) {
         viewModelScope.launch(ioDispatcher) {
-            val info = loadAppointmentInfo(
-                patientId = patient!!.id,
-                hospitalCode = user.hospitalCode,
-                maxNumberOfAppointmentsInADay = maxNumberOfAppointmentsInADay,
-                appointmentRepository = appointmentRepository
-            )
-            appointment = info.appointment
-            existsInOtherHospital = info.existsInOtherHospital
-            canAddAssessment = info.canAddAssessment
-            isAppointmentCompleted = info.isAppointmentCompleted
-            ifAllSlotsBooked = info.ifAllSlotsBooked
+            val campaignId = selectedCampaignId
+            if (campaignId != null) {
+                val info = loadCampaignPriorDxInfo(
+                    patientId = patient!!.id,
+                    campaignId = campaignId,
+                    appointmentRepository = appointmentRepository,
+                    priorDxRepository = priorDxRepository
+                )
+                appointment = info.appointment
+                existsInOtherHospital = false
+                canAddAssessment = info.appointment != null
+                isAppointmentCompleted = info.appointment?.status == AppointmentStatusEnum.COMPLETED.value
+                ifAllSlotsBooked = false
+            } else {
+                // Standard Facility path
+                val info = loadAppointmentInfo(
+                    patientId = patient!!.id,
+                    hospitalCode = user.hospitalCode,
+                    maxNumberOfAppointmentsInADay = maxNumberOfAppointmentsInADay,
+                    appointmentRepository = appointmentRepository
+                )
+                appointment = info.appointment
+                existsInOtherHospital = info.existsInOtherHospital
+                canAddAssessment = info.canAddAssessment
+                isAppointmentCompleted = info.isAppointmentCompleted
+                ifAllSlotsBooked = info.ifAllSlotsBooked
+            }
             callback()
         }
     }
@@ -115,6 +160,23 @@ class HistoryTakingAndTestsViewModel @Inject constructor(
                 appointmentRepository,
                 patientLastUpdatedRepository,
                 addedToQueue
+            )
+        }
+    }
+
+    internal fun addPatientToCampaignQueue(
+        patient: PatientResponse,
+        campaignId: String,
+        addedToQueue: (List<Long>) -> Unit
+    ) {
+        viewModelScope.launch(ioDispatcher) {
+            Queries.addPatientToCampaignQueue(
+                patient = patient,
+                campaignId = campaignId,
+                scheduleRepository = scheduleRepository,
+                genericRepository = genericRepository,
+                appointmentRepository = appointmentRepository,
+                addedToQueue = addedToQueue
             )
         }
     }
@@ -140,10 +202,23 @@ class HistoryTakingAndTestsViewModel @Inject constructor(
 
     fun getPreviousRecords(patientId: String) {
         viewModelScope.launch(ioDispatcher) {
-            val appointmentIds =
-                getInProgressCompletedAppointmentIds(patientId, appointmentRepository)
-            priorDxList = priorDxRepository.getPriorDxRecordsByAppointmentIds(*appointmentIds.toTypedArray()).also {
-                todayPriorDx = it.firstOrNull { priorDx -> isToday(priorDx.createdOn!!) }
+
+            // Load all screening sites once for mapping names
+            val allSites = screeningSiteDao.getScreeningSiteMaster()
+            val siteMap = allSites.associateBy { it.id }
+
+            val appointmentIds = getInProgressCompletedAppointmentIds(patientId, appointmentRepository)
+            val screenSiteAppointmentIds = Queries.getScreenSiteAppointmentIds(patientId, appointmentRepository)
+            val allCombinedIds = (screenSiteAppointmentIds+appointmentIds).toTypedArray()
+
+            priorDxList = priorDxRepository.getPriorDxRecordsByAppointmentIds(*allCombinedIds).map {dxResponse ->
+                dxResponse.copy(screeningSiteName = dxResponse.campaignId?.let { siteMap[it]?.name })
+            }.also {
+                if (selectedType== RecordType.FACILITY) {
+                    todayPriorDx = it.firstOrNull { priorDx -> isToday(priorDx.createdOn!!) }
+                }else if (selectedCampaignId!= null) {
+                    todayPriorDx = priorDxRepository.getLatestPriorDxForCampaign(patientId, selectedCampaignId!!)
+                }
             }
             medicationList = historyMedicationRepository.getHistoryMedicationRecordsByAppointmentIds(*appointmentIds.toTypedArray()).also {
                 todayHistoryMedication = it.firstOrNull { historyMedication -> isToday(historyMedication.appUpdatedDate) }

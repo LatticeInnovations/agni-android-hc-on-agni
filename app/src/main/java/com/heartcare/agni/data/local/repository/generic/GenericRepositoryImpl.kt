@@ -127,8 +127,8 @@ class GenericRepositoryImpl @Inject constructor(
             }
     }
 
-    override suspend fun updatePriorDxFhirId() {
-        genericDao.getNotSyncedData(GenericTypeEnum.PRIOR_DX)
+    override suspend fun updatePriorDxFhirId(genericTypeEnum: GenericTypeEnum) {
+        genericDao.getNotSyncedData(genericTypeEnum)
             .forEach { priorDxGenericEntity ->
                 updatePriorDxFhirIdInGenericEntity(priorDxGenericEntity)
             }
@@ -229,9 +229,10 @@ class GenericRepositoryImpl @Inject constructor(
     }
 
     override suspend fun insertPriorDxRecord(priorDxResponse: PriorDxResponse, uuid: String): Long {
+        val type = if (priorDxResponse.campaignId != null) GenericTypeEnum.CAMPAIGN_PRIOR_DX else GenericTypeEnum.PRIOR_DX
         return genericDao.getGenericEntityById(
             patientId = priorDxResponse.priorDxUuid,
-            genericTypeEnum = GenericTypeEnum.PRIOR_DX,
+            genericTypeEnum = type,
             syncType = SyncType.POST
         ).let { priorDxGenericEntity ->
             insertPriorDxGenericEntity(priorDxGenericEntity, priorDxResponse, uuid)

@@ -29,5 +29,7 @@ data class PriorDxResponse(
     val patientId: String,
     val practitionerId: String?,
     val practitionerName: String?,
-    val appUpdatedDate: Date?
+    val appUpdatedDate: Date?,
+    val campaignId: String?,
+    val screeningSiteName: String? =null
 )

@@ -40,9 +40,6 @@ interface ScheduleAndAppointmentApiService {
         @Body appointmentResponse: List<Any>
     ): Response<BaseResponse<List<CreateResponse>>>
 
-    @PATCH("{endPoint}")
-    suspend fun patchListOfChanges(
-        @Path("endPoint", encoded = true) endPoint: String,
-        @Body patchLogs: List<Map<String, Any>>
-    ): Response<BaseResponse<List<CreateResponse>>>
+    @PATCH("Appointment")
+    suspend fun patchListOfChanges(@Body patchLogs: List<Map<String, Any>>): Response<BaseResponse<List<CreateResponse>>>
 }

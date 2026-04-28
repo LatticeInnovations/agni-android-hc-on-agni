@@ -223,10 +223,10 @@ class AddVitalsViewModel @Inject constructor(
                 vitalResponse.copy(
                     appointmentId = appointmentResponseLocal!!.uuid,
                     patientId = patient!!.id,
-                    practitionerName = if (selectedCampaignId==null)getFullName(
+                    practitionerName = getFullName(
                         user.firstName,
                         user.lastName
-                    ) else null,
+                    ),
                     fhirId = fhirId
                 )
             ).also {

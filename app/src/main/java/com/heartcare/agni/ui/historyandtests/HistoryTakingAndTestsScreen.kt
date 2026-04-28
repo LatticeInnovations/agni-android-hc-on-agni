@@ -40,7 +40,6 @@ import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -74,13 +73,13 @@ import com.heartcare.agni.ui.patientlandingscreen.AllSlotsBookedDialog
 import com.heartcare.agni.ui.theme.Black
 import com.heartcare.agni.ui.theme.White
 import com.heartcare.agni.utils.constants.NavControllerConstants.ALLERGIES_SAVED
+import com.heartcare.agni.utils.constants.NavControllerConstants.CAMPAIGN_ID
 import com.heartcare.agni.utils.constants.NavControllerConstants.FAMILY_HISTORY_SAVED
 import com.heartcare.agni.utils.constants.NavControllerConstants.MEDICATION_SAVED
 import com.heartcare.agni.utils.constants.NavControllerConstants.PATIENT
 import com.heartcare.agni.utils.constants.NavControllerConstants.PRIOR_DX_SAVED
 import com.heartcare.agni.utils.constants.NavControllerConstants.RISK_FACTORS_SAVED
 import com.heartcare.agni.utils.constants.NavControllerConstants.TOBACCO_CESSATION_SAVED
-import com.heartcare.agni.utils.constants.ScreenSiteConstants.SITE_LIST
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -99,16 +98,13 @@ fun HistoryTakingAndTestsScreen(
         initialPageOffsetFraction = 0f
     ) { tabs.size }
 
-    var currentStep by remember { mutableIntStateOf(0) }
     var selectedSite by remember { mutableStateOf<String?>(null) }
-    var selectedType by remember { mutableStateOf<RecordType?>(null) }
-
     BackHandler {
-        if (currentStep > 0) {
-            if (currentStep == 2) {
-                currentStep = 1
-            } else if (currentStep == 1) {
-                currentStep = 0
+        if (viewModel.currentStep > 0) {
+            if (viewModel.currentStep == 2) {
+                viewModel.currentStep = 1
+            } else if (viewModel.currentStep == 1) {
+                viewModel.currentStep = 0
             }
         } else {
             navController.navigateUp()
@@ -129,20 +125,22 @@ fun HistoryTakingAndTestsScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = if (currentStep > 0) "Add ${tabs[pagerState.currentPage].lowercase()}" else stringResource(R.string.history_taking_and_tests),
+                        text = if (viewModel.currentStep > 0) "Add ${tabs[pagerState.currentPage].lowercase()}" else stringResource(
+                            R.string.history_taking_and_tests
+                        ),
                         style = MaterialTheme.typography.titleLarge
                     )
                 },
                 navigationIcon = {
-                    if (currentStep == 0) {
+                    if (viewModel.currentStep == 0) {
                         IconButton(onClick = { navController.navigateUp() }) {
                             Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                         }
                     }
                 },
                 actions = {
-                    if (currentStep > 0) {
-                        IconButton(onClick = { currentStep = 0 }) {
+                    if (viewModel.currentStep > 0) {
+                        IconButton(onClick = { viewModel.currentStep = 0 }) {
                             Icon(Icons.Default.Clear, contentDescription = "Close")
                         }
                     }
@@ -153,7 +151,7 @@ fun HistoryTakingAndTestsScreen(
             )
         },
         bottomBar = {
-            if (currentStep == 0) {
+            if (viewModel.currentStep == 0) {
                 HistoryBottomAppBar(
                     pagerState,
                     coroutineScope,
@@ -161,11 +159,24 @@ fun HistoryTakingAndTestsScreen(
                     viewModel,
                     snackBarHostState,
                     context
-                ) { currentStep = 1 }
+                ) {
+                    if (viewModel.isScreeningSiteEnabled) {
+                        viewModel.currentStep = 1
+                    } else {
+                        handleAddButtonClick(
+                            viewModel = viewModel,
+                            pagerState = pagerState,
+                            coroutineScope = coroutineScope,
+                            navController = navController,
+                            snackBarHostState = snackBarHostState,
+                            context = context
+                        )
+                    }
+                }
             }
         },
         content = { paddingValues ->
-            when(currentStep) {
+            when (viewModel.currentStep) {
                 0 -> {
                     HistoryScaffoldContent(
                         tabs = tabs,
@@ -176,12 +187,17 @@ fun HistoryTakingAndTestsScreen(
                         navController = navController
                     )
                 }
+
                 1 -> RecordTypeSelectionContent(
-                    modifier = Modifier.padding(paddingValues).fillMaxSize(),
-                    selectedType = selectedType,
-                    onTypeSelected = { selectedType = it },
+                    modifier = Modifier
+                        .padding(paddingValues)
+                        .fillMaxSize(),
+                    selectedType = viewModel.selectedType,
+                    onTypeSelected = { viewModel.selectedType = it },
                     onContinueClick = {
-                        if (selectedType == RecordType.FACILITY) {
+                        if (viewModel.selectedType == RecordType.FACILITY) {
+                            viewModel.selectedCampaignId=null
+                            viewModel.getAppointmentInfo {  }
                             handleAddButtonClick(
                                 viewModel = viewModel,
                                 pagerState = pagerState,
@@ -190,18 +206,26 @@ fun HistoryTakingAndTestsScreen(
                                 snackBarHostState = snackBarHostState,
                                 context = context
                             )
-                        } else if (selectedType == RecordType.SCREENING_SITE) {
-                            currentStep = 2
+                        } else if (viewModel.selectedType == RecordType.SCREENING_SITE) {
+                            viewModel.currentStep = 2
                         }
                     }
                 )
+
                 2 -> ScreeningSiteListContent(
-                    modifier = Modifier.padding(paddingValues).fillMaxSize(),
-                    sites = SITE_LIST,
+                    modifier = Modifier
+                        .padding(paddingValues)
+                        .fillMaxSize(),
+                    sites = viewModel.screeningSites.map { it.name },
                     selectedSite = selectedSite,
-                    onSiteSelected = { selectedSite = it },
-                    onBackClick = { currentStep = 1 },
+                    onSiteSelected = { siteName ->
+                        selectedSite = siteName
+                        viewModel.selectedCampaignId =
+                            viewModel.screeningSites.find { it.name == siteName }?.id
+                    },
+                    onBackClick = { viewModel.currentStep = 1 },
                     onContinueClick = {
+                        viewModel.getAppointmentInfo { }
                         handleAddButtonClick(
                             viewModel = viewModel,
                             pagerState = pagerState,
@@ -237,17 +261,19 @@ private fun HandleLaunchedEffectsAndSnackBars(
         }
         viewModel.getPreviousRecords(viewModel.patient!!.id)
 
-        showSnackBars(navController, snackBarHostState, context)
+        showSnackBars(navController, snackBarHostState, context,viewModel)
     }
 }
 
 private suspend fun showSnackBars(
     navController: NavController,
     snackBarHostState: SnackbarHostState,
-    context: Context
+    context: Context,
+    viewModel: HistoryTakingAndTestsViewModel
 ) {
     navController.currentBackStackEntry?.savedStateHandle?.let { handle ->
         if (handle.remove<Boolean>(PRIOR_DX_SAVED) == true) {
+            viewModel.currentStep =0
             snackBarHostState.showSnackbar(context.getString(R.string.prior_dx_saved))
         }
         if (handle.remove<Boolean>(MEDICATION_SAVED) == true) {
@@ -357,7 +383,7 @@ private fun HistoryBottomAppBar(
                 viewModel = viewModel,
                 snackBarHostState = snackBarHostState,
                 context = context,
-                navController=navController,
+                navController = navController,
                 onAddClick = onAddClick
             )
 
@@ -393,17 +419,24 @@ private fun AddAssessmentButton(
                     5 -> viewModel.todayTobaccoCessation != null
                     else -> false
                 }
-                if (hasData && !viewModel.existsInOtherHospital) {
-                    handleAddButtonClick(
-                        viewModel = viewModel,
-                        pagerState = pagerState,
-                        coroutineScope = coroutineScope,
-                        navController = navController,
-                        snackBarHostState = snackBarHostState,
-                        context = context
-                    )
-                } else {
-                    onAddClick()
+                when {
+                    hasData && !viewModel.existsInOtherHospital -> {
+                        if (viewModel.isScreeningSiteEnabled) {
+                            viewModel.currentStep = 1
+                        } else {
+                            handleAddButtonClick(
+                                viewModel = viewModel,
+                                pagerState = pagerState,
+                                coroutineScope = coroutineScope,
+                                navController = navController,
+                                snackBarHostState = snackBarHostState,
+                                context = context
+                            )
+                        }
+                    }
+                    else -> {
+                        onAddClick()
+                    }
                 }
             } else {
                 coroutineScope.launch {
@@ -445,11 +478,13 @@ private fun handleAddButtonClick(
 
                 viewModel.canAddAssessment -> {
                     navigateToAddScreen(
-                        viewModel.patient!!,
+                        viewModel,
                         pagerState,
                         navController,
                         coroutineScope
                     )
+                    viewModel.currentStep = 0
+
                 }
 
                 viewModel.isAppointmentCompleted -> {
@@ -457,7 +492,24 @@ private fun handleAddButtonClick(
                 }
 
                 else -> {
-                    viewModel.showAddToQueueDialog = true
+                    if (viewModel.selectedCampaignId != null) {
+                        viewModel.addPatientToCampaignQueue(
+                            viewModel.patient!!,
+                            viewModel.selectedCampaignId!!,
+                            addedToQueue = {
+                                navigateToAddScreen(
+                                    viewModel,
+                                    pagerState,
+                                    navController,
+                                    coroutineScope
+                                )
+                                viewModel.showAddToQueueDialog = false
+
+                            }
+                        )
+                    } else {
+                        viewModel.showAddToQueueDialog = true
+                    }
                 }
             }
         }
@@ -547,13 +599,17 @@ private fun getBtnText(
 }
 
 private fun navigateToAddScreen(
-    patient: PatientResponse,
+    viewModel: HistoryTakingAndTestsViewModel,
     pagerState: PagerState,
     navController: NavController,
     coroutineScope: CoroutineScope
 ) {
     coroutineScope.launch {
-        navController.currentBackStackEntry?.savedStateHandle?.set(PATIENT, patient)
+        navController.currentBackStackEntry?.savedStateHandle?.set(PATIENT, viewModel.patient!!)
+        navController.currentBackStackEntry?.savedStateHandle?.set(
+            CAMPAIGN_ID,
+            viewModel.selectedCampaignId
+        )
         when (pagerState.currentPage) {
             0 -> navController.navigate(Screen.AddPriorDxScreen.route)
             1 -> navController.navigate(Screen.AddMedicationScreen.route)
@@ -590,7 +646,7 @@ private fun AddToQueueDialog(
                     updated = {
                         viewModel.showAddToQueueDialog = false
                         navigateToAddScreen(
-                            viewModel.patient!!,
+                            viewModel,
                             pagerState,
                             navController,
                             coroutineScope
@@ -606,7 +662,7 @@ private fun AddToQueueDialog(
                         addedToQueue = {
                             viewModel.showAddToQueueDialog = false
                             navigateToAddScreen(
-                                viewModel.patient!!,
+                                viewModel,
                                 pagerState,
                                 navController,
                                 coroutineScope

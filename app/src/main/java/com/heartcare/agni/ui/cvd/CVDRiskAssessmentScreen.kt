@@ -49,7 +49,6 @@ import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -488,7 +487,17 @@ private fun handleSaveButtonClick(
 
                             viewModel.isAppointmentCompleted -> viewModel.showAppointmentCompletedDialog = true
 
-                            else -> viewModel.showAddToQueueDialog = true
+                            else -> if (viewModel.selectedCampaignId!=null){
+                                viewModel.addPatientToQueue(
+                                    viewModel.patient!!,
+                                    addedToQueue = {
+                                        viewModel.showAddToQueueDialog = false
+                                        saveCVD(viewModel,onNavigate)
+                                    }
+                                )
+                            }else {
+                                viewModel.showAddToQueueDialog = true
+                            }
                         }
                     }
                 )

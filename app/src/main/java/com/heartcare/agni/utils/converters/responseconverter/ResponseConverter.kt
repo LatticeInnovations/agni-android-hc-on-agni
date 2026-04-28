@@ -978,7 +978,9 @@ internal fun PriorDxResponse.toPriorDxEntity(): PriorDxEntity {
     return PriorDxEntity(
         priorDxUuid = priorDxUuid,
         priorDxFhirId = priorDxFhirId,
-        appointmentId = appointmentId,
+        appointmentId = if (campaignId.isNullOrEmpty()) appointmentId else null,
+        campaignAppointmentId = if (!campaignId.isNullOrEmpty()) appointmentId else null,
+        campaignId = campaignId,
         cancer = cancer,
         createdOn = createdOn!!,
         hasAids = hasAids,
@@ -1003,12 +1005,15 @@ internal fun PriorDxResponse.toPriorDxEntity(): PriorDxEntity {
 
 suspend fun PriorDxResponse.toPriorDxEntity(
     patientDao: PatientDao,
-    appointmentDao: AppointmentDao
+    appointmentDao: AppointmentDao,
+    campaignAppointmentDao: CampaignAppointmentDao
 ): PriorDxEntity {
     return PriorDxEntity(
         priorDxUuid = priorDxUuid,
         priorDxFhirId = priorDxFhirId,
-        appointmentId = appointmentDao.getAppointmentIdByFhirId(appointmentId),
+        appointmentId = if (campaignId.isNullOrEmpty()) appointmentDao.getAppointmentIdByFhirId(appointmentId) else null,
+        campaignAppointmentId = if (!campaignId.isNullOrEmpty()) campaignAppointmentDao.getAppointmentIdByFhirId(appointmentId) else null,
+        campaignId = campaignId,
         cancer = cancer,
         createdOn = createdOn!!,
         hasAids = hasAids,
@@ -1035,7 +1040,8 @@ internal fun PriorDxEntity.toPriorDxResponse(): PriorDxResponse {
     return PriorDxResponse(
         priorDxUuid = priorDxUuid,
         priorDxFhirId = priorDxFhirId,
-        appointmentId = appointmentId,
+        appointmentId = (appointmentId ?: campaignAppointmentId)!!,
+        campaignId = campaignId,
         cancer = cancer,
         createdOn = createdOn,
         hasAids = hasAids,

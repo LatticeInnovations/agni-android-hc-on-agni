@@ -169,7 +169,7 @@ class CVDRiskAssessmentViewModel @Inject constructor(
         callback: () -> Unit
     ) {
         viewModelScope.launch(ioDispatcher) {
-            val patientId = patient?.id ?: return@launch
+            val patientId = patient!!.id
             val campaignId = selectedCampaignId
 
             val info = if (campaignId != null) {
@@ -388,10 +388,10 @@ class CVDRiskAssessmentViewModel @Inject constructor(
                 cvdResponse.copy(
                     appointmentId = appointmentResponseLocal!!.uuid,
                     patientId = patient!!.id,
-                    practitionerName = if (selectedCampaignId==null)getFullName(
+                    practitionerName = getFullName(
                         preferenceRepository.getUserDetails()!!.firstName,
                         preferenceRepository.getUserDetails()!!.lastName
-                    )else null
+                    )
                 )
             )
             genericRepository.insertCVDRecord(cvdResponse)

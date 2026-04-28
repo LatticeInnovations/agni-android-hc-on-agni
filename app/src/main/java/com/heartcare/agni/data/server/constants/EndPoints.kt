@@ -22,5 +22,5 @@ object EndPoints {
     const val CAMPAIGN_APPOINTMENT = "campaign/Appointment"
     const val CAMPAIGN_CVD = "campaign/CVD"
     const val CAMPAIGN_VITAL = "campaign/Vital"
-    const val PATCH_LOGS = "Schedule/AppLog"
+    const val CAMPAIGN_PRIOR_DX = "campaign/priorDx"
 }

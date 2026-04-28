@@ -225,7 +225,8 @@ class SyncService(
                 // Run all update jobs concurrently
                 val jobs = listOf(
                     async { updateFhirIdInCampaignCVD(logout) },
-                    async { updateFhirIdInCampaignVital(logout) }
+                    async { updateFhirIdInCampaignVital(logout) },
+                    async { updateFhirIdInCampaignPriorDx(logout) }
                 )
 
                 // Wait for all of them to complete
@@ -272,6 +273,11 @@ class SyncService(
     /** Upload Prior Dx */
     private suspend fun uploadPriorDx(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
         return checkAuthenticationStatus(syncRepository.sendPriorDxPostData(), logout)
+    }
+
+    /** Upload Campaign Prior Dx */
+    private suspend fun uploadCampaignPriorDx(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
+        return checkAuthenticationStatus(syncRepository.sendCampaignPriorDxPostData(), logout)
     }
 
     /** Upload History Medication */
@@ -434,7 +440,8 @@ class SyncService(
                 val jobs = listOf(
                     async { downloadPatientLastUpdated(logout) },
                     async { downloadCampaignCVD(logout) },
-                    async { downloadCampaignVitals(logout) }
+                    async { downloadCampaignVitals(logout) },
+                    async { downloadCampaignPriorDx(logout) }
                 )
                 jobs.awaitAll()
             }
@@ -527,6 +534,11 @@ class SyncService(
     }
     private suspend fun downloadCampaignVitals(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
         return checkAuthenticationStatus(syncRepository.getAndInsertCampaignVitalData(0), logout)
+    }
+
+    /** Download Campaign Prior Dx */
+    private suspend fun downloadCampaignPriorDx(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
+        return checkAuthenticationStatus(syncRepository.getAndInsertCampaignPriorDxData(0), logout)
     }
 
     /** Download Campaign Schedule */
@@ -672,6 +684,12 @@ class SyncService(
         return vitalResponse
     }
 
+    /** Update Appointment FHIR ID in Campaign Prior Dx */
+    private suspend fun updateFhirIdInCampaignPriorDx(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
+        genericRepository.updatePriorDxFhirId(GenericTypeEnum.CAMPAIGN_PRIOR_DX)
+        return uploadCampaignPriorDx(logout)
+    }
+
     /** Update Appointment FHIR ID in Diagnosis */
     private suspend fun updateFhirIdInDiagnosis(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
         genericRepository.updateDiagnosisFhirId()
@@ -680,7 +698,7 @@ class SyncService(
 
     /** Update FHIR ID in Prior Dx */
     private suspend fun updateFhirIdInPriorDx(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
-        genericRepository.updatePriorDxFhirId()
+        genericRepository.updatePriorDxFhirId(GenericTypeEnum.PRIOR_DX)
         return uploadPriorDx(logout)
     }
 

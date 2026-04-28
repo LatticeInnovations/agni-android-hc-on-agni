@@ -39,6 +39,7 @@ import com.heartcare.agni.ui.common.CheckBoxRow
 import com.heartcare.agni.ui.common.OtherField
 import com.heartcare.agni.ui.theme.Black
 import com.heartcare.agni.ui.theme.White
+import com.heartcare.agni.utils.constants.NavControllerConstants
 import com.heartcare.agni.utils.constants.NavControllerConstants.PATIENT
 import com.heartcare.agni.utils.constants.NavControllerConstants.PRIOR_DX_SAVED
 import kotlinx.coroutines.launch
@@ -53,9 +54,11 @@ fun AddPriorDxScreen(
 
     LaunchedEffect(viewModel.isLaunched) {
         if (!viewModel.isLaunched) {
-            navController.previousBackStackEntry?.savedStateHandle
-                ?.get<PatientResponse>(PATIENT)?.let {
+            val handle = navController.previousBackStackEntry?.savedStateHandle
+
+            handle?.get<PatientResponse>(PATIENT)?.let {
                     viewModel.patient = it
+                    viewModel.selectedCampaignId = handle.get<String>(NavControllerConstants.CAMPAIGN_ID)
                     viewModel.getLastPriorDx(it.id)
                 }
             viewModel.isLaunched = true

@@ -661,7 +661,7 @@ open class SyncRepositoryDatabaseTransactions(
 
     protected suspend fun insertPriorDx(body: List<PriorDxResponse>) {
         priorDxDao.insertPriorDxRecord(
-            *body.map { it.toPriorDxEntity(patientDao, appointmentDao) }.toTypedArray()
+            *body.map { it.toPriorDxEntity(patientDao, appointmentDao, campaignAppointmentDao) }.toTypedArray()
         )
     }
 

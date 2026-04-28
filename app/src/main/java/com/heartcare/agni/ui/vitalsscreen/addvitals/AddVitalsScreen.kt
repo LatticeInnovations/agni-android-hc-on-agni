@@ -55,6 +55,7 @@ import com.heartcare.agni.ui.common.SingleFieldWithSwapUnit
 import com.heartcare.agni.ui.theme.Black
 import com.heartcare.agni.ui.theme.White
 import com.heartcare.agni.ui.vitalsscreen.components.CustomChip
+import com.heartcare.agni.utils.constants.NavControllerConstants
 import com.heartcare.agni.utils.constants.NavControllerConstants.PATIENT
 import com.heartcare.agni.utils.constants.VitalConstants.VITAL_UPDATE_OR_ADD
 import com.heartcare.agni.utils.regex.OnlyNumberRegex.onlyNumbers
@@ -72,7 +73,7 @@ fun AddVitalsScreen(
             val handle = navController.previousBackStackEntry?.savedStateHandle
             handle?.get<PatientResponse>(PATIENT)?.let {
                 viewModel.patient = it
-                viewModel.selectedCampaignId = handle.get<String>(com.heartcare.agni.utils.constants.NavControllerConstants.CAMPAIGN_ID)
+                viewModel.selectedCampaignId = handle.get<String>(NavControllerConstants.CAMPAIGN_ID)
                 viewModel.getTodayVital(it.id)
             }
             viewModel.isLaunched = true

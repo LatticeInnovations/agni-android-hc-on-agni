@@ -38,6 +38,7 @@ import java.util.Date
 fun ExpandableCard(
     createdOn: Date,
     practitionerName: String,
+    screenSiteName: String? = null,
     listOfItems: List<String>,
     isBulleted: Boolean,
     extraInfoComposable: (@Composable () -> Unit)? = null,
@@ -59,6 +60,14 @@ fun ExpandableCard(
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+            Spacer(modifier = Modifier.padding(4.dp))
+            screenSiteName?.let {
+                Text(
+                    text = screenSiteName,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
 
             AnimatedVisibility(visible = expanded) {
                 ExpandedContent(
