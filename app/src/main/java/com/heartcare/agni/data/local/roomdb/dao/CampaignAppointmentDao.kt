@@ -65,4 +65,8 @@ interface CampaignAppointmentDao {
         patientId: String,
         campaignId: String
     ): CampaignAppointmentEntity?
+
+    @Transaction
+    @Query("SELECT * FROM CampaignAppointmentEntity WHERE campaignId=:campaignId")
+    suspend fun getAppointmentByCampaign(campaignId: String): List<CampaignAppointmentEntity>
 }

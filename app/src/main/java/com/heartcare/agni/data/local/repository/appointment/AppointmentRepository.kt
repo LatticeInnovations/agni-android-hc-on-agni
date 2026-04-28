@@ -45,4 +45,6 @@ interface AppointmentRepository {
     suspend fun getCampaignAppointmentsOfPatient(
         patientId: String
     ): List<AppointmentResponseLocal>
+
+    suspend fun getAppointmentForCampaign(campaignId: String): List<AppointmentResponseLocal>
 }

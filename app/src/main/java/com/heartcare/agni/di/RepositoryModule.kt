@@ -44,6 +44,8 @@ import com.heartcare.agni.data.local.repository.risk.RiskFactorRepository
 import com.heartcare.agni.data.local.repository.risk.RiskFactorRepositoryImpl
 import com.heartcare.agni.data.local.repository.schedule.ScheduleRepository
 import com.heartcare.agni.data.local.repository.schedule.ScheduleRepositoryImpl
+import com.heartcare.agni.data.local.repository.screeningsite.ScreeningSiteRepository
+import com.heartcare.agni.data.local.repository.screeningsite.ScreeningSiteRepositoryImpl
 import com.heartcare.agni.data.local.repository.search.SearchRepository
 import com.heartcare.agni.data.local.repository.search.SearchRepositoryImpl
 import com.heartcare.agni.data.local.repository.tobacco.TobaccoCessationRepository
@@ -171,4 +173,8 @@ abstract class RepositoryModule {
     @Binds
     @ViewModelScoped
     abstract fun provideHealthFacilityRepository(healthFacilityRepositoryImpl: HealthFacilityRepositoryImpl): HealthFacilityRepository
+
+    @Binds
+    @ViewModelScoped
+    abstract fun provideScreeningSiteRepository( screeningSiteRepositoryImpl: ScreeningSiteRepositoryImpl): ScreeningSiteRepository
 }
