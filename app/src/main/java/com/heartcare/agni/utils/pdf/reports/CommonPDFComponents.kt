@@ -195,17 +195,13 @@ object CommonPDFComponents {
     }
 
     fun reportHeaderSection(
-        title: String
+        title: String,
+        metaData: String = ""
     ): String {
         return """
           <div class="center">
             <div class="title">$title</div>
-            <div class="subtitle">Health facility: Vila Central</div>
-            <div class="subtitle">Administrative Division: Shefa province</div>
-            <div class="subtitle">Team Lead: Dr. Sarah Naupa, +91 419419412, sarah@gmail.com</div>
-            <div class="subtitle">Date of screening: Mar 15, 2026</div>
-            <div class="subtitle">Date Range: Mar 1, 2026 – Mar 15, 2026</div>
-            <div class="subtitle">Report Generated: April 8, 2026</div>
+            <div class="subtitle">$metaData</div>
           </div>
           <div class="divider"></div>
         

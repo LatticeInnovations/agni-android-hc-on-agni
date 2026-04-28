@@ -1,4 +1,5 @@
 package com.heartcare.agni.ui.sitescreendashboard.components
+
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -20,21 +21,35 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.heartcare.agni.R
 import com.heartcare.agni.ui.common.SelectableRadioCard
+import com.heartcare.agni.ui.sitescreendashboard.ReportsViewModel
+import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toMMMMddyyyy
+import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toMMMddyyyyDateRange
+import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toTimeInMilli
+import com.heartcare.agni.utils.pdf.PDFHelper.generatePdf
+import com.heartcare.agni.utils.pdf.reports.HighLevelScreeningReportPDF.getHighLevelScreeningReportHTML
+import kotlinx.coroutines.launch
+import java.util.Date
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DownloadReportBottomSheet(
     onDismissRequest: () -> Unit,
-    onDownloadClick: (String) -> Unit
+    reportsViewModel: ReportsViewModel = hiltViewModel()
 ) {
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var selectedOption by remember { mutableStateOf("High-Level") }
 
@@ -47,7 +62,7 @@ fun DownloadReportBottomSheet(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding( 16.dp)
+                .padding(16.dp)
                 .padding(bottom = 16.dp)
         ) {
             Row(
@@ -107,7 +122,28 @@ fun DownloadReportBottomSheet(
 
             Button(
                 onClick = {
-                    onDownloadClick(selectedOption)
+                    var html: String? = null
+                    var fileName: String? = null
+                    when (selectedOption) {
+                        highLevel -> {
+                            html = getHighLevelScreeningReportHTML(
+                                getMetaData(reportsViewModel),
+                                reportsViewModel.currentState
+                            )
+                            fileName = "Report"
+                        }
+                        clinicalAction -> {
+
+                        }
+                        riskRoster -> {
+
+                        }
+                    }
+                    if (!html.isNullOrBlank() && !fileName.isNullOrBlank()) {
+                        coroutineScope.launch {
+                            generatePdf(context, html, fileName)
+                        }
+                    }
                     onDismissRequest()
                 },
                 modifier = Modifier.fillMaxWidth()
@@ -115,5 +151,46 @@ fun DownloadReportBottomSheet(
                 Text(stringResource(R.string.download), style = MaterialTheme.typography.labelLarge)
             }
         }
+    }
+}
+
+private fun getMetaData(reportsViewModel: ReportsViewModel): String {
+    return when (reportsViewModel.selectedTabIndex) {
+        0 -> {
+            reportsViewModel.selectedCampaign?.let { campaign ->
+                val teamLead = campaign.staff.first { it.isTeamLead }.let { lead ->
+                    listOfNotNull(
+                        lead.name.takeIf { it.isNotBlank() },
+                        lead.email.takeIf { it.isNotBlank() },
+                        lead.mobile.takeIf { it.isNotBlank() }
+                    ).joinToString(", ")
+                }
+                val start = Date(campaign.fromDate.toTimeInMilli()).toMMMddyyyyDateRange()
+                val end = Date(campaign.toDate.toTimeInMilli()).toMMMddyyyyDateRange()
+                "Campaign: ${campaign.name}" +
+                        "<BR />Site Location: ${
+                            campaign.location.takeIf { it.isNotBlank() }
+                                ?: campaign.areaCouncil.takeIf { it.isNotBlank() }
+                                ?: ""}" +
+                        "<BR />Team Lead: $teamLead" +
+                        "<BR />Date Range: $start - $end" +
+                        "<BR />Report Generated: ${Date().toMMMMddyyyy()}"
+            } ?: ""
+        }
+        1 -> {
+            val start = reportsViewModel.currentState.dateRangeStart.toMMMddyyyyDateRange()
+            val end = reportsViewModel.currentState.dateRangeEnd.toMMMddyyyyDateRange()
+            "Health Facility: ${reportsViewModel.selectedFacility?.name}" +
+                    "<BR />Date Range: $start - $end" +
+                    "<BR />Report Generated: ${Date().toMMMMddyyyy()}"
+        }
+        2 -> {
+            val start = reportsViewModel.currentState.dateRangeStart.toMMMddyyyyDateRange()
+            val end = reportsViewModel.currentState.dateRangeEnd.toMMMddyyyyDateRange()
+            "Administrative Division: ${reportsViewModel.selectedDivision?.name} ${reportsViewModel.selectedDivisionType}" +
+                    "<BR />Date Range: $start - $end" +
+                    "<BR />Report Generated: ${Date().toMMMMddyyyy()}"
+        }
+        else -> ""
     }
 }

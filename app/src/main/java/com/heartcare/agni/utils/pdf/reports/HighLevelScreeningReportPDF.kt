@@ -1,12 +1,16 @@
 package com.heartcare.agni.utils.pdf.reports
 
+import com.heartcare.agni.ui.sitescreendashboard.state.ReportUiState
 import com.heartcare.agni.utils.pdf.reports.CommonPDFComponents.reportFooterSection
 import com.heartcare.agni.utils.pdf.reports.CommonPDFComponents.reportHeaderSection
 import com.heartcare.agni.utils.pdf.reports.CommonPDFComponents.reportPdfCss
 
 object HighLevelScreeningReportPDF {
 
-    fun getHighLevelScreeningReportHTML(): String {
+    fun getHighLevelScreeningReportHTML(
+        metaData: String,
+        currentState: ReportUiState
+    ): String {
         return """
             <!DOCTYPE html>
             <html lang="en">
@@ -17,7 +21,7 @@ object HighLevelScreeningReportPDF {
               ${reportPdfCss()}
             </head>
             <body>
-                ${reportHeaderSection(title = "High-Level Screening Report")}
+                ${reportHeaderSection(title = "High-Level Screening Report", metaData = metaData)}
                 ${getAgeGroupDistributionTable()}
                 ${getBMICategoriesTable()}
                 ${getBloodPressureTable()}

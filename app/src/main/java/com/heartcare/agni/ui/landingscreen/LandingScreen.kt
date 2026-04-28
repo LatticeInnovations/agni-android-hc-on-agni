@@ -627,10 +627,7 @@ fun LandingScreen(
 
     if (viewModel.showDownloadSheet) {
         DownloadReportBottomSheet(
-            onDismissRequest = { viewModel.showDownloadSheet = false },
-            onDownloadClick = {
-                // handle download PDF
-            }
+            onDismissRequest = { viewModel.showDownloadSheet = false }
         )
     }
 }
