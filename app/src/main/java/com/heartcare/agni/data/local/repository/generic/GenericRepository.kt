@@ -108,11 +108,11 @@ interface GenericRepository {
         uuid: String = UUIDBuilder.generateUUID()
     ): Long
 
-    suspend fun updateAppointmentFhirIds()
+    suspend fun updateAppointmentFhirIds(genericTypeEnum: GenericTypeEnum)
     suspend fun updateAppointmentFhirIdInPatch()
 
-    suspend fun updateCVDFhirIds()
-    suspend fun updateVitalFhirId()
+    suspend fun updateCVDFhirIds(genericTypeEnum: GenericTypeEnum)
+    suspend fun updateVitalFhirId(genericTypeEnum: GenericTypeEnum)
     suspend fun updateDiagnosisFhirId()
     suspend fun updatePriorDxFhirId()
     suspend fun updateHistoryMedicationFhirId()

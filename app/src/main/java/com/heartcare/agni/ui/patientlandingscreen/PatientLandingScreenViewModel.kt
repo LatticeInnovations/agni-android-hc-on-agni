@@ -19,6 +19,7 @@ import com.heartcare.agni.di.dispatcher.IoDispatcher
 import com.heartcare.agni.service.workmanager.utils.Sync
 import com.heartcare.agni.service.workmanager.workers.trigger.TriggerWorkerPeriodicImpl
 import com.heartcare.agni.utils.common.Queries.getInProgressCompletedAppointmentIds
+import com.heartcare.agni.utils.common.Queries.getScreenSiteAppointmentIds
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toEndOfDay
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toTodayStartDate
 import com.heartcare.agni.utils.network.CheckNetwork
@@ -99,9 +100,9 @@ class PatientLandingScreenViewModel @Inject constructor(
 
     internal fun getLastCVDRisk(patientId: String) {
         viewModelScope.launch(ioDispatcher) {
-            val appointmentIds =
-                getInProgressCompletedAppointmentIds(patientId, appointmentRepository)
-            cvdRisk = (cvdAssessmentRepository.getCVDRecordByAppointmentIds(*appointmentIds.toTypedArray()).firstOrNull()?.risk ?: "").toString()
+            val appointmentIds = getInProgressCompletedAppointmentIds(patientId, appointmentRepository)
+            val campaignAppointmentIds = getScreenSiteAppointmentIds(patientId, appointmentRepository)
+            cvdRisk = (cvdAssessmentRepository.getCVDRecordByAppointmentIds(*(campaignAppointmentIds+appointmentIds).toTypedArray()).firstOrNull()?.risk ?: "").toString()
         }
     }
 }

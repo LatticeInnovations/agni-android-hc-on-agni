@@ -835,7 +835,7 @@ open class GenericRepositoryDatabaseTransactions(
     }
 
     private suspend fun getPatientFhirIdById(patientId: String): String? {
-        return patientDao.getPatientDataById(patientId)[0].patientEntity.fhirId
+        return patientDao.getPatientDataById(patientId).firstOrNull()?.patientEntity?.fhirId
     }
 
     private suspend fun getScheduleFhirIdById(scheduleId: String): String? {

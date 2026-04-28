@@ -357,7 +357,7 @@ open class SyncRepositoryDatabaseTransactions(
                         createResponse.id!!, createResponse.fhirId!!
                     )
                 }else{
-                    campaignAppointmentDao.updateAppointmentFhirId(
+                    appointmentDao.updateAppointmentFhirId(
                         createResponse.id!!, createResponse.fhirId!!
                     )
                 }

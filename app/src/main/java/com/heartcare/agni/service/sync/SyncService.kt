@@ -1,6 +1,7 @@
 package com.heartcare.agni.service.sync
 
 import android.content.Context
+import com.heartcare.agni.data.local.enums.GenericTypeEnum
 import com.heartcare.agni.data.local.repository.generic.GenericRepository
 import com.heartcare.agni.data.local.repository.preference.PreferenceRepository
 import com.heartcare.agni.data.server.repository.sync.SyncRepository
@@ -79,10 +80,10 @@ class SyncService(
                 },
                 async {
                     uploadSchedule(logout)
+                },
+                async {
+                    uploadCampaignSchedule(logout)
                 }
-//                , async {
-//                    uploadCampaignSchedule(logout)
-//                }
             ).all { responseMapper ->
                 responseMapper is ApiEmptyResponse
             }.apply {
@@ -105,6 +106,8 @@ class SyncService(
             awaitAll(
                 async {
                     updateFhirIdsInAppointment(logout)
+                },async {
+                    updateFhirIdsInCampaignAppointment(logout)
                 },
                 appointmentPatchJob
             ).all { responseMapper ->
@@ -114,9 +117,9 @@ class SyncService(
                     scheduleDownloadJob = async {
                         downloadSchedule(logout)
                     }
-//                    campaignScheduleDownloadJob = async {
-//                        downloadCampaignSchedule(logout)
-//                    }
+                    campaignScheduleDownloadJob = async {
+                        downloadCampaignSchedule(logout)
+                    }
                     downloadAppointmentJob(logout)
                 }
             }
@@ -135,10 +138,11 @@ class SyncService(
             awaitAll(
                 patientDownloadJob,
                 scheduleDownloadJob,
-//                campaignScheduleDownloadJob
+                campaignScheduleDownloadJob
             ).all { responseMapper -> responseMapper is ApiEndResponse }.apply {
                 if (this) {
                     downloadAppointment(logout)
+                    downloadCampaignAppointment(logout)
                 }
             }
         }
@@ -187,9 +191,8 @@ class SyncService(
             syncRepository.sendAppointmentPostData(),
             logout
         )
-        val campaignResponse = uploadCampaignAppointment(logout)
         coroutineScope {
-            if (response is ApiEmptyResponse || campaignResponse is ApiEmptyResponse) {
+            if (response is ApiEmptyResponse) {
                 // Run all update jobs concurrently
                 val jobs = listOf(
                     async { updateFhirIdInCVD(logout) },
@@ -214,6 +217,24 @@ class SyncService(
         return response
     }
 
+    /** Upload Campaign Appointment */
+    private suspend fun uploadCampaignAppointment(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
+         val response= checkAuthenticationStatus(syncRepository.sendCampaignAppointmentPostData(), logout)
+        coroutineScope {
+            if (response is ApiEmptyResponse) {
+                // Run all update jobs concurrently
+                val jobs = listOf(
+                    async { updateFhirIdInCampaignCVD(logout) },
+                    async { updateFhirIdInCampaignVital(logout) }
+                )
+
+                // Wait for all of them to complete
+                jobs.awaitAll()
+            }
+        }
+        return response
+    }
+
     /** Upload Form Prescription*/
     private suspend fun uploadFormPrescriptionData(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
         return checkAuthenticationStatus(syncRepository.sendFormPrescriptionPostData(), logout)
@@ -228,6 +249,10 @@ class SyncService(
     private suspend fun uploadCVD(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
         return checkAuthenticationStatus(syncRepository.sendCVDPostData(), logout)
     }
+    /** Upload Campaign CVD */
+    private suspend fun uploadCampaignCVD(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
+        return checkAuthenticationStatus(syncRepository.sendCampaignCVDPostData(), logout)
+    }
 
     /** Upload Diagnosis */
     private suspend fun uploadDiagnosis(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
@@ -237,17 +262,6 @@ class SyncService(
     /** Upload Vital */
     private suspend fun uploadVital(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
         return checkAuthenticationStatus(syncRepository.sendVitalPostData(), logout)
-    }
-
-
-    /** Upload Campaign Appointment */
-    private suspend fun uploadCampaignAppointment(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
-        return checkAuthenticationStatus(syncRepository.sendCampaignAppointmentPostData(), logout)
-    }
-
-    /** Upload Campaign CVD */
-    private suspend fun uploadCampaignCVD(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
-        return checkAuthenticationStatus(syncRepository.sendCampaignCVDPostData(), logout)
     }
 
     /** Upload Campaign Vital */
@@ -376,16 +390,12 @@ class SyncService(
                 syncRepository.getAndInsertAppointment(0),
                 logout
             )
-//            val campaignResponse = downloadCampaignAppointment(logout)
 
-
-//            if (response is ApiEmptyResponse || response is ApiEndResponse  || campaignResponse is ApiEmptyResponse || campaignResponse is ApiEndResponse) {
             if (response is ApiEmptyResponse || response is ApiEndResponse) {
                 val jobs = listOf(
                     async { downloadPatientLastUpdated(logout) },
                     async { downloadCVD(logout) },
                     async { downloadVitals(logout) },
-                    async { downloadCampaignVitals(logout) },
                     async { downloadPriorDx(logout) },
                     async { downloadHistoryMedication(logout) },
                     async { downloadFamilyHistory(logout) },
@@ -407,8 +417,24 @@ class SyncService(
                         examinationPatchJob.await()
                         downloadExamination(logout)
                     },
-                    async { downloadReferral(logout) },
-//                    async { downloadCampaignCVD(logout) }
+                    async { downloadReferral(logout) }
+                )
+                jobs.awaitAll()
+            }
+
+            response
+        }
+
+    /** Download Campaign Appointment */
+    private suspend fun downloadCampaignAppointment(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? =
+        coroutineScope {
+            val response = checkAuthenticationStatus(syncRepository.getAndInsertCampaignAppointment(0), logout)
+
+            if (response is ApiEmptyResponse || response is ApiEndResponse) {
+                val jobs = listOf(
+                    async { downloadPatientLastUpdated(logout) },
+                    async { downloadCampaignCVD(logout) },
+                    async { downloadCampaignVitals(logout) }
                 )
                 jobs.awaitAll()
             }
@@ -482,6 +508,11 @@ class SyncService(
         return checkAuthenticationStatus(syncRepository.getAndInsertCVD(0), logout)
     }
 
+    /** Download Campaign CVD */
+    private suspend fun downloadCampaignCVD(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
+        return checkAuthenticationStatus(syncRepository.getAndInsertCampaignCVD(0), logout)
+    }
+
     /** Download Diagnosis*/
     private suspend fun downloadDiagnosis(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
         return checkAuthenticationStatus(
@@ -503,15 +534,6 @@ class SyncService(
         return checkAuthenticationStatus(syncRepository.getAndInsertCampaignSchedule(0), logout)
     }
 
-    /** Download Campaign Appointment */
-    private suspend fun downloadCampaignAppointment(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
-        return checkAuthenticationStatus(syncRepository.getAndInsertCampaignAppointment(0), logout)
-    }
-
-    /** Download Campaign CVD */
-    private suspend fun downloadCampaignCVD(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
-        return checkAuthenticationStatus(syncRepository.getAndInsertCampaignCVD(0), logout)
-    }
 
     /** Download Levels Data */
     private suspend fun downloadLevelsRecord(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
@@ -601,9 +623,14 @@ class SyncService(
 
     /** Update Schedule and Patient FHIR ID in Appointment */
     private suspend fun updateFhirIdsInAppointment(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
-        genericRepository.updateAppointmentFhirIds()
+        genericRepository.updateAppointmentFhirIds(GenericTypeEnum.APPOINTMENT)
         /** Upload Appointment */
         return uploadAppointment(logout)
+    }
+    private suspend fun updateFhirIdsInCampaignAppointment(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
+        genericRepository.updateAppointmentFhirIds(GenericTypeEnum.CAMPAIGN_APPOINTMENT)
+        /** Upload Campaign Appointment */
+        return uploadCampaignAppointment(logout)
     }
 
     /** Update Schedule FHIR ID in Appointment Patch */
@@ -622,17 +649,26 @@ class SyncService(
 
     /** Update Appointment FHIR ID in CVD */
     private suspend fun updateFhirIdInCVD(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
-        genericRepository.updateCVDFhirIds()
+        genericRepository.updateCVDFhirIds(GenericTypeEnum.CVD)
         val cvdResponse = uploadCVD(logout)
-//        uploadCampaignCVD(logout)
+        return cvdResponse
+    }
+    /** Update Appointment FHIR ID in CVD */
+    private suspend fun updateFhirIdInCampaignCVD(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
+        genericRepository.updateCVDFhirIds(GenericTypeEnum.CAMPAIGN_CVD)
+        val cvdResponse = uploadCampaignCVD(logout)
         return cvdResponse
     }
 
     /** Update Appointment FHIR ID in Vitals */
     private suspend fun updateFhirIdInVital(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
-        genericRepository.updateVitalFhirId()
+        genericRepository.updateVitalFhirId(GenericTypeEnum.VITAL)
         val vitalResponse = uploadVital(logout)
-//        uploadCampaignVital(logout)
+        return vitalResponse
+    }
+    private suspend fun updateFhirIdInCampaignVital(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
+        genericRepository.updateVitalFhirId(GenericTypeEnum.CAMPAIGN_VITAL)
+       val vitalResponse= uploadCampaignVital(logout)
         return vitalResponse
     }
 

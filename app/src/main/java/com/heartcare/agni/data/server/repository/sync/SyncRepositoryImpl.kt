@@ -1452,7 +1452,7 @@ class SyncRepositoryImpl @Inject constructor(
                 if (listOfGenericEntity.isEmpty()) ApiEmptyResponse()
                 else ApiResponseConverter.convert(
                     cvdApiService.createCVD(EndPoints.CAMPAIGN_CVD, listOfGenericEntity.map {
-                        it.payload.fromJson<LinkedTreeMap<*, *>>().mapToObject(CVDResponse::class.java)!!
+                        it.payload.fromJson<LinkedTreeMap<*, *>>().mapToObject(CVDResponse::class.java)!!.copy(campaignId = null)
                     })
                 ).run {
                     when (this) {
@@ -1536,7 +1536,7 @@ class SyncRepositoryImpl @Inject constructor(
                 else ApiResponseConverter.convert(
                     vitalApiService.createData(CAMPAIGN_VITAL, listOfGenericEntity.map {
                         it.payload.fromJson<LinkedTreeMap<*, *>>()
-                            .mapToObject(VitalResponse::class.java)!!
+                            .mapToObject(VitalResponse::class.java)!!.copy(campaignId = null)
                     })
                 ).run {
                     when (this) {
