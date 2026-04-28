@@ -51,6 +51,7 @@ fun FamilyHistoryView(
                     ExpandableCard(
                         createdOn = familyHistory.appUpdatedDate,
                         practitionerName = familyHistory.practitionerName!!,
+                        screenSiteName = familyHistory.screeningSiteName,
                         listOfItems = familyHistory.familyDiseases.map { familyHistoryDisplayFromCode(it) },
                         isBulleted = true,
                         extraInfoComposable = familyHistory.occurrenceAgeData?.let {

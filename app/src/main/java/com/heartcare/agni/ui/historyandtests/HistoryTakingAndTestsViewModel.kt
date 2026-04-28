@@ -238,12 +238,17 @@ class HistoryTakingAndTestsViewModel @Inject constructor(
                                 )
                         }
                     }
-            familyHistoryList =
-                familyHistoryRepository.getFamilyHistoryRecordsByAppointmentIds(*appointmentIds.toTypedArray())
-                    .also {
-                        todayFamilyHistory =
-                            it.firstOrNull { familyHistory -> isToday(familyHistory.appUpdatedDate) }
+            familyHistoryList = familyHistoryRepository.getFamilyHistoryRecordsByAppointmentIds(*allCombinedIds)
+                .map { familyHistory ->
+                    familyHistory.copy(screeningSiteName = familyHistory.campaignId?.let { siteMap[it]?.name })
+                }
+                .also {
+                    if (selectedType == RecordType.FACILITY) {
+                        todayFamilyHistory = it.firstOrNull { familyHistory -> isToday(familyHistory.appUpdatedDate) }
+                    } else if (selectedCampaignId != null) {
+                        todayFamilyHistory = familyHistoryRepository.getLatestFamilyHistoryForCampaign(patientId, selectedCampaignId!!)
                     }
+                }
             allergyList =
                 allergyRepository.getAllergyRecordsByAppointmentIds(*appointmentIds.toTypedArray())
                     .also {

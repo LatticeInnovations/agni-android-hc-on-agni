@@ -343,11 +343,12 @@ open class GenericRepositoryDatabaseTransactions(
     protected suspend fun insertFamilyHistoryGenericEntity(
         familyHistoryGenericEntity: GenericEntity?,
         familyHistoryResponse: FamilyHistoryResponse,
-        uuid: String
+        uuid: String,
+        type: GenericTypeEnum
     ): Long {
         return if (familyHistoryGenericEntity != null) {
             genericDao.insertGenericEntity(
-                familyHistoryGenericEntity.copy(payload = familyHistoryResponse.toJson())
+                familyHistoryGenericEntity.copy(payload = familyHistoryResponse.toJson(), type = type)
             )[0]
         } else {
             genericDao.insertGenericEntity(
@@ -355,7 +356,7 @@ open class GenericRepositoryDatabaseTransactions(
                     id = uuid,
                     patientId = familyHistoryResponse.uuid,
                     payload = familyHistoryResponse.toJson(),
-                    type = GenericTypeEnum.FAMILY_HISTORY,
+                    type = type,
                     syncType = SyncType.POST
                 )
             )[0]

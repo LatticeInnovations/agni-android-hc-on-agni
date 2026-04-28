@@ -32,7 +32,7 @@ import java.util.Date
 import javax.inject.Inject
 
 @HiltViewModel
-class AddFamilyHistoryViewModel@Inject constructor(
+class AddFamilyHistoryViewModel @Inject constructor(
     private val familyHistoryRepository: FamilyHistoryRepository,
     private val appointmentRepository: AppointmentRepository,
     private val preferenceRepository: PreferenceRepository,
@@ -45,7 +45,7 @@ class AddFamilyHistoryViewModel@Inject constructor(
     var isLaunched by mutableStateOf(false)
     var patient by mutableStateOf<PatientResponse?>(null)
     var appointmentResponseLocal by mutableStateOf<AppointmentResponseLocal?>(null)
-    
+    var selectedCampaignId by mutableStateOf<String?>(null)
     var selectedFamilyHistory by mutableStateOf(listOf<String>())
     var lastFamilyHistory by mutableStateOf<FamilyHistoryResponse?>(null)
 
@@ -55,10 +55,20 @@ class AddFamilyHistoryViewModel@Inject constructor(
     
     fun getLastFamilyHistory(patientId: String) {
         viewModelScope.launch(ioDispatcher) {
-            val appointmentIds =
-                getInProgressCompletedAppointmentIds(patientId, appointmentRepository)
-            lastFamilyHistory =
-                familyHistoryRepository.getFamilyHistoryRecordsByAppointmentIds(*appointmentIds.toTypedArray()).firstOrNull()
+            val campaignId = selectedCampaignId
+            if (campaignId != null) {
+                // Fetch strictly for the current campaign site
+                lastFamilyHistory = familyHistoryRepository.getLatestFamilyHistoryForCampaign(patientId, campaignId)
+            } else {
+                // Standard facility-based lookup
+                val appointmentIds =
+                    getInProgressCompletedAppointmentIds(patientId, appointmentRepository)
+                lastFamilyHistory =
+                    familyHistoryRepository.getFamilyHistoryRecordsByAppointmentIds(*appointmentIds.toTypedArray()).firstOrNull {
+                        isToday(it.appUpdatedDate)
+                    }
+            }
+
             lastFamilyHistory?.let { familyHistory ->
                 selectedFamilyHistory = mutableListOf<String>().apply {
                     addAll(familyHistory.familyDiseases.map { familyHistoryDisplayFromCode(it) })
@@ -85,6 +95,7 @@ class AddFamilyHistoryViewModel@Inject constructor(
             appUpdatedDate = appUpdatedDate,
             familyDiseases = selectedFamilyHistory.map { familyHistoryCodeFromDisplay(it) },
             occurrenceAgeData = ageAnswer.lowercase().ifBlank { null },
+            campaignId = selectedCampaignId
         )
     }
 
@@ -95,12 +106,16 @@ class AddFamilyHistoryViewModel@Inject constructor(
             appointmentResponseLocal = getAppointment(
                 patientId = patient!!.id,
                 hospitalCode = user.hospitalCode,
+                campaignId = selectedCampaignId,
                 appointmentRepository = appointmentRepository
             )
             var uuid = UUIDBuilder.generateUUID()
             var fhirId: String? = null
             lastFamilyHistory?.let {
-                if (isToday(it.appUpdatedDate)) {
+                if (isToday(it.appUpdatedDate) && selectedCampaignId == null) {
+                    uuid = it.uuid
+                    fhirId = it.fhirId
+                } else if (selectedCampaignId != null) {
                     uuid = it.uuid
                     fhirId = it.fhirId
                 }
@@ -119,15 +134,17 @@ class AddFamilyHistoryViewModel@Inject constructor(
                 )
             )
             genericRepository.insertFamilyHistoryRecord(familyHistoryResponse)
-            checkAndUpdateAppointmentStatusToInProgress(
-                inProgressTime = familyHistoryResponse.appUpdatedDate,
-                patient = patient!!,
-                appointmentResponseLocal = appointmentResponseLocal!!,
-                appointmentRepository = appointmentRepository,
-                scheduleRepository = scheduleRepository,
-                genericRepository = genericRepository,
-                preferenceRepository = preferenceRepository
-            )
+            if (selectedCampaignId==null) {
+                checkAndUpdateAppointmentStatusToInProgress(
+                    inProgressTime = familyHistoryResponse.appUpdatedDate,
+                    patient = patient!!,
+                    appointmentResponseLocal = appointmentResponseLocal!!,
+                    appointmentRepository = appointmentRepository,
+                    scheduleRepository = scheduleRepository,
+                    genericRepository = genericRepository,
+                    preferenceRepository = preferenceRepository
+                )
+            }
             updatePatientLastUpdated(
                 patient!!.id,
                 patientLastUpdatedRepository,
