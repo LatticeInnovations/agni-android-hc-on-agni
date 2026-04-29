@@ -2,8 +2,8 @@ package com.heartcare.agni.data.local.enums
 
 enum class LevelsEnum(val levelType: String, val display: String) {
     PROVINCE("province", "Province"),
-    AREA_COUNCIL("area-council", "Area Council"),
-    ISLAND("island", "Island"),
+    AREA_COUNCIL("area-council", "Area Council/Municipalities"),
+    ISLAND("island", "Island/Wards"),
     VILLAGE("village", "Village");
 
     companion object {
