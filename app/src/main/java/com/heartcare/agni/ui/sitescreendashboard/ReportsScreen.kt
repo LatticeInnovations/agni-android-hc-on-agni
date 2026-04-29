@@ -31,6 +31,7 @@ import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -55,6 +56,9 @@ import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toDat
 fun ReportsScreen(
     viewModel: ReportsViewModel = hiltViewModel()
 ) {
+    LaunchedEffect(Unit) {
+        viewModel.getMasterLists()
+    }
     val tabs = listOf(
         stringResource(R.string.tab_screening_site),
         stringResource(R.string.tab_facility),

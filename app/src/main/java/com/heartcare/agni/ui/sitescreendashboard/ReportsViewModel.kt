@@ -92,7 +92,7 @@ class ReportsViewModel @Inject constructor(
     var campaignDateRange by mutableStateOf("")
     var campaignLocation by mutableStateOf("")
 
-    init {
+    fun getMasterLists() {
         getCampaignList()
         getFacilityAndDivisionList()
     }
@@ -127,12 +127,13 @@ class ReportsViewModel @Inject constructor(
         viewModelScope.launch {
             getDivisionOptions(false)
             val divisionData = withContext(ioDispatcher) {
-                val userIslandId = facilityOptions.find { it.code == user.hospitalCode }!!
-                    .precedingLevelId!!
+                val userIslandId = facilityOptions.find { it.code == user.hospitalCode }?.precedingLevelId
 
-                val userIsland = levelRepository.getLevelListByFhirIds(userIslandId)[0]
+                userIslandId?.let {
+                    val userIsland = levelRepository.getLevelListByFhirIds(it)[0]
 
-                levelRepository.getLevelListByFhirIds(userIsland.precedingLevelId!!)[0]
+                    levelRepository.getLevelListByFhirIds(userIsland.precedingLevelId!!)[0]
+                }
             }
             selectedDivision = divisionData
             getDataOfDivision()
@@ -315,7 +316,11 @@ class ReportsViewModel @Inject constructor(
             cholesterolStats = getCholesterolStats(latestCholesterolCVDList, patientMap),
 
             cvdRiskTotal = latestCVDList.size,
-            cvdRiskStats = getCvdRiskStats(latestCVDList, patientMap)
+            cvdRiskStats = getCvdRiskStats(latestCVDList, patientMap),
+
+            patientAndCVD = latestCVDList.map {
+                Pair(patientMap[it.patientId]!!, it)
+            }
         )
 
         return newState
