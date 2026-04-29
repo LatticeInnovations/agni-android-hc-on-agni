@@ -861,8 +861,7 @@ internal fun DiagnosisLocal.toDiagnosisEntity(): DiagnosisEntity {
         practitionerName = practitionerName,
         patientId = patientId,
         progressNote = progressNote,
-        campaignId = campaignId,
-        screeningSiteName = screeningSiteName
+        campaignId = campaignId
     )
 }
 
@@ -877,8 +876,7 @@ internal fun DiagnosisEntity.toDiagnosisLocal(): DiagnosisLocal {
         practitionerName = practitionerName,
         patientId = patientId,
         progressNote = progressNote,
-        campaignId = campaignId,
-        screeningSiteName = screeningSiteName
+        campaignId = campaignId
     )
 }
 
@@ -899,8 +897,7 @@ internal suspend fun DiagnosisResponse.toDiagnosisEntity(
         symptoms = symptoms,
         practitionerName = practitionerName,
         patientId = patientDao.getPatientIdByFhirId(patientId)!!,
-        progressNote = progressNote,
-        screeningSiteName = screeningSiteName
+        progressNote = progressNote
     )
 }
 

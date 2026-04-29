@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 3,
-    "identityHash": "dec32757c983dbe3532e6b61e09f5698",
+    "identityHash": "6ffb6ba5f7c2c0ed0299b5ea569eec97",
     "entities": [
       {
         "tableName": "PatientEntity",
@@ -1497,7 +1497,7 @@
       },
       {
         "tableName": "DiagnosisEntity",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`diagnosisUuid` TEXT NOT NULL, `appointmentId` TEXT, `campaignAppointmentId` TEXT, `campaignId` TEXT, `fhirId` TEXT, `createdOn` INTEGER NOT NULL, `diagnosis` TEXT NOT NULL, `symptoms` TEXT NOT NULL, `practitionerName` TEXT NOT NULL, `patientId` TEXT NOT NULL, `progressNote` TEXT, `screeningSiteName` TEXT, PRIMARY KEY(`diagnosisUuid`), FOREIGN KEY(`patientId`) REFERENCES `PatientEntity`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION , FOREIGN KEY(`campaignAppointmentId`) REFERENCES `CampaignAppointmentEntity`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`diagnosisUuid` TEXT NOT NULL, `appointmentId` TEXT, `campaignAppointmentId` TEXT, `campaignId` TEXT, `fhirId` TEXT, `createdOn` INTEGER NOT NULL, `diagnosis` TEXT NOT NULL, `symptoms` TEXT NOT NULL, `practitionerName` TEXT NOT NULL, `patientId` TEXT NOT NULL, `progressNote` TEXT, PRIMARY KEY(`diagnosisUuid`), FOREIGN KEY(`patientId`) REFERENCES `PatientEntity`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION , FOREIGN KEY(`campaignAppointmentId`) REFERENCES `CampaignAppointmentEntity`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION )",
         "fields": [
           {
             "fieldPath": "diagnosisUuid",
@@ -1558,11 +1558,6 @@
           {
             "fieldPath": "progressNote",
             "columnName": "progressNote",
-            "affinity": "TEXT"
-          },
-          {
-            "fieldPath": "screeningSiteName",
-            "columnName": "screeningSiteName",
             "affinity": "TEXT"
           }
         ],
@@ -3622,7 +3617,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'dec32757c983dbe3532e6b61e09f5698')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '6ffb6ba5f7c2c0ed0299b5ea569eec97')"
     ]
   }
 }

@@ -38,6 +38,5 @@ data class DiagnosisEntity(
     val symptoms: List<DiagnosisItem>,
     val practitionerName: String,
     val patientId: String,
-    val progressNote: String?,
-    val screeningSiteName: String? = null
+    val progressNote: String?
 )
