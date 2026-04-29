@@ -1423,7 +1423,9 @@ internal fun TobaccoCessationResponse.toTobaccoCessationEntity(): TobaccoCessati
         uuid = uuid,
         fhirId = fhirId,
         patientId = patientId,
-        appointmentId = appointmentId,
+        campaignId = campaignId,
+        appointmentId = if (campaignId == null) appointmentId else null,
+        campaignAppointmentId = if (campaignId != null) appointmentId else null,
         appUpdatedDate = appUpdatedDate,
         practitionerId = practitionerId!!,
         practitionerName = practitionerName!!,
@@ -1439,10 +1441,18 @@ internal fun TobaccoCessationResponse.toTobaccoCessationEntity(): TobaccoCessati
 
 suspend fun TobaccoCessationResponse.toTobaccoCessationEntity(
     patientDao: PatientDao,
-    appointmentDao: AppointmentDao
+    appointmentDao: AppointmentDao,
+    campaignAppointmentDao: CampaignAppointmentDao
 ): TobaccoCessationEntity {
+    val localAppointmentId = if (campaignId != null) {
+        campaignAppointmentDao.getAppointmentIdByFhirId(appointmentId)
+    } else {
+        appointmentDao.getAppointmentIdByFhirId(appointmentId)
+    }
     return this.toTobaccoCessationEntity().copy(
-        appointmentId = appointmentDao.getAppointmentIdByFhirId(appointmentId),
+        appointmentId = if (campaignId == null) localAppointmentId else null,
+        campaignAppointmentId = if (campaignId != null) localAppointmentId else null,
+        campaignId = campaignId,
         patientId = patientDao.getPatientIdByFhirId(patientId)!!,
     )
 }
@@ -1452,7 +1462,7 @@ internal fun TobaccoCessationEntity.toTobaccoCessationResponse(): TobaccoCessati
         uuid = uuid,
         fhirId = fhirId,
         appUpdatedDate = appUpdatedDate,
-        appointmentId = appointmentId,
+        appointmentId = (campaignAppointmentId ?: appointmentId)!!,
         patientId = patientId,
         practitionerId = practitionerId,
         practitionerName = practitionerName,
@@ -1462,7 +1472,8 @@ internal fun TobaccoCessationEntity.toTobaccoCessationResponse(): TobaccoCessati
         assistQuit = assistQuit,
         dateOfPlan = dateOfPlan,
         pharmacotherapy = pharmacotherapy,
-        planStatus = planStatus
+        planStatus = planStatus,
+        campaignId = campaignId
     )
 }
 

@@ -125,6 +125,9 @@ interface PreferenceRepository {
     fun setLastSyncTobaccoCessation(long: Long)
     fun getLastSyncTobaccoCessation(): Long
 
+    fun setLastSyncCampaignTobaccoCessation(time: Long)
+    fun getLastSyncCampaignTobaccoCessation(): Long
+
     /** Last Intervention Master Sync Date */
     fun setLastInterventionMasterSyncDate(long: Long)
     fun getLastInterventionMasterSyncDate(): Long

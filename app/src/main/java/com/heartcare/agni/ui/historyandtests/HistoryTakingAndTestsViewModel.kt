@@ -293,10 +293,15 @@ class HistoryTakingAndTestsViewModel @Inject constructor(
                                 }
                     }
             tobaccoCessationList =
-                tobaccoCessationRepository.getTobaccoCessationRecordsByAppointmentIds(*appointmentIds.toTypedArray())
+                tobaccoCessationRepository.getTobaccoCessationRecordsByAppointmentIds(*allCombinedIds)
+                    .map { tobaccoCessation -> tobaccoCessation.copy(screeningSiteName = tobaccoCessation.campaignId?.let { siteMap[it]?.name }) }
                     .also {
-                        todayTobaccoCessation =
-                            it.firstOrNull { tobaccoCessation -> isToday(tobaccoCessation.appUpdatedDate) }
+                            todayTobaccoCessation =
+                                it.firstOrNull { tobaccoCessation -> isToday(tobaccoCessation.appUpdatedDate) }?:it.firstOrNull()?.campaignId?.let {campaignId->
+                                    if (isCampaignActive(campaignId =campaignId )){
+                                        tobaccoCessationRepository.getLatestTobaccoCessationForCampaign(patientId,campaignId)
+                                    }else null
+                                }
                     }
             isLoading = false
         }
