@@ -37,6 +37,7 @@ import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toMMM
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toTimeInMilli
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toddMMyy
 import com.heartcare.agni.utils.pdf.PDFHelper.generatePdf
+import com.heartcare.agni.utils.pdf.reports.ClinicalActionReportPDF.getClinicalActionReportHTML
 import com.heartcare.agni.utils.pdf.reports.HighLevelScreeningReportPDF.getHighLevelScreeningReportHTML
 import kotlinx.coroutines.launch
 import java.util.Date
@@ -133,7 +134,11 @@ fun DownloadReportBottomSheet(
                             )
                         }
                         clinicalAction -> {
-
+                            html = getClinicalActionReportHTML(
+                                getMetaData(reportsViewModel),
+                                reportsViewModel.currentState,
+                                getFooterData(reportsViewModel)
+                            )
                         }
                         riskRoster -> {
 
@@ -141,7 +146,8 @@ fun DownloadReportBottomSheet(
                     }
                     if (!html.isNullOrBlank()) {
                         coroutineScope.launch {
-                            generatePdf(context, html, "${getFooterData(reportsViewModel)}-${Date().toddMMyy()}")
+                            val fileName = "${getFooterData(reportsViewModel)}-$selectedOption-${Date().toddMMyy()}"
+                            generatePdf(context, html, fileName)
                         }
                     }
                     onDismissRequest()

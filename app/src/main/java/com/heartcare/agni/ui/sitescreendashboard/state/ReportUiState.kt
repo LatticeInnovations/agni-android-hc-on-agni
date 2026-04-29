@@ -2,6 +2,8 @@ package com.heartcare.agni.ui.sitescreendashboard.state
 
 import com.heartcare.agni.data.local.enums.DateRangeEnum
 import com.heartcare.agni.data.local.model.report.StatRowData
+import com.heartcare.agni.data.server.model.cvd.CVDResponse
+import com.heartcare.agni.data.server.model.patient.PatientResponse
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.plusMinusDays
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toEndOfDay
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toTodayStartDate
@@ -29,5 +31,6 @@ data class ReportUiState(
     val cholesterolTotal: Int = 0,
     val cholesterolStats: List<StatRowData> = emptyList(),
     val cvdRiskTotal: Int = 0,
-    val cvdRiskStats: List<StatRowData> = emptyList()
+    val cvdRiskStats: List<StatRowData> = emptyList(),
+    val patientAndCVD: List<Pair<PatientResponse, CVDResponse>> = emptyList()
 )
