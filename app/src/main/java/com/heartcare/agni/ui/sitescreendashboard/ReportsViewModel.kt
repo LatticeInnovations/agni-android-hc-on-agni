@@ -316,7 +316,11 @@ class ReportsViewModel @Inject constructor(
             cholesterolStats = getCholesterolStats(latestCholesterolCVDList, patientMap),
 
             cvdRiskTotal = latestCVDList.size,
-            cvdRiskStats = getCvdRiskStats(latestCVDList, patientMap)
+            cvdRiskStats = getCvdRiskStats(latestCVDList, patientMap),
+
+            patientAndCVD = latestCVDList.map {
+                Pair(patientMap[it.patientId]!!, it)
+            }
         )
 
         return newState
