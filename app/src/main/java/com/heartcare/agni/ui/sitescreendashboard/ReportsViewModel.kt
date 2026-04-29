@@ -319,7 +319,20 @@ class ReportsViewModel @Inject constructor(
             cvdRiskStats = getCvdRiskStats(latestCVDList, patientMap),
 
             patientAndCVD = latestCVDList.map {
-                Pair(patientMap[it.patientId]!!, it)
+                val patient = patientMap[it.patientId]!!
+                Pair(
+                    patient.copy(
+                        permanentAddress = patient.permanentAddress.copy(
+                            province = getLevelNames(patient.permanentAddress.province),
+                            island = getLevelNames(patient.permanentAddress.island),
+                            areaCouncil = getLevelNames(patient.permanentAddress.areaCouncil),
+                            village = patient.permanentAddress.village?.let { village ->
+                                getLevelNames(village)
+                            }
+                        )
+                    ),
+                    it
+                )
             }
         )
 
@@ -490,5 +503,9 @@ class ReportsViewModel @Inject constructor(
             1 -> getDataOfFacility(rangeType, startDate, endDate)
             2 -> getDataOfDivision(rangeType, startDate, endDate)
         }
+    }
+
+    private suspend fun getLevelNames(fhirId: String): String {
+        return levelRepository.getLevelNameFromFhirId(fhirId)
     }
 }

@@ -39,6 +39,7 @@ import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toddM
 import com.heartcare.agni.utils.pdf.PDFHelper.generatePdf
 import com.heartcare.agni.utils.pdf.reports.ClinicalActionReportPDF.getClinicalActionReportHTML
 import com.heartcare.agni.utils.pdf.reports.HighLevelScreeningReportPDF.getHighLevelScreeningReportHTML
+import com.heartcare.agni.utils.pdf.reports.RiskRoasterReportPDF.getRiskRoasterReportHTML
 import kotlinx.coroutines.launch
 import java.util.Date
 
@@ -141,7 +142,11 @@ fun DownloadReportBottomSheet(
                             )
                         }
                         riskRoster -> {
-
+                            html = getRiskRoasterReportHTML(
+                                getMetaData(reportsViewModel),
+                                reportsViewModel.currentState,
+                                getFooterData(reportsViewModel)
+                            )
                         }
                     }
                     if (!html.isNullOrBlank()) {
