@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 3,
-    "identityHash": "0b5cfc3217dcdc56f54fba9fe3c951b9",
+    "identityHash": "dec32757c983dbe3532e6b61e09f5698",
     "entities": [
       {
         "tableName": "PatientEntity",
@@ -1497,7 +1497,7 @@
       },
       {
         "tableName": "DiagnosisEntity",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`diagnosisUuid` TEXT NOT NULL, `appointmentId` TEXT NOT NULL, `fhirId` TEXT, `createdOn` INTEGER NOT NULL, `diagnosis` TEXT NOT NULL, `symptoms` TEXT NOT NULL, `practitionerName` TEXT NOT NULL, `patientId` TEXT NOT NULL, `progressNote` TEXT, PRIMARY KEY(`diagnosisUuid`), FOREIGN KEY(`patientId`) REFERENCES `PatientEntity`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`diagnosisUuid` TEXT NOT NULL, `appointmentId` TEXT, `campaignAppointmentId` TEXT, `campaignId` TEXT, `fhirId` TEXT, `createdOn` INTEGER NOT NULL, `diagnosis` TEXT NOT NULL, `symptoms` TEXT NOT NULL, `practitionerName` TEXT NOT NULL, `patientId` TEXT NOT NULL, `progressNote` TEXT, `screeningSiteName` TEXT, PRIMARY KEY(`diagnosisUuid`), FOREIGN KEY(`patientId`) REFERENCES `PatientEntity`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION , FOREIGN KEY(`campaignAppointmentId`) REFERENCES `CampaignAppointmentEntity`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION )",
         "fields": [
           {
             "fieldPath": "diagnosisUuid",
@@ -1508,8 +1508,17 @@
           {
             "fieldPath": "appointmentId",
             "columnName": "appointmentId",
-            "affinity": "TEXT",
-            "notNull": true
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "campaignAppointmentId",
+            "columnName": "campaignAppointmentId",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "campaignId",
+            "columnName": "campaignId",
+            "affinity": "TEXT"
           },
           {
             "fieldPath": "fhirId",
@@ -1550,6 +1559,11 @@
             "fieldPath": "progressNote",
             "columnName": "progressNote",
             "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "screeningSiteName",
+            "columnName": "screeningSiteName",
+            "affinity": "TEXT"
           }
         ],
         "primaryKey": {
@@ -1585,6 +1599,15 @@
             ],
             "orders": [],
             "createSql": "CREATE INDEX IF NOT EXISTS `index_DiagnosisEntity_patientId` ON `${TABLE_NAME}` (`patientId`)"
+          },
+          {
+            "name": "index_DiagnosisEntity_campaignAppointmentId",
+            "unique": false,
+            "columnNames": [
+              "campaignAppointmentId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_DiagnosisEntity_campaignAppointmentId` ON `${TABLE_NAME}` (`campaignAppointmentId`)"
           }
         ],
         "foreignKeys": [
@@ -1594,6 +1617,17 @@
             "onUpdate": "NO ACTION",
             "columns": [
               "patientId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          },
+          {
+            "table": "CampaignAppointmentEntity",
+            "onDelete": "NO ACTION",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "campaignAppointmentId"
             ],
             "referencedColumns": [
               "id"
@@ -3588,7 +3622,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '0b5cfc3217dcdc56f54fba9fe3c951b9')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'dec32757c983dbe3532e6b61e09f5698')"
     ]
   }
 }

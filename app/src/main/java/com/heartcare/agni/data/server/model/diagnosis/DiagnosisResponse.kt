@@ -16,5 +16,7 @@ data class DiagnosisResponse(
     @SerializedName("uuid")
     val diagnosisUuid: String,
     val symptoms: List<DiagnosisItem>,
-    val progressNote: String?
+    val progressNote: String?,
+    val campaignId: String?,
+    val screeningSiteName: String? = null
 )

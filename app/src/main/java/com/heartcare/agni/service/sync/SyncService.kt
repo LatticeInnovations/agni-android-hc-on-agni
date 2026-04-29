@@ -4,6 +4,7 @@ import android.content.Context
 import com.heartcare.agni.data.local.enums.GenericTypeEnum
 import com.heartcare.agni.data.local.repository.generic.GenericRepository
 import com.heartcare.agni.data.local.repository.preference.PreferenceRepository
+import com.heartcare.agni.data.server.constants.EndPoints
 import com.heartcare.agni.data.server.repository.sync.SyncRepository
 import com.heartcare.agni.utils.constants.ErrorConstants
 import com.heartcare.agni.utils.converters.server.responsemapper.ApiEmptyResponse
@@ -35,6 +36,7 @@ class SyncService(
     private lateinit var interventionMasterDownloadJob: Deferred<ResponseMapper<Any>?>
     private lateinit var examinationMasterDownloadJob: Deferred<ResponseMapper<Any>?>
     private lateinit var healthFacilityDownloadJob: Deferred<ResponseMapper<Any>?>
+
     /**
      *
      *
@@ -106,7 +108,7 @@ class SyncService(
             awaitAll(
                 async {
                     updateFhirIdsInAppointment(logout)
-                },async {
+                }, async {
                     updateFhirIdsInCampaignAppointment(logout)
                 },
                 appointmentPatchJob
@@ -188,7 +190,10 @@ class SyncService(
     /** Upload Appointment */
     private suspend fun uploadAppointment(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
         val response = checkAuthenticationStatus(
-            syncRepository.sendAppointmentPostData(),
+            syncRepository.sendAppointmentPostData(
+                genericTypeEnum = GenericTypeEnum.APPOINTMENT,
+                EndPoints.APPOINTMENT
+            ),
             logout
         )
         coroutineScope {
@@ -219,7 +224,11 @@ class SyncService(
 
     /** Upload Campaign Appointment */
     private suspend fun uploadCampaignAppointment(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
-         val response= checkAuthenticationStatus(syncRepository.sendCampaignAppointmentPostData(), logout)
+        val response = checkAuthenticationStatus(
+            syncRepository.sendAppointmentPostData(
+                GenericTypeEnum.CAMPAIGN_APPOINTMENT, EndPoints.CAMPAIGN_APPOINTMENT
+            ), logout
+        )
         coroutineScope {
             if (response is ApiEmptyResponse) {
                 // Run all update jobs concurrently
@@ -231,7 +240,8 @@ class SyncService(
                     async { updateFhirIdInCampaignFamilyHistory(logout) },
                     async { updateFhirIdInCampaignAllergy(logout) },
                     async { updateFhirIdInCampaignRiskFactors(logout) },
-                    async { updateFhirIdInCampaignTobaccoCessation(logout) }
+                    async { updateFhirIdInCampaignTobaccoCessation(logout) },
+                    async { updateFhirIdInCampaignDiagnosis(logout) }
                 )
 
                 // Wait for all of them to complete
@@ -253,86 +263,94 @@ class SyncService(
 
     /** Upload CVD */
     private suspend fun uploadCVD(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
-        return checkAuthenticationStatus(syncRepository.sendCVDPostData(), logout)
+        return checkAuthenticationStatus(syncRepository.sendCVDPostData(GenericTypeEnum.CVD,EndPoints.CVD), logout)
     }
+
     /** Upload Campaign CVD */
     private suspend fun uploadCampaignCVD(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
-        return checkAuthenticationStatus(syncRepository.sendCampaignCVDPostData(), logout)
+        return checkAuthenticationStatus(syncRepository.sendCVDPostData(GenericTypeEnum.CAMPAIGN_CVD,EndPoints.CAMPAIGN_CVD), logout)
     }
 
     /** Upload Diagnosis */
     private suspend fun uploadDiagnosis(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
-        return checkAuthenticationStatus(syncRepository.sendDiagnosisPostData(), logout)
+        return checkAuthenticationStatus(syncRepository.sendDiagnosisPostData(GenericTypeEnum.DIAGNOSIS,EndPoints.DIAGNOSIS), logout)
+    }
+    private suspend fun uploadCampaignDiagnosis(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
+        return checkAuthenticationStatus(syncRepository.sendDiagnosisPostData(GenericTypeEnum.CAMPAIGN_DIAGNOSIS,EndPoints.CAMPAIGN_DIAGNOSIS), logout)
+
     }
 
     /** Upload Vital */
     private suspend fun uploadVital(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
-        return checkAuthenticationStatus(syncRepository.sendVitalPostData(), logout)
+        return checkAuthenticationStatus(syncRepository.sendVitalPostData(GenericTypeEnum.VITAL,EndPoints.VITAL), logout)
     }
 
     /** Upload Campaign Vital */
     private suspend fun uploadCampaignVital(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
-        return checkAuthenticationStatus(syncRepository.sendCampaignVitalPostData(), logout)
+        return checkAuthenticationStatus(syncRepository.sendVitalPostData(GenericTypeEnum.CAMPAIGN_VITAL,EndPoints.CAMPAIGN_VITAL), logout)
     }
 
     /** Upload Prior Dx */
     private suspend fun uploadPriorDx(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
-        return checkAuthenticationStatus(syncRepository.sendPriorDxPostData(), logout)
+        return checkAuthenticationStatus(syncRepository.sendPriorDxPostData(GenericTypeEnum.PRIOR_DX,EndPoints.PRIOR_DX), logout)
     }
 
     /** Upload Campaign Prior Dx */
     private suspend fun uploadCampaignPriorDx(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
-        return checkAuthenticationStatus(syncRepository.sendCampaignPriorDxPostData(), logout)
-    }
-
-    /** Upload Campaign History Medication */
-    private suspend fun uploadCampaignHistoryMedication(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
-        return checkAuthenticationStatus(syncRepository.sendCampaignHistoryMedicationPostData(), logout)
-    }
-
-    /** Upload Campaign Family History */
-    private suspend fun uploadCampaignFamilyHistory(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
-        return checkAuthenticationStatus(syncRepository.sendCampaignFamilyHistoryPostData(), logout)
-    }
-
-    /** Upload Campaign Allergy */
-    private suspend fun uploadCampaignAllergy(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
-        return checkAuthenticationStatus(syncRepository.sendCampaignAllergyPostData(), logout)
-    }
-
-    /** Upload Campaign Risk Factors */
-    private suspend fun uploadCampaignRiskFactors(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
-        return checkAuthenticationStatus(syncRepository.sendCampaignRiskFactorPostData(), logout)
-    }
-
-    /** Upload Campaign Tobacco Cessation */
-    private suspend fun uploadCampaignTobaccoCessation(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
-        return checkAuthenticationStatus(syncRepository.sendCampaignTobaccoCessationPostData(), logout)
+        return checkAuthenticationStatus(syncRepository.sendPriorDxPostData(GenericTypeEnum.CAMPAIGN_PRIOR_DX,EndPoints.CAMPAIGN_PRIOR_DX), logout)
     }
 
     /** Upload History Medication */
     private suspend fun uploadHistoryMedication(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
-        return checkAuthenticationStatus(syncRepository.sendHistoryMedicationPostData(), logout)
+        return checkAuthenticationStatus(syncRepository.sendHistoryMedicationPostData(GenericTypeEnum.HISTORY_MEDICATION,EndPoints.HISTORY_MEDICATION), logout)
     }
 
+    /** Upload Campaign History Medication */
+    private suspend fun uploadCampaignHistoryMedication(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
+        return checkAuthenticationStatus(
+            syncRepository.sendHistoryMedicationPostData(GenericTypeEnum.CAMPAIGN_HISTORY_MEDICATION,EndPoints.CAMPAIGN_HISTORY_MEDICATION),
+            logout
+        )
+    }
     /** Upload Family History */
     private suspend fun uploadFamilyHistory(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
-        return checkAuthenticationStatus(syncRepository.sendFamilyHistoryPostData(), logout)
+        return checkAuthenticationStatus(syncRepository.sendFamilyHistoryPostData(GenericTypeEnum.FAMILY_HISTORY,EndPoints.FAMILY_HISTORY), logout)
+    }
+    /** Upload Campaign Family History */
+    private suspend fun uploadCampaignFamilyHistory(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
+        return checkAuthenticationStatus(syncRepository.sendFamilyHistoryPostData(GenericTypeEnum.CAMPAIGN_FAMILY_HISTORY,EndPoints.CAMPAIGN_FAMILY_HISTORY), logout)
     }
 
     /** Upload Allergy */
     private suspend fun uploadAllergy(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
-        return checkAuthenticationStatus(syncRepository.sendAllergyPostData(), logout)
+        return checkAuthenticationStatus(syncRepository.sendAllergyPostData(GenericTypeEnum.ALLERGY,EndPoints.ALLERGY), logout)
+    }
+    /** Upload Campaign Allergy */
+    private suspend fun uploadCampaignAllergy(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
+        return checkAuthenticationStatus(syncRepository.sendAllergyPostData(GenericTypeEnum.CAMPAIGN_ALLERGY,EndPoints.CAMPAIGN_ALLERGY), logout)
     }
 
     /** Upload Risk Factors */
     private suspend fun uploadRiskFactors(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
-        return checkAuthenticationStatus(syncRepository.sendRiskFactorPostData(), logout)
+        return checkAuthenticationStatus(syncRepository.sendRiskFactorPostData(GenericTypeEnum.RISK_FACTOR,EndPoints.RISK_FACTOR), logout)
+    }
+
+    /** Upload Campaign Risk Factors */
+    private suspend fun uploadCampaignRiskFactors(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
+        return checkAuthenticationStatus(syncRepository.sendRiskFactorPostData(GenericTypeEnum.CAMPAIGN_RISK_FACTORS,EndPoints.CAMPAIGN_RISK_FACTORS), logout)
     }
 
     /** Upload Tobacco Cessation */
     private suspend fun uploadTobaccoCessation(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
-        return checkAuthenticationStatus(syncRepository.sendTobaccoCessationPostData(), logout)
+        return checkAuthenticationStatus(syncRepository.sendTobaccoCessationPostData(GenericTypeEnum.TOBACCO_CESSATION,EndPoints.TOBACCO_CESSATION), logout)
+    }
+
+    /** Upload Campaign Tobacco Cessation */
+    private suspend fun uploadCampaignTobaccoCessation(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
+        return checkAuthenticationStatus(
+            syncRepository.sendTobaccoCessationPostData(GenericTypeEnum.CAMPAIGN_TOBACCO_CESSATION,EndPoints.CAMPAIGN_TOBACCO_CESSATION),
+            logout
+        )
     }
 
     /** Upload Intervention */
@@ -464,7 +482,8 @@ class SyncService(
     /** Download Campaign Appointment */
     private suspend fun downloadCampaignAppointment(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? =
         coroutineScope {
-            val response = checkAuthenticationStatus(syncRepository.getAndInsertCampaignAppointment(0), logout)
+            val response =
+                checkAuthenticationStatus(syncRepository.getAndInsertCampaignAppointment(0), logout)
 
             if (response is ApiEmptyResponse || response is ApiEndResponse) {
                 val jobs = listOf(
@@ -476,7 +495,8 @@ class SyncService(
                     async { downloadCampaignFamilyHistory(logout) },
                     async { downloadCampaignAllergy(logout) },
                     async { downloadCampaignRiskFactors(logout) },
-                    async { downloadCampaignTobaccoCessation(logout) }
+                    async { downloadCampaignTobaccoCessation(logout) },
+                    async { downloadCampaignDiagnosis(logout) }
                 )
                 jobs.awaitAll()
             }
@@ -563,10 +583,18 @@ class SyncService(
         )
     }
 
+    private suspend fun downloadCampaignDiagnosis(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
+        return checkAuthenticationStatus(
+            syncRepository.getAndInsertCampaignDiagnosisData(0),
+            logout
+        )
+    }
+
     /** Download Vitals*/
     private suspend fun downloadVitals(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
         return checkAuthenticationStatus(syncRepository.getAndInsertListVitalData(0), logout)
     }
+
     private suspend fun downloadCampaignVitals(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
         return checkAuthenticationStatus(syncRepository.getAndInsertCampaignVitalData(0), logout)
     }
@@ -578,12 +606,18 @@ class SyncService(
 
     /** Download Campaign History Medication */
     private suspend fun downloadCampaignHistoryMedication(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
-        return checkAuthenticationStatus(syncRepository.getAndInsertCampaignHistoryMedicationData(0), logout)
+        return checkAuthenticationStatus(
+            syncRepository.getAndInsertCampaignHistoryMedicationData(0),
+            logout
+        )
     }
 
     /** Download Campaign Family History */
     private suspend fun downloadCampaignFamilyHistory(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
-        return checkAuthenticationStatus(syncRepository.getAndInsertCampaignFamilyHistoryData(0), logout)
+        return checkAuthenticationStatus(
+            syncRepository.getAndInsertCampaignFamilyHistoryData(0),
+            logout
+        )
     }
 
     /** Download Campaign Allergy */
@@ -593,12 +627,18 @@ class SyncService(
 
     /** Download Campaign Risk Factors */
     private suspend fun downloadCampaignRiskFactors(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
-        return checkAuthenticationStatus(syncRepository.getAndInsertCampaignRiskFactorData(0), logout)
+        return checkAuthenticationStatus(
+            syncRepository.getAndInsertCampaignRiskFactorData(0),
+            logout
+        )
     }
 
     /** Download Campaign Tobacco Cessation */
     private suspend fun downloadCampaignTobaccoCessation(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
-        return checkAuthenticationStatus(syncRepository.getAndInsertCampaignTobaccoCessationData(0), logout)
+        return checkAuthenticationStatus(
+            syncRepository.getAndInsertCampaignTobaccoCessationData(0),
+            logout
+        )
     }
 
     /** Download Campaign Schedule */
@@ -699,6 +739,7 @@ class SyncService(
         /** Upload Appointment */
         return uploadAppointment(logout)
     }
+
     private suspend fun updateFhirIdsInCampaignAppointment(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
         genericRepository.updateAppointmentFhirIds(GenericTypeEnum.CAMPAIGN_APPOINTMENT)
         /** Upload Campaign Appointment */
@@ -725,6 +766,7 @@ class SyncService(
         val cvdResponse = uploadCVD(logout)
         return cvdResponse
     }
+
     /** Update Appointment FHIR ID in CVD */
     private suspend fun updateFhirIdInCampaignCVD(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
         genericRepository.updateCVDFhirIds(GenericTypeEnum.CAMPAIGN_CVD)
@@ -738,9 +780,10 @@ class SyncService(
         val vitalResponse = uploadVital(logout)
         return vitalResponse
     }
+
     private suspend fun updateFhirIdInCampaignVital(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
         genericRepository.updateVitalFhirId(GenericTypeEnum.CAMPAIGN_VITAL)
-       val vitalResponse= uploadCampaignVital(logout)
+        val vitalResponse = uploadCampaignVital(logout)
         return vitalResponse
     }
 
@@ -780,9 +823,16 @@ class SyncService(
         return uploadCampaignTobaccoCessation(logout)
     }
 
+    /** Update Appointment FHIR ID in Campaign Diagnosis */
+    private suspend fun updateFhirIdInCampaignDiagnosis(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
+        genericRepository.updateDiagnosisFhirId(GenericTypeEnum.CAMPAIGN_DIAGNOSIS)
+        return uploadCampaignDiagnosis(logout)
+    }
+
+
     /** Update Appointment FHIR ID in Diagnosis */
     private suspend fun updateFhirIdInDiagnosis(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
-        genericRepository.updateDiagnosisFhirId()
+        genericRepository.updateDiagnosisFhirId(GenericTypeEnum.DIAGNOSIS)
         return uploadDiagnosis(logout)
     }
 

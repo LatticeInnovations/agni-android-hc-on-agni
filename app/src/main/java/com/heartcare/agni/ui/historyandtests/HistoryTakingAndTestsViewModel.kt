@@ -32,7 +32,7 @@ import com.heartcare.agni.di.dispatcher.IoDispatcher
 import com.heartcare.agni.utils.common.Queries
 import com.heartcare.agni.utils.common.Queries.getInProgressCompletedAppointmentIds
 import com.heartcare.agni.utils.common.Queries.loadAppointmentInfo
-import com.heartcare.agni.utils.common.Queries.loadHistoryCampaignAppointmentInfo
+import com.heartcare.agni.utils.common.Queries.getCampaignAppointmentInfo
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.isToday
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
@@ -116,7 +116,7 @@ class HistoryTakingAndTestsViewModel @Inject constructor(
         viewModelScope.launch(ioDispatcher) {
             val campaignId = selectedCampaignId
             val info = if (campaignId != null) {
-                loadHistoryCampaignAppointmentInfo(
+                getCampaignAppointmentInfo(
                     patientId = patient!!.id,
                     campaignId = campaignId,
                     appointmentRepository = appointmentRepository

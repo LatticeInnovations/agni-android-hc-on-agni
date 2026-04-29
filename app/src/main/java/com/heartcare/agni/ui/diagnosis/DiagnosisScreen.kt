@@ -31,7 +31,6 @@ import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -55,9 +54,9 @@ import com.heartcare.agni.ui.common.RecordTypeSelectionContent
 import com.heartcare.agni.ui.common.ScreeningSiteListContent
 import com.heartcare.agni.ui.patientlandingscreen.AllSlotsBookedDialog
 import com.heartcare.agni.ui.common.AppointmentCompletedDialog
+import com.heartcare.agni.utils.constants.NavControllerConstants.CAMPAIGN_ID
 import com.heartcare.agni.utils.constants.NavControllerConstants.DIAGNOSIS_SAVED
 import com.heartcare.agni.utils.constants.NavControllerConstants.PATIENT
-import com.heartcare.agni.utils.constants.ScreenSiteConstants.SITE_LIST
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -71,16 +70,15 @@ fun DiagnosisScreen(
     val snackBarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current
 
-    var currentStep by remember { mutableIntStateOf(0) }
     var selectedSite by remember { mutableStateOf<String?>(null) }
     var selectedType by remember { mutableStateOf<RecordType?>(null) }
 
     BackHandler {
-        if (currentStep > 0) {
-            if (currentStep == 2) {
-                currentStep = 1
-            } else if (currentStep == 1) {
-                currentStep = 0
+        if (viewModel.currentStep > 0) {
+            if (viewModel.currentStep == 2) {
+                viewModel.currentStep = 1
+            } else if (viewModel.currentStep == 1) {
+                viewModel.currentStep = 0
             }
         } else {
             navController.navigateUp()
@@ -117,7 +115,7 @@ fun DiagnosisScreen(
                 modifier = Modifier
                     .padding(paddingValues)
             ) {
-                when (currentStep) {
+                when (viewModel.currentStep) {
                     0 -> DiagnosisScreenContent(viewModel)
                     1 -> RecordTypeSelectionContent(
                         modifier = Modifier.fillMaxSize(),
@@ -125,35 +123,59 @@ fun DiagnosisScreen(
                         onTypeSelected = { selectedType = it },
                         onContinueClick = {
                             if (selectedType == RecordType.FACILITY) {
-                                handleAddDiagnosisLogic(viewModel, navController, coroutineScope, snackBarHostState, context)
+                                viewModel.selectedCampaignId = null
+                                handleAddDiagnosisLogic(
+                                    viewModel,
+                                    navController,
+                                    coroutineScope,
+                                    snackBarHostState,
+                                    context
+                                )
                             } else if (selectedType == RecordType.SCREENING_SITE) {
-                                currentStep = 2
+                                viewModel.currentStep = 2
                             }
                         }
                     )
+
                     2 -> ScreeningSiteListContent(
                         modifier = Modifier.fillMaxSize(),
-                        sites = SITE_LIST,
+                        sites = viewModel.screeningSites.map { it.name },
                         selectedSite = selectedSite,
-                        onSiteSelected = { selectedSite = it },
-                        onBackClick = { currentStep = 1 },
+                        onSiteSelected = { siteName ->
+                            selectedSite = siteName
+                            viewModel.selectedCampaignId =
+                                viewModel.screeningSites.find { it.name == siteName }?.id
+                        },
+                        onBackClick = { viewModel.currentStep = 1 },
                         onContinueClick = {
-                            handleAddDiagnosisLogic(viewModel, navController, coroutineScope, snackBarHostState, context)
+                            handleAddDiagnosisLogic(
+                                viewModel,
+                                navController,
+                                coroutineScope,
+                                snackBarHostState,
+                                context
+                            )
                         }
                     )
                 }
             }
         },
         bottomBar = {
-            if (currentStep == 0) {
+            if (viewModel.currentStep == 0) {
                 DiagnosisBottomBar(
                     viewModel = viewModel,
                     onClickAdd = {
                         if (viewModel.patient!!.patientDeceasedReason.isNullOrBlank()) {
-                            if (viewModel.todayDiagnosis != null && !viewModel.existsInOtherHospital) {
-                                handleAddDiagnosisLogic(viewModel, navController, coroutineScope, snackBarHostState, context)
+                            if (viewModel.isScreeningSiteEnabled) {
+                                viewModel.currentStep = 1
                             } else {
-                                currentStep = 1
+                                handleAddDiagnosisLogic(
+                                    viewModel,
+                                    navController,
+                                    coroutineScope,
+                                    snackBarHostState,
+                                    context
+                                )
                             }
                         } else {
                             coroutineScope.launch {
@@ -189,6 +211,7 @@ private fun HandleLaunchedEffect(
             viewModel.isLaunched = true
         }
         navController.currentBackStackEntry?.savedStateHandle?.let { handle ->
+            viewModel.currentStep = 0
             if (handle.remove<Boolean>(DIAGNOSIS_SAVED) == true) {
                 viewModel.getPreviousDiagnosis(viewModel.patient!!.id)
                 snackBarHostState.showSnackbar(
@@ -238,6 +261,7 @@ private fun DiagnosisScreenContent(
                     ExpandableCard(
                         createdOn = diagnosis.createdOn,
                         practitionerName = diagnosis.practitionerName,
+                        screenSiteName = diagnosis.screeningSiteName,
                         listOfItems = diagnosis.diagnosis.map { "${it.code}, ${it.display}" },
                         isBulleted = true,
                         listTitle = stringResource(R.string.diagnosis_colon)
@@ -272,6 +296,10 @@ private fun handleAddDiagnosisLogic(
                             PATIENT,
                             viewModel.patient
                         )
+                        navController.currentBackStackEntry?.savedStateHandle?.set(
+                            CAMPAIGN_ID,
+                            viewModel.selectedCampaignId
+                        )
                         navController.navigate(Screen.AddDiagnosisScreen.route)
                     }
                 }
@@ -281,7 +309,27 @@ private fun handleAddDiagnosisLogic(
                 }
 
                 else -> {
-                    viewModel.showAddToQueueDialog = true
+                    if (viewModel.selectedCampaignId != null) {
+                        viewModel.addPatientToCampaignQueue(
+                            viewModel.patient!!,
+                            viewModel.selectedCampaignId!!,
+                            addedToQueue = {
+                                coroutineScope.launch {
+                                    navController.currentBackStackEntry?.savedStateHandle?.set(
+                                        PATIENT,
+                                        viewModel.patient
+                                    )
+                                    navController.currentBackStackEntry?.savedStateHandle?.set(
+                                        CAMPAIGN_ID,
+                                        viewModel.selectedCampaignId
+                                    )
+                                    navController.navigate(Screen.AddDiagnosisScreen.route)
+                                }
+                            }
+                        )
+                    } else {
+                        viewModel.showAddToQueueDialog = true
+                    }
                 }
             }
         }
@@ -310,7 +358,9 @@ private fun DiagnosisBottomBar(
             )
             Spacer(Modifier.width(8.dp))
             Text(
-                text = if (viewModel.todayDiagnosis == null || viewModel.existsInOtherHospital) stringResource(R.string.add_diagnosis)
+                text = if (viewModel.todayDiagnosis == null || viewModel.existsInOtherHospital) stringResource(
+                    R.string.add_diagnosis
+                )
                 else stringResource(R.string.update_diagnosis)
             )
         }
