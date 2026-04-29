@@ -685,7 +685,7 @@ open class SyncRepositoryDatabaseTransactions(
 
     protected suspend fun insertRiskFactors(body: List<RiskFactorResponse>) {
         riskFactorDao.insertRiskFactorRecord(
-            *body.map { it.toRiskFactorEntity(patientDao, appointmentDao) }.toTypedArray()
+            *body.map { it.toRiskFactorEntity(patientDao, appointmentDao, campaignAppointmentDao) }.toTypedArray()
         )
     }
 

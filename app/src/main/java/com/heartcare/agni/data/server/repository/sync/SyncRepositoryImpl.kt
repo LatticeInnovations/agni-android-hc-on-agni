@@ -2007,6 +2007,57 @@ class SyncRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun sendCampaignRiskFactorPostData(): ResponseMapper<List<CreateResponse>> {
+        return  try {
+            genericDao.getSameTypeGenericEntityPayload(GenericTypeEnum.CAMPAIGN_RISK_FACTORS,
+                syncType = SyncType.POST
+            ).let { listOfGenericEntity->
+                if (listOfGenericEntity.isEmpty()) ApiEmptyResponse()
+                else {
+
+                        ApiResponseConverter.convert(
+                            historyAndTestsApiService.postCampaignRiskFactor(
+                                listOfGenericEntity.map {
+                                    it.payload.fromJson<LinkedTreeMap<*, *>>()
+                                        .mapToObject(RiskFactorResponse::class.java)!!.copy(campaignId = null)
+                                }
+                            )
+
+                        ).apply {
+                            if (this is ApiEndResponse) {
+                                insertRiskFactorsFhirIds(body, listOfGenericEntity)
+                                    .apply {
+                                        if (this > 0) return sendCampaignRiskFactorPostData()
+                                    }
+
+                            }
+                        }
+
+                }
+            }
+        }catch (e: Exception) {
+            Timber.e(e, e.localizedMessage)
+            crashlyticsLogger.logException(
+                e,
+                "sendCampaignRiskFactorPostData function failed.",
+                mapOf(
+                    Pair(
+                        USER_ID,
+                        preferenceRepository.getUserDetails()?.userId ?: ERROR_FETCHING_USER_DETAILS
+                    )
+                )
+            )
+            ApiErrorResponse(
+                statusCode = 0,
+                errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
+            )
+        }
+
+
+
+
+    }
+
     override suspend fun sendTobaccoCessationPostData(): ResponseMapper<List<CreateResponse>> {
         return try {
             genericDao.getSameTypeGenericEntityPayload(
@@ -2935,6 +2986,58 @@ class SyncRepositoryImpl @Inject constructor(
             )
         }
     }
+    override suspend fun getAndInsertCampaignRiskFactorData(offset: Int): ResponseMapper<List<RiskFactorResponse>> {
+        val map = mutableMapOf<String, String>()
+        map[COUNT] = COUNT_VALUE.toString()
+        map[OFFSET] = offset.toString()
+        map[SORT] = "-$ID"
+        if (preferenceRepository.getLastSyncCampaignRiskFactors() != 0L) map[LAST_UPDATED] =
+            String.format(
+                GREATER_THAN_BUILDER,
+                preferenceRepository.getLastSyncCampaignRiskFactors().toTimeStampDate()
+            )
+
+        return try {
+            ApiResponseConverter.convert(
+                historyAndTestsApiService.getCampaignRiskFactor(
+                    map
+                ), true
+            ).run {
+                when (this) {
+                    is ApiContinueResponse -> {
+                        insertRiskFactors(body)
+                        //Call for next batch data
+                        getAndInsertCampaignRiskFactorData(offset + COUNT_VALUE)
+                    }
+
+                    is ApiEndResponse -> {
+                        preferenceRepository.setLastSyncCampaignRiskFactors(Date().time)
+                        insertRiskFactors(body)
+                        this
+                    }
+
+                    else -> this
+                }
+            }
+        } catch (e: Exception) {
+            Timber.e(e, e.localizedMessage)
+            crashlyticsLogger.logException(
+                e,
+                "getAndInsertCampaignRiskFactorData function failed.",
+                mapOf(
+                    Pair(
+                        USER_ID,
+                        preferenceRepository.getUserDetails()?.userId ?: ERROR_FETCHING_USER_DETAILS
+                    )
+                )
+            )
+            ApiErrorResponse(
+                statusCode = 0,
+                errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
+            )
+        }
+    }
+
     override suspend fun getAndInsertRiskFactorData(offset: Int): ResponseMapper<List<RiskFactorResponse>> {
         val map = mutableMapOf<String, String>()
         map[COUNT] = COUNT_VALUE.toString()

@@ -22,5 +22,7 @@ data class RiskFactorResponse(
     val salt: SaltResponse?,
     val fatAndOil: FatAndOilResponse?,
     val sugar: SugarResponse?,
-    val mealsOutsideHome: MealsOutsideHomeResponse?
+    val mealsOutsideHome: MealsOutsideHomeResponse?,
+    val campaignId: String? = null,
+    val screeningSiteName: String? = null
 ) : Parcelable

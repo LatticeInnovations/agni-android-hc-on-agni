@@ -12,9 +12,9 @@ import com.heartcare.agni.data.local.repository.generic.GenericRepository
 import com.heartcare.agni.data.local.repository.patient.lastupdated.PatientLastUpdatedRepository
 import com.heartcare.agni.data.local.repository.preference.PreferenceRepository
 import com.heartcare.agni.data.local.repository.schedule.ScheduleRepository
+import com.heartcare.agni.data.local.repository.screeningsite.ScreeningSiteRepository
 import com.heartcare.agni.data.local.repository.vital.VitalRepository
-import com.heartcare.agni.data.local.roomdb.dao.ScreeningSiteDao
-import com.heartcare.agni.data.local.roomdb.entities.campaign.ScreeningSiteMasterEntity
+import com.heartcare.agni.data.server.model.campaign.ScreeningSiteMasterResponse
 import com.heartcare.agni.data.server.model.cvd.CVDResponse
 import com.heartcare.agni.data.server.model.patient.PatientResponse
 import com.heartcare.agni.data.server.model.vitals.VitalResponse
@@ -32,7 +32,6 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import timber.log.Timber
 import java.util.Date
 import javax.inject.Inject
 
@@ -45,7 +44,7 @@ class VitalsViewModel @Inject constructor(
     private val scheduleRepository: ScheduleRepository,
     private val patientLastUpdatedRepository: PatientLastUpdatedRepository,
     private val cvdAssessmentRepository: CVDAssessmentRepository,
-    private val screeningSiteDao: ScreeningSiteDao,
+    private val screeningSiteRepository: ScreeningSiteRepository,
     @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) : ViewModel() {
     val user = preferenceRepository.getUserDetails()!!
@@ -80,16 +79,15 @@ class VitalsViewModel @Inject constructor(
     val kg = "kg"
 
     var selectedCampaignId by mutableStateOf<String?>(null)
-    var screeningSites by mutableStateOf(listOf<ScreeningSiteMasterEntity>())
+    var screeningSites by mutableStateOf(listOf<ScreeningSiteMasterResponse>())
     var isScreeningSiteEnabled by mutableStateOf(false)
     var existingCampaignVital by mutableStateOf<VitalResponse?>(null)
     var hasExistingCampaignVitalRecord by mutableStateOf(false)
 
     internal fun loadActiveScreeningSites() {
         viewModelScope.launch(ioDispatcher) {
-            val allSites = Queries.getScreeningSites(screeningSiteDao)
+            val allSites = screeningSiteRepository.getActiveScreeningSites()
             val userFhirId = user.fhirId
-            Timber.d("USERID: $userFhirId")
             screeningSites = allSites.filter { site ->
                 site.staff.any { it.id == userFhirId }
             }
@@ -110,7 +108,7 @@ class VitalsViewModel @Inject constructor(
                     campaignId = campaignId,
                     appointmentRepository = appointmentRepository,
                     vitalRepository = vitalRepository,
-                    screeningSiteDao = screeningSiteDao
+                    screeningSiteRepository =screeningSiteRepository
                 )
                 appointment = info.appointment
                 existingCampaignVital = info.existingVital
@@ -145,7 +143,7 @@ class VitalsViewModel @Inject constructor(
             val campaignAppointmentIds = getScreenSiteAppointmentIds(patient!!.id, appointmentRepository)
 
             // Load all screening sites once for mapping names
-            val allSites = screeningSiteDao.getScreeningSiteMaster()
+            val allSites = screeningSiteRepository.getScreeningSites()
             val siteMap = allSites.associateBy { it.id }
 
             vitals.value = vitalRepository.getLastVitalByAppointmentId(*(campaignAppointmentIds+appointmentIds).toTypedArray()).map { vital ->

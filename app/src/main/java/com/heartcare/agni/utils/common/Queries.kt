@@ -16,9 +16,8 @@ import com.heartcare.agni.data.local.repository.generic.GenericRepository
 import com.heartcare.agni.data.local.repository.patient.lastupdated.PatientLastUpdatedRepository
 import com.heartcare.agni.data.local.repository.preference.PreferenceRepository
 import com.heartcare.agni.data.local.repository.schedule.ScheduleRepository
+import com.heartcare.agni.data.local.repository.screeningsite.ScreeningSiteRepository
 import com.heartcare.agni.data.local.repository.vital.VitalRepository
-import com.heartcare.agni.data.local.roomdb.dao.ScreeningSiteDao
-import com.heartcare.agni.data.local.roomdb.entities.campaign.ScreeningSiteMasterEntity
 import com.heartcare.agni.data.local.roomdb.entities.patient.PatientAndIdentifierAndAppointmentEntity
 import com.heartcare.agni.data.local.roomdb.entities.patient.PatientAndIdentifierEntity
 import com.heartcare.agni.data.server.model.patient.PatientLastUpdatedResponse
@@ -488,12 +487,6 @@ object Queries {
         }
     }
 
-    /** Screening Site Master Data — returns only active sites within today's date range */
-    internal suspend fun getScreeningSites(
-        screeningSiteDao: ScreeningSiteDao
-    ): List<ScreeningSiteMasterEntity> {
-        return screeningSiteDao.getActiveScreeningSites()
-    }
 
     /** Facility specific logic path (Day-wise) */
     internal suspend fun addPatientToFacilityQueue(
@@ -642,12 +635,12 @@ object Queries {
         campaignId: String,
         appointmentRepository: AppointmentRepository,
         cvdAssessmentRepository: CVDAssessmentRepository,
-        screeningSiteDao: ScreeningSiteDao
+        screeningSiteRepository: ScreeningSiteRepository
     ): AppointmentInfo {
         val appointmentResponse = appointmentRepository.loadAppointmentForCampaign(patientId, campaignId)
         
         val latestCvd = cvdAssessmentRepository.getLatestCVDForCampaign(patientId, campaignId)
-        val screeningSite = screeningSiteDao.getScreeningSiteById(campaignId)
+        val screeningSite = screeningSiteRepository.getScreeningSiteById(campaignId)
         
         var isDuplicateCVDForCampaign = false
         if (latestCvd != null && screeningSite != null) {
@@ -698,11 +691,11 @@ object Queries {
         campaignId: String,
         appointmentRepository: AppointmentRepository,
         vitalRepository: VitalRepository,
-        screeningSiteDao: ScreeningSiteDao
+       screeningSiteRepository: ScreeningSiteRepository
     ): CampaignVitalInfo {
         val appointment = appointmentRepository.loadAppointmentForCampaign(patientId, campaignId)
         val existingVital = vitalRepository.getLatestVitalForCampaign(patientId, campaignId)
-        val screeningSite = screeningSiteDao.getScreeningSiteById(campaignId)
+        val screeningSite = screeningSiteRepository.getScreeningSiteById(campaignId)
 
         val isWithinCampaignWindow = if (screeningSite != null) {
             val now = Date().time

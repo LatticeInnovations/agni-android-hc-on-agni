@@ -168,6 +168,7 @@ private fun ItemRow(item: String, isBulleted: Boolean) {
 @Composable
 fun CardWithRightArrow(
     date: Date,
+    screenSiteName: String?=null,
     practitionerName: String? = null,
     onClick: () -> Unit
 ) {
@@ -194,6 +195,14 @@ fun CardWithRightArrow(
                     Text(
                         text = it,
                         style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                screenSiteName?.let {
+                    Text(
+                        modifier = Modifier.padding(top = 4.dp),
+                        text = it,
+                        style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }

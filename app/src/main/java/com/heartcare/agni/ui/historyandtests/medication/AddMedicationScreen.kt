@@ -68,10 +68,9 @@ fun AddMedicationScreen(
     LaunchedEffect(viewModel.isLaunched) {
         if (!viewModel.isLaunched) {
             val handle = navController.previousBackStackEntry?.savedStateHandle
-
-                handle?.get<PatientResponse>(PATIENT)?.let {
+            viewModel.selectedCampaignId = handle?.get<String>(NavControllerConstants.CAMPAIGN_ID)
+            handle?.get<PatientResponse>(PATIENT)?.let {
                     viewModel.patient = it
-                    viewModel.selectedCampaignId = handle.get<String>(NavControllerConstants.CAMPAIGN_ID)
                     viewModel.getLastHistoryMedication(it.id)
                 }
             viewModel.isLaunched = true

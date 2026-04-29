@@ -389,7 +389,8 @@ open class GenericRepositoryDatabaseTransactions(
     protected suspend fun insertRiskFactorGenericEntity(
         riskFactorGenericEntity: GenericEntity?,
         riskFactorResponse: RiskFactorResponse,
-        uuid: String
+        uuid: String,
+        type: GenericTypeEnum
     ): Long {
         return if (riskFactorGenericEntity != null) {
             genericDao.insertGenericEntity(
@@ -401,7 +402,7 @@ open class GenericRepositoryDatabaseTransactions(
                     id = uuid,
                     patientId = riskFactorResponse.uuid,
                     payload = riskFactorResponse.toJson(),
-                    type = GenericTypeEnum.RISK_FACTOR,
+                    type = type,
                     syncType = SyncType.POST
                 )
             )[0]

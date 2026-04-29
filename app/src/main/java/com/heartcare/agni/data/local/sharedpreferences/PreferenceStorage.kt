@@ -45,6 +45,7 @@ interface PreferenceStorage {
     var lastSyncAllergyRecord: Long
     var lastSyncCampaignAllergyRecord: Long
     var lastSyncRiskFactorsRecord: Long
+    var lastSyncCampaignRiskFactorRecord: Long
     var lastSyncTobaccoCessationRecord: Long
     var lastSyncInterventionMaster: Long
     var lastSyncIntervention: Long

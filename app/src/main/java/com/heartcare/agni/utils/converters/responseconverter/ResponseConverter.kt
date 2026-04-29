@@ -1245,7 +1245,9 @@ internal fun RiskFactorResponse.toRiskFactorEntity(): RiskFactorEntity {
         uuid = uuid,
         fhirId = fhirId,
         patientId = patientId,
-        appointmentId = appointmentId,
+        campaignId = campaignId,
+        appointmentId = if (campaignId == null) appointmentId else null,
+        campaignAppointmentId = if (campaignId != null) appointmentId else null,
         appUpdatedDate = appUpdatedDate,
         practitionerId = practitionerId!!,
         practitionerName = practitionerName!!,
@@ -1318,10 +1320,18 @@ internal fun RiskFactorResponse.toRiskFactorEntity(): RiskFactorEntity {
 
 suspend fun RiskFactorResponse.toRiskFactorEntity(
     patientDao: PatientDao,
-    appointmentDao: AppointmentDao
+    appointmentDao: AppointmentDao,
+    campaignAppointmentDao: CampaignAppointmentDao
 ): RiskFactorEntity {
+    val localAppointmentId = if (campaignId != null) {
+        campaignAppointmentDao.getAppointmentIdByFhirId(appointmentId)
+    } else {
+        appointmentDao.getAppointmentIdByFhirId(appointmentId)
+    }
     return this.toRiskFactorEntity().copy(
-        appointmentId = appointmentDao.getAppointmentIdByFhirId(appointmentId),
+        appointmentId = if (campaignId == null) localAppointmentId else null,
+        campaignAppointmentId = if (campaignId != null) localAppointmentId else null,
+        campaignId = campaignId,
         patientId = patientDao.getPatientIdByFhirId(patientId)!!,
     )
 }
@@ -1331,7 +1341,7 @@ internal fun RiskFactorEntity.toRiskFactorResponse(): RiskFactorResponse {
         uuid = uuid,
         fhirId = fhirId,
         appUpdatedDate = appUpdatedDate,
-        appointmentId = appointmentId,
+        appointmentId = (campaignAppointmentId ?: appointmentId)!!,
         patientId = patientId,
         practitionerId = practitionerId,
         practitionerName = practitionerName,
@@ -1403,7 +1413,8 @@ internal fun RiskFactorEntity.toRiskFactorResponse(): RiskFactorResponse {
                 eatsOut = eatsOut,
                 mealsPerWeek = mealsPerWeek
             )
-        }
+        },
+        campaignId = campaignId
     )
 }
 

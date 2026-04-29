@@ -43,6 +43,7 @@ import com.heartcare.agni.ui.historyandtests.risk.add.questions.SugarQuestions
 import com.heartcare.agni.ui.historyandtests.risk.add.questions.TobaccoQuestions
 import com.heartcare.agni.ui.theme.Black
 import com.heartcare.agni.ui.theme.White
+import com.heartcare.agni.utils.constants.NavControllerConstants
 import com.heartcare.agni.utils.constants.NavControllerConstants.PATIENT
 import com.heartcare.agni.utils.constants.NavControllerConstants.RISK_FACTORS_SAVED
 import kotlinx.coroutines.launch
@@ -57,8 +58,9 @@ fun AddRiskFactorScreen(
 
     LaunchedEffect(viewModel.isLaunched) {
         if (!viewModel.isLaunched) {
-            navController.previousBackStackEntry?.savedStateHandle
-                ?.get<PatientResponse>(PATIENT)?.let {
+           val handle =  navController.previousBackStackEntry?.savedStateHandle
+            viewModel.selectedCampaignId = handle?.get<String>(NavControllerConstants.CAMPAIGN_ID)
+            handle?.get<PatientResponse>(PATIENT)?.let {
                     viewModel.patient = it
                     viewModel.getTodayRiskFactor(it.id)
                 }

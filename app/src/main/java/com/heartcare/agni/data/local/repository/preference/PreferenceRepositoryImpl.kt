@@ -186,6 +186,12 @@ class PreferenceRepositoryImpl @Inject constructor(private val preferenceStorage
 
     override fun getLastSyncRiskFactors(): Long = preferenceStorage.lastSyncRiskFactorsRecord
 
+    override fun setLastSyncCampaignRiskFactors(long: Long) {
+        preferenceStorage.lastSyncCampaignRiskFactorRecord = long
+    }
+
+    override fun getLastSyncCampaignRiskFactors(): Long = preferenceStorage.lastSyncCampaignRiskFactorRecord
+
     override fun setLastSyncTobaccoCessation(long: Long) {
         preferenceStorage.lastSyncTobaccoCessationRecord = long
     }
