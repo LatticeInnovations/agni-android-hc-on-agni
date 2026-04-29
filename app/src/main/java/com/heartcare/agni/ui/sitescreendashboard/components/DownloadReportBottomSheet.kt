@@ -146,7 +146,8 @@ fun DownloadReportBottomSheet(
                     }
                     if (!html.isNullOrBlank()) {
                         coroutineScope.launch {
-                            generatePdf(context, html, "${getFooterData(reportsViewModel)}-${Date().toddMMyy()}")
+                            val fileName = "${getFooterData(reportsViewModel)}-$selectedOption-${Date().toddMMyy()}"
+                            generatePdf(context, html, fileName)
                         }
                     }
                     onDismissRequest()
