@@ -52,6 +52,7 @@ fun TobaccoCessationView(
                 viewModel.tobaccoCessationList.forEach { tobaccoCessation ->
                     CardWithRightArrow(
                         date = tobaccoCessation.appUpdatedDate,
+                        screenSiteName = tobaccoCessation.screeningSiteName,
                         onClick = {
                             navController.currentBackStackEntry?.savedStateHandle?.set(
                                 TOBACCO_CESSATION,

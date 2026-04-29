@@ -21,5 +21,7 @@ data class TobaccoCessationResponse(
     val assistQuit: String?,
     val dateOfPlan: Date?,
     val pharmacotherapy: String?,
-    val planStatus: String?
+    val planStatus: String?,
+    val campaignId: String? = null,
+    val screeningSiteName: String? = null
 ): Parcelable

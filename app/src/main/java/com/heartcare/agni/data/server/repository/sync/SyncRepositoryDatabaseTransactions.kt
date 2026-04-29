@@ -691,7 +691,7 @@ open class SyncRepositoryDatabaseTransactions(
 
     protected suspend fun insertTobaccoCessation(body: List<TobaccoCessationResponse>) {
         tobaccoCessationDao.insertTobaccoCessationRecord(
-            *body.map { it.toTobaccoCessationEntity(patientDao, appointmentDao) }.toTypedArray()
+            *body.map { it.toTobaccoCessationEntity(patientDao, appointmentDao,campaignAppointmentDao) }.toTypedArray()
         )
     }
 

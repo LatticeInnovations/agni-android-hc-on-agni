@@ -230,7 +230,8 @@ class SyncService(
                     async { updateFhirIdInCampaignHistoryMedication(logout) },
                     async { updateFhirIdInCampaignFamilyHistory(logout) },
                     async { updateFhirIdInCampaignAllergy(logout) },
-                    async { updateFhirIdInCampaignRiskFactors(logout) }
+                    async { updateFhirIdInCampaignRiskFactors(logout) },
+                    async { updateFhirIdInCampaignTobaccoCessation(logout) }
                 )
 
                 // Wait for all of them to complete
@@ -302,6 +303,11 @@ class SyncService(
     /** Upload Campaign Risk Factors */
     private suspend fun uploadCampaignRiskFactors(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
         return checkAuthenticationStatus(syncRepository.sendCampaignRiskFactorPostData(), logout)
+    }
+
+    /** Upload Campaign Tobacco Cessation */
+    private suspend fun uploadCampaignTobaccoCessation(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
+        return checkAuthenticationStatus(syncRepository.sendCampaignTobaccoCessationPostData(), logout)
     }
 
     /** Upload History Medication */
@@ -469,7 +475,8 @@ class SyncService(
                     async { downloadCampaignHistoryMedication(logout) },
                     async { downloadCampaignFamilyHistory(logout) },
                     async { downloadCampaignAllergy(logout) },
-                    async { downloadCampaignRiskFactors(logout) }
+                    async { downloadCampaignRiskFactors(logout) },
+                    async { downloadCampaignTobaccoCessation(logout) }
                 )
                 jobs.awaitAll()
             }
@@ -587,6 +594,11 @@ class SyncService(
     /** Download Campaign Risk Factors */
     private suspend fun downloadCampaignRiskFactors(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
         return checkAuthenticationStatus(syncRepository.getAndInsertCampaignRiskFactorData(0), logout)
+    }
+
+    /** Download Campaign Tobacco Cessation */
+    private suspend fun downloadCampaignTobaccoCessation(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
+        return checkAuthenticationStatus(syncRepository.getAndInsertCampaignTobaccoCessationData(0), logout)
     }
 
     /** Download Campaign Schedule */
@@ -760,6 +772,12 @@ class SyncService(
     private suspend fun updateFhirIdInCampaignRiskFactors(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
         genericRepository.updateRiskFactorsFhirId(GenericTypeEnum.CAMPAIGN_RISK_FACTORS)
         return uploadCampaignRiskFactors(logout)
+    }
+
+    /** Update Appointment FHIR ID in Campaign Tobacco Cessation */
+    private suspend fun updateFhirIdInCampaignTobaccoCessation(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
+        genericRepository.updateTobaccoCessationFhirId(GenericTypeEnum.CAMPAIGN_TOBACCO_CESSATION)
+        return uploadCampaignTobaccoCessation(logout)
     }
 
     /** Update Appointment FHIR ID in Diagnosis */

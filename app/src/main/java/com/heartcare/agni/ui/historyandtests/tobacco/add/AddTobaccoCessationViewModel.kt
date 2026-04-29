@@ -54,6 +54,7 @@ class AddTobaccoCessationViewModel @Inject constructor(
     var appointmentResponseLocal by mutableStateOf<AppointmentResponseLocal?>(null)
     var patient by mutableStateOf<PatientResponse?>(null)
     var isLaunched by mutableStateOf(false)
+    var selectedCampaignId by mutableStateOf<String?>(null)
 
     var todayTobaccoCessation by mutableStateOf<TobaccoCessationResponse?>(null)
 
@@ -121,12 +122,20 @@ class AddTobaccoCessationViewModel @Inject constructor(
 
     fun getTodayTobaccoCessation(patientId: String) {
         viewModelScope.launch(ioDispatcher) {
-            val appointmentIds =
-                getInProgressCompletedAppointmentIds(patientId, appointmentRepository)
-            todayTobaccoCessation =
-                tobaccoCessationRepository.getTobaccoCessationRecordsByAppointmentIds(*appointmentIds.toTypedArray()).firstOrNull {
-                    isToday(it.appUpdatedDate)
-                }
+            val campaignId = selectedCampaignId
+            if (campaignId != null) {
+                // Load the latest record for this specific campaign site
+                todayTobaccoCessation =
+                    tobaccoCessationRepository.getLatestTobaccoCessationForCampaign(patientId, campaignId)
+            } else {
+                // Standard facility-based today's record lookup
+                val appointmentIds =
+                    getInProgressCompletedAppointmentIds(patientId, appointmentRepository)
+                todayTobaccoCessation =
+                    tobaccoCessationRepository.getTobaccoCessationRecordsByAppointmentIds(*appointmentIds.toTypedArray()).firstOrNull {
+                        isToday(it.appUpdatedDate)
+                    }
+            }
             todayTobaccoCessation?.let { tobaccoCessation ->
                 tobaccoUse = tobaccoUsageDisplayFromCode(tobaccoCessation.tobaccoUse ?: "") ?: ""
                 briefAdvice = when (tobaccoCessation.briefAdvice) {
@@ -168,7 +177,8 @@ class AddTobaccoCessationViewModel @Inject constructor(
             assistQuit = quitPlanCodeFromDisplay(assistQuit),
             dateOfPlan = if (assistQuit == QuitPlan.YES_INTENSIVE_QUIT_PLAN.display || assistQuit == QuitPlan.YES_BRIEF_QUIT_PLAN.display) dateOfPlan else null,
             pharmacotherapy = pharmacotherapyCodeFromDisplay(pharmacotherapy),
-            planStatus = statusOfPlanCodeFromDisplay(planStatus)
+            planStatus = statusOfPlanCodeFromDisplay(planStatus),
+            campaignId = selectedCampaignId
         )
     }
 
@@ -179,13 +189,19 @@ class AddTobaccoCessationViewModel @Inject constructor(
             appointmentResponseLocal = getAppointment(
                 patientId = patient!!.id,
                 hospitalCode = user.hospitalCode,
+                campaignId = selectedCampaignId,
                 appointmentRepository = appointmentRepository
             )
             var uuid = UUIDBuilder.generateUUID()
             var fhirId: String? = null
             todayTobaccoCessation?.let {
-                uuid = it.uuid
-                fhirId = it.fhirId
+                if (isToday(it.appUpdatedDate) && selectedCampaignId == null) {
+                    uuid = it.uuid
+                    fhirId = it.fhirId
+                } else if (selectedCampaignId != null) {
+                    uuid = it.uuid
+                    fhirId = it.fhirId
+                }
             }
             val tobaccoCessationResponse = getTobaccoCessationResponse(uuid)
             tobaccoCessationRepository.insertTobaccoCessation(
@@ -197,19 +213,22 @@ class AddTobaccoCessationViewModel @Inject constructor(
                         user.lastName
                     ),
                     practitionerId = user.fhirId,
-                    fhirId = fhirId
+                    fhirId = fhirId,
+                    campaignId = selectedCampaignId
                 )
             )
-            genericRepository.insertTobaccoCessationRecord(tobaccoCessationResponse)
-            checkAndUpdateAppointmentStatusToInProgress(
-                inProgressTime = tobaccoCessationResponse.appUpdatedDate,
-                patient = patient!!,
-                appointmentResponseLocal = appointmentResponseLocal!!,
-                appointmentRepository = appointmentRepository,
-                scheduleRepository = scheduleRepository,
-                genericRepository = genericRepository,
-                preferenceRepository = preferenceRepository
-            )
+            genericRepository.insertTobaccoCessationRecord(tobaccoCessationResponse = tobaccoCessationResponse)
+            if (selectedCampaignId == null) {
+                checkAndUpdateAppointmentStatusToInProgress(
+                    inProgressTime = tobaccoCessationResponse.appUpdatedDate,
+                    patient = patient!!,
+                    appointmentResponseLocal = appointmentResponseLocal!!,
+                    appointmentRepository = appointmentRepository,
+                    scheduleRepository = scheduleRepository,
+                    genericRepository = genericRepository,
+                    preferenceRepository = preferenceRepository
+                )
+            }
             updatePatientLastUpdated(
                 patient!!.id,
                 patientLastUpdatedRepository,

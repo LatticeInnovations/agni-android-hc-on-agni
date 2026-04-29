@@ -28,5 +28,6 @@ enum class GenericTypeEnum(val number: Int, val value: String) {
     CAMPAIGN_HISTORY_MEDICATION(25, "Campaign_History_Medication_Record"),
     CAMPAIGN_FAMILY_HISTORY(26, "Campaign_Family_History_Record"),
     CAMPAIGN_ALLERGY(27, "Campaign_Allergy_Record"),
-    CAMPAIGN_RISK_FACTORS(28, "Campaign_Risk_Factor_Record");
+    CAMPAIGN_RISK_FACTORS(28, "Campaign_Risk_Factor_Record"),
+    CAMPAIGN_TOBACCO_CESSATION(29, "Campaign_Tobacco_Cessation_Record");
 }

@@ -16,4 +16,12 @@ class TobaccoCessationRepositoryImpl@Inject constructor(
     override suspend fun getTobaccoCessationRecordsByAppointmentIds(vararg appointmentIds: String): List<TobaccoCessationResponse> {
         return tobaccoCessationDao.getTobaccoCessationRecordsByAppointmentIds(*appointmentIds).map { it.toTobaccoCessationResponse() }
     }
+
+    override suspend fun getLatestTobaccoCessationForCampaign(
+        patientId: String,
+        campaignId: String
+    ): TobaccoCessationResponse? {
+        return tobaccoCessationDao.getLatestTobaccoCessationForCampaign(patientId, campaignId)
+            ?.toTobaccoCessationResponse()
+    }
 }

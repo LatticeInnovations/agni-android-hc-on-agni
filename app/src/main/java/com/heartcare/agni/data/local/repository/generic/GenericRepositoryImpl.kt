@@ -302,12 +302,15 @@ class GenericRepositoryImpl @Inject constructor(
         tobaccoCessationResponse: TobaccoCessationResponse,
         uuid: String
     ): Long {
+        val type = if (tobaccoCessationResponse.campaignId != null) GenericTypeEnum.CAMPAIGN_RISK_FACTORS else GenericTypeEnum.RISK_FACTOR
+
+
         return genericDao.getGenericEntityById(
             patientId = tobaccoCessationResponse.uuid,
-            genericTypeEnum = GenericTypeEnum.TOBACCO_CESSATION,
+            genericTypeEnum = type,
             syncType = SyncType.POST
         ).let { tobaccoCessationGenericEntity ->
-            insertTobaccoCessationGenericEntity(tobaccoCessationGenericEntity, tobaccoCessationResponse, uuid)
+            insertTobaccoCessationGenericEntity(tobaccoCessationGenericEntity, tobaccoCessationResponse, uuid, type)
         }
     }
 

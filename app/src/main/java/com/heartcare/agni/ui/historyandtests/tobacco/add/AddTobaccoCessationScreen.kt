@@ -55,6 +55,7 @@ import com.heartcare.agni.ui.common.Header
 import com.heartcare.agni.ui.common.RadioButtonRow
 import com.heartcare.agni.ui.theme.Black
 import com.heartcare.agni.ui.theme.White
+import com.heartcare.agni.utils.constants.NavControllerConstants
 import com.heartcare.agni.utils.constants.NavControllerConstants.PATIENT
 import com.heartcare.agni.utils.constants.NavControllerConstants.TOBACCO_CESSATION_SAVED
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.currentYear
@@ -73,8 +74,9 @@ fun AddTobaccoCessationScreen(
 
     LaunchedEffect(viewModel.isLaunched) {
         if (!viewModel.isLaunched) {
-            navController.previousBackStackEntry?.savedStateHandle
-                ?.get<PatientResponse>(PATIENT)
+            val handle =navController.previousBackStackEntry?.savedStateHandle
+            viewModel.selectedCampaignId = handle?.get<String>(NavControllerConstants.CAMPAIGN_ID)
+            handle?.get<PatientResponse>(PATIENT)
                 ?.let {
                     viewModel.patient = it
                     viewModel.getTodayTobaccoCessation(it.id)

@@ -27,4 +27,6 @@ object EndPoints {
     const val CAMPAIGN_FAMILY_HISTORY = "campaign/familyHistory"
     const val CAMPAIGN_ALLERGY = "campaign/allergy"
     const val CAMPAIGN_RISK_FACTORS = "campaign/riskFactor"
+    const val CAMPAIGN_TOBACCO_CESSATION = "campaign/tobaccoCessation"
+
 }
