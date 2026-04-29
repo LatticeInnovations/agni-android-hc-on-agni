@@ -170,11 +170,15 @@ class PreferenceRepositoryImpl @Inject constructor(private val preferenceStorage
 
     override fun getLastSyncCampaignFamilyHistory(): Long = preferenceStorage.lastSyncCampaignFamilyHistoryRecord
 
-    override fun setLastSyncAllergy(long: Long) {
-        preferenceStorage.lastSyncAllergyRecord = long
+    override fun setLastSyncAllergy(lastSync: Long) {
+        preferenceStorage.lastSyncAllergyRecord = lastSync
     }
-
     override fun getLastSyncAllergy(): Long = preferenceStorage.lastSyncAllergyRecord
+
+    override fun setLastSyncCampaignAllergy(lastSync: Long) {
+        preferenceStorage.lastSyncCampaignAllergyRecord = lastSync
+    }
+    override fun getLastSyncCampaignAllergy(): Long = preferenceStorage.lastSyncCampaignAllergyRecord
 
     override fun setLastSyncRiskFactors(long: Long) {
         preferenceStorage.lastSyncRiskFactorsRecord = long

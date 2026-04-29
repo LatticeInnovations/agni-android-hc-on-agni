@@ -108,8 +108,10 @@ interface PreferenceRepository {
     fun getLastSyncCampaignFamilyHistory(): Long
 
     /** Last Sync Allergy */
-    fun setLastSyncAllergy(long: Long)
+    fun setLastSyncAllergy(lastSync: Long)
     fun getLastSyncAllergy(): Long
+    fun setLastSyncCampaignAllergy(lastSync: Long)
+    fun getLastSyncCampaignAllergy(): Long
 
     /** Last Sync Risk Factors */
     fun setLastSyncRiskFactors(long: Long)

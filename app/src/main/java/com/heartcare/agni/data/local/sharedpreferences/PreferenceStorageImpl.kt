@@ -133,6 +133,11 @@ class PreferenceStorageImpl(private val sharedPreferences: SharedPreferences) : 
         PREF_LAST_ALLERGY_SYNC_TIME,
         0L
     )
+    override var lastSyncCampaignAllergyRecord by LongPreference(
+        sharedPreferences,
+        PREF_LAST_CAMPAIGN_ALLERGY_SYNC_TIME,
+        0L
+    )
 
     override var lastSyncRiskFactorsRecord by LongPreference(
         sharedPreferences,
@@ -232,6 +237,7 @@ class PreferenceStorageImpl(private val sharedPreferences: SharedPreferences) : 
         const val PREF_LAST_HISTORY_MEDICATION_SYNC_TIME = "pref_last_history_medication_sync_time"
         const val PREF_LAST_FAMILY_HISTORY_SYNC_TIME = "pref_last_family_history_sync_time"
         const val PREF_LAST_ALLERGY_SYNC_TIME = "pref_last_allergy_sync_time"
+        const val PREF_LAST_CAMPAIGN_ALLERGY_SYNC_TIME = "pref_last_campaign_allergy_sync_time"
         const val PREF_LAST_RISK_FACTORS_SYNC_TIME = "pref_last_risk_factors_sync_time"
         const val PREF_LAST_TOBACCO_CESSATION_SYNC_TIME = "pref_last_tobacco_cessation_sync_time"
         const val PREF_LAST_INTERVENTION_MASTER_SYNC_TIME = "pref_last_intervention_master_sync_time"

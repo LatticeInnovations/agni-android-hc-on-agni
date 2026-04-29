@@ -43,6 +43,7 @@ interface PreferenceStorage {
     var lastSyncFamilyHistoryRecord: Long
     var lastSyncCampaignFamilyHistoryRecord: Long
     var lastSyncAllergyRecord: Long
+    var lastSyncCampaignAllergyRecord: Long
     var lastSyncRiskFactorsRecord: Long
     var lastSyncTobaccoCessationRecord: Long
     var lastSyncInterventionMaster: Long

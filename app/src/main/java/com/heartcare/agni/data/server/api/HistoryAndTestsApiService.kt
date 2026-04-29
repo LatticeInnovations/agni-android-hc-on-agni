@@ -8,6 +8,7 @@ import com.heartcare.agni.data.server.constants.EndPoints.PRIOR_DX
 import com.heartcare.agni.data.server.constants.EndPoints.CAMPAIGN_PRIOR_DX
 import com.heartcare.agni.data.server.constants.EndPoints.CAMPAIGN_HISTORY_MEDICATION
 import com.heartcare.agni.data.server.constants.EndPoints.CAMPAIGN_FAMILY_HISTORY
+import com.heartcare.agni.data.server.constants.EndPoints.CAMPAIGN_ALLERGY
 import com.heartcare.agni.data.server.constants.EndPoints.RISK_FACTOR
 import com.heartcare.agni.data.server.constants.EndPoints.TOBACCO_CESSATION
 import com.heartcare.agni.data.server.model.allergy.AllergyResponse
@@ -65,6 +66,12 @@ interface HistoryAndTestsApiService {
 
     @GET(ALLERGY)
     suspend fun getAllergy(@QueryMap(encoded = true) map: Map<String, String>?): Response<BaseResponse<List<AllergyResponse>>>
+
+    @POST(CAMPAIGN_ALLERGY)
+    suspend fun postCampaignAllergy(@Body allergyResponse: List<AllergyResponse>): Response<BaseResponse<List<CreateResponse>>>
+
+    @GET(CAMPAIGN_ALLERGY)
+    suspend fun getCampaignAllergy(@QueryMap(encoded = true) map: Map<String, String>?): Response<BaseResponse<List<AllergyResponse>>>
 
     @POST(RISK_FACTOR)
     suspend fun postRiskFactor(@Body riskFactorResponse: List<RiskFactorResponse>): Response<BaseResponse<List<CreateResponse>>>

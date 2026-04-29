@@ -16,4 +16,11 @@ class AllergyRepositoryImpl@Inject constructor(
     override suspend fun getAllergyRecordsByAppointmentIds(vararg appointmentIds: String): List<AllergyResponse> {
         return allergyDao.getAllergyRecordsByAppointmentIds(*appointmentIds).map { it.toAllergyResponse() }
     }
+
+    override suspend fun getLatestAllergyForCampaign(
+        patientId: String,
+        campaignId: String
+    ): AllergyResponse? {
+        return allergyDao.getLatestAllergyForCampaign(patientId, campaignId)?.toAllergyResponse()
+    }
 }

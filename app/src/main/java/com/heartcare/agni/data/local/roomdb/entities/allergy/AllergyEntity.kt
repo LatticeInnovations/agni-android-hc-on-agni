@@ -10,7 +10,7 @@ import java.util.Date
 
 @Keep
 @Entity(
-    indices = [Index("patientId"), Index("appointmentId")],
+    indices = [Index("patientId"), Index("appointmentId"), Index("campaignId"), Index("campaignAppointmentId")],
     primaryKeys = ["uuid"],
     foreignKeys = [
         ForeignKey(
@@ -22,6 +22,11 @@ import java.util.Date
             entity = AppointmentEntity::class,
             parentColumns = ["id"],
             childColumns = ["appointmentId"]
+        ),
+        ForeignKey(
+            entity = com.heartcare.agni.data.local.roomdb.entities.campaign.CampaignAppointmentEntity::class,
+            parentColumns = ["id"],
+            childColumns = ["campaignAppointmentId"]
         )
     ]
 )
@@ -30,7 +35,9 @@ data class AllergyEntity (
     val fhirId: String?,
     val allergy: String?,
     val appUpdatedDate: Date,
-    val appointmentId: String,
+    val appointmentId: String?,
+    val campaignId: String?,
+    val campaignAppointmentId: String?,
     val patientId: String,
     val practitionerId: String,
     val practitionerName: String
