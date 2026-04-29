@@ -679,7 +679,7 @@ open class SyncRepositoryDatabaseTransactions(
 
     protected suspend fun insertAllergy(body: List<AllergyResponse>) {
         allergyDao.insertAllergyRecord(
-            *body.map { it.toAllergyEntity(patientDao, appointmentDao) }.toTypedArray()
+            *body.map { it.toAllergyEntity(patientDao, appointmentDao, campaignAppointmentDao) }.toTypedArray()
         )
     }
 

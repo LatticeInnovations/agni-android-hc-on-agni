@@ -250,9 +250,17 @@ class HistoryTakingAndTestsViewModel @Inject constructor(
                     }
                 }
             allergyList =
-                allergyRepository.getAllergyRecordsByAppointmentIds(*appointmentIds.toTypedArray())
+                allergyRepository.getAllergyRecordsByAppointmentIds(*allCombinedIds)
+                    .map { allergy ->
+                        allergy.copy(screeningSiteName = allergy.campaignId?.let { siteMap[it]?.name })
+                    }
                     .also {
-                        todayAllergy = it.firstOrNull { allergy -> isToday(allergy.appUpdatedDate) }
+                        if (selectedType == RecordType.FACILITY) {
+                            todayAllergy = it.firstOrNull { allergy -> isToday(allergy.appUpdatedDate) }
+                        } else if (selectedCampaignId != null) {
+                            todayAllergy =
+                                allergyRepository.getLatestAllergyForCampaign(patientId, selectedCampaignId!!)
+                        }
                     }
             riskFactorsList =
                 riskFactorRepository.getRiskFactorRecordsByAppointmentIds(*appointmentIds.toTypedArray())

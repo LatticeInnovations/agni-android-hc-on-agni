@@ -1192,7 +1192,9 @@ internal fun AllergyResponse.toAllergyEntity(): AllergyEntity {
         uuid = uuid,
         fhirId = fhirId,
         patientId = patientId,
-        appointmentId = appointmentId,
+        campaignId = campaignId,
+        appointmentId = if (campaignId == null) appointmentId else null,
+        campaignAppointmentId = if (campaignId != null) appointmentId else null,
         appUpdatedDate = appUpdatedDate,
         practitionerId = practitionerId!!,
         practitionerName = practitionerName!!,
@@ -1202,13 +1204,21 @@ internal fun AllergyResponse.toAllergyEntity(): AllergyEntity {
 
 suspend fun AllergyResponse.toAllergyEntity(
     patientDao: PatientDao,
-    appointmentDao: AppointmentDao
+    appointmentDao: AppointmentDao,
+    campaignAppointmentDao: CampaignAppointmentDao
 ): AllergyEntity {
+    val localAppointmentId = if (campaignId != null) {
+        campaignAppointmentDao.getAppointmentIdByFhirId(appointmentId)
+    } else {
+        appointmentDao.getAppointmentIdByFhirId(appointmentId)
+    }
     return AllergyEntity(
         uuid = uuid,
         fhirId = fhirId,
         appUpdatedDate = appUpdatedDate,
-        appointmentId = appointmentDao.getAppointmentIdByFhirId(appointmentId),
+        appointmentId = if (campaignId == null) localAppointmentId else null,
+        campaignAppointmentId = if (campaignId != null) localAppointmentId else null,
+        campaignId = campaignId,
         patientId = patientDao.getPatientIdByFhirId(patientId)!!,
         practitionerId = practitionerId!!,
         practitionerName = practitionerName!!,
@@ -1221,11 +1231,12 @@ internal fun AllergyEntity.toAllergyResponse(): AllergyResponse {
         uuid = uuid,
         fhirId = fhirId,
         appUpdatedDate = appUpdatedDate,
-        appointmentId = appointmentId,
+        appointmentId = (campaignAppointmentId ?: appointmentId)!!,
         patientId = patientId,
         practitionerId = practitionerId,
         practitionerName = practitionerName,
         allergy = allergy,
+        campaignId = campaignId
     )
 }
 
@@ -1694,35 +1705,5 @@ fun HealthFacilityEntity.toLevelResponse(): LevelResponse {
         precedingLevelId = islandId,
         secondaryName = null,
         status = "active"
-    )
-}
-
-internal suspend fun CampaignAppointmentEntity.toCampaignAppointmentResponse(
-    patientDao: PatientDao,
-    campaignScheduleDao: CampaignScheduleDao
-): AppointmentResponse {
-    return AppointmentResponse(
-        uuid = id,
-        createdOn = createdOn,
-        appointmentId = appointmentFhirId,
-        patientFhirId = patientId,
-        scheduleId = campaignScheduleDao.getFhirIdByStartTime(scheduleId, campaignId)
-            ?: campaignScheduleDao.getScheduleByStartTime(scheduleId.time, campaignId)!!.id,
-        slot = Slot(
-            start = startTime,
-            end = endTime
-        ),
-        status = status,
-        appointmentType = appointmentType,
-        inProgressTime = inProgressTime,
-        roleId = null,
-        slotId = null,
-        practitionerId = null,
-        hospitalFhirId = null,
-        hospitalId = null,
-        hospitalName = null,
-        hospitalCode = null,
-        campaignId = campaignId,
-        appUpdatedDate = Date()
     )
 }

@@ -42,6 +42,7 @@ class AddAllergyViewModel @Inject constructor(
     var isLaunched by mutableStateOf(false)
     var patient by mutableStateOf<PatientResponse?>(null)
     var appointmentResponseLocal by mutableStateOf<AppointmentResponseLocal?>(null)
+    var selectedCampaignId by mutableStateOf<String?>(null)
 
     val maxAllergiesLength = 500
 
@@ -50,12 +51,19 @@ class AddAllergyViewModel @Inject constructor(
 
     fun getTodayAllergy(patientId: String) {
         viewModelScope.launch(ioDispatcher) {
-            val appointmentIds =
-                getInProgressCompletedAppointmentIds(patientId, appointmentRepository)
-            todayAllergy =
-                allergyRepository.getAllergyRecordsByAppointmentIds(*appointmentIds.toTypedArray()).firstOrNull {
-                    isToday(it.appUpdatedDate)
-                }
+            val campaignId = selectedCampaignId
+            if (campaignId != null) {
+                // Fetch strictly for the current campaign site
+                todayAllergy = allergyRepository.getLatestAllergyForCampaign(patientId, campaignId)
+            } else {
+                // Standard facility-based lookup
+                val appointmentIds =
+                    getInProgressCompletedAppointmentIds(patientId, appointmentRepository)
+                todayAllergy =
+                    allergyRepository.getAllergyRecordsByAppointmentIds(*appointmentIds.toTypedArray()).firstOrNull {
+                        isToday(it.appUpdatedDate)
+                    }
+            }
             allergy = todayAllergy?.allergy ?: ""
         }
     }
@@ -75,6 +83,7 @@ class AddAllergyViewModel @Inject constructor(
             practitionerName = null,
             appUpdatedDate = appUpdatedDate,
             allergy = allergy.trim().ifBlank { null },
+            campaignId = selectedCampaignId
         )
     }
 
@@ -85,13 +94,19 @@ class AddAllergyViewModel @Inject constructor(
             appointmentResponseLocal = getAppointment(
                 patientId = patient!!.id,
                 hospitalCode = user.hospitalCode,
+                campaignId = selectedCampaignId,
                 appointmentRepository = appointmentRepository
             )
             var uuid = UUIDBuilder.generateUUID()
             var fhirId: String? = null
             todayAllergy?.let {
-                uuid = it.uuid
-                fhirId = it.fhirId
+                if (isToday(it.appUpdatedDate) && selectedCampaignId == null) {
+                    uuid = it.uuid
+                    fhirId = it.fhirId
+                } else if (selectedCampaignId != null) {
+                    uuid = it.uuid
+                    fhirId = it.fhirId
+                }
             }
             val allergyResponse = getAllergyResponse(uuid)
             allergyRepository.insertAllergy(
@@ -106,16 +121,19 @@ class AddAllergyViewModel @Inject constructor(
                     fhirId = fhirId
                 )
             )
-            genericRepository.insertAllergyRecord(allergyResponse)
-            checkAndUpdateAppointmentStatusToInProgress(
-                inProgressTime = allergyResponse.appUpdatedDate,
-                patient = patient!!,
-                appointmentResponseLocal = appointmentResponseLocal!!,
-                appointmentRepository = appointmentRepository,
-                scheduleRepository = scheduleRepository,
-                genericRepository = genericRepository,
-                preferenceRepository = preferenceRepository
-            )
+            genericRepository.insertAllergyRecord(allergyResponse = allergyResponse)
+            if (selectedCampaignId == null) {
+                checkAndUpdateAppointmentStatusToInProgress(
+                    inProgressTime = allergyResponse.appUpdatedDate,
+                    patient = patient!!,
+                    appointmentResponseLocal = appointmentResponseLocal!!,
+                    appointmentRepository = appointmentRepository,
+                    scheduleRepository = scheduleRepository,
+                    genericRepository = genericRepository,
+                    preferenceRepository = preferenceRepository
+                )
+            }
+            
             updatePatientLastUpdated(
                 patient!!.id,
                 patientLastUpdatedRepository,

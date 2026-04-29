@@ -228,7 +228,8 @@ class SyncService(
                     async { updateFhirIdInCampaignVital(logout) },
                     async { updateFhirIdInCampaignPriorDx(logout) },
                     async { updateFhirIdInCampaignHistoryMedication(logout) },
-                    async { updateFhirIdInCampaignFamilyHistory(logout) }
+                    async { updateFhirIdInCampaignFamilyHistory(logout) },
+                    async { updateFhirIdInCampaignAllergy(logout) }
                 )
 
                 // Wait for all of them to complete
@@ -290,6 +291,11 @@ class SyncService(
     /** Upload Campaign Family History */
     private suspend fun uploadCampaignFamilyHistory(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
         return checkAuthenticationStatus(syncRepository.sendCampaignFamilyHistoryPostData(), logout)
+    }
+
+    /** Upload Campaign Allergy */
+    private suspend fun uploadCampaignAllergy(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
+        return checkAuthenticationStatus(syncRepository.sendCampaignAllergyPostData(), logout)
     }
 
     /** Upload History Medication */
@@ -455,7 +461,8 @@ class SyncService(
                     async { downloadCampaignVitals(logout) },
                     async { downloadCampaignPriorDx(logout) },
                     async { downloadCampaignHistoryMedication(logout) },
-                    async { downloadCampaignFamilyHistory(logout) }
+                    async { downloadCampaignFamilyHistory(logout) },
+                    async { downloadCampaignAllergy(logout) }
                 )
                 jobs.awaitAll()
             }
@@ -563,6 +570,11 @@ class SyncService(
     /** Download Campaign Family History */
     private suspend fun downloadCampaignFamilyHistory(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
         return checkAuthenticationStatus(syncRepository.getAndInsertCampaignFamilyHistoryData(0), logout)
+    }
+
+    /** Download Campaign Allergy */
+    private suspend fun downloadCampaignAllergy(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
+        return checkAuthenticationStatus(syncRepository.getAndInsertCampaignAllergyData(0), logout)
     }
 
     /** Download Campaign Schedule */
@@ -724,6 +736,12 @@ class SyncService(
     private suspend fun updateFhirIdInCampaignFamilyHistory(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
         genericRepository.updateFamilyHistoryFhirId(GenericTypeEnum.CAMPAIGN_FAMILY_HISTORY)
         return uploadCampaignFamilyHistory(logout)
+    }
+
+    /** Update Appointment FHIR ID in Campaign Allergy */
+    private suspend fun updateFhirIdInCampaignAllergy(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
+        genericRepository.updateAllergyFhirId(GenericTypeEnum.CAMPAIGN_ALLERGY)
+        return uploadCampaignAllergy(logout)
     }
 
     /** Update Appointment FHIR ID in Diagnosis */

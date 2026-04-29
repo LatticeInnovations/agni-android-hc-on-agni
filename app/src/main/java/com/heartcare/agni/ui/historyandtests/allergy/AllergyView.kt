@@ -49,6 +49,7 @@ fun AllergyView(
                     ExpandableCard(
                         createdOn = allergy.appUpdatedDate,
                         practitionerName = allergy.practitionerName!!,
+                        screenSiteName = allergy.screeningSiteName,
                         listOfItems = allergy.allergy?.let { listOf(it) } ?: emptyList(),
                         isBulleted = false
                     )

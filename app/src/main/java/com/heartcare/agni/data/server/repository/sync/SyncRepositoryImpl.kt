@@ -1919,6 +1919,50 @@ class SyncRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun sendCampaignAllergyPostData(): ResponseMapper<List<CreateResponse>> {
+        return try {
+            genericDao.getSameTypeGenericEntityPayload(
+                genericTypeEnum = GenericTypeEnum.CAMPAIGN_ALLERGY,
+                syncType = SyncType.POST
+            ).let { listOfGenericEntity ->
+                if (listOfGenericEntity.isEmpty()) ApiEmptyResponse()
+                else {
+                    ApiResponseConverter.convert(
+                        historyAndTestsApiService.postCampaignAllergy(
+                            listOfGenericEntity.map {
+                                it.payload.fromJson<LinkedTreeMap<*, *>>()
+                                    .mapToObject(AllergyResponse::class.java)!!.copy(campaignId = null)
+                            }
+                        )
+                    ).apply {
+                        if (this is ApiEndResponse) {
+                            insertAllergyFhirIds(body, listOfGenericEntity)
+                                .apply {
+                                    if (this > 0) return sendCampaignAllergyPostData()
+                                }
+                        }
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            Timber.e(e, e.localizedMessage)
+            crashlyticsLogger.logException(
+                e,
+                "sendCampaignAllergyPostData function failed.",
+                mapOf(
+                    Pair(
+                        USER_ID,
+                        preferenceRepository.getUserDetails()?.userId ?: ERROR_FETCHING_USER_DETAILS
+                    )
+                )
+            )
+            ApiErrorResponse(
+                statusCode = 0,
+                errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
+            )
+        }
+    }
+
     override suspend fun sendRiskFactorPostData(): ResponseMapper<List<CreateResponse>> {
         return try {
             genericDao.getSameTypeGenericEntityPayload(
@@ -2839,6 +2883,58 @@ class SyncRepositoryImpl @Inject constructor(
         }
     }
 
+
+    override suspend fun getAndInsertCampaignAllergyData(offset: Int): ResponseMapper<List<AllergyResponse>> {
+        val map = mutableMapOf<String, String>()
+        map[COUNT] = COUNT_VALUE.toString()
+        map[OFFSET] = offset.toString()
+        map[SORT] = "-$ID"
+        if (preferenceRepository.getLastSyncCampaignAllergy() != 0L) map[LAST_UPDATED] =
+            String.format(
+                GREATER_THAN_BUILDER,
+                preferenceRepository.getLastSyncCampaignAllergy().toTimeStampDate()
+            )
+
+        return try {
+            ApiResponseConverter.convert(
+                historyAndTestsApiService.getCampaignAllergy(
+                    map
+                ), true
+            ).run {
+                when (this) {
+                    is ApiContinueResponse -> {
+                        insertAllergy(body)
+                        //Call for next batch data
+                        getAndInsertCampaignAllergyData(offset + COUNT_VALUE)
+                    }
+
+                    is ApiEndResponse -> {
+                        preferenceRepository.setLastSyncCampaignAllergy(Date().time)
+                        insertAllergy(body)
+                        this
+                    }
+
+                    else -> this
+                }
+            }
+        } catch (e: Exception) {
+            Timber.e(e, e.localizedMessage)
+            crashlyticsLogger.logException(
+                e,
+                "getAndInsertCampaignAllergyData function failed.",
+                mapOf(
+                    Pair(
+                        USER_ID,
+                        preferenceRepository.getUserDetails()?.userId ?: ERROR_FETCHING_USER_DETAILS
+                    )
+                )
+            )
+            ApiErrorResponse(
+                statusCode = 0,
+                errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
+            )
+        }
+    }
     override suspend fun getAndInsertRiskFactorData(offset: Int): ResponseMapper<List<RiskFactorResponse>> {
         val map = mutableMapOf<String, String>()
         map[COUNT] = COUNT_VALUE.toString()
