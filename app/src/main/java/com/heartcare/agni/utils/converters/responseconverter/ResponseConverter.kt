@@ -53,6 +53,7 @@ import com.heartcare.agni.data.local.roomdb.entities.prescription.PrescriptionDi
 import com.heartcare.agni.data.local.roomdb.entities.prescription.PrescriptionEntity
 import com.heartcare.agni.data.local.roomdb.entities.priordx.PriorDxEntity
 import com.heartcare.agni.data.local.roomdb.entities.referral.ReferralEntity
+import com.heartcare.agni.data.local.roomdb.entities.report.ReportTokenEntity
 import com.heartcare.agni.data.local.roomdb.entities.risk.AlcoholEntity
 import com.heartcare.agni.data.local.roomdb.entities.risk.FatAndOilEntity
 import com.heartcare.agni.data.local.roomdb.entities.risk.FruitsVegetablesEntity
@@ -92,6 +93,7 @@ import com.heartcare.agni.data.server.model.prescription.medication.MedicineTime
 import com.heartcare.agni.data.server.model.prescription.prescriptionresponse.PrescriptionResponse
 import com.heartcare.agni.data.server.model.priordx.PriorDxResponse
 import com.heartcare.agni.data.server.model.referral.ReferralResponse
+import com.heartcare.agni.data.server.model.report.ReportTokenResponse
 import com.heartcare.agni.data.server.model.risk.AlcoholResponse
 import com.heartcare.agni.data.server.model.risk.FatAndOilResponse
 import com.heartcare.agni.data.server.model.risk.FruitsVegetablesResponse
@@ -1727,5 +1729,12 @@ fun HealthFacilityEntity.toLevelResponse(): LevelResponse {
         precedingLevelId = islandId,
         secondaryName = null,
         status = "active"
+    )
+}
+
+fun ReportTokenResponse.toReportTokenEntity(): ReportTokenEntity {
+    return ReportTokenEntity(
+        appointmentId = appointmentId,
+        token = token
     )
 }

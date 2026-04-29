@@ -2,6 +2,7 @@ package com.heartcare.agni.data.local.repository.appointment
 
 import com.heartcare.agni.data.local.model.appointment.AppointmentResponseLocal
 import com.heartcare.agni.data.local.roomdb.entities.appointment.AppointmentEntity
+import com.heartcare.agni.data.server.model.report.ReportTokenResponse
 
 interface AppointmentRepository {
     suspend fun getAppointmentListByDate(
@@ -47,4 +48,6 @@ interface AppointmentRepository {
     ): List<AppointmentResponseLocal>
 
     suspend fun getAppointmentForCampaign(campaignId: String): List<AppointmentResponseLocal>
+
+    suspend fun insertReportToken(vararg reportTokenResponse: ReportTokenResponse): List<Long>
 }

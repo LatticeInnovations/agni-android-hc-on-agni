@@ -8,8 +8,8 @@ import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toddM
 import com.heartcare.agni.utils.converters.responseconverter.toAppointmentEntity
 import com.heartcare.agni.utils.converters.responseconverter.toAppointmentResponseLocal
 import javax.inject.Inject
-
 import com.heartcare.agni.data.local.roomdb.dao.CampaignAppointmentDao
+import com.heartcare.agni.data.server.model.report.ReportTokenResponse
 import com.heartcare.agni.utils.converters.responseconverter.*
 
 class AppointmentRepositoryImpl @Inject constructor(
@@ -126,5 +126,10 @@ class AppointmentRepositoryImpl @Inject constructor(
 
     override suspend fun getAppointmentForCampaign(campaignId: String): List<AppointmentResponseLocal> {
         return campaignAppointmentDao.getAppointmentByCampaign(campaignId).map { it.toAppointmentResponseLocal() }
+    }
+
+    // appointment report token
+    override suspend fun insertReportToken(vararg reportTokenResponse: ReportTokenResponse): List<Long> {
+        return appointmentDao.insertReportToken(*reportTokenResponse.map { it.toReportTokenEntity() }.toTypedArray())
     }
 }

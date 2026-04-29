@@ -7,6 +7,7 @@ import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Update
 import com.heartcare.agni.data.local.roomdb.entities.appointment.AppointmentEntity
+import com.heartcare.agni.data.local.roomdb.entities.report.ReportTokenEntity
 
 @Dao
 interface AppointmentDao {
@@ -70,4 +71,8 @@ interface AppointmentDao {
     suspend fun getLastCompletedAppointment(
         patientId: String
     ): AppointmentEntity?
+
+    // appointment report token
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    fun insertReportToken(vararg reportTokenEntity: ReportTokenEntity): List<Long>
 }
