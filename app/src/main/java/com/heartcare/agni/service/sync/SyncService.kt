@@ -227,7 +227,8 @@ class SyncService(
                     async { updateFhirIdInCampaignCVD(logout) },
                     async { updateFhirIdInCampaignVital(logout) },
                     async { updateFhirIdInCampaignPriorDx(logout) },
-                    async { updateFhirIdInCampaignHistoryMedication(logout) }
+                    async { updateFhirIdInCampaignHistoryMedication(logout) },
+                    async { updateFhirIdInCampaignFamilyHistory(logout) }
                 )
 
                 // Wait for all of them to complete
@@ -284,6 +285,11 @@ class SyncService(
     /** Upload Campaign History Medication */
     private suspend fun uploadCampaignHistoryMedication(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
         return checkAuthenticationStatus(syncRepository.sendCampaignHistoryMedicationPostData(), logout)
+    }
+
+    /** Upload Campaign Family History */
+    private suspend fun uploadCampaignFamilyHistory(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
+        return checkAuthenticationStatus(syncRepository.sendCampaignFamilyHistoryPostData(), logout)
     }
 
     /** Upload History Medication */
@@ -448,7 +454,8 @@ class SyncService(
                     async { downloadCampaignCVD(logout) },
                     async { downloadCampaignVitals(logout) },
                     async { downloadCampaignPriorDx(logout) },
-                    async { downloadCampaignHistoryMedication(logout) }
+                    async { downloadCampaignHistoryMedication(logout) },
+                    async { downloadCampaignFamilyHistory(logout) }
                 )
                 jobs.awaitAll()
             }
@@ -551,6 +558,11 @@ class SyncService(
     /** Download Campaign History Medication */
     private suspend fun downloadCampaignHistoryMedication(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
         return checkAuthenticationStatus(syncRepository.getAndInsertCampaignHistoryMedicationData(0), logout)
+    }
+
+    /** Download Campaign Family History */
+    private suspend fun downloadCampaignFamilyHistory(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
+        return checkAuthenticationStatus(syncRepository.getAndInsertCampaignFamilyHistoryData(0), logout)
     }
 
     /** Download Campaign Schedule */
@@ -708,6 +720,12 @@ class SyncService(
         return uploadCampaignHistoryMedication(logout)
     }
 
+    /** Update Appointment FHIR ID in Campaign Family History */
+    private suspend fun updateFhirIdInCampaignFamilyHistory(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
+        genericRepository.updateFamilyHistoryFhirId(GenericTypeEnum.CAMPAIGN_FAMILY_HISTORY)
+        return uploadCampaignFamilyHistory(logout)
+    }
+
     /** Update Appointment FHIR ID in Diagnosis */
     private suspend fun updateFhirIdInDiagnosis(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
         genericRepository.updateDiagnosisFhirId()
@@ -726,27 +744,31 @@ class SyncService(
         return uploadHistoryMedication(logout)
     }
 
-    /** Update FHIR ID in Family History */
+    /** Update Appointment FHIR ID in Family History */
     private suspend fun updateFhirIdInFamilyHistory(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
-        genericRepository.updateFamilyHistoryFhirId()
+        genericRepository.updateFamilyHistoryFhirId(GenericTypeEnum.FAMILY_HISTORY)
+        /** Upload Family History */
         return uploadFamilyHistory(logout)
     }
 
-    /** Update FHIR ID in Allergy */
+    /** Update Appointment FHIR ID in Allergy */
     private suspend fun updateFhirIdInAllergy(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
-        genericRepository.updateAllergyFhirId()
+        genericRepository.updateAllergyFhirId(GenericTypeEnum.ALLERGY)
+        /** Upload Allergy */
         return uploadAllergy(logout)
     }
 
-    /** Update FHIR ID in Risk Factors */
+    /** Update Appointment FHIR ID in Risk Factors */
     private suspend fun updateFhirIdInRiskFactors(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
-        genericRepository.updateRiskFactorsFhirId()
+        genericRepository.updateRiskFactorsFhirId(GenericTypeEnum.RISK_FACTOR)
+        /** Upload Risk Factors */
         return uploadRiskFactors(logout)
     }
 
-    /** Update FHIR ID in Tobacco Cessation */
+    /** Update Appointment FHIR ID in Tobacco Cessation */
     private suspend fun updateFhirIdInTobaccoCessation(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
-        genericRepository.updateTobaccoCessationFhirId()
+        genericRepository.updateTobaccoCessationFhirId(GenericTypeEnum.TOBACCO_CESSATION)
+        /** Upload Tobacco Cessation */
         return uploadTobaccoCessation(logout)
     }
 

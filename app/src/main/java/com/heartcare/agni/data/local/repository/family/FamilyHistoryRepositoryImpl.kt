@@ -13,7 +13,14 @@ class FamilyHistoryRepositoryImpl @Inject constructor(
         return familyHistoryDao.insertFamilyHistoryRecord(*familyHistoryResponse.map { it.toFamilyHistoryEntity() }.toTypedArray())
     }
 
-    override suspend fun getFamilyHistoryRecordsByAppointmentIds(vararg appointmentIds: String): List<FamilyHistoryResponse> {
-        return familyHistoryDao.getFamilyHistoryRecordsByAppointmentIds(*appointmentIds).map { it.toFamilyHistoryResponse() }
-    }
+    override suspend fun getFamilyHistoryRecordsByAppointmentIds(vararg appointmentIds: String): List<FamilyHistoryResponse> =
+        familyHistoryDao.getFamilyHistoryRecordsByAppointmentIds(*appointmentIds).map {
+            it.toFamilyHistoryResponse()
+        }
+
+    override suspend fun getLatestFamilyHistoryForCampaign(
+        patientId: String,
+        campaignId: String
+    ): FamilyHistoryResponse? =
+        familyHistoryDao.getLatestFamilyHistoryForCampaign(patientId, campaignId)?.toFamilyHistoryResponse()
 }

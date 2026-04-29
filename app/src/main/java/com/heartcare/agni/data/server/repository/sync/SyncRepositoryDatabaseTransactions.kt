@@ -673,7 +673,7 @@ open class SyncRepositoryDatabaseTransactions(
 
     protected suspend fun insertFamilyHistory(body: List<FamilyHistoryResponse>) {
         familyHistoryDao.insertFamilyHistoryRecord(
-            *body.map { it.toFamilyHistoryEntity(patientDao, appointmentDao) }.toTypedArray()
+            *body.map { it.toFamilyHistoryEntity(patientDao, appointmentDao, campaignAppointmentDao) }.toTypedArray()
         )
     }
 

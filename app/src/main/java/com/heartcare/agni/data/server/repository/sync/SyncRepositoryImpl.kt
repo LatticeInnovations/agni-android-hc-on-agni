@@ -1831,6 +1831,50 @@ class SyncRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun sendCampaignFamilyHistoryPostData(): ResponseMapper<List<CreateResponse>> {
+        return try {
+            genericDao.getSameTypeGenericEntityPayload(
+                genericTypeEnum = GenericTypeEnum.CAMPAIGN_FAMILY_HISTORY,
+                syncType = SyncType.POST
+            ).let { listOfGenericEntity ->
+                if (listOfGenericEntity.isEmpty()) ApiEmptyResponse()
+                else {
+                    ApiResponseConverter.convert(
+                        historyAndTestsApiService.postCampaignFamilyHistory(
+                            listOfGenericEntity.map {
+                                it.payload.fromJson<LinkedTreeMap<*, *>>()
+                                    .mapToObject(FamilyHistoryResponse::class.java)!!.copy(campaignId = null)
+                            }
+                        )
+                    ).apply {
+                        if (this is ApiEndResponse) {
+                            insertFamilyHistoryFhirIds(body, listOfGenericEntity)
+                                .apply {
+                                    if (this > 0) sendCampaignFamilyHistoryPostData()
+                                }
+                        }
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            Timber.e(e, e.localizedMessage)
+            crashlyticsLogger.logException(
+                e,
+                "sendCampaignFamilyHistoryPostData function failed.",
+                mapOf(
+                    Pair(
+                        USER_ID,
+                        preferenceRepository.getUserDetails()?.userId ?: ERROR_FETCHING_USER_DETAILS
+                    )
+                )
+            )
+            ApiErrorResponse(
+                statusCode = 0,
+                errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
+            )
+        }
+    }
+
     override suspend fun sendAllergyPostData(): ResponseMapper<List<CreateResponse>> {
         return try {
             genericDao.getSameTypeGenericEntityPayload(
@@ -2625,6 +2669,60 @@ class SyncRepositoryImpl @Inject constructor(
             crashlyticsLogger.logException(
                 e,
                 "getAndInsertCampaignHistoryMedicationData function failed.",
+                mapOf(
+                    Pair(
+                        USER_ID,
+                        preferenceRepository.getUserDetails()?.userId ?: ERROR_FETCHING_USER_DETAILS
+                    )
+                )
+            )
+            ApiErrorResponse(
+                statusCode = 0,
+                errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
+            )
+        }
+    }
+
+    override suspend fun getAndInsertCampaignFamilyHistoryData(
+        offset: Int
+    ): ResponseMapper<List<FamilyHistoryResponse>> {
+        val map = mutableMapOf<String, String>()
+        map[COUNT] = COUNT_VALUE.toString()
+        map[OFFSET] = offset.toString()
+        map[SORT] = "-$ID"
+        if (preferenceRepository.getLastSyncCampaignFamilyHistory() != 0L) map[LAST_UPDATED] =
+            String.format(
+                GREATER_THAN_BUILDER,
+                preferenceRepository.getLastSyncCampaignFamilyHistory().toTimeStampDate()
+            )
+
+        return try {
+            ApiResponseConverter.convert(
+                historyAndTestsApiService.getCampaignFamilyHistory(
+                    map
+                ), true
+            ).run {
+                when (this) {
+                    is ApiContinueResponse -> {
+                        insertFamilyHistory(body)
+                        //Call for next batch data
+                        getAndInsertCampaignFamilyHistoryData(offset + COUNT_VALUE)
+                    }
+
+                    is ApiEndResponse -> {
+                        preferenceRepository.setLastSyncCampaignFamilyHistory(Date().time)
+                        insertFamilyHistory(body)
+                        this
+                    }
+
+                    else -> this
+                }
+            }
+        } catch (e: Exception) {
+            Timber.e(e, e.localizedMessage)
+            crashlyticsLogger.logException(
+                e,
+                "getAndInsertCampaignFamilyHistoryData function failed.",
                 mapOf(
                     Pair(
                         USER_ID,

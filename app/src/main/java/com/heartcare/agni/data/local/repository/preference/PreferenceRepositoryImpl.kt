@@ -164,6 +164,12 @@ class PreferenceRepositoryImpl @Inject constructor(private val preferenceStorage
 
     override fun getLastSyncFamilyHistory(): Long = preferenceStorage.lastSyncFamilyHistoryRecord
 
+    override fun setLastSyncCampaignFamilyHistory(long: Long) {
+        preferenceStorage.lastSyncCampaignFamilyHistoryRecord = long
+    }
+
+    override fun getLastSyncCampaignFamilyHistory(): Long = preferenceStorage.lastSyncCampaignFamilyHistoryRecord
+
     override fun setLastSyncAllergy(long: Long) {
         preferenceStorage.lastSyncAllergyRecord = long
     }

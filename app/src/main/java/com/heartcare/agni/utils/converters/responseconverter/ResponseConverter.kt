@@ -1101,6 +1101,7 @@ suspend fun HistoryMedicationResponse.toHistoryMedicationEntity(
         adherence = adherence,
         appUpdatedDate = appUpdatedDate,
         appointmentId = if (campaignId == null) localAppointmentId else null,
+        campaignAppointmentId = if (campaignId != null) localAppointmentId else null,
         hasSideEffect = hasSideEffect,
         medicinePrescribed = medicinePrescribed,
         medicinePrescribedOthers = medicinePrescribedOthers,
@@ -1108,8 +1109,7 @@ suspend fun HistoryMedicationResponse.toHistoryMedicationEntity(
         practitionerId = practitionerId!!,
         practitionerName = practitionerName!!,
         sideEffects = sideEffects,
-        campaignId = campaignId,
-        campaignAppointmentId = if (campaignId != null) localAppointmentId else null
+        campaignId = campaignId
     )
 }
 
@@ -1136,7 +1136,9 @@ internal fun FamilyHistoryResponse.toFamilyHistoryEntity(): FamilyHistoryEntity 
         uuid = uuid,
         fhirId = fhirId,
         patientId = patientId,
-        appointmentId = appointmentId,
+        appointmentId = if (campaignId == null) appointmentId else null,
+        campaignAppointmentId = if (campaignId != null) appointmentId else null,
+        campaignId = campaignId,
         appUpdatedDate = appUpdatedDate,
         familyDiseases = familyDiseases,
         occurrenceAgeData = occurrenceAgeData,
@@ -1147,13 +1149,21 @@ internal fun FamilyHistoryResponse.toFamilyHistoryEntity(): FamilyHistoryEntity 
 
 suspend fun FamilyHistoryResponse.toFamilyHistoryEntity(
     patientDao: PatientDao,
-    appointmentDao: AppointmentDao
+    appointmentDao: AppointmentDao,
+    campaignAppointmentDao: CampaignAppointmentDao
 ): FamilyHistoryEntity {
+    val localAppointmentId = if (campaignId != null) {
+        campaignAppointmentDao.getAppointmentIdByFhirId(appointmentId)
+    } else {
+        appointmentDao.getAppointmentIdByFhirId(appointmentId)
+    }
     return FamilyHistoryEntity(
         uuid = uuid,
         fhirId = fhirId,
         appUpdatedDate = appUpdatedDate,
-        appointmentId = appointmentDao.getAppointmentIdByFhirId(appointmentId),
+        appointmentId = if (campaignId == null) localAppointmentId else null,
+        campaignAppointmentId = if (campaignId != null) localAppointmentId else null,
+        campaignId = campaignId,
         patientId = patientDao.getPatientIdByFhirId(patientId)!!,
         practitionerId = practitionerId!!,
         practitionerName = practitionerName!!,
@@ -1167,12 +1177,13 @@ internal fun FamilyHistoryEntity.toFamilyHistoryResponse(): FamilyHistoryRespons
         uuid = uuid,
         fhirId = fhirId,
         appUpdatedDate = appUpdatedDate,
-        appointmentId = appointmentId,
+        appointmentId = (campaignAppointmentId ?: appointmentId)!!,
         patientId = patientId,
         practitionerId = practitionerId,
         practitionerName = practitionerName,
         familyDiseases = familyDiseases,
-        occurrenceAgeData = occurrenceAgeData
+        occurrenceAgeData = occurrenceAgeData,
+        campaignId = campaignId
     )
 }
 

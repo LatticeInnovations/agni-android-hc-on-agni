@@ -103,6 +103,10 @@ interface PreferenceRepository {
     fun setLastSyncFamilyHistory(long: Long)
     fun getLastSyncFamilyHistory(): Long
 
+    /** Last Sync Campaign Family History */
+    fun setLastSyncCampaignFamilyHistory(long: Long)
+    fun getLastSyncCampaignFamilyHistory(): Long
+
     /** Last Sync Allergy */
     fun setLastSyncAllergy(long: Long)
     fun getLastSyncAllergy(): Long

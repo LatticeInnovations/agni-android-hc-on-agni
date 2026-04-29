@@ -141,29 +141,29 @@ class GenericRepositoryImpl @Inject constructor(
             }
     }
 
-    override suspend fun updateFamilyHistoryFhirId() {
-        genericDao.getNotSyncedData(GenericTypeEnum.FAMILY_HISTORY)
+    override suspend fun updateFamilyHistoryFhirId(genericTypeEnum: GenericTypeEnum) {
+        genericDao.getNotSyncedData(genericTypeEnum)
             .forEach { familyHistoryGenericEntity ->
                 updateFamilyHistoryFhirIdInGenericEntity(familyHistoryGenericEntity)
             }
     }
 
-    override suspend fun updateAllergyFhirId() {
-        genericDao.getNotSyncedData(GenericTypeEnum.ALLERGY)
+    override suspend fun updateAllergyFhirId(genericTypeEnum: GenericTypeEnum) {
+        genericDao.getNotSyncedData(genericTypeEnum)
             .forEach { allergyGenericEntity ->
                 updateAllergyFhirIdInGenericEntity(allergyGenericEntity)
             }
     }
 
-    override suspend fun updateRiskFactorsFhirId() {
-        genericDao.getNotSyncedData(GenericTypeEnum.RISK_FACTOR)
+    override suspend fun updateRiskFactorsFhirId(genericTypeEnum: GenericTypeEnum) {
+        genericDao.getNotSyncedData(genericTypeEnum)
             .forEach { riskFactoGenericEntity ->
                 updateRiskFactorFhirIdInGenericEntity(riskFactoGenericEntity)
             }
     }
 
-    override suspend fun updateTobaccoCessationFhirId() {
-        genericDao.getNotSyncedData(GenericTypeEnum.TOBACCO_CESSATION)
+    override suspend fun updateTobaccoCessationFhirId(genericTypeEnum: GenericTypeEnum) {
+        genericDao.getNotSyncedData(genericTypeEnum)
             .forEach { tobaccoCessationGenericEntity ->
                 updateTobaccoCessationFhirIdInGenericEntity(tobaccoCessationGenericEntity)
             }
@@ -257,12 +257,14 @@ class GenericRepositoryImpl @Inject constructor(
         familyHistoryResponse: FamilyHistoryResponse,
         uuid: String
     ): Long {
+        val type = if (familyHistoryResponse.campaignId != null) GenericTypeEnum.CAMPAIGN_FAMILY_HISTORY else GenericTypeEnum.FAMILY_HISTORY
+
         return genericDao.getGenericEntityById(
             patientId = familyHistoryResponse.uuid,
-            genericTypeEnum = GenericTypeEnum.FAMILY_HISTORY,
+            genericTypeEnum = type,
             syncType = SyncType.POST
         ).let { familyHistoryGenericEntity ->
-            insertFamilyHistoryGenericEntity(familyHistoryGenericEntity, familyHistoryResponse, uuid)
+            insertFamilyHistoryGenericEntity(familyHistoryGenericEntity, familyHistoryResponse, uuid, type)
         }
     }
 

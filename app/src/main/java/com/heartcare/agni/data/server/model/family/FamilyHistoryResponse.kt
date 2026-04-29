@@ -13,5 +13,7 @@ data class FamilyHistoryResponse(
     val familyDiseases: List<String>,
     val occurrenceAgeData: String?,
     val practitionerId: String?,
-    val practitionerName: String?
+    val practitionerName: String?,
+    val campaignId: String? = null,
+    val screeningSiteName: String? = null
 )

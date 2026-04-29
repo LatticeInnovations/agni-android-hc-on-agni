@@ -11,7 +11,7 @@ import java.util.Date
 
 @Keep
 @Entity(
-    indices = [Index("patientId"), Index("appointmentId")],
+    indices = [Index("patientId"), Index("appointmentId"),Index("campaignAppointmentId")],
     primaryKeys = ["priorDxUuid"],
     foreignKeys = [
         ForeignKey(
