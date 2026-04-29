@@ -60,6 +60,7 @@ interface SyncRepository {
     suspend fun getAndInsertAllergyData(offset: Int): ResponseMapper<List<AllergyResponse>>
     suspend fun getAndInsertCampaignAllergyData(offset: Int): ResponseMapper<List<AllergyResponse>>
     suspend fun getAndInsertRiskFactorData(offset: Int): ResponseMapper<List<RiskFactorResponse>>
+    suspend fun getAndInsertCampaignRiskFactorData(offset: Int): ResponseMapper<List<RiskFactorResponse>>
     suspend fun getAndInsertTobaccoCessationData(offset: Int): ResponseMapper<List<TobaccoCessationResponse>>
     suspend fun getAndInsertInterventionsData(offset: Int): ResponseMapper<List<InterventionResponse>>
     suspend fun getAndInsertExaminationData(offset: Int): ResponseMapper<List<ExaminationResponse>>
@@ -87,6 +88,7 @@ interface SyncRepository {
     suspend fun sendAllergyPostData(): ResponseMapper<List<CreateResponse>>
     suspend fun sendCampaignAllergyPostData(): ResponseMapper<List<CreateResponse>>
     suspend fun sendRiskFactorPostData(): ResponseMapper<List<CreateResponse>>
+    suspend fun sendCampaignRiskFactorPostData(): ResponseMapper<List<CreateResponse>>
     suspend fun sendTobaccoCessationPostData(): ResponseMapper<List<CreateResponse>>
     suspend fun sendInterventionPostData(): ResponseMapper<List<CreateResponse>>
     suspend fun sendExaminationPostData(): ResponseMapper<List<CreateResponse>>

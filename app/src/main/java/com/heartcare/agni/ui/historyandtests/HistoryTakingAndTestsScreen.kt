@@ -82,6 +82,7 @@ import com.heartcare.agni.utils.constants.NavControllerConstants.RISK_FACTORS_SA
 import com.heartcare.agni.utils.constants.NavControllerConstants.TOBACCO_CESSATION_SAVED
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import timber.log.Timber
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -597,6 +598,7 @@ private fun getBtnText(
         else -> false
     }
 
+    Timber.d("DATAAAAAAAA: $hasData : ${!viewModel.existsInOtherHospital}")
     return if (hasData && !viewModel.existsInOtherHospital) {
         context.getString(updateRes)
     } else {

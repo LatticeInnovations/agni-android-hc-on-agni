@@ -72,6 +72,7 @@ class AddRiskFactorViewModel @Inject constructor(
     var patient by mutableStateOf<PatientResponse?>(null)
     var isLaunched by mutableStateOf(false)
     var appointmentResponseLocal by mutableStateOf<AppointmentResponseLocal?>(null)
+    var selectedCampaignId by mutableStateOf<String?>(null)
 
     var todayRiskFactor by mutableStateOf<RiskFactorResponse?>(null)
 
@@ -245,10 +246,17 @@ class AddRiskFactorViewModel @Inject constructor(
 
     fun getTodayRiskFactor(patientId: String) {
         viewModelScope.launch(ioDispatcher) {
-            val appointmentIds =
-                getInProgressCompletedAppointmentIds(patientId, appointmentRepository)
-            todayRiskFactor = riskFactorRepository.getRiskFactorRecordsByAppointmentIds(*appointmentIds.toTypedArray())
-                .firstOrNull { isToday(it.appUpdatedDate) }
+            val campaignId = selectedCampaignId
+            if (campaignId != null) {
+                // Fetch strictly for the current campaign site
+                todayRiskFactor = riskFactorRepository.getLatestRiskFactorForCampaign(patientId, campaignId)
+            } else {
+                // Standard facility-based lookup
+                val appointmentIds =
+                    getInProgressCompletedAppointmentIds(patientId, appointmentRepository)
+                todayRiskFactor = riskFactorRepository.getRiskFactorRecordsByAppointmentIds(*appointmentIds.toTypedArray())
+                    .firstOrNull { isToday(it.appUpdatedDate) }
+            }
 
             todayRiskFactor?.let { rf ->
                 mapTobacco(rf.tobacco)
@@ -364,6 +372,7 @@ class AddRiskFactorViewModel @Inject constructor(
             fatAndOil = getFatAndOilResponse(),
             sugar = getSugarResponse(),
             mealsOutsideHome = getMealsOutsideHome(),
+            campaignId = selectedCampaignId
         )
     }
 
@@ -458,13 +467,19 @@ class AddRiskFactorViewModel @Inject constructor(
             appointmentResponseLocal = getAppointment(
                 patientId = patient!!.id,
                 hospitalCode = user.hospitalCode,
+                campaignId = selectedCampaignId,
                 appointmentRepository = appointmentRepository
             )
             var uuid = UUIDBuilder.generateUUID()
             var fhirId: String? = null
             todayRiskFactor?.let {
-                uuid = it.uuid
-                fhirId = it.fhirId
+                if (isToday(it.appUpdatedDate) && selectedCampaignId == null) {
+                    uuid = it.uuid
+                    fhirId = it.fhirId
+                } else if (selectedCampaignId != null) {
+                    uuid = it.uuid
+                    fhirId = it.fhirId
+                }
             }
             val riskFactorResponse = getRiskFactorResponse(uuid)
             riskFactorRepository.insertRiskFactor(
@@ -476,19 +491,23 @@ class AddRiskFactorViewModel @Inject constructor(
                         user.lastName
                     ),
                     practitionerId = user.fhirId,
-                    fhirId = fhirId
+                    fhirId = fhirId,
+                    campaignId = selectedCampaignId
                 )
             )
-            genericRepository.insertRiskFactorRecord(riskFactorResponse)
-            checkAndUpdateAppointmentStatusToInProgress(
-                inProgressTime = riskFactorResponse.appUpdatedDate,
-                patient = patient!!,
-                appointmentResponseLocal = appointmentResponseLocal!!,
-                appointmentRepository = appointmentRepository,
-                scheduleRepository = scheduleRepository,
-                genericRepository = genericRepository,
-                preferenceRepository = preferenceRepository
-            )
+            genericRepository.insertRiskFactorRecord(riskFactorResponse = riskFactorResponse)
+
+            if (selectedCampaignId == null) {
+                checkAndUpdateAppointmentStatusToInProgress(
+                    inProgressTime = riskFactorResponse.appUpdatedDate,
+                    patient = patient!!,
+                    appointmentResponseLocal = appointmentResponseLocal!!,
+                    appointmentRepository = appointmentRepository,
+                    scheduleRepository = scheduleRepository,
+                    genericRepository = genericRepository,
+                    preferenceRepository = preferenceRepository
+                )
+            }
             updatePatientLastUpdated(
                 patient!!.id,
                 patientLastUpdatedRepository,

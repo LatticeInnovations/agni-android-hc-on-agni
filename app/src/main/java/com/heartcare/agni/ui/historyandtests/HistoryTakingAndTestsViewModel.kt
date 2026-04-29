@@ -18,10 +18,12 @@ import com.heartcare.agni.data.local.repository.preference.PreferenceRepository
 import com.heartcare.agni.data.local.repository.priordx.PriorDxRepository
 import com.heartcare.agni.data.local.repository.risk.RiskFactorRepository
 import com.heartcare.agni.data.local.repository.schedule.ScheduleRepository
+import com.heartcare.agni.data.local.repository.screeningsite.ScreeningSiteRepository
 import com.heartcare.agni.data.local.repository.tobacco.TobaccoCessationRepository
 import com.heartcare.agni.data.local.roomdb.dao.ScreeningSiteDao
 import com.heartcare.agni.data.local.roomdb.entities.campaign.ScreeningSiteMasterEntity
 import com.heartcare.agni.data.server.model.allergy.AllergyResponse
+import com.heartcare.agni.data.server.model.campaign.ScreeningSiteMasterResponse
 import com.heartcare.agni.data.server.model.family.FamilyHistoryResponse
 import com.heartcare.agni.data.server.model.historymedication.HistoryMedicationResponse
 import com.heartcare.agni.data.server.model.patient.PatientResponse
@@ -53,7 +55,7 @@ class HistoryTakingAndTestsViewModel @Inject constructor(
     private val allergyRepository: AllergyRepository,
     private val riskFactorRepository: RiskFactorRepository,
     private val tobaccoCessationRepository: TobaccoCessationRepository,
-    private val screeningSiteDao: ScreeningSiteDao,
+    private val screeningSiteRepository: ScreeningSiteRepository,
     @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) : BaseViewModel() {
     var isLaunched by mutableStateOf(false)
@@ -91,7 +93,7 @@ class HistoryTakingAndTestsViewModel @Inject constructor(
     var existsInOtherHospital by mutableStateOf(false)
 
     var selectedCampaignId by mutableStateOf<String?>(null)
-    var screeningSites by mutableStateOf(listOf<ScreeningSiteMasterEntity>())
+    var screeningSites by mutableStateOf(listOf<ScreeningSiteMasterResponse>())
     var isScreeningSiteEnabled by mutableStateOf(false)
     var currentStep by mutableIntStateOf(0)
     var selectedType by mutableStateOf<RecordType?>(null)
@@ -102,9 +104,8 @@ class HistoryTakingAndTestsViewModel @Inject constructor(
 
     internal fun loadActiveScreeningSites() {
         viewModelScope.launch(ioDispatcher) {
-            val allSites = Queries.getScreeningSites(screeningSiteDao)
+            val allSites = screeningSiteRepository.getActiveScreeningSites()
             val userFhirId = user.fhirId
-            Timber.d("USERID: $userFhirId")
             screeningSites = allSites.filter { site ->
                 site.staff.any { it.id == userFhirId }
             }
@@ -199,7 +200,7 @@ class HistoryTakingAndTestsViewModel @Inject constructor(
         viewModelScope.launch(ioDispatcher) {
 
             // Load all screening sites once for mapping names
-            val allSites = screeningSiteDao.getScreeningSiteMaster()
+            val allSites = screeningSiteRepository.getScreeningSites()
             val siteMap = allSites.associateBy { it.id }
 
             val appointmentIds =
@@ -212,61 +213,87 @@ class HistoryTakingAndTestsViewModel @Inject constructor(
                 .map { dxResponse ->
                     dxResponse.copy(screeningSiteName = dxResponse.campaignId?.let { siteMap[it]?.name })
                 }.also {
-                if (selectedType == RecordType.FACILITY) {
                     todayPriorDx = it.firstOrNull { priorDx -> isToday(priorDx.createdOn!!) }
-                } else if (selectedCampaignId != null) {
-                    todayPriorDx = priorDxRepository.getLatestPriorDxForCampaign(
-                        patientId,
-                        selectedCampaignId!!
-                    )
+                        ?: it.firstOrNull()?.campaignId?.let { campaignId ->
+                            if (isCampaignActive(campaignId)) {
+                                priorDxRepository.getLatestPriorDxForCampaign(
+                                    patientId,
+                                    campaignId
+                                )
+                            } else null
+                        }
+
+
                 }
-            }
             medicationList =
                 historyMedicationRepository.getHistoryMedicationRecordsByAppointmentIds(*allCombinedIds)
                     .map { medication ->
                         medication.copy(screeningSiteName = medication.campaignId?.let { siteMap[it]?.name })
                     }
                     .also {
-                        if (selectedType == RecordType.FACILITY) {
-                            todayHistoryMedication =
-                                it.firstOrNull { historyMedication -> isToday(historyMedication.appUpdatedDate) }
-                        } else if (selectedCampaignId != null) {
-                            todayHistoryMedication =
-                                historyMedicationRepository.getLatestMedicationForCampaign(
-                                    patientId,
-                                    selectedCampaignId!!
-                                )
-                        }
+                        todayHistoryMedication =
+                            it.firstOrNull { historyMedication -> isToday(historyMedication.appUpdatedDate) }
+                                ?: it.firstOrNull()?.campaignId?.let { campaignId ->
+                                    if (isCampaignActive(campaignId)) {
+                                        historyMedicationRepository.getLatestMedicationForCampaign(
+                                            patientId,
+                                            campaignId
+                                        )
+                                    } else null
+                                }
+
                     }
-            familyHistoryList = familyHistoryRepository.getFamilyHistoryRecordsByAppointmentIds(*allCombinedIds)
-                .map { familyHistory ->
-                    familyHistory.copy(screeningSiteName = familyHistory.campaignId?.let { siteMap[it]?.name })
-                }
-                .also {
-                    if (selectedType == RecordType.FACILITY) {
-                        todayFamilyHistory = it.firstOrNull { familyHistory -> isToday(familyHistory.appUpdatedDate) }
-                    } else if (selectedCampaignId != null) {
-                        todayFamilyHistory = familyHistoryRepository.getLatestFamilyHistoryForCampaign(patientId, selectedCampaignId!!)
+            familyHistoryList =
+                familyHistoryRepository.getFamilyHistoryRecordsByAppointmentIds(*allCombinedIds)
+                    .map { familyHistory ->
+                        familyHistory.copy(screeningSiteName = familyHistory.campaignId?.let { siteMap[it]?.name })
                     }
-                }
+                    .also {
+
+                        todayFamilyHistory =
+                            it.firstOrNull { familyHistory -> isToday(familyHistory.appUpdatedDate) }
+                                ?: it.firstOrNull()?.campaignId?.let { campaignId ->
+                                    if (isCampaignActive(campaignId)) {
+                                        familyHistoryRepository.getLatestFamilyHistoryForCampaign(
+                                            patientId,
+                                            campaignId
+                                        )
+                                    } else null
+                                }
+                    }
             allergyList =
                 allergyRepository.getAllergyRecordsByAppointmentIds(*allCombinedIds)
                     .map { allergy ->
                         allergy.copy(screeningSiteName = allergy.campaignId?.let { siteMap[it]?.name })
                     }
                     .also {
-                        if (selectedType == RecordType.FACILITY) {
-                            todayAllergy = it.firstOrNull { allergy -> isToday(allergy.appUpdatedDate) }
-                        } else if (selectedCampaignId != null) {
-                            todayAllergy =
-                                allergyRepository.getLatestAllergyForCampaign(patientId, selectedCampaignId!!)
-                        }
+                        todayAllergy = it.firstOrNull { allergy -> isToday(allergy.appUpdatedDate) }
+                            ?: it.firstOrNull()?.campaignId?.let { campaignId ->
+                                if (isCampaignActive(campaignId)) {
+                                    allergyRepository.getLatestAllergyForCampaign(
+                                        patientId,
+                                        campaignId
+                                    )
+                                } else null
+                            }
                     }
             riskFactorsList =
-                riskFactorRepository.getRiskFactorRecordsByAppointmentIds(*appointmentIds.toTypedArray())
+                riskFactorRepository.getRiskFactorRecordsByAppointmentIds(*allCombinedIds)
+                    .map { riskFactor ->
+                        riskFactor.copy(screeningSiteName = riskFactor.campaignId?.let { siteMap[it]?.name })
+                    }
                     .also {
+
                         todayRiskFactor =
                             it.firstOrNull { riskFactor -> isToday(riskFactor.appUpdatedDate) }
+                                ?: it.firstOrNull()?.campaignId?.let { campaignId ->
+                                    if (isCampaignActive(campaignId)) {
+                                        riskFactorRepository.getLatestRiskFactorForCampaign(
+                                            patientId,
+                                            campaignId
+                                        )
+                                    } else null
+                                }
                     }
             tobaccoCessationList =
                 tobaccoCessationRepository.getTobaccoCessationRecordsByAppointmentIds(*appointmentIds.toTypedArray())
@@ -276,5 +303,9 @@ class HistoryTakingAndTestsViewModel @Inject constructor(
                     }
             isLoading = false
         }
+    }
+
+    private suspend fun isCampaignActive(campaignId: String): Boolean {
+        return screeningSiteRepository.getScreeningSiteById(campaignId)?.status == "active"
     }
 }

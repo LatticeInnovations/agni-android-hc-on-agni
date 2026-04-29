@@ -22,8 +22,8 @@ import com.heartcare.agni.data.local.repository.patient.lastupdated.PatientLastU
 import com.heartcare.agni.data.local.repository.preference.PreferenceRepository
 import com.heartcare.agni.data.local.repository.referral.ReferralRepository
 import com.heartcare.agni.data.local.repository.schedule.ScheduleRepository
-import com.heartcare.agni.data.local.roomdb.dao.ScreeningSiteDao
-import com.heartcare.agni.data.local.roomdb.entities.campaign.ScreeningSiteMasterEntity
+import com.heartcare.agni.data.local.repository.screeningsite.ScreeningSiteRepository
+import com.heartcare.agni.data.server.model.campaign.ScreeningSiteMasterResponse
 import com.heartcare.agni.data.server.model.cvd.CVDResponse
 import com.heartcare.agni.data.server.model.patient.PatientLastUpdatedResponse
 import com.heartcare.agni.data.server.model.patient.PatientResponse
@@ -68,7 +68,7 @@ class CVDRiskAssessmentViewModel @Inject constructor(
     private val patientLastUpdatedRepository: PatientLastUpdatedRepository,
     private val remoteConfigRepository: RemoteConfigRepository,
     private val referralRepository: ReferralRepository,
-    private val screeningSiteDao: ScreeningSiteDao,
+    private val screeningSiteRepository: ScreeningSiteRepository,
     @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) : ViewModel() {
     val user = preferenceRepository.getUserDetails()!!
@@ -132,7 +132,7 @@ class CVDRiskAssessmentViewModel @Inject constructor(
     var showFollowUpDialog by mutableStateOf(false)
     var isReferralAlreadyExists by mutableStateOf(false)
 
-    var screeningSites by mutableStateOf<List<ScreeningSiteMasterEntity>>(listOf())
+    var screeningSites by mutableStateOf<List<ScreeningSiteMasterResponse>>(listOf())
     var selectedCampaignId by mutableStateOf<String?>(null)
 
     var isScreeningSiteEnabled by mutableStateOf(false)
@@ -151,7 +151,7 @@ class CVDRiskAssessmentViewModel @Inject constructor(
 
     fun getScreeningSites() {
         viewModelScope.launch(ioDispatcher) {
-            val allSites = Queries.getScreeningSites(screeningSiteDao)
+            val allSites = screeningSiteRepository.getActiveScreeningSites()
             val userFhirId = user.fhirId
             screeningSites = allSites.filter { site ->
                 site.staff.any { it.id == userFhirId }
@@ -179,7 +179,7 @@ class CVDRiskAssessmentViewModel @Inject constructor(
                     campaignId = campaignId,
                     appointmentRepository = appointmentRepository,
                     cvdAssessmentRepository = cvdAssessmentRepository,
-                    screeningSiteDao = screeningSiteDao
+                    screeningSiteRepository= screeningSiteRepository
                 )
             } else {
                 // Facility path - load today's facility info
@@ -319,7 +319,7 @@ class CVDRiskAssessmentViewModel @Inject constructor(
             getInProgressCompletedAppointmentIds(patient!!.id, appointmentRepository)
         val campaignAppointmentIds = getScreenSiteAppointmentIds(patient!!.id, appointmentRepository)
 
-        val allSites = screeningSiteDao.getScreeningSiteMaster()
+        val allSites = screeningSiteRepository.getScreeningSites()
         val siteMap = allSites.associateBy { it.id }
 
         previousRecordsWithReferralStatus =

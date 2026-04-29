@@ -52,9 +52,9 @@ fun AddAllergyScreen(
         if (!viewModel.isLaunched) {
            val handle=  navController.previousBackStackEntry?.savedStateHandle
 
+            viewModel.selectedCampaignId = handle?.get<String>(NavControllerConstants.CAMPAIGN_ID)
             handle?.get<PatientResponse>(PATIENT)?.let {
-                    viewModel.patient = it
-                    viewModel.selectedCampaignId = handle.get<String>(NavControllerConstants.CAMPAIGN_ID)
+                viewModel.patient = it
                     viewModel.getTodayAllergy(it.id)
                 }
             viewModel.isLaunched = true

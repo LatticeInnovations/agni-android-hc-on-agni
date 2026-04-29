@@ -17,4 +17,11 @@ class RiskFactorRepositoryImpl @Inject constructor(
     override suspend fun getRiskFactorRecordsByAppointmentIds(vararg appointmentIds: String): List<RiskFactorResponse> {
         return riskFactorDao.getRiskFactorRecordsByAppointmentIds(*appointmentIds).map { it.toRiskFactorResponse() }
     }
+
+    override fun getLatestRiskFactorForCampaign(
+        patientId: String,
+        campaignId: String
+    ): RiskFactorResponse? {
+        return riskFactorDao.getLatestRiskFactorForCampaign(patientId, campaignId)?.toRiskFactorResponse()
+    }
 }

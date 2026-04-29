@@ -52,6 +52,7 @@ fun RiskFactorsView(
                 viewModel.riskFactorsList.forEach { riskFactor ->
                     CardWithRightArrow(
                         date = riskFactor.appUpdatedDate,
+                        screenSiteName = riskFactor.screeningSiteName,
                         onClick = {
                             navController.currentBackStackEntry?.savedStateHandle?.set(RISK_FACTOR, riskFactor)
                             navController.navigate(Screen.RiskFactorsViewScreen.route)

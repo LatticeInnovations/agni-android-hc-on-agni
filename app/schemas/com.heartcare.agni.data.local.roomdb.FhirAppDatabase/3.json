@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 3,
-    "identityHash": "c12a80f4014cf74b57995af8aa5bc06e",
+    "identityHash": "f23100e8a506eba9b15aba3797e3e884",
     "entities": [
       {
         "tableName": "PatientEntity",
@@ -2342,7 +2342,7 @@
       },
       {
         "tableName": "RiskFactorEntity",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`uuid` TEXT NOT NULL, `fhirId` TEXT, `appointmentId` TEXT NOT NULL, `patientId` TEXT NOT NULL, `appUpdatedDate` INTEGER NOT NULL, `practitionerId` TEXT, `practitionerName` TEXT, `tobaccoUser` INTEGER, `tobaccoItemType` INTEGER, `tobaccoOther` TEXT, `consumptionAmount` INTEGER, `consumptionUnit` TEXT, `startAge` INTEGER, `willingToQuit` INTEGER, `consumedWithin30Days` INTEGER, `alcoholQ1` INTEGER, `alcoholQ2` INTEGER, `alcoholQ3` INTEGER, `consumptionInWeek` INTEGER, `fruitsDays` INTEGER, `fruitServings` INTEGER, `vegetableDays` INTEGER, `vegetableServings` INTEGER, `weeklyEngagement` INTEGER, `vigorousDays` INTEGER, `vigorousTime` INTEGER, `moderateDays` INTEGER, `moderateTime` INTEGER, `saltAmount` INTEGER, `saltAddMeal` INTEGER, `saltAddCooking` INTEGER, `saltProcessedFood` INTEGER, `oilUsed` INTEGER, `fatFoodFrequency` INTEGER, `otherFatAndOils` TEXT, `softDrinkFrequency` INTEGER, `juiceFrequency` INTEGER, `eatsOut` INTEGER, `mealsPerWeek` INTEGER, PRIMARY KEY(`uuid`), FOREIGN KEY(`patientId`) REFERENCES `PatientEntity`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION , FOREIGN KEY(`appointmentId`) REFERENCES `AppointmentEntity`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`uuid` TEXT NOT NULL, `fhirId` TEXT, `appointmentId` TEXT, `campaignAppointmentId` TEXT, `campaignId` TEXT, `patientId` TEXT NOT NULL, `appUpdatedDate` INTEGER NOT NULL, `practitionerId` TEXT, `practitionerName` TEXT, `tobaccoUser` INTEGER, `tobaccoItemType` INTEGER, `tobaccoOther` TEXT, `consumptionAmount` INTEGER, `consumptionUnit` TEXT, `startAge` INTEGER, `willingToQuit` INTEGER, `consumedWithin30Days` INTEGER, `alcoholQ1` INTEGER, `alcoholQ2` INTEGER, `alcoholQ3` INTEGER, `consumptionInWeek` INTEGER, `fruitsDays` INTEGER, `fruitServings` INTEGER, `vegetableDays` INTEGER, `vegetableServings` INTEGER, `weeklyEngagement` INTEGER, `vigorousDays` INTEGER, `vigorousTime` INTEGER, `moderateDays` INTEGER, `moderateTime` INTEGER, `saltAmount` INTEGER, `saltAddMeal` INTEGER, `saltAddCooking` INTEGER, `saltProcessedFood` INTEGER, `oilUsed` INTEGER, `fatFoodFrequency` INTEGER, `otherFatAndOils` TEXT, `softDrinkFrequency` INTEGER, `juiceFrequency` INTEGER, `eatsOut` INTEGER, `mealsPerWeek` INTEGER, PRIMARY KEY(`uuid`), FOREIGN KEY(`patientId`) REFERENCES `PatientEntity`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION , FOREIGN KEY(`appointmentId`) REFERENCES `AppointmentEntity`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION , FOREIGN KEY(`campaignAppointmentId`) REFERENCES `CampaignAppointmentEntity`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION )",
         "fields": [
           {
             "fieldPath": "uuid",
@@ -2358,8 +2358,17 @@
           {
             "fieldPath": "appointmentId",
             "columnName": "appointmentId",
-            "affinity": "TEXT",
-            "notNull": true
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "campaignAppointmentId",
+            "columnName": "campaignAppointmentId",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "campaignId",
+            "columnName": "campaignId",
+            "affinity": "TEXT"
           },
           {
             "fieldPath": "patientId",
@@ -2568,6 +2577,24 @@
             ],
             "orders": [],
             "createSql": "CREATE INDEX IF NOT EXISTS `index_RiskFactorEntity_appointmentId` ON `${TABLE_NAME}` (`appointmentId`)"
+          },
+          {
+            "name": "index_RiskFactorEntity_campaignAppointmentId",
+            "unique": false,
+            "columnNames": [
+              "campaignAppointmentId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_RiskFactorEntity_campaignAppointmentId` ON `${TABLE_NAME}` (`campaignAppointmentId`)"
+          },
+          {
+            "name": "index_RiskFactorEntity_campaignId",
+            "unique": false,
+            "columnNames": [
+              "campaignId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_RiskFactorEntity_campaignId` ON `${TABLE_NAME}` (`campaignId`)"
           }
         ],
         "foreignKeys": [
@@ -2588,6 +2615,17 @@
             "onUpdate": "NO ACTION",
             "columns": [
               "appointmentId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          },
+          {
+            "table": "CampaignAppointmentEntity",
+            "onDelete": "NO ACTION",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "campaignAppointmentId"
             ],
             "referencedColumns": [
               "id"
@@ -3512,7 +3550,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'c12a80f4014cf74b57995af8aa5bc06e')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'f23100e8a506eba9b15aba3797e3e884')"
     ]
   }
 }

@@ -3,12 +3,18 @@ package com.heartcare.agni.data.local.roomdb.entities.risk
 import androidx.annotation.Keep
 import androidx.room.*
 import com.heartcare.agni.data.local.roomdb.entities.appointment.AppointmentEntity
+import com.heartcare.agni.data.local.roomdb.entities.campaign.CampaignAppointmentEntity
 import com.heartcare.agni.data.local.roomdb.entities.patient.PatientEntity
 import java.util.*
 
 @Keep
 @Entity(
-    indices = [Index("patientId"), Index("appointmentId")],
+    indices = [
+        Index("patientId"),
+        Index("appointmentId"),
+        Index("campaignAppointmentId"),
+        Index("campaignId")
+    ],
     primaryKeys = ["uuid"],
     foreignKeys = [
         ForeignKey(
@@ -20,13 +26,20 @@ import java.util.*
             entity = AppointmentEntity::class,
             parentColumns = ["id"],
             childColumns = ["appointmentId"]
+        ),
+        ForeignKey(
+            entity = CampaignAppointmentEntity::class,
+            parentColumns = ["id"],
+            childColumns = ["campaignAppointmentId"]
         )
     ]
 )
 data class RiskFactorEntity(
     val uuid: String,
     val fhirId: String?,
-    val appointmentId: String,
+    val appointmentId: String?,
+    val campaignAppointmentId: String?,
+    val campaignId: String?,
     val patientId: String,
     val appUpdatedDate: Date,
     val practitionerId: String?,
