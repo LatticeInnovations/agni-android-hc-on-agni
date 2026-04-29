@@ -81,6 +81,7 @@ import com.heartcare.agni.data.local.model.search.SearchParameters
 import com.heartcare.agni.navigation.Screen
 import com.heartcare.agni.ui.common.BottomNavBar
 import com.heartcare.agni.ui.sitescreendashboard.ReportsScreen
+import com.heartcare.agni.ui.sitescreendashboard.ReportsViewModel
 import com.heartcare.agni.ui.sitescreendashboard.components.DownloadReportBottomSheet
 import com.heartcare.agni.utils.constants.NavControllerConstants.ADD_TO_QUEUE
 import com.heartcare.agni.utils.constants.NavControllerConstants.LOGGED_IN
@@ -97,7 +98,8 @@ import java.util.Date
 fun LandingScreen(
     navController: NavController,
     viewModel: LandingScreenViewModel = hiltViewModel(),
-    queueViewModel: QueueViewModel = hiltViewModel()
+    queueViewModel: QueueViewModel = hiltViewModel(),
+    reportsViewModel: ReportsViewModel = hiltViewModel()
 ) {
     val focusRequester = remember { FocusRequester() }
     val snackbarHostState = remember { SnackbarHostState() }
@@ -238,11 +240,13 @@ fun LandingScreen(
                         title = { Text("Reports", style = MaterialTheme.typography.titleLarge, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth()) },
 
                         actions = {
-                            IconButton(onClick = { viewModel.showDownloadSheet = true }) {
-                                Icon(
-                                    painter = painterResource(id = R.drawable.file_download),
-                                    contentDescription = "Download"
-                                )
+                            if (reportsViewModel.showSummary()) {
+                                IconButton(onClick = { viewModel.showDownloadSheet = true }) {
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.file_download),
+                                        contentDescription = "Download"
+                                    )
+                                }
                             }
                         },
                         colors = TopAppBarDefaults.topAppBarColors(
@@ -627,10 +631,7 @@ fun LandingScreen(
 
     if (viewModel.showDownloadSheet) {
         DownloadReportBottomSheet(
-            onDismissRequest = { viewModel.showDownloadSheet = false },
-            onDownloadClick = {
-                // handle download PDF
-            }
+            onDismissRequest = { viewModel.showDownloadSheet = false }
         )
     }
 }

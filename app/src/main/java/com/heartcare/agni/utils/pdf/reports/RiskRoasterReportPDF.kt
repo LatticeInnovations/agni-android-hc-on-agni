@@ -1,5 +1,6 @@
 package com.heartcare.agni.utils.pdf.reports
 
+import com.heartcare.agni.ui.sitescreendashboard.state.ReportUiState
 import com.heartcare.agni.utils.pdf.reports.CommonPDFComponents.buildSection
 import com.heartcare.agni.utils.pdf.reports.CommonPDFComponents.buildTable
 import com.heartcare.agni.utils.pdf.reports.CommonPDFComponents.reportFooterSection
@@ -7,7 +8,10 @@ import com.heartcare.agni.utils.pdf.reports.CommonPDFComponents.reportHeaderSect
 import com.heartcare.agni.utils.pdf.reports.CommonPDFComponents.reportPdfCss
 
 object RiskRoasterReportPDF {
-    fun getRiskRoasterReportHTML(): String {
+    fun getRiskRoasterReportHTML(
+        metaData: String,
+        currentState: ReportUiState
+    ): String {
         return """
             <!DOCTYPE html>
             <html lang="en">
@@ -18,7 +22,7 @@ object RiskRoasterReportPDF {
               ${reportPdfCss()}
             </head>
             <body>
-                ${reportHeaderSection(title = "Risk Roaster Report")}
+                ${reportHeaderSection(title = "Risk Roaster Report", metaData, currentState)}
                 ${getHighRiskPatientsSection()}
                 ${getModerateRiskPatientsSection()}
                 ${reportFooterSection(title = "Risk Roaster Report")}

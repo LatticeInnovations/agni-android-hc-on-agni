@@ -388,6 +388,11 @@ object TimeConverter {
         return sdf.format(this)
     }
 
+    fun Date.toddMMyy(): String {
+        val sdf = SimpleDateFormat("dd-MM-yy", Locale.getDefault())
+        return sdf.format(this)
+    }
+
     fun Date.formatDateToDayMonth(): String {
         // Create a formatter to get the day and short month (e.g., "04 Mar")
         val formatter = SimpleDateFormat("dd MMM", Locale.getDefault())
@@ -447,6 +452,11 @@ object TimeConverter {
 
     fun Date.toMMMMddyyyy(): String {
         val sdf = SimpleDateFormat("MMMM dd, yyyy", Locale.getDefault())
+        return sdf.format(this)
+    }
+
+    fun Date.toMMMMddyyyyHHmm(): String {
+        val sdf = SimpleDateFormat("MMMM dd, yyyy HH:mm", Locale.getDefault())
         return sdf.format(this)
     }
 

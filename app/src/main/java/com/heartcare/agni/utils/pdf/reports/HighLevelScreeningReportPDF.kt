@@ -1,12 +1,18 @@
 package com.heartcare.agni.utils.pdf.reports
 
+import com.heartcare.agni.data.local.model.report.StatRowData
+import com.heartcare.agni.ui.sitescreendashboard.state.ReportUiState
 import com.heartcare.agni.utils.pdf.reports.CommonPDFComponents.reportFooterSection
 import com.heartcare.agni.utils.pdf.reports.CommonPDFComponents.reportHeaderSection
 import com.heartcare.agni.utils.pdf.reports.CommonPDFComponents.reportPdfCss
 
 object HighLevelScreeningReportPDF {
 
-    fun getHighLevelScreeningReportHTML(): String {
+    fun getHighLevelScreeningReportHTML(
+        metaData: String,
+        currentState: ReportUiState,
+        footerData: String
+    ): String {
         return """
             <!DOCTYPE html>
             <html lang="en">
@@ -17,141 +23,164 @@ object HighLevelScreeningReportPDF {
               ${reportPdfCss()}
             </head>
             <body>
-                ${reportHeaderSection(title = "High-Level Screening Report")}
-                ${getAgeGroupDistributionTable()}
-                ${getBMICategoriesTable()}
-                ${getBloodPressureTable()}
-                ${getSmokingStatusTable()}
-                ${getBloodSugarTable()}
-                ${getTotalCholesterolTable()}
-                ${getCVDRiskTable()}
-                ${reportFooterSection(title = "High-Level Screening Report")}
+                ${reportHeaderSection(title = "High-Level Screening Report", metaData = metaData, currentState = currentState)}
+                ${getAgeGroupDistributionTable(ageGroup = currentState.ageGroups.map { (first, second) -> listOf(first, second) })}
+                ${getBMICategoriesTable(
+                    total = currentState.bmiTotal,
+                    stats = currentState.bmiStats.toTableStats()
+                )}
+                ${getBloodPressureTable(
+                    total = currentState.bloodPressureTotal,
+                    stats = currentState.bloodPressureStats.toTableStats()
+                )}
+                ${getSmokingStatusTable(
+                    total = currentState.smokingTotal,
+                    stats = currentState.smokingStats.toTableStats()
+                )}
+                ${getBloodSugarTable(
+                    fastingTotal = currentState.bloodSugarFastingTotal,
+                    fastingStats = currentState.bloodSugarFastingStats.toTableStats(),
+                    randomTotal = currentState.bloodSugarRandomTotal,
+                    randomStats = currentState.bloodSugarRandomStats.toTableStats()
+                )}
+                ${getTotalCholesterolTable(
+                    total = currentState.cholesterolTotal,
+                    stats = currentState.cholesterolStats.toTableStats()
+                )}
+                ${getCVDRiskTable(
+                    total = currentState.cvdRiskTotal,
+                    stats = currentState.cvdRiskStats.toTableStats()
+                )}
+                ${reportFooterSection(title = "High-Level Screening Report - $footerData")}
             </body>
             </html>
         """.trimIndent()
     }
 
-    private fun getAgeGroupDistributionTable(): String {
+    private fun getAgeGroupDistributionTable(
+        ageGroup: List<List<String>>
+    ): String {
         val table = CommonPDFComponents.buildTable(
             headers = listOf("Age Range", "Count"),
-            rows = listOf(
-                listOf("18-29", "198"),
-                listOf("30-44", "412"),
-                listOf("45-59", "389"),
-                listOf("60+", "248")
-            ),
+            rows = ageGroup,
             columnWeights = listOf("2fr", "1fr")
         )
 
         return CommonPDFComponents.buildSection("Age Group Distribution", table)
     }
 
-    private fun getBMICategoriesTable(): String {
+    private fun getBMICategoriesTable(
+        total: Int,
+        stats: List<List<String>>
+    ): String {
         val table = CommonPDFComponents.buildTable(
             headers = listOf("Category", "Percentage", "Count"),
-            rows = listOf(
-                listOf("Underweight (≤ 18.5 kg/m²)", "5%", "62"),
-                listOf("Normal (18.6 - 24.9 kg/m²)", "43%", "534"),
-                listOf("Overweight (25.0 - 29.9 kg/m²)", "32%", "398"),
-                listOf("Obese (≥ 30.0 kg/m²)", "20%", "253")
-            ),
+            rows = stats,
             columnWeights = listOf("2fr", "1fr", "1fr"),
             highlightColumns = setOf(1)
         )
 
-        return CommonPDFComponents.buildSection("BMI Categories", table)
+        return CommonPDFComponents.buildSection("BMI Categories ($total)", table)
     }
 
-    private fun getBloodPressureTable(): String {
+    private fun getBloodPressureTable(
+        total: Int,
+        stats: List<List<String>>
+    ): String {
         val table = CommonPDFComponents.buildTable(
             headers = listOf("Category", "Percentage", "Count"),
-            rows = listOf(
-                listOf("Normal (< 140/90 mmHg)", "43%", "534 (F 30, M 32)"),
-                listOf("High (140/90 - 159/99 mmHg)", "32%", "398 (F 30, M 32)"),
-                listOf("Very High (≥ 160/100 mmHg)", "20%", "253 (F 30, M 32)")
-            ),
+            rows = stats,
             columnWeights = listOf("2fr", "1fr", "1fr"),
             highlightColumns = setOf(1)
         )
 
-        return CommonPDFComponents.buildSection("Blood Pressure", table)
+        return CommonPDFComponents.buildSection("Blood Pressure ($total)", table)
     }
 
-    private fun getSmokingStatusTable(): String {
+    private fun getSmokingStatusTable(
+        total: Int,
+        stats: List<List<String>>
+    ): String {
         val table = CommonPDFComponents.buildTable(
             headers = listOf("Status", "Percentage", "Count"),
-            rows = listOf(
-                listOf("Yes", "57%", "253 (F 30, M 32)"),
-                listOf("No", "43%", "534 (F 30, M 32)")
-            ),
+            rows = stats,
             columnWeights = listOf("2fr", "1fr", "1fr"),
             highlightColumns = setOf(1)
         )
 
-        return CommonPDFComponents.buildSection("Smoking Status", table)
+        return CommonPDFComponents.buildSection("Smoking Status ($total)", table)
     }
 
-    private fun getBloodSugarTable(): String {
+    private fun getBloodSugarTable(
+        fastingTotal: Int,
+        fastingStats: List<List<String>>,
+        randomTotal: Int,
+        randomStats: List<List<String>>
+    ): String {
 
         val fastingTable = CommonPDFComponents.buildTable(
             headers = listOf("Category", "Percentage", "Count"),
-            rows = listOf(
-                listOf("Normal", "43%", "534 (F 30, M 32)"),
-                listOf("Above Normal", "32%", "398 (F 30, M 32)")
-            ),
+            rows = fastingStats,
             columnWeights = listOf("2fr", "1fr", "1fr"),
             highlightColumns = setOf(1)
         )
 
         val randomTable = CommonPDFComponents.buildTable(
             headers = listOf("Category", "Percentage", "Count"),
-            rows = listOf(
-                listOf("Normal", "43%", "534 (F 30, M 32)"),
-                listOf("Above Normal", "32%", "398 (F 30, M 32)")
-            ),
+            rows = randomStats,
             columnWeights = listOf("2fr", "1fr", "1fr"),
             highlightColumns = setOf(1)
         )
 
         return """
         <div class="section-block">
-            <div class="section-title">Blood Sugar</div>
+            <div class="section-title">Blood Sugar (${fastingTotal + randomTotal})</div>
 
-            <div class="sub-section-title">Fasting</div>
+            <div class="sub-section-title">Fasting (${fastingTotal})</div>
             $fastingTable
 
-            <div class="sub-section-title">Random</div>
+            <div class="sub-section-title">Random (${randomTotal})</div>
             $randomTable
         </div>
     """.trimIndent()
     }
 
-    private fun getTotalCholesterolTable(): String {
+    private fun getTotalCholesterolTable(
+        total: Int,
+        stats: List<List<String>>
+    ): String {
         val table = CommonPDFComponents.buildTable(
             headers = listOf("Category", "Percentage", "Count"),
-            rows = listOf(
-                listOf("Normal", "43%", "534 (F 30, M 32)"),
-                listOf("Above Normal", "32%", "398 (F 30, M 32)")
-            ),
+            rows = stats,
             columnWeights = listOf("2fr", "1fr", "1fr"),
             highlightColumns = setOf(1)
         )
 
-        return CommonPDFComponents.buildSection("Total Cholesterol", table)
+        return CommonPDFComponents.buildSection("Total Cholesterol ($total)", table)
     }
 
-    private fun getCVDRiskTable(): String {
+    private fun getCVDRiskTable(
+        total: Int,
+        stats: List<List<String>>
+    ): String {
         val table = CommonPDFComponents.buildTable(
             headers = listOf("Category", "Percentage", "Count"),
-            rows = listOf(
-                listOf("Low (<10%)", "43%", "534 (F 30, M 32)"),
-                listOf("Moderate (10-20%)", "32%", "398 (F 30, M 32)"),
-                listOf("High (>20%)", "20%", "253 (F 30, M 32)")
-            ),
+            rows = stats,
             columnWeights = listOf("2fr", "1fr", "1fr"),
             highlightColumns = setOf(1)
         )
 
-        return CommonPDFComponents.buildSection("CVD Risk", table)
+        return CommonPDFComponents.buildSection("CVD Risk ($total)", table)
+    }
+
+    private fun List<StatRowData>.toTableStats(): List<List<String>> {
+        return map {
+            listOf(
+                it.label,
+                "${it.percentage}%",
+                "${it.maleCount + it.femaleCount + it.otherCount} " +
+                        "(F ${it.femaleCount}, M ${it.maleCount}, O ${it.otherCount})"
+            )
+        }
     }
 }

@@ -1,5 +1,9 @@
 package com.heartcare.agni.utils.pdf.reports
 
+import com.heartcare.agni.ui.sitescreendashboard.state.ReportUiState
+import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toMMMMddyyyyHHmm
+import java.util.Date
+
 object CommonPDFComponents {
     fun reportPdfCss(): String {
         return """
@@ -195,17 +199,14 @@ object CommonPDFComponents {
     }
 
     fun reportHeaderSection(
-        title: String
+        title: String,
+        metaData: String,
+        currentState: ReportUiState
     ): String {
         return """
           <div class="center">
             <div class="title">$title</div>
-            <div class="subtitle">Health facility: Vila Central</div>
-            <div class="subtitle">Administrative Division: Shefa province</div>
-            <div class="subtitle">Team Lead: Dr. Sarah Naupa, +91 419419412, sarah@gmail.com</div>
-            <div class="subtitle">Date of screening: Mar 15, 2026</div>
-            <div class="subtitle">Date Range: Mar 1, 2026 – Mar 15, 2026</div>
-            <div class="subtitle">Report Generated: April 8, 2026</div>
+            <div class="subtitle">$metaData</div>
           </div>
           <div class="divider"></div>
         
@@ -213,12 +214,13 @@ object CommonPDFComponents {
         
           <div class="card">
             <div class="primary-count">
-              1247 <span>participants</span>
+              ${currentState.totalScreened} <span>participants</span>
             </div>
         
             <div class="secondary-label">
-              Male: <span>664</span>
-              Female: <span>583</span>
+              Male: <span>${currentState.totalMale}</span>
+              Female: <span>${currentState.totalFemale}</span>
+              Other: <span>${currentState.totalOther}</span>
             </div>
           </div>
         """.trimIndent()
@@ -283,8 +285,8 @@ object CommonPDFComponents {
               <div class="footer-divider"></div>
             
               <div class="footer">
-                <div>$title - Shefa province</div>
-                <div>Generated on April 8, 2026</div>
+                <div>$title</div>
+                <div>Generated on ${Date().toMMMMddyyyyHHmm()}</div>
               </div>
           </div>
         """.trimIndent()

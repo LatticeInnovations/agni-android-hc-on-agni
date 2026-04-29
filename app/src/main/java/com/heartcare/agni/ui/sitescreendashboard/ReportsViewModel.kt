@@ -169,7 +169,9 @@ class ReportsViewModel @Inject constructor(
 
         campaignDateRange = listOfNotNull(start, end).joinToString(" - ")
 
-        campaignLocation = selectedCampaign?.location ?: ""
+        campaignLocation = selectedCampaign?.location?.takeIf { it.isNotBlank() }
+            ?: selectedCampaign?.areaCouncil?.takeIf { it.isNotBlank() }
+                    ?: ""
 
         viewModelScope.launch(ioDispatcher) {
             val appointments = appointmentRepository.getAppointmentForCampaign(selectedCampaign?.id ?: "")
