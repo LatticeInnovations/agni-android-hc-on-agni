@@ -14,8 +14,6 @@ import com.heartcare.agni.data.local.repository.preference.PreferenceRepository
 import com.heartcare.agni.data.local.repository.schedule.ScheduleRepository
 import com.heartcare.agni.data.local.repository.screeningsite.ScreeningSiteRepository
 import com.heartcare.agni.data.local.repository.vital.VitalRepository
-import com.heartcare.agni.data.local.roomdb.dao.ScreeningSiteDao
-import com.heartcare.agni.data.local.roomdb.entities.campaign.ScreeningSiteMasterEntity
 import com.heartcare.agni.data.server.model.campaign.ScreeningSiteMasterResponse
 import com.heartcare.agni.data.server.model.cvd.CVDResponse
 import com.heartcare.agni.data.server.model.patient.PatientResponse
@@ -34,7 +32,6 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import timber.log.Timber
 import java.util.Date
 import javax.inject.Inject
 

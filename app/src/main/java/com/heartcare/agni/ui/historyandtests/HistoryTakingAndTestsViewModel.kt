@@ -20,8 +20,6 @@ import com.heartcare.agni.data.local.repository.risk.RiskFactorRepository
 import com.heartcare.agni.data.local.repository.schedule.ScheduleRepository
 import com.heartcare.agni.data.local.repository.screeningsite.ScreeningSiteRepository
 import com.heartcare.agni.data.local.repository.tobacco.TobaccoCessationRepository
-import com.heartcare.agni.data.local.roomdb.dao.ScreeningSiteDao
-import com.heartcare.agni.data.local.roomdb.entities.campaign.ScreeningSiteMasterEntity
 import com.heartcare.agni.data.server.model.allergy.AllergyResponse
 import com.heartcare.agni.data.server.model.campaign.ScreeningSiteMasterResponse
 import com.heartcare.agni.data.server.model.family.FamilyHistoryResponse
@@ -39,7 +37,6 @@ import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.isTod
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.launch
-import timber.log.Timber
 import javax.inject.Inject
 
 @HiltViewModel
