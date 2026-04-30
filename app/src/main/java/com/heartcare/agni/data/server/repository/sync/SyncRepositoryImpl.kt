@@ -6,6 +6,7 @@ import com.heartcare.agni.data.local.enums.RecordType
 import com.heartcare.agni.data.local.enums.SyncType
 import com.heartcare.agni.data.local.model.diagnosis.DiagnosisData
 import com.heartcare.agni.data.local.repository.crashlytics.CrashlyticsLogger
+import com.heartcare.agni.data.local.repository.nationalId.NationalIdRepository
 import com.heartcare.agni.data.local.repository.preference.PreferenceRepository
 import com.heartcare.agni.data.local.roomdb.dao.AllergyDao
 import com.heartcare.agni.data.local.roomdb.dao.AppointmentDao
@@ -119,6 +120,7 @@ class SyncRepositoryImpl @Inject constructor(
     patientDao: PatientDao,
     private val genericDao: GenericDao,
     private val preferenceRepository: PreferenceRepository,
+    private val nationalIdRepository: NationalIdRepository,
     medicationDao: MedicationDao,
     prescriptionDao: PrescriptionDao,
     scheduleDao: ScheduleDao,
@@ -3075,6 +3077,103 @@ class SyncRepositoryImpl @Inject constructor(
                 statusCode = 0,
                 errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
             )
+        }
+    }
+
+    override suspend fun getAndSaveNationalIdData(): ResponseMapper<Nothing> {
+        return try {
+            // Todo: Replace it after server binding
+            val dummyJson = """
+            [
+              {
+                "national_id": "1123665",
+                "last_name": "Rosko",
+                "middle_name": "Alison",
+                "first_name": "May",
+                "date_of_birth": "2023-05-15",
+                "gender": "Female"
+              },
+              {
+                "national_id": "1123638",
+                "last_name": "Taso",
+                "middle_name": "Emmy",
+                "first_name": "Raevely",
+                "date_of_birth": "2023-05-17",
+                "gender": "Female"
+              },
+              {
+                "national_id": "1123634",
+                "last_name": "Kuaramu",
+                "middle_name": "Luke",
+                "first_name": "Junior",
+                "date_of_birth": "2024-09-12",
+                "gender": "Male"
+              },
+              {
+                "national_id": "1123633",
+                "last_name": "Liu",
+                "middle_name": "",
+                "first_name": "Huajian",
+                "date_of_birth": "1996-06-17",
+                "gender": "Male"
+              },
+              {
+                "national_id": "1123628",
+                "last_name": "Lin",
+                "middle_name": "",
+                "first_name": "Qiaoli",
+                "date_of_birth": "1992-03-07",
+                "gender": "Male"
+              },
+              {
+                "national_id": "1123624",
+                "last_name": "Xu",
+                "middle_name": "",
+                "first_name": "Hongkun",
+                "date_of_birth": "2000-08-15",
+                "gender": "Male"
+              },
+              {
+                "national_id": "1123619",
+                "last_name": "Wu",
+                "middle_name": "",
+                "first_name": "Jincai",
+                "date_of_birth": "1988-04-20",
+                "gender": "Male"
+              },
+              {
+                "national_id": "1123617",
+                "last_name": "Namu",
+                "middle_name": "Sima",
+                "first_name": "Kauna",
+                "date_of_birth": "2025-06-25",
+                "gender": "Male"
+              },
+              {
+                "national_id": "1123615",
+                "last_name": "Namu",
+                "middle_name": "",
+                "first_name": "Rota",
+                "date_of_birth": "2023-10-17",
+                "gender": "Female"
+              },
+              {
+                "national_id": "1123611",
+                "last_name": "Muliaki",
+                "middle_name": "",
+                "first_name": "Anthony",
+                "date_of_birth": "2018-10-07",
+                "gender": "Male"
+              }
+            ]
+        """.trimIndent()
+
+            nationalIdRepository.saveNationalIdData(dummyJson)
+
+            ApiEmptyResponse()
+
+        } catch (e: Exception) {
+            ApiErrorResponse(statusCode = 0, errorMessage = e.localizedMessage ?: "Error in saving National Id Data")
         }
     }
 }
