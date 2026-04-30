@@ -1,7 +1,9 @@
 package com.heartcare.agni.data.server.api
 
 import com.heartcare.agni.base.server.BaseResponse
+import com.heartcare.agni.data.server.constants.EndPoints.REPORT_TOKEN
 import com.heartcare.agni.data.server.model.create.CreateResponse
+import com.heartcare.agni.data.server.model.report.ReportTokenResponse
 import com.heartcare.agni.data.server.model.scheduleandappointment.appointment.AppointmentResponse
 import com.heartcare.agni.data.server.model.scheduleandappointment.schedule.ScheduleResponse
 import retrofit2.Response
@@ -9,9 +11,8 @@ import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.PATCH
 import retrofit2.http.POST
-import retrofit2.http.QueryMap
-
 import retrofit2.http.Path
+import retrofit2.http.QueryMap
 
 @JvmSuppressWildcards
 interface ScheduleAndAppointmentApiService {
@@ -42,4 +43,7 @@ interface ScheduleAndAppointmentApiService {
 
     @PATCH("Appointment")
     suspend fun patchListOfChanges(@Body patchLogs: List<Map<String, Any>>): Response<BaseResponse<List<CreateResponse>>>
+
+    @GET(REPORT_TOKEN)
+    suspend fun getAppointmentReportToken(@QueryMap(encoded = true) map: Map<String, String>?): Response<BaseResponse<List<ReportTokenResponse>>>
 }

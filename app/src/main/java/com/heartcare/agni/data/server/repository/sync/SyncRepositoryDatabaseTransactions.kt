@@ -57,6 +57,7 @@ import com.heartcare.agni.data.server.model.scheduleandappointment.schedule.Sche
 import com.heartcare.agni.data.server.model.tobacco.TobaccoCessationResponse
 import com.heartcare.agni.data.server.model.vitals.VitalResponse
 import com.heartcare.agni.data.server.model.campaign.ScreeningSiteMasterResponse
+import com.heartcare.agni.data.server.model.report.ReportTokenResponse
 import com.heartcare.agni.utils.constants.ErrorConstants
 import com.heartcare.agni.utils.constants.ErrorConstants.APPOINTMENT_ERROR
 import com.heartcare.agni.utils.constants.ErrorConstants.DUPLICATE_RECORD
@@ -89,6 +90,7 @@ import com.heartcare.agni.utils.converters.responseconverter.toScheduleEntity
 import com.heartcare.agni.utils.converters.responseconverter.toTobaccoCessationEntity
 import com.heartcare.agni.utils.converters.responseconverter.toScreeningSiteMasterEntity
 import com.heartcare.agni.utils.converters.responseconverter.toCampaignAppointmentEntity
+import com.heartcare.agni.utils.converters.responseconverter.toReportTokenEntity
 import com.heartcare.agni.utils.converters.responseconverter.toVitalEntity
 import java.util.UUID
 
@@ -710,6 +712,12 @@ open class SyncRepositoryDatabaseTransactions(
     protected suspend fun insertReferral(body: List<ReferralResponse>) {
         referralDao.insertReferralRecord(
             *body.map { it.toReferralEntity(patientDao, appointmentDao) }.toTypedArray()
+        )
+    }
+
+    protected suspend fun insertReportToken(body: List<ReportTokenResponse>) {
+        appointmentDao.insertReportToken(
+            *body.map { it.toReportTokenEntity(appointmentDao) }.toTypedArray()
         )
     }
 }

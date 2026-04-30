@@ -1762,9 +1762,11 @@ fun HealthFacilityEntity.toLevelResponse(): LevelResponse {
     )
 }
 
-fun ReportTokenResponse.toReportTokenEntity(): ReportTokenEntity {
+suspend fun ReportTokenResponse.toReportTokenEntity(
+    appointmentDao: AppointmentDao
+): ReportTokenEntity {
     return ReportTokenEntity(
-        appointmentId = appointmentId,
+        appointmentId = appointmentDao.getAppointmentIdByFhirId(appointmentId),
         token = token
     )
 }

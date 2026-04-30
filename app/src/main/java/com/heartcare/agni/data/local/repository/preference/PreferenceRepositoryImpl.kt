@@ -260,6 +260,12 @@ class PreferenceRepositoryImpl @Inject constructor(private val preferenceStorage
     override fun getLastMedicineDosageInstructionSyncDate() =
         preferenceStorage.lastMedicineDosageInstructionSyncTime
 
+    override fun setLastSyncReportToken(long: Long) {
+        preferenceStorage.lastSyncReportToken = long
+    }
+
+    override fun getLastSyncReportToken(): Long = preferenceStorage.lastSyncReportToken
+
     override fun setRoomDBEncryptionKey(encryptionKey: String) {
         preferenceStorage.roomDBEncryptionKey = encryptionKey
     }
