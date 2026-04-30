@@ -276,7 +276,7 @@ class SyncRepositoryImpl @Inject constructor(
                         map[PATIENT_ID] =
                             listOfGenericEntity.map { it.payload }.toNoBracketAndNoSpaceString()
                         map[COUNT] = DEFAULT_MAX_COUNT_VALUE.toString()
-                        ApiResponseConverter.convert(prescriptionApiService.getPastPrescription(map))
+                        ApiResponseConverter.convert(prescriptionApiService.getPastPrescription(MEDICATION_REQUEST,map))
                             .run {
                                 when (this) {
                                     is ApiEndResponse -> {
@@ -296,6 +296,7 @@ class SyncRepositoryImpl @Inject constructor(
             } else {
                 ApiResponseConverter.convert(
                     prescriptionApiService.getPastPrescription(
+                        MEDICATION_REQUEST,
                         mapOf(
                             Pair(PATIENT_ID, patientId)
                         )
@@ -316,6 +317,75 @@ class SyncRepositoryImpl @Inject constructor(
             crashlyticsLogger.logException(
                 e,
                 "getAndInsertFormPrescription function failed.",
+                mapOf(
+                    Pair(
+                        USER_ID,
+                        preferenceRepository.getUserDetails()?.userId ?: ERROR_FETCHING_USER_DETAILS
+                    )
+                )
+            )
+            ApiErrorResponse(
+                statusCode = 0,
+                errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
+            )
+        }
+    }
+
+    override suspend fun getAndInsertCampaignPrescription(patientId: String?): ResponseMapper<List<PrescriptionResponse>> {
+        return try {
+            if (patientId == null) {
+                genericDao.getSameTypeGenericEntityPayload(
+                    GenericTypeEnum.FHIR_IDS_PRESCRIPTION, SyncType.POST, COUNT_VALUE
+                ).let { listOfGenericEntity ->
+                    if (listOfGenericEntity.isEmpty()) ApiEmptyResponse()
+                    else {
+                        val map = mutableMapOf<String, String>()
+                        map[PATIENT_ID] =
+                            listOfGenericEntity.map { it.payload }.toNoBracketAndNoSpaceString()
+                        map[COUNT] = DEFAULT_MAX_COUNT_VALUE.toString()
+                        ApiResponseConverter.convert(prescriptionApiService.getPastPrescription(
+                            EndPoints.CAMPAIGN_PRESCRIPTION,
+                            map))
+                            .run {
+                                when (this) {
+                                    is ApiEndResponse -> {
+                                        insertFormPrescriptions(body)
+                                        genericDao.deleteSyncPayload(listOfGenericEntity.toListOfId())
+                                        getAndInsertFormPrescription(null)
+                                    }
+
+                                    else -> {
+                                        this
+                                    }
+                                }
+
+                            }
+                    }
+                }
+            } else {
+                ApiResponseConverter.convert(
+                    prescriptionApiService.getPastPrescription(
+                        EndPoints.CAMPAIGN_PRESCRIPTION,
+                        mapOf(
+                            Pair(PATIENT_ID, patientId)
+                        )
+                    )
+                ).run {
+                    when (this) {
+                        is ApiEndResponse -> {
+                            insertFormPrescriptions(body)
+                            this
+                        }
+
+                        else -> this
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            Timber.e(e, e.localizedMessage)
+            crashlyticsLogger.logException(
+                e,
+                "getAndInsertCampaignFormPrescription function failed.",
                 mapOf(
                     Pair(
                         USER_ID,
@@ -1179,20 +1249,20 @@ class SyncRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun sendFormPrescriptionPostData(): ResponseMapper<List<CreateResponse>> {
+    override suspend fun sendFormPrescriptionPostData(genericTypeEnum: GenericTypeEnum, endPoint: String): ResponseMapper<List<CreateResponse>> {
         return try {
             genericDao.getSameTypeGenericEntityPayload(
-                genericTypeEnum = GenericTypeEnum.PRESCRIPTION,
+                genericTypeEnum = genericTypeEnum,
                 syncType = SyncType.POST
             ).let { listOfGenericEntity ->
                 if (listOfGenericEntity.isEmpty()) ApiEmptyResponse()
                 else {
                     ApiResponseConverter.convert(
                         prescriptionApiService.postPrescriptionRelatedData(
-                            MEDICATION_REQUEST,
+                            endPoint,
                             listOfGenericEntity.map { prescriptionGenericEntity ->
                                 prescriptionGenericEntity.payload.fromJson<LinkedTreeMap<*, *>>()
-                                    .mapToObject(PrescriptionResponse::class.java)!!
+                                    .mapToObject(PrescriptionResponse::class.java)!!.copy(campaignId = null)
                             }
                         )
                     ).run {
@@ -1202,7 +1272,7 @@ class SyncRepositoryImpl @Inject constructor(
                                     listOfGenericEntity,
                                     body
                                 ).let { deletedRows ->
-                                    if (deletedRows > 0) sendFormPrescriptionPostData() else this
+                                    if (deletedRows > 0) sendFormPrescriptionPostData(genericTypeEnum, endPoint) else this
                                 }
                             }
 
@@ -2038,18 +2108,21 @@ class SyncRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun sendPrescriptionPutData(): ResponseMapper<List<CreateResponse>> {
+    override suspend fun sendPrescriptionPutData(genericTypeEnum: GenericTypeEnum, endPoint: String): ResponseMapper<List<CreateResponse>> {
         return try {
             genericDao.getSameTypeGenericEntityPayload(
-                genericTypeEnum = GenericTypeEnum.PRESCRIPTION, syncType = SyncType.PUT
+                genericTypeEnum = genericTypeEnum, syncType = SyncType.PUT
             ).let { listOfGenericEntity ->
                 if (listOfGenericEntity.isEmpty()) ApiEmptyResponse()
                 else {
                     ApiResponseConverter.convert(
                         prescriptionApiService.sendPrescriptionPut(
+                            endPoint,
                             listOfGenericEntity.map { prescriptionGenericEntity ->
                                 prescriptionGenericEntity.payload.fromJson<LinkedTreeMap<*, *>>()
-                                    .mapToObject(PrescriptionResponse::class.java)!!
+                                    .mapToObject(PrescriptionResponse::class.java)!!.let {
+                                        if (genericTypeEnum == GenericTypeEnum.CAMPAIGN_PRESCRIPTION) it.copy(campaignId = null) else it
+                                    }
                             }
                         )
                     ).run {
@@ -2059,7 +2132,7 @@ class SyncRepositoryImpl @Inject constructor(
                                     listOfGenericEntity,
                                     body
                                 ).let {
-                                    if (it > 0) sendPrescriptionPutData() else this
+                                    if (it > 0) sendPrescriptionPutData(genericTypeEnum, endPoint) else this
                                 }
                             }
 

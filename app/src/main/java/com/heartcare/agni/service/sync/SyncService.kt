@@ -31,6 +31,7 @@ class SyncService(
     private lateinit var campaignScheduleDownloadJob: Deferred<ResponseMapper<Any>?>
     private lateinit var appointmentPatchJob: Deferred<ResponseMapper<Any>?>
     private lateinit var prescriptionPatchJob: Deferred<ResponseMapper<Any>?>
+    private lateinit var campaignPrescriptionPatchJob: Deferred<ResponseMapper<Any>?>
     private lateinit var interventionPatchJob: Deferred<ResponseMapper<Any>?>
     private lateinit var examinationPatchJob: Deferred<ResponseMapper<Any>?>
     private lateinit var interventionMasterDownloadJob: Deferred<ResponseMapper<Any>?>
@@ -52,6 +53,7 @@ class SyncService(
                     async { uploadPatientAndScheduleJob(logout) },
                     async { patchPatient(logout) },
                     async { patchPrescription(logout) },
+                    async { patchCampaignPrescription(logout) },
                     async { patchIntervention(logout) },
                     async { patchExamination(logout) },
                     async { uploadPatientLastUpdatedData(logout) },
@@ -241,7 +243,8 @@ class SyncService(
                     async { updateFhirIdInCampaignAllergy(logout) },
                     async { updateFhirIdInCampaignRiskFactors(logout) },
                     async { updateFhirIdInCampaignTobaccoCessation(logout) },
-                    async { updateFhirIdInCampaignDiagnosis(logout) }
+                    async { updateFhirIdInCampaignDiagnosis(logout) },
+                    async { updateFhirIdInCampaignPrescription(logout) }
                 )
 
                 // Wait for all of them to complete
@@ -253,7 +256,11 @@ class SyncService(
 
     /** Upload Form Prescription*/
     private suspend fun uploadFormPrescriptionData(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
-        return checkAuthenticationStatus(syncRepository.sendFormPrescriptionPostData(), logout)
+        return checkAuthenticationStatus(syncRepository.sendFormPrescriptionPostData(GenericTypeEnum.PRESCRIPTION, EndPoints.MEDICATION_REQUEST), logout)
+    }
+
+    private suspend fun uploadCampaignFormPrescriptionData(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
+        return checkAuthenticationStatus(syncRepository.sendFormPrescriptionPostData(GenericTypeEnum.CAMPAIGN_PRESCRIPTION, EndPoints.CAMPAIGN_PRESCRIPTION), logout)
     }
 
     /** Upload Patient Last Updated Data */
@@ -390,10 +397,29 @@ class SyncService(
     internal suspend fun patchPrescription(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
         coroutineScope {
             prescriptionPatchJob = async {
-                checkAuthenticationStatus(syncRepository.sendPrescriptionPutData(), logout)
+                checkAuthenticationStatus(
+                    syncRepository.sendPrescriptionPutData(
+                        GenericTypeEnum.PRESCRIPTION,
+                        EndPoints.MEDICATION_REQUEST
+                    ), logout
+                )
             }
         }
         return prescriptionPatchJob.await()
+    }
+
+    internal suspend fun patchCampaignPrescription(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
+        coroutineScope {
+            campaignPrescriptionPatchJob = async {
+                checkAuthenticationStatus(
+                    syncRepository.sendPrescriptionPutData(
+                        GenericTypeEnum.CAMPAIGN_PRESCRIPTION,
+                        EndPoints.CAMPAIGN_PRESCRIPTION
+                    ), logout
+                )
+            }
+        }
+        return campaignPrescriptionPatchJob.await()
     }
 
     /** Patch Intervention */
@@ -496,7 +522,12 @@ class SyncService(
                     async { downloadCampaignAllergy(logout) },
                     async { downloadCampaignRiskFactors(logout) },
                     async { downloadCampaignTobaccoCessation(logout) },
-                    async { downloadCampaignDiagnosis(logout) }
+                    async { downloadCampaignTobaccoCessation(logout) },
+                    async { downloadCampaignDiagnosis(logout) },
+                    async {
+                        campaignPrescriptionPatchJob.await()
+                        downloadCampaignFormPrescription(null, logout)
+                    }
                 )
                 jobs.awaitAll()
             }
@@ -511,6 +542,16 @@ class SyncService(
     ): ResponseMapper<Any>? {
         return checkAuthenticationStatus(
             syncRepository.getAndInsertFormPrescription(patientId),
+            logout
+        )
+    }
+
+    internal suspend fun downloadCampaignFormPrescription(
+        patientId: String?,
+        logout: (Boolean, String) -> Unit
+    ): ResponseMapper<Any>? {
+        return checkAuthenticationStatus(
+            syncRepository.getAndInsertCampaignPrescription(patientId),
             logout
         )
     }
@@ -755,9 +796,15 @@ class SyncService(
 
     /** Update Appointment FHIR ID in Prescription */
     private suspend fun updateFhirIdInPrescription(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
-        genericRepository.updatePrescriptionFhirId()
+        genericRepository.updatePrescriptionFhirId(GenericTypeEnum.PRESCRIPTION)
         /** Upload Prescription */
         return uploadFormPrescriptionData(logout)
+    }
+
+    private suspend fun updateFhirIdInCampaignPrescription(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
+        genericRepository.updatePrescriptionFhirId(GenericTypeEnum.CAMPAIGN_PRESCRIPTION)
+        /** Upload Campaign Prescription */
+        return uploadCampaignFormPrescriptionData(logout)
     }
 
     /** Update Appointment FHIR ID in CVD */

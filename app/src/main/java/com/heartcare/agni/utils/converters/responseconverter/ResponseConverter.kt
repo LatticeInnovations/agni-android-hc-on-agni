@@ -245,10 +245,13 @@ internal suspend fun PrescriptionResponse.toPrescriptionEntity(
         id = prescriptionId!!,
         prescriptionDate = generatedOn,
         patientId = patientDao.getPatientIdByFhirId(patientFhirId)!!,
-        appointmentId = appointmentUuid!!,
+        appointmentId = if (campaignId==null)appointmentUuid!! else null,
+        campaignAppointmentId = if (campaignId!=null) appointmentUuid!! else null,
         patientFhirId = patientFhirId,
         prescriptionFhirId = prescriptionFhirId,
-        prescriptionType = PrescriptionType.FORM.type
+        prescriptionType = PrescriptionType.FORM.type,
+        campaignId = campaignId,
+        screeningSiteName = screeningSiteName
     )
 }
 
@@ -257,10 +260,13 @@ internal fun PrescriptionResponseLocal.toPrescriptionEntity(): PrescriptionEntit
         id = prescriptionId,
         prescriptionDate = generatedOn,
         patientId = patientId,
-        appointmentId = appointmentId,
+        appointmentId = if (campaignId.isNullOrEmpty()) appointmentId else null,
+        campaignAppointmentId = if (!campaignId.isNullOrEmpty()) appointmentId else null,
         patientFhirId = patientFhirId,
         prescriptionFhirId = prescriptionFhirId,
-        prescriptionType = PrescriptionType.FORM.type
+        prescriptionType = PrescriptionType.FORM.type,
+        campaignId = campaignId,
+        screeningSiteName = screeningSiteName
     )
 }
 
@@ -575,11 +581,13 @@ internal fun PrescriptionAndMedicineRelation.toPrescriptionResponseLocal(): Pres
     return PrescriptionResponseLocal(
         patientId = prescriptionEntity.patientId,
         patientFhirId = prescriptionEntity.patientFhirId,
-        appointmentId = prescriptionEntity.appointmentId,
+        appointmentId = if(prescriptionEntity.campaignId==null)prescriptionEntity.appointmentId!! else prescriptionEntity.campaignAppointmentId!!,
         generatedOn = prescriptionEntity.prescriptionDate,
         prescriptionId = prescriptionEntity.id,
         prescription = prescriptionDirectionAndMedicineView.map { prescriptionDirectionAndMedicineView -> prescriptionDirectionAndMedicineView.toMedicationLocal() },
-        prescriptionFhirId = prescriptionEntity.prescriptionFhirId
+        prescriptionFhirId = prescriptionEntity.prescriptionFhirId,
+        campaignId = prescriptionEntity.campaignId,
+        screeningSiteName = prescriptionEntity.screeningSiteName
     )
 }
 

@@ -1,10 +1,12 @@
 package com.heartcare.agni.ui.prescription
 
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewModelScope
 import com.heartcare.agni.base.viewmodel.BaseViewModel
+import com.heartcare.agni.data.local.enums.RecordType
 import com.heartcare.agni.data.local.model.appointment.AppointmentResponseLocal
 import com.heartcare.agni.data.local.model.prescription.MedicationLocal
 import com.heartcare.agni.data.local.model.prescription.PrescriptionResponseLocal
@@ -16,9 +18,11 @@ import com.heartcare.agni.data.local.repository.patient.lastupdated.PatientLastU
 import com.heartcare.agni.data.local.repository.preference.PreferenceRepository
 import com.heartcare.agni.data.local.repository.prescription.PrescriptionRepository
 import com.heartcare.agni.data.local.repository.schedule.ScheduleRepository
+import com.heartcare.agni.data.local.repository.screeningsite.ScreeningSiteRepository
 import com.heartcare.agni.data.local.repository.search.SearchRepository
 import com.heartcare.agni.data.local.roomdb.entities.medication.MedicineTimingEntity
 import com.heartcare.agni.data.local.roomdb.entities.prescription.PrescriptionAndMedicineRelation
+import com.heartcare.agni.data.server.model.campaign.ScreeningSiteMasterResponse
 import com.heartcare.agni.data.server.model.patient.PatientResponse
 import com.heartcare.agni.data.server.model.prescription.medication.MedicationResponse
 import com.heartcare.agni.data.server.model.prescription.prescriptionresponse.Medication
@@ -52,7 +56,8 @@ class PrescriptionViewModel @Inject constructor(
     private val appointmentRepository: AppointmentRepository,
     private val scheduleRepository: ScheduleRepository,
     private val patientLastUpdatedRepository: PatientLastUpdatedRepository,
-    private val preferenceRepository: PreferenceRepository,
+    val preferenceRepository: PreferenceRepository,
+    val screeningSiteRepository: ScreeningSiteRepository,
     @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) : BaseViewModel() {
     val user = preferenceRepository.getUserDetails()!!
@@ -93,6 +98,27 @@ class PrescriptionViewModel @Inject constructor(
     var showAppointmentCompletedDialog by mutableStateOf(false)
     var isAppointmentCompleted by mutableStateOf(false)
     var existsInOtherHospital by mutableStateOf(false)
+    var isScreeningSiteEnabled by mutableStateOf(false)
+    var currentStep by mutableIntStateOf(0)
+    var screeningSites by mutableStateOf<List<ScreeningSiteMasterResponse>>(listOf())
+    var selectedCampaignId by mutableStateOf<String?>(null)
+    var selectedType by mutableStateOf<RecordType?>(null)
+
+    init {
+        getScreeningSites()
+    }
+
+    fun getScreeningSites() {
+        viewModelScope.launch(ioDispatcher) {
+            val allSites = screeningSiteRepository.getActiveScreeningSites()
+            val userFhirId = user.fhirId
+            screeningSites = allSites.filter { site ->
+                site.staff.any { it.id == userFhirId }
+            }
+            isScreeningSiteEnabled = screeningSites.isNotEmpty()
+            currentStep = 0
+        }
+    }
 
     var isReprescribing by mutableStateOf(false)
     var represcribingPrescription by mutableStateOf<PrescriptionAndMedicineRelation?>(null)
@@ -101,16 +127,41 @@ class PrescriptionViewModel @Inject constructor(
         patientId: String
     ) {
         viewModelScope.launch(ioDispatcher) {
-            val appointmentIds =
-                getInProgressCompletedAppointmentIds(patientId, appointmentRepository)
-            previousPrescriptionList =
-                prescriptionRepository.getLastPrescriptionAndMedicineByAppointmentId(*appointmentIds.toTypedArray())
-            todayPrescription =
-                previousPrescriptionList.firstOrNull { isToday(it.prescriptionEntity.prescriptionDate) }
+            val allSites = screeningSiteRepository.getScreeningSites()
+            val siteMap = allSites.associateBy { it.id }
+            val appointmentIds = getInProgressCompletedAppointmentIds(patientId, appointmentRepository)
+            val screenSiteAppointmentIds = Queries.getScreenSiteAppointmentIds(patientId, appointmentRepository)
+            val allCombinedIds = (screenSiteAppointmentIds + appointmentIds).toTypedArray()
+            
+            previousPrescriptionList = prescriptionRepository.getLastPrescriptionAndMedicineByAppointmentId(*allCombinedIds).map { relation ->
+                relation.copy(
+                    prescriptionEntity = relation.prescriptionEntity.copy(
+                        screeningSiteName = relation.prescriptionEntity.campaignId?.let { siteMap[it]?.name }
+                    )
+                )
+            }
+            todayPrescription = if (selectedCampaignId ==null) {
+                previousPrescriptionList.firstOrNull { isToday(it.prescriptionEntity.prescriptionDate) && it.prescriptionEntity.campaignId==null }
+            }else {
+                todayPrescription =null
+                selectedMedicationsList = emptyList()
+                medicationsResponseWithMedicationList = emptyList()
+                previousPrescriptionList.firstOrNull()?.prescriptionEntity?.campaignId?.let { campaignId ->
+                    if (isCampaignActive(campaignId)) {
+                        prescriptionRepository.getLatestPrescriptionForCampaign(
+                            patientId,
+                            campaignId
+                        )
+                    } else null
+                }
+            }
             setTodayData()
         }
     }
 
+    private suspend fun isCampaignActive(campaignId: String): Boolean {
+        return screeningSiteRepository.getScreeningSiteById(campaignId)?.status == "active"
+    }
     fun setTodayData() {
         todayPrescription?.let { prescription ->
             selectedMedicationsList =
@@ -147,12 +198,21 @@ class PrescriptionViewModel @Inject constructor(
         callback: () -> Unit
     ) {
         viewModelScope.launch(ioDispatcher) {
-            val info = loadAppointmentInfo(
-                patientId = patient!!.id,
-                hospitalCode = user.hospitalCode,
-                maxNumberOfAppointmentsInADay = maxNumberOfAppointmentsInADay,
-                appointmentRepository = appointmentRepository
-            )
+            val campaignId = selectedCampaignId
+            val info = if (campaignId != null) {
+                Queries.getCampaignAppointmentInfo(
+                    patientId = patient!!.id,
+                    campaignId = campaignId,
+                    appointmentRepository = appointmentRepository
+                )
+            } else {
+                loadAppointmentInfo(
+                    patientId = patient!!.id,
+                    hospitalCode = user.hospitalCode,
+                    maxNumberOfAppointmentsInADay = maxNumberOfAppointmentsInADay,
+                    appointmentRepository = appointmentRepository
+                )
+            }
             appointment = info.appointment
             existsInOtherHospital = info.existsInOtherHospital
             canAddAssessment = info.canAddAssessment
@@ -192,6 +252,7 @@ class PrescriptionViewModel @Inject constructor(
             appointmentResponseLocal = getAppointment(
                 patientId = patient!!.id,
                 hospitalCode = user.hospitalCode,
+                campaignId = selectedCampaignId,
                 appointmentRepository = appointmentRepository
             )
             var uuid = UUIDBuilder.generateUUID()
@@ -218,15 +279,17 @@ class PrescriptionViewModel @Inject constructor(
                         prescriptionFhirId = fhirId,
                         medicationsList = medicationsList
                     )
-                    checkAndUpdateAppointmentStatusToInProgress(
-                        inProgressTime = date,
-                        patient = patient!!,
-                        appointmentResponseLocal = appointmentResponseLocal!!,
-                        appointmentRepository = appointmentRepository,
-                        scheduleRepository = scheduleRepository,
-                        genericRepository = genericRepository,
-                        preferenceRepository = preferenceRepository
-                    )
+                    if (selectedCampaignId==null) {
+                        checkAndUpdateAppointmentStatusToInProgress(
+                            inProgressTime = date,
+                            patient = patient!!,
+                            appointmentResponseLocal = appointmentResponseLocal!!,
+                            appointmentRepository = appointmentRepository,
+                            scheduleRepository = scheduleRepository,
+                            genericRepository = genericRepository,
+                            preferenceRepository = preferenceRepository
+                        )
+                    }
                     updatePatientLastUpdated(
                         patient!!.id,
                         patientLastUpdatedRepository,
@@ -295,7 +358,9 @@ class PrescriptionViewModel @Inject constructor(
                         doseFormCode = it.doseFormCode
                     )
                 },
-                appointmentId = appointmentResponseLocal!!.uuid
+                appointmentId = appointmentResponseLocal!!.uuid,
+                campaignId = selectedCampaignId,
+                screeningSiteName = selectedCampaignId?.let { id -> screeningSites.find { it.id == id }?.name }
             )
         )
     }
@@ -324,7 +389,8 @@ class PrescriptionViewModel @Inject constructor(
             appointmentUuid = null,
             appointmentId = appointmentResponseLocal!!.appointmentId
                 ?: appointmentResponseLocal!!.uuid,
-            appUpdatedOn = Date()
+            appUpdatedOn = Date(),
+            campaignId = selectedCampaignId
         )
         return if (prescriptionFhirId == null) {
             genericRepository.insertPrescription(prescriptionResponse)
@@ -340,19 +406,31 @@ class PrescriptionViewModel @Inject constructor(
 
     fun addPatientToQueue(
         patient: PatientResponse,
+        campaignId: String? = null,
         addedToQueue: (List<Long>) -> Unit,
         ioDispatcher: CoroutineDispatcher = Dispatchers.IO
     ) {
         viewModelScope.launch(ioDispatcher) {
-            Queries.addPatientToQueue(
-                patient,
-                scheduleRepository,
-                genericRepository,
-                preferenceRepository,
-                appointmentRepository,
-                patientLastUpdatedRepository,
-                addedToQueue
-            )
+            if (campaignId != null) {
+                Queries.addPatientToCampaignQueue(
+                    patient,
+                    campaignId,
+                    scheduleRepository,
+                    genericRepository,
+                    appointmentRepository,
+                    addedToQueue
+                )
+            } else {
+                Queries.addPatientToQueue(
+                    patient,
+                    scheduleRepository,
+                    genericRepository,
+                    preferenceRepository,
+                    appointmentRepository,
+                    patientLastUpdatedRepository,
+                    addedToQueue
+                )
+            }
         }
     }
 

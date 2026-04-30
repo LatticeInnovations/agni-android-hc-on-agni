@@ -11,7 +11,9 @@ data class PrescriptionResponseLocal(
     val generatedOn: Date,
     val prescriptionId: String,
     val prescription: List<MedicationLocal>,
-    val prescriptionFhirId: String?
+    val prescriptionFhirId: String?,
+    val campaignId: String? = null,
+    val screeningSiteName: String? = null
 )
 
 @Keep

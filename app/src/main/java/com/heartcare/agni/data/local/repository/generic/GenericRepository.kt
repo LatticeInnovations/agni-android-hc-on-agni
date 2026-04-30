@@ -40,7 +40,7 @@ interface GenericRepository {
         uuid: String = UUIDBuilder.generateUUID()
     ): Long
 
-    suspend fun updatePrescriptionFhirId()
+    suspend fun updatePrescriptionFhirId(type: GenericTypeEnum)
 
     suspend fun insertSchedule(
         scheduleResponse: ScheduleResponse,

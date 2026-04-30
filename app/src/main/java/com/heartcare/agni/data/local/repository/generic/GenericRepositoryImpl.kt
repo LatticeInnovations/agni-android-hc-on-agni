@@ -68,17 +68,18 @@ class GenericRepositoryImpl @Inject constructor(
         prescriptionResponse: PrescriptionResponse,
         uuid: String
     ): Long {
+        val type = if (prescriptionResponse.campaignId != null) GenericTypeEnum.CAMPAIGN_PRESCRIPTION else GenericTypeEnum.PRESCRIPTION
         return genericDao.getGenericEntityById(
             patientId = prescriptionResponse.prescriptionId!!,
-            genericTypeEnum = GenericTypeEnum.PRESCRIPTION,
+            genericTypeEnum = type,
             syncType = SyncType.POST
         ).let { prescriptionGenericEntity ->
-            insertPrescriptionGenericEntity(prescriptionResponse, prescriptionGenericEntity, uuid)
+            insertPrescriptionGenericEntity(prescriptionResponse, prescriptionGenericEntity, uuid, type)
         }
     }
 
-    override suspend fun updatePrescriptionFhirId() {
-        genericDao.getNotSyncedData(GenericTypeEnum.PRESCRIPTION)
+    override suspend fun updatePrescriptionFhirId(type: GenericTypeEnum) {
+        genericDao.getNotSyncedData(type)
             .forEach { prescriptionGenericEntity ->
                 updateFormPrescriptionFhirIdInGenericEntity(prescriptionGenericEntity)
             }
@@ -446,12 +447,14 @@ class GenericRepositoryImpl @Inject constructor(
         prescriptionResponse: PrescriptionResponse,
         uuid: String
     ): Long {
+        val type = if (prescriptionResponse.campaignId != null) GenericTypeEnum.CAMPAIGN_PRESCRIPTION else GenericTypeEnum.PRESCRIPTION
+
         return genericDao.getGenericEntityById(
             patientId = prescriptionFhirId,
-            genericTypeEnum = GenericTypeEnum.PRESCRIPTION,
+            genericTypeEnum = type,
             syncType = SyncType.PUT
         ).let { prescriptionGenericEntity ->
-            insertPrescriptionPutGenericEntity(prescriptionFhirId, prescriptionResponse, prescriptionGenericEntity, uuid)
+            insertPrescriptionPutGenericEntity(prescriptionFhirId, prescriptionResponse, prescriptionGenericEntity, uuid,type)
         }
     }
 
