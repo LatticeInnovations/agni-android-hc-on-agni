@@ -253,7 +253,8 @@ open class SyncRepositoryDatabaseTransactions(
         diagnosisDao.insertDiagnosis(*body.map {
             it.toDiagnosisEntity(
                 patientDao,
-                appointmentDao
+                appointmentDao,
+                campaignAppointmentDao
             )
         }.toTypedArray())
     }

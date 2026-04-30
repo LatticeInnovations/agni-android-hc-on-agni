@@ -669,7 +669,7 @@ object Queries {
     }
 
     /** Outreach / Screening Site Appointment Info — detects if a record exists for current campaign */
-    internal suspend fun loadHistoryCampaignAppointmentInfo(
+    internal suspend fun getCampaignAppointmentInfo(
         patientId: String,
         campaignId: String,
         appointmentRepository: AppointmentRepository,

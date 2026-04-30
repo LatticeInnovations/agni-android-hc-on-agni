@@ -49,6 +49,7 @@ import com.heartcare.agni.ui.common.CheckBoxRow
 import com.heartcare.agni.ui.common.CustomDialog
 import com.heartcare.agni.ui.common.ExpandableBottomNavLayout
 import com.heartcare.agni.ui.common.Loader
+import com.heartcare.agni.utils.constants.NavControllerConstants
 import com.heartcare.agni.utils.constants.NavControllerConstants.DIAGNOSIS_SAVED
 import com.heartcare.agni.utils.constants.NavControllerConstants.PATIENT
 import kotlinx.coroutines.CoroutineScope
@@ -94,6 +95,7 @@ fun AddDiagnosisScreen(
 private fun HandleLaunchedEffect(viewModel: AddDiagnosisViewModel, navController: NavController) {
     LaunchedEffect(viewModel.isLaunched) {
         if (!viewModel.isLaunched) {
+            viewModel.selectedCampaignId = navController.previousBackStackEntry?.savedStateHandle?.get<String>(NavControllerConstants.CAMPAIGN_ID)
             navController.previousBackStackEntry?.savedStateHandle?.get<PatientResponse>(PATIENT)
                 ?.let {
                     viewModel.patient = it

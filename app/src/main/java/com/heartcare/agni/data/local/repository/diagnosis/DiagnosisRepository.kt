@@ -9,4 +9,5 @@ interface DiagnosisRepository {
     suspend fun updateDiagnosisFhirId(diagnosisUuid: String, fhirId: String)
     suspend fun getDiagnosisByAppointmentId(appointmentId: String): List<DiagnosisLocal>
     suspend fun updateDiagnosisData(diagnosisLocal: DiagnosisLocal): Int
+    suspend fun getLatestDiagnosisForCampaign(patientId: String, campaignId: String): DiagnosisLocal?
 }

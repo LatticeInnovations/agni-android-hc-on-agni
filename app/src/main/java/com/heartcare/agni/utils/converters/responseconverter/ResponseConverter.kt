@@ -852,43 +852,51 @@ internal fun DiagnosisMasterResponse.toDiagnosisMasterEntity(): DiagnosisMasterE
 internal fun DiagnosisLocal.toDiagnosisEntity(): DiagnosisEntity {
     return DiagnosisEntity(
         diagnosisUuid = diagnosisUuid,
-        appointmentId = appointmentId, fhirId = diagnosisFhirId,
+        appointmentId = if (campaignId == null) appointmentId else null,
+        campaignAppointmentId = if (campaignId != null) appointmentId else null,
+        fhirId = diagnosisFhirId,
         createdOn = createdOn,
         diagnosis = diagnosis,
         symptoms = symptoms,
         practitionerName = practitionerName,
         patientId = patientId,
-        progressNote = progressNote
+        progressNote = progressNote,
+        campaignId = campaignId
     )
 }
 
 internal fun DiagnosisEntity.toDiagnosisLocal(): DiagnosisLocal {
     return DiagnosisLocal(
         diagnosisUuid = diagnosisUuid,
-        appointmentId = appointmentId, diagnosisFhirId = fhirId,
+        appointmentId = (campaignAppointmentId ?: appointmentId)!!,
+        diagnosisFhirId = fhirId,
         createdOn = createdOn,
         diagnosis = diagnosis,
         symptoms = symptoms,
         practitionerName = practitionerName,
         patientId = patientId,
-        progressNote = progressNote
+        progressNote = progressNote,
+        campaignId = campaignId
     )
 }
 
 
 internal suspend fun DiagnosisResponse.toDiagnosisEntity(
-    studentDao: PatientDao,
-    appointmentDao: AppointmentDao
+    patientDao: PatientDao,
+    appointmentDao: AppointmentDao,
+    campaignAppointmentDao: CampaignAppointmentDao
 ): DiagnosisEntity {
     return DiagnosisEntity(
         diagnosisUuid = diagnosisUuid,
-        appointmentId = appointmentDao.getAppointmentIdByFhirId(appointmentId),
+        appointmentId = if (campaignId.isNullOrEmpty()) appointmentDao.getAppointmentIdByFhirId(appointmentId) else null,
+        campaignAppointmentId = if (!campaignId.isNullOrEmpty()) campaignAppointmentDao.getAppointmentIdByFhirId(appointmentId) else null,
+        campaignId = campaignId,
         fhirId = diagnosisFhirId,
         createdOn = createdOn,
         diagnosis = diagnosis,
         symptoms = symptoms,
         practitionerName = practitionerName,
-        patientId = studentDao.getPatientIdByFhirId(patientId)!!,
+        patientId = patientDao.getPatientIdByFhirId(patientId)!!,
         progressNote = progressNote
     )
 }
@@ -900,7 +908,8 @@ internal fun DiagnosisLocal.toDiagnosisData(): DiagnosisData {
         createdOn = createdOn,
         diagnosis = diagnosis.map { it.code },
         symptoms = symptoms.map { it.code }.ifEmpty { null },
-        patientId = patientId
+        patientId = patientId,
+        campaignId = campaignId
     )
 }
 

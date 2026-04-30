@@ -275,7 +275,8 @@ open class GenericRepositoryDatabaseTransactions(
     protected suspend fun insertSymDiagGenericEntity(
         local: DiagnosisData,
         genericEntity: GenericEntity?,
-        uuid: String
+        uuid: String,
+        type: GenericTypeEnum
     ): Long {
         return if (genericEntity != null) {
             genericDao.insertGenericEntity(
@@ -286,7 +287,7 @@ open class GenericRepositoryDatabaseTransactions(
                 GenericEntity(
                     id = uuid, patientId = local.diagnosisUuid,
                     payload = local.toJson(),
-                    type = GenericTypeEnum.DIAGNOSIS,
+                    type = type,
                     syncType = SyncType.POST
                 )
             )[0]

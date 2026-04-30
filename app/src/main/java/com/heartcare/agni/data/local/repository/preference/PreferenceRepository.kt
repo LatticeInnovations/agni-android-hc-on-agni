@@ -78,6 +78,8 @@ interface PreferenceRepository {
     /** Last Sync Diagnosis */
     fun setLastSyncDiagnosis(long: Long)
     fun getLastSyncDiagnosis(): Long
+    fun setLastSyncCampaignDiagnosis(long: Long)
+    fun getLastSyncCampaignDiagnosis(): Long
 
     /** Last Level Data */
     fun setLastSyncLevelRecord(long: Long)

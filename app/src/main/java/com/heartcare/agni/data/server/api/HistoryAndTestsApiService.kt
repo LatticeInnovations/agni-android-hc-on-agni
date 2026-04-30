@@ -1,18 +1,6 @@
 package com.heartcare.agni.data.server.api
 
 import com.heartcare.agni.base.server.BaseResponse
-import com.heartcare.agni.data.server.constants.EndPoints.ALLERGY
-import com.heartcare.agni.data.server.constants.EndPoints.FAMILY_HISTORY
-import com.heartcare.agni.data.server.constants.EndPoints.HISTORY_MEDICATION
-import com.heartcare.agni.data.server.constants.EndPoints.PRIOR_DX
-import com.heartcare.agni.data.server.constants.EndPoints.CAMPAIGN_PRIOR_DX
-import com.heartcare.agni.data.server.constants.EndPoints.CAMPAIGN_HISTORY_MEDICATION
-import com.heartcare.agni.data.server.constants.EndPoints.CAMPAIGN_FAMILY_HISTORY
-import com.heartcare.agni.data.server.constants.EndPoints.CAMPAIGN_ALLERGY
-import com.heartcare.agni.data.server.constants.EndPoints.CAMPAIGN_RISK_FACTORS
-import com.heartcare.agni.data.server.constants.EndPoints.CAMPAIGN_TOBACCO_CESSATION
-import com.heartcare.agni.data.server.constants.EndPoints.RISK_FACTOR
-import com.heartcare.agni.data.server.constants.EndPoints.TOBACCO_CESSATION
 import com.heartcare.agni.data.server.model.allergy.AllergyResponse
 import com.heartcare.agni.data.server.model.create.CreateResponse
 import com.heartcare.agni.data.server.model.family.FamilyHistoryResponse
@@ -24,78 +12,46 @@ import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
+import retrofit2.http.Path
 import retrofit2.http.QueryMap
 
 interface HistoryAndTestsApiService {
-    @POST(PRIOR_DX)
-    suspend fun postPriorDx(@Body priorDxResponse: List<PriorDxResponse>): Response<BaseResponse<List<CreateResponse>>>
+    @POST("{endPoint}")
+    suspend fun postPriorDx(@Path("endPoint") endPoint: String, @Body priorDxResponse: List<PriorDxResponse>): Response<BaseResponse<List<CreateResponse>>>
+    @GET("{endPoint}")
+    suspend fun getPriorDx(@Path("endPoint") endPoint: String, @QueryMap(encoded = true) map: Map<String, String>?): Response<BaseResponse<List<PriorDxResponse>>>
 
-    @GET(PRIOR_DX)
-    suspend fun getPriorDx(@QueryMap(encoded = true) map: Map<String, String>?): Response<BaseResponse<List<PriorDxResponse>>>
 
-    @POST(CAMPAIGN_PRIOR_DX)
-    suspend fun postCampaignPriorDx(@Body priorDxResponse: List<PriorDxResponse>): Response<BaseResponse<List<CreateResponse>>>
+    @POST("{endPoint}")
+    suspend fun postHistoryMedication(@Path("endPoint") endPoint: String, @Body historyMedicationResponse: List<HistoryMedicationResponse>): Response<BaseResponse<List<CreateResponse>>>
+    @GET("{endPoint}")
+    suspend fun getHistoryMedication(@Path("endPoint") endPoint: String,@QueryMap(encoded = true) map: Map<String, String>?): Response<BaseResponse<List<HistoryMedicationResponse>>>
 
-    @GET(CAMPAIGN_PRIOR_DX)
-    suspend fun getCampaignPriorDx(@QueryMap(encoded = true) map: Map<String, String>?): Response<BaseResponse<List<PriorDxResponse>>>
 
-    @POST(HISTORY_MEDICATION)
-    suspend fun postHistoryMedication(@Body historyMedicationResponse: List<HistoryMedicationResponse>): Response<BaseResponse<List<CreateResponse>>>
+    @POST("{endPoint}")
+    suspend fun postFamilyHistory(@Path("endPoint") endPoint: String, @Body familyHistoryResponse: List<FamilyHistoryResponse>): Response<BaseResponse<List<CreateResponse>>>
+    @GET("{endPoint}")
+    suspend fun getFamilyHistory(@Path("endPoint") endPoint: String, @QueryMap(encoded = true) map: Map<String, String>?): Response<BaseResponse<List<FamilyHistoryResponse>>>
 
-    @GET(HISTORY_MEDICATION)
-    suspend fun getHistoryMedication(@QueryMap(encoded = true) map: Map<String, String>?): Response<BaseResponse<List<HistoryMedicationResponse>>>
 
-    @POST(CAMPAIGN_HISTORY_MEDICATION)
-    suspend fun postCampaignHistoryMedication(@Body historyMedicationResponse: List<HistoryMedicationResponse>): Response<BaseResponse<List<CreateResponse>>>
+    @POST("{endPoint}")
+    suspend fun postAllergy(@Path("endPoint") endPoint: String, @Body allergyResponse: List<AllergyResponse>): Response<BaseResponse<List<CreateResponse>>>
+    @GET("{endPoint}")
+    suspend fun getAllergy(@Path("endPoint") endPoint: String, @QueryMap(encoded = true) map: Map<String, String>?): Response<BaseResponse<List<AllergyResponse>>>
 
-    @GET(CAMPAIGN_HISTORY_MEDICATION)
-    suspend fun getCampaignHistoryMedication(@QueryMap(encoded = true) map: Map<String, String>?): Response<BaseResponse<List<HistoryMedicationResponse>>>
 
-    @POST(FAMILY_HISTORY)
-    suspend fun postFamilyHistory(@Body familyHistoryResponse: List<FamilyHistoryResponse>): Response<BaseResponse<List<CreateResponse>>>
+    @POST("{endPoint}")
+    suspend fun postRiskFactor(@Path("endPoint") endPoint: String, @Body riskFactorResponse: List<RiskFactorResponse>): Response<BaseResponse<List<CreateResponse>>>
+    @GET("{endPoint}")
+    suspend fun getRiskFactors(@Path("endPoint") endPoint: String, @QueryMap(encoded = true) map: Map<String, String>?): Response<BaseResponse<List<RiskFactorResponse>>>
 
-    @GET(FAMILY_HISTORY)
-    suspend fun getFamilyHistory(@QueryMap(encoded = true) map: Map<String, String>?): Response<BaseResponse<List<FamilyHistoryResponse>>>
 
-    @POST(CAMPAIGN_FAMILY_HISTORY)
-    suspend fun postCampaignFamilyHistory(@Body familyHistoryResponse: List<FamilyHistoryResponse>): Response<BaseResponse<List<CreateResponse>>>
+    @POST("{endPoint}")
+    suspend fun postTobaccoCessation(@Path("endPoint") endPoint: String, @Body tobaccoCessationResponse: List<TobaccoCessationResponse>): Response<BaseResponse<List<CreateResponse>>>
 
-    @GET(CAMPAIGN_FAMILY_HISTORY)
-    suspend fun getCampaignFamilyHistory(@QueryMap(encoded = true) map: Map<String, String>?): Response<BaseResponse<List<FamilyHistoryResponse>>>
+    @GET("{endPoint}")
+    suspend fun getTobaccoCessation(@Path("endPoint") endPoint: String, @QueryMap(encoded = true) map: Map<String, String>?): Response<BaseResponse<List<TobaccoCessationResponse>>>
 
-    @POST(ALLERGY)
-    suspend fun postAllergy(@Body allergyResponse: List<AllergyResponse>): Response<BaseResponse<List<CreateResponse>>>
 
-    @GET(ALLERGY)
-    suspend fun getAllergy(@QueryMap(encoded = true) map: Map<String, String>?): Response<BaseResponse<List<AllergyResponse>>>
 
-    @POST(CAMPAIGN_ALLERGY)
-    suspend fun postCampaignAllergy(@Body allergyResponse: List<AllergyResponse>): Response<BaseResponse<List<CreateResponse>>>
-
-    @GET(CAMPAIGN_ALLERGY)
-    suspend fun getCampaignAllergy(@QueryMap(encoded = true) map: Map<String, String>?): Response<BaseResponse<List<AllergyResponse>>>
-
-    @POST(RISK_FACTOR)
-    suspend fun postRiskFactor(@Body riskFactorResponse: List<RiskFactorResponse>): Response<BaseResponse<List<CreateResponse>>>
-
-    @GET(RISK_FACTOR)
-    suspend fun getRiskFactors(@QueryMap(encoded = true) map: Map<String, String>?): Response<BaseResponse<List<RiskFactorResponse>>>
-
-    @POST(CAMPAIGN_RISK_FACTORS)
-    suspend fun postCampaignRiskFactor(@Body riskFactorResponse: List<RiskFactorResponse>): Response<BaseResponse<List<CreateResponse>>>
-
-    @GET(CAMPAIGN_RISK_FACTORS)
-    suspend fun getCampaignRiskFactor(@QueryMap(encoded = true) map: Map<String, String>?): Response<BaseResponse<List<RiskFactorResponse>>>
-
-    @POST(TOBACCO_CESSATION)
-    suspend fun postTobaccoCessation(@Body tobaccoCessationResponse: List<TobaccoCessationResponse>): Response<BaseResponse<List<CreateResponse>>>
-
-    @GET(TOBACCO_CESSATION)
-    suspend fun getTobaccoCessation(@QueryMap(encoded = true) map: Map<String, String>?): Response<BaseResponse<List<TobaccoCessationResponse>>>
-
-    @POST(CAMPAIGN_TOBACCO_CESSATION)
-    suspend fun postCampaignTobaccoCessation(@Body tobaccoCessationResponse: List<TobaccoCessationResponse>): Response<BaseResponse<List<CreateResponse>>>
-
-    @GET(CAMPAIGN_TOBACCO_CESSATION)
-    suspend fun getCampaignTobaccoCessation(@QueryMap(encoded = true) map: Map<String, String>?): Response<BaseResponse<List<TobaccoCessationResponse>>>
 }

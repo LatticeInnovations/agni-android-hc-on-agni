@@ -24,8 +24,12 @@ interface DiagnosisDao {
     suspend fun insertDiagnosis(vararg diagnosisEntity: DiagnosisEntity): List<Long>
 
     @Transaction
-    @Query("SELECT * FROM DiagnosisEntity WHERE appointmentId IN (:appointmentIds) ORDER BY createdOn DESC")
+    @Query("SELECT * FROM DiagnosisEntity WHERE appointmentId IN (:appointmentIds) OR campaignAppointmentId IN (:appointmentIds) ORDER BY createdOn DESC")
     suspend fun getPastDiagnosisByAppointmentId(vararg appointmentIds: String): List<DiagnosisEntity>
+
+    @Transaction
+    @Query("SELECT * FROM DiagnosisEntity WHERE patientId = :patientId AND campaignId = :campaignId ORDER BY createdOn DESC LIMIT 1")
+    suspend fun getLatestDiagnosisForCampaign(patientId: String, campaignId: String): DiagnosisEntity?
 
     @Transaction
     @Query("UPDATE DiagnosisEntity SET fhirId = :fhirId WHERE diagnosisUuid = :diagnosisUuid")
