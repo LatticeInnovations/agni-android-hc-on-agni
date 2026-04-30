@@ -22,6 +22,7 @@ import com.heartcare.agni.data.local.roomdb.dao.RiskPredictionDao
 import com.heartcare.agni.data.local.roomdb.dao.ScheduleDao
 import com.heartcare.agni.data.local.roomdb.entities.allergy.AllergyEntity
 import com.heartcare.agni.data.local.roomdb.entities.appointment.AppointmentEntity
+import com.heartcare.agni.data.local.roomdb.entities.appointment.AppointmentEntityWithToken
 import com.heartcare.agni.data.local.roomdb.entities.campaign.CampaignAppointmentEntity
 import com.heartcare.agni.data.local.roomdb.entities.campaign.CampaignScheduleEntity
 import com.heartcare.agni.data.local.roomdb.entities.campaign.ScreeningSiteMasterEntity
@@ -499,6 +500,35 @@ internal fun AppointmentEntity.toAppointmentResponseLocal(): AppointmentResponse
         campaignId = null,
         recordType = RecordType.FACILITY
     )
+}
+
+internal fun AppointmentEntityWithToken.toAppointmentResponseLocal(): AppointmentResponseLocal {
+    return appointmentEntity.run {
+        AppointmentResponseLocal(
+            uuid = id,
+            createdOn = createdOn,
+            appointmentId = appointmentFhirId,
+            patientId = patientId,
+            scheduleId = scheduleId,
+            slot = Slot(
+                start = startTime,
+                end = endTime
+            ),
+            status = status,
+            appointmentType = appointmentType,
+            inProgressTime = inProgressTime,
+            roleId = roleId,
+            slotId = slotId,
+            practitionerId = practitionerId,
+            hospitalFhirId = hospitalFhirId,
+            hospitalId = hospitalId,
+            hospitalName = hospitalName,
+            hospitalCode = hospitalCode,
+            campaignId = null,
+            recordType = RecordType.FACILITY,
+            reportToken = reportTokenEntity?.token
+        )
+    }
 }
 
 internal fun CampaignAppointmentEntity.toAppointmentResponseLocal(): AppointmentResponseLocal {

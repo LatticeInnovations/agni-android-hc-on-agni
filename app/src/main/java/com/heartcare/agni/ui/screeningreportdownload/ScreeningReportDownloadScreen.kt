@@ -46,7 +46,6 @@ import com.heartcare.agni.BuildConfig
 import com.heartcare.agni.R
 import com.heartcare.agni.data.server.model.patient.PatientResponse
 import com.heartcare.agni.utils.QR.generateQrCode
-import com.heartcare.agni.utils.builders.UUIDBuilder
 import com.heartcare.agni.utils.constants.NavControllerConstants.PATIENT
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toAppointmentDate
 
@@ -109,7 +108,6 @@ fun ScreeningReportDownloadScreen(
                     ) {
                         viewModel.appointmentList.forEach { appointment ->
                             var isExpanded by rememberSaveable { mutableStateOf(false) }
-                            val token = UUIDBuilder.generateUUID()
                             Column {
                                 Row(
                                     modifier = Modifier
@@ -157,13 +155,13 @@ fun ScreeningReportDownloadScreen(
                                             .padding(16.dp),
                                         contentAlignment = Alignment.Center
                                     ) {
-                                        if (token == null) {
+                                        if (appointment.reportToken == null) {
                                             Text(
                                                 text = stringResource(R.string.qr_not_generated_yet),
                                                 style = MaterialTheme.typography.bodyLarge
                                             )
                                         } else {
-                                            val qr = generateQrCode("${BuildConfig.BASE_URL}access/${token}")
+                                            val qr = generateQrCode("${BuildConfig.BASE_URL}access/${appointment.reportToken}")
                                             Image(
                                                 bitmap = qr.asImageBitmap(),
                                                 contentDescription = "QR Code",
