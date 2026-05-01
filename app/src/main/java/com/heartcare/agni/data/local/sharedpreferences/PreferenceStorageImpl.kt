@@ -197,6 +197,11 @@ class PreferenceStorageImpl(private val sharedPreferences: SharedPreferences) : 
         PREF_LAST_DIAGNOSIS_MASTER_SYNC_TIME,
         0L
     )
+    override var lastSyncCampaignExamination by LongPreference(
+        sharedPreferences,
+        PREF_LAST_CAMPAIGN_EXAMINATION_SYNC_TIME,
+        0L
+    )
 
     override var lastSyncHealthFacility by LongPreference(
         sharedPreferences,
@@ -275,6 +280,7 @@ class PreferenceStorageImpl(private val sharedPreferences: SharedPreferences) : 
         const val PREF_LAST_CAMPAIGN_PRIOR_DX_SYNC_TIME = "pref_last_campaign_prior_dx_sync_time"
         const val PREF_LAST_CAMPAIGN_HISTORY_MEDICATION_SYNC_TIME = "pref_last_campaign_history_medication_sync_time"
         const val PREF_LAST_CAMPAIGN_FAMILY_HISTORY_SYNC_TIME = "pref_last_campaign_family_history_sync_time"
+        const val PREF_LAST_CAMPAIGN_EXAMINATION_SYNC_TIME = "pref_last_campaign_examination_sync_time"
         const val PREF_IS_SCREENING_SITE_SEEDED = "pref_is_screening_site_seeded"
     }
 }

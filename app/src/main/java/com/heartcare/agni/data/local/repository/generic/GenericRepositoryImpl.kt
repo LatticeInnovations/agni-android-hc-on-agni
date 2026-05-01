@@ -177,8 +177,8 @@ class GenericRepositoryImpl @Inject constructor(
             }
     }
 
-    override suspend fun updateExaminationFhirId() {
-        genericDao.getNotSyncedData(GenericTypeEnum.EXAMINATION)
+    override suspend fun updateExaminationFhirId(genericTypeEnum: GenericTypeEnum) {
+        genericDao.getNotSyncedData(genericTypeEnum)
             .forEach { examinationGenericEntity ->
                 updateExaminationFhirIdInGenericEntity(examinationGenericEntity)
             }
@@ -333,12 +333,13 @@ class GenericRepositoryImpl @Inject constructor(
         examinationResponse: ExaminationResponse,
         uuid: String
     ): Long {
+        val type = if (examinationResponse.campaignId != null) GenericTypeEnum.CAMPAIGN_EXAMINATION else GenericTypeEnum.EXAMINATION
         return genericDao.getGenericEntityById(
             patientId = examinationResponse.uuid!!,
-            genericTypeEnum = GenericTypeEnum.EXAMINATION,
+            genericTypeEnum = type,
             syncType = SyncType.POST
         ).let { examinationGenericEntity ->
-            insertExaminationGenericEntity(examinationGenericEntity, examinationResponse, uuid)
+            insertExaminationGenericEntity(examinationGenericEntity, examinationResponse, uuid, type)
         }
     }
 
@@ -477,12 +478,13 @@ class GenericRepositoryImpl @Inject constructor(
         examinationResponse: ExaminationResponse,
         uuid: String
     ): Long {
+        val type = if (examinationResponse.campaignId != null) GenericTypeEnum.CAMPAIGN_EXAMINATION else GenericTypeEnum.EXAMINATION
         return genericDao.getGenericEntityById(
             patientId = examinationFhirId,
-            genericTypeEnum = GenericTypeEnum.EXAMINATION,
+            genericTypeEnum = type,
             syncType = SyncType.PUT
         ).let { examinationGenericEntity ->
-            insertExaminationPutGenericEntity(examinationFhirId, examinationResponse, examinationGenericEntity, uuid)
+            insertExaminationPutGenericEntity(examinationFhirId, examinationResponse, examinationGenericEntity, uuid, type)
         }
     }
 }

@@ -40,6 +40,7 @@ import com.heartcare.agni.ui.common.CustomDialog
 import com.heartcare.agni.ui.common.ExpandableBottomNavLayout
 import com.heartcare.agni.ui.common.SearchLayout
 import com.heartcare.agni.ui.common.SearchResults
+import com.heartcare.agni.utils.constants.NavControllerConstants.CAMPAIGN_ID
 import com.heartcare.agni.utils.constants.NavControllerConstants.PATIENT
 import com.heartcare.agni.utils.constants.NavControllerConstants.TEST_EXAMINATION_SAVED
 import kotlinx.coroutines.CoroutineScope
@@ -56,6 +57,7 @@ fun AddTestExaminationScreen(
 
     LaunchedEffect(viewModel.isLaunched) {
         if (!viewModel.isLaunched) {
+            viewModel.selectedCampaignId = navController.previousBackStackEntry?.savedStateHandle?.get<String>(CAMPAIGN_ID)
             navController.previousBackStackEntry?.savedStateHandle
                 ?.get<PatientResponse>(PATIENT)?.let {
                     viewModel.patient = it

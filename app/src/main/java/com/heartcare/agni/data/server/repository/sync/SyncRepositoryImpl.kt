@@ -1933,26 +1933,27 @@ class SyncRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun sendExaminationPostData(): ResponseMapper<List<CreateResponse>> {
+    override suspend fun sendExaminationPostData(genericTypeEnum: GenericTypeEnum, endPoint: String): ResponseMapper<List<CreateResponse>> {
         return try {
             genericDao.getSameTypeGenericEntityPayload(
-                genericTypeEnum = GenericTypeEnum.EXAMINATION,
+                genericTypeEnum = genericTypeEnum,
                 syncType = SyncType.POST
             ).let { listOfGenericEntity ->
                 if (listOfGenericEntity.isEmpty()) ApiEmptyResponse()
                 else {
                     ApiResponseConverter.convert(
                         examinationApiService.postExamination(
+                            endPoint,
                             listOfGenericEntity.map {
                                 it.payload.fromJson<LinkedTreeMap<*, *>>()
-                                    .mapToObject(ExaminationResponse::class.java)!!
+                                    .mapToObject(ExaminationResponse::class.java)!!.copy(campaignId = null)
                             }
                         )
                     ).apply {
                         if (this is ApiEndResponse) {
                             insertExaminationFhirIds(body, listOfGenericEntity)
                                 .apply {
-                                    if (this > 0) sendExaminationPostData()
+                                    if (this > 0) sendExaminationPostData(genericTypeEnum, endPoint)
                                 }
                         }
                     }
@@ -2206,25 +2207,26 @@ class SyncRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun sentExaminationPutData(): ResponseMapper<List<CreateResponse>> {
+    override suspend fun sentExaminationPutData(genericTypeEnum: GenericTypeEnum, endPoint: String): ResponseMapper<List<CreateResponse>> {
         return try {
             genericDao.getSameTypeGenericEntityPayload(
-                genericTypeEnum = GenericTypeEnum.EXAMINATION, syncType = SyncType.PUT
+                genericTypeEnum = genericTypeEnum, syncType = SyncType.PUT
             ).let { listOfGenericEntity ->
                 if (listOfGenericEntity.isEmpty()) ApiEmptyResponse()
                 else {
                     ApiResponseConverter.convert(
                         examinationApiService.putExamination(
+                            endPoint,
                             listOfGenericEntity.map { examinationGenericEntity ->
                                 examinationGenericEntity.payload.fromJson<LinkedTreeMap<*, *>>()
-                                    .mapToObject(ExaminationResponse::class.java)!!
+                                    .mapToObject(ExaminationResponse::class.java)!!.copy(campaignId = null)
                             }
                         )
                     ).run {
                         when (this) {
                             is ApiEndResponse -> {
                                 deleteGenericEntityData(listOfGenericEntity).let {
-                                    if (it > 0) sentExaminationPutData() else this
+                                    if (it > 0) sentExaminationPutData(genericTypeEnum, endPoint) else this
                                 }
                             }
 
@@ -3061,6 +3063,7 @@ class SyncRepositoryImpl @Inject constructor(
         return try {
             ApiResponseConverter.convert(
                 examinationApiService.getExaminations(
+                    EndPoints.EXAMINATION,
                     map
                 ), true
             ).run {
@@ -3085,6 +3088,59 @@ class SyncRepositoryImpl @Inject constructor(
             crashlyticsLogger.logException(
                 e,
                 "getAndInsertExaminationData function failed.",
+                mapOf(
+                    Pair(
+                        USER_ID,
+                        preferenceRepository.getUserDetails()?.userId ?: ERROR_FETCHING_USER_DETAILS
+                    )
+                )
+            )
+            ApiErrorResponse(
+                statusCode = 0,
+                errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
+            )
+        }
+    }
+
+    override suspend fun getAndInsertCampaignExaminationData(offset: Int): ResponseMapper<List<ExaminationResponse>> {
+        val map = mutableMapOf<String, String>()
+        map[COUNT] = COUNT_VALUE.toString()
+        map[OFFSET] = offset.toString()
+        map[SORT] = "-$ID"
+        if (preferenceRepository.getLastSyncCampaignExamination() != 0L) map[LAST_UPDATED] =
+            String.format(
+                GREATER_THAN_BUILDER,
+                preferenceRepository.getLastSyncCampaignExamination().toTimeStampDate()
+            )
+
+        return try {
+            ApiResponseConverter.convert(
+                examinationApiService.getExaminations(
+                    EndPoints.CAMPAIGN_EXAMINATION,
+                    map
+                ), true
+            ).run {
+                when (this) {
+                    is ApiContinueResponse -> {
+                        insertExamination(body)
+                        //Call for next batch data
+                        getAndInsertCampaignExaminationData(offset + COUNT_VALUE)
+                    }
+
+                    is ApiEndResponse -> {
+                        preferenceRepository.setLastSyncCampaignExamination(Date().time)
+                        insertExamination(body)
+                        this
+                    }
+
+                    else -> this
+                }
+            }
+        } catch (e: Exception) {
+            Timber.e(e, e.localizedMessage)
+            crashlyticsLogger.logException(
+                e,
+                "getAndInsertCampaignExaminationData function failed.",
                 mapOf(
                     Pair(
                         USER_ID,

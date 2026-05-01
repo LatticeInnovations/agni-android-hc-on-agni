@@ -19,6 +19,7 @@ import com.heartcare.agni.data.server.model.examination.ExaminationResponse
 import com.heartcare.agni.data.server.model.patient.PatientResponse
 import com.heartcare.agni.di.dispatcher.IoDispatcher
 import com.heartcare.agni.utils.builders.UUIDBuilder
+import com.heartcare.agni.utils.common.Queries
 import com.heartcare.agni.utils.common.Queries.checkAndUpdateAppointmentStatusToInProgress
 import com.heartcare.agni.utils.common.Queries.getAppointment
 import com.heartcare.agni.utils.common.Queries.getInProgressCompletedAppointmentIds
@@ -62,6 +63,7 @@ class AddTestExaminationViewModel @Inject constructor(
     var isSearchResult by mutableStateOf(false)
     
     var todayExamination by mutableStateOf<ExaminationResponseLocal?>(null)
+    var selectedCampaignId by mutableStateOf<String?>(null)
 
     init {
         viewModelScope.launch(ioDispatcher) {
@@ -73,10 +75,19 @@ class AddTestExaminationViewModel @Inject constructor(
         viewModelScope.launch(ioDispatcher) {
             val appointmentIds =
                 getInProgressCompletedAppointmentIds(patientId, appointmentRepository)
-            todayExamination =
-                examinationRepository.getExaminationListByAppointmentId(*appointmentIds.toTypedArray()).firstOrNull {
-                    isToday(it.appUpdatedDate)
+            val screenSiteAppointmentIds = Queries.getScreenSiteAppointmentIds(patientId, appointmentRepository)
+            val allCombinedIds = (screenSiteAppointmentIds + appointmentIds).toTypedArray()
+            
+            todayExamination = if (selectedCampaignId == null) {
+                examinationRepository.getExaminationListByAppointmentId(*allCombinedIds).firstOrNull {
+                    isToday(it.appUpdatedDate) && it.campaignId == null
                 }
+            } else {
+                examinationRepository.getExaminationListByAppointmentId(*allCombinedIds).firstOrNull {
+                    it.campaignId == selectedCampaignId
+                }
+            }
+            
             todayExamination?.let {
                 selectedTestExaminationList = it.examinations.map { examination ->
                     examinationRepository.getExaminationMasterByFhirId(examination.fhirId)
@@ -108,6 +119,7 @@ class AddTestExaminationViewModel @Inject constructor(
             appointmentResponseLocal = getAppointment(
                 patientId = patient!!.id,
                 hospitalCode = user.hospitalCode,
+                campaignId = selectedCampaignId,
                 appointmentRepository = appointmentRepository
             )
 
@@ -128,7 +140,8 @@ class AddTestExaminationViewModel @Inject constructor(
                 patientId = patient!!.fhirId ?: patient!!.id,
                 practitionerId = null,
                 practitionerName = null,
-                examinations = selectedTestExaminationList.map { it.fhirId }
+                examinations = selectedTestExaminationList.map { it.fhirId },
+                campaignId = selectedCampaignId
             )
 
             examinationRepository.insertExamination(
@@ -154,15 +167,17 @@ class AddTestExaminationViewModel @Inject constructor(
                 )
             }
 
-            checkAndUpdateAppointmentStatusToInProgress(
-                inProgressTime = examinationResponse.appUpdatedDate,
-                patient = patient!!,
-                appointmentResponseLocal = appointmentResponseLocal!!,
-                appointmentRepository = appointmentRepository,
-                scheduleRepository = scheduleRepository,
-                genericRepository = genericRepository,
-                preferenceRepository = preferenceRepository
-            )
+            if (selectedCampaignId==null) {
+                checkAndUpdateAppointmentStatusToInProgress(
+                    inProgressTime = examinationResponse.appUpdatedDate,
+                    patient = patient!!,
+                    appointmentResponseLocal = appointmentResponseLocal!!,
+                    appointmentRepository = appointmentRepository,
+                    scheduleRepository = scheduleRepository,
+                    genericRepository = genericRepository,
+                    preferenceRepository = preferenceRepository
+                )
+            }
 
             updatePatientLastUpdated(
                 patient!!.id,

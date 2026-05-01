@@ -34,6 +34,7 @@ class SyncService(
     private lateinit var campaignPrescriptionPatchJob: Deferred<ResponseMapper<Any>?>
     private lateinit var interventionPatchJob: Deferred<ResponseMapper<Any>?>
     private lateinit var examinationPatchJob: Deferred<ResponseMapper<Any>?>
+    private lateinit var campaignExaminationPatchJob: Deferred<ResponseMapper<Any>?>
     private lateinit var interventionMasterDownloadJob: Deferred<ResponseMapper<Any>?>
     private lateinit var examinationMasterDownloadJob: Deferred<ResponseMapper<Any>?>
     private lateinit var healthFacilityDownloadJob: Deferred<ResponseMapper<Any>?>
@@ -57,6 +58,7 @@ class SyncService(
                     async { patchIntervention(logout) },
                     async { patchExamination(logout) },
                     async { uploadPatientLastUpdatedData(logout) },
+                    async { patchCampaignExamination(logout) },
                     async { downloadLevelsRecord(logout) },
                     async { downloadDiagnosisMasterList(logout) },
                     async { downloadMedicationTiming(logout) },
@@ -244,7 +246,8 @@ class SyncService(
                     async { updateFhirIdInCampaignRiskFactors(logout) },
                     async { updateFhirIdInCampaignTobaccoCessation(logout) },
                     async { updateFhirIdInCampaignDiagnosis(logout) },
-                    async { updateFhirIdInCampaignPrescription(logout) }
+                    async { updateFhirIdInCampaignPrescription(logout) },
+                    async { updateFhirIdInCampaignExamination(logout) }
                 )
 
                 // Wait for all of them to complete
@@ -367,7 +370,11 @@ class SyncService(
 
     /** Upload Examination */
     private suspend fun uploadExamination(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
-        return checkAuthenticationStatus(syncRepository.sendExaminationPostData(), logout)
+        return checkAuthenticationStatus(syncRepository.sendExaminationPostData(GenericTypeEnum.EXAMINATION, EndPoints.EXAMINATION), logout)
+    }
+
+    private suspend fun uploadCampaignExamination(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
+        return checkAuthenticationStatus(syncRepository.sendExaminationPostData(GenericTypeEnum.CAMPAIGN_EXAMINATION, EndPoints.CAMPAIGN_EXAMINATION), logout)
     }
 
     /** Upload Referral */
@@ -436,10 +443,19 @@ class SyncService(
     internal suspend fun patchExamination(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
         coroutineScope {
             examinationPatchJob = async {
-                checkAuthenticationStatus(syncRepository.sentExaminationPutData(), logout)
+                checkAuthenticationStatus(syncRepository.sentExaminationPutData(GenericTypeEnum.EXAMINATION, EndPoints.EXAMINATION), logout)
             }
         }
         return examinationPatchJob.await()
+    }
+
+    internal suspend fun patchCampaignExamination(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
+        coroutineScope {
+            campaignExaminationPatchJob = async {
+                checkAuthenticationStatus(syncRepository.sentExaminationPutData(GenericTypeEnum.CAMPAIGN_EXAMINATION, EndPoints.CAMPAIGN_EXAMINATION), logout)
+            }
+        }
+        return campaignExaminationPatchJob.await()
     }
 
     /**
@@ -527,7 +543,10 @@ class SyncService(
                     async {
                         campaignPrescriptionPatchJob.await()
                         downloadCampaignFormPrescription(null, logout)
-                    }
+                    },
+                    async {
+                        campaignExaminationPatchJob.await()
+                        downloadCampaignExamination(logout) }
                 )
                 jobs.awaitAll()
             }
@@ -754,6 +773,10 @@ class SyncService(
         return checkAuthenticationStatus(syncRepository.getAndInsertExaminationData(0), logout)
     }
 
+    private suspend fun downloadCampaignExamination(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
+        return checkAuthenticationStatus(syncRepository.getAndInsertCampaignExaminationData(0), logout)
+    }
+
     /** Download Referral Data */
     private suspend fun downloadReferral(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
         val response = healthFacilityDownloadJob.await()
@@ -931,8 +954,13 @@ class SyncService(
 
     /** Update FHIR ID in Examination */
     private suspend fun updateFhirIdInExamination(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
-        genericRepository.updateExaminationFhirId()
+        genericRepository.updateExaminationFhirId(GenericTypeEnum.EXAMINATION)
         return uploadExamination(logout)
+    }
+
+    private suspend fun updateFhirIdInCampaignExamination(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
+        genericRepository.updateExaminationFhirId(GenericTypeEnum.CAMPAIGN_EXAMINATION)
+        return uploadCampaignExamination(logout)
     }
 
     /** Update FHIR ID in Referral */

@@ -145,6 +145,8 @@ interface PreferenceRepository {
     /** Last Examination Sync Date */
     fun setLastSyncExamination(long: Long)
     fun getLastSyncExamination(): Long
+    fun setLastSyncCampaignExamination(long: Long)
+    fun getLastSyncCampaignExamination(): Long
 
     /** Last Diagnosis Master Sync Date */
     fun setLastDiagnosisMasterSyncDate(long: Long)

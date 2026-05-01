@@ -1632,7 +1632,9 @@ fun ExaminationResponse.toExaminationEntity(): ExaminationEntity{
         uuid = uuid!!,
         fhirId = fhirId,
         appUpdatedDate = appUpdatedDate,
-        appointmentId = appointmentId,
+        appointmentId = if (campaignId.isNullOrEmpty()) appointmentId else null,
+        campaignAppointmentId = if (!campaignId.isNullOrEmpty()) appointmentId else null,
+        campaignId = campaignId,
         patientId = patientId,
         practitionerId = practitionerId!!,
         practitionerName = practitionerName!!,
@@ -1642,10 +1644,12 @@ fun ExaminationResponse.toExaminationEntity(): ExaminationEntity{
 
 suspend fun ExaminationResponse.toExaminationEntity(
     patientDao: PatientDao,
-    appointmentDao: AppointmentDao
+    appointmentDao: AppointmentDao,
+    campaignAppointmentDao: CampaignAppointmentDao
 ): ExaminationEntity {
     return this.toExaminationEntity().copy(
-        appointmentId = appointmentDao.getAppointmentIdByFhirId(appointmentId),
+        appointmentId = if (campaignId.isNullOrEmpty()) appointmentDao.getAppointmentIdByFhirId(appointmentId) else null,
+        campaignAppointmentId = if (!campaignId.isNullOrEmpty()) campaignAppointmentDao.getAppointmentIdByFhirId(appointmentId) else null,
         patientId = patientDao.getPatientIdByFhirId(patientId)!!
     )
 }
@@ -1657,10 +1661,11 @@ suspend fun ExaminationEntity.toExaminationResponseLocal(
         uuid = uuid,
         fhirId = fhirId,
         appUpdatedDate = appUpdatedDate,
-        appointmentId = appointmentId,
+        appointmentId = (if (campaignId.isNullOrEmpty()) appointmentId else campaignAppointmentId) ?: "",
         patientId = patientId,
         practitionerId = practitionerId,
         practitionerName = practitionerName,
+        campaignId = campaignId,
         examinations = examinations.map { fhirId ->
             val examination = examinationDao.getExaminationByFhirId(fhirId)
             ExaminationItem(
