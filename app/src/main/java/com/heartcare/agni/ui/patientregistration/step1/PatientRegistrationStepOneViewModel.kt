@@ -82,6 +82,7 @@ class PatientRegistrationStepOneViewModel @Inject constructor(
     var isHospitalIdValid by mutableStateOf(false)
 
     var nationalId by mutableStateOf("")
+    var verifyNationIdError by mutableStateOf(false)
     var isVerifyClicked by mutableStateOf(false)
     var isNationalIdVerified by mutableStateOf(false)
 
@@ -95,6 +96,7 @@ class PatientRegistrationStepOneViewModel @Inject constructor(
         isGenderBlank = gender.isBlank()
         isDOBAgeBlank = if (dobAgeSelector == "dob") dobDay.isBlank() || dobMonth.isBlank() || dobYear.isBlank()
         else years.isBlank() && months.isBlank() && days.isBlank()
+        verifyNationIdError = !(isVerifyClicked || nationalId.isBlank())
         return firstName.isNotBlank() &&
                 lastName.isNotBlank() &&
                 motherName.isNotBlank() &&
@@ -102,7 +104,9 @@ class PatientRegistrationStepOneViewModel @Inject constructor(
                 !verifyAge() &&
                 !isPhoneValid &&
                 !emailError &&
-                gender.isNotBlank()
+                gender.isNotBlank() &&
+                !isHospitalIdValid &&
+                !verifyNationIdError
     }
 
     private fun verifyDOB(): Boolean{

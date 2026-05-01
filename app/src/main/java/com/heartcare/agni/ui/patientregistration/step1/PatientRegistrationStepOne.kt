@@ -199,10 +199,12 @@ private fun NationalIdComposable(
             },
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Number
-            )
+            ),
+            isError = viewModel.verifyNationIdError
         )
         FilledTonalButton(
             onClick = {
+                viewModel.verifyNationIdError = false
                 viewModel.isVerifyClicked = true
                 viewModel.verifyNationalId()
             },
@@ -222,6 +224,12 @@ private fun NationalIdSupportingText(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically
     ) {
+        if (viewModel.verifyNationIdError) {
+            Text(
+                text = "Please verify National ID",
+                style = MaterialTheme.typography.bodySmall
+            )
+        }
         if (viewModel.isVerifyClicked) {
             val text: String
             val icon: Int
