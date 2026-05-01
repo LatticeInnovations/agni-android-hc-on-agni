@@ -1,6 +1,5 @@
 package com.heartcare.agni.ui.patientregistration.step1
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.Arrangement
@@ -10,10 +9,8 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
@@ -21,23 +18,17 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.Button
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -53,13 +44,12 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.heartcare.agni.R
-import com.heartcare.agni.data.local.enums.DeceasedReason
-import com.heartcare.agni.data.local.enums.DeceasedReason.Companion.getDeceasedReasonList
 import com.heartcare.agni.data.local.enums.GenderEnum
 import com.heartcare.agni.data.local.enums.YesNoEnum
 import com.heartcare.agni.ui.common.CustomFilterChip
 import com.heartcare.agni.ui.common.CustomTextField
 import com.heartcare.agni.ui.common.CustomTextFieldWithLength
+import com.heartcare.agni.ui.common.DeceasedReasonComposable
 import com.heartcare.agni.ui.patientregistration.PatientRegistrationViewModel
 import com.heartcare.agni.ui.patientregistration.model.PatientRegister
 import com.heartcare.agni.ui.theme.Neutral40
@@ -76,9 +66,9 @@ import com.heartcare.agni.utils.regex.RegexPatterns.atLeastOneAlphaAndNumber
 @Composable
 fun PatientRegistrationStepOne(
     patientRegister: PatientRegister,
-    viewModel: PatientRegistrationStepOneViewModel = hiltViewModel()
+    viewModel: PatientRegistrationStepOneViewModel = hiltViewModel(),
+    patientRegistrationViewModel: PatientRegistrationViewModel = viewModel()
 ) {
-    val patientRegistrationViewModel: PatientRegistrationViewModel = viewModel()
     LaunchedEffect(viewModel.isLaunched) {
         if (!viewModel.isLaunched) {
             patientRegister.run {
@@ -107,21 +97,7 @@ fun PatientRegistrationStepOne(
             .padding(15.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text(
-                text = stringResource(id = R.string.basic_information),
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            Text(
-                text = "Page 1/${patientRegistrationViewModel.totalSteps}",
-                style = MaterialTheme.typography.bodySmall,
-                color = Neutral40
-            )
-        }
+        HeaderRow(patientRegistrationViewModel)
         Spacer(modifier = Modifier.height(15.dp))
         Column(
             modifier = Modifier
@@ -130,180 +106,20 @@ fun PatientRegistrationStepOne(
                 .weight(1f),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-
             NationalIdComposable(viewModel)
-            CustomTextFieldWithLength(
-                value = viewModel.lastName,
-                label = stringResource(id = R.string.last_name_mandatory),
-                placeholder = null,
-                weight = 1f,
-                maxLength = viewModel.maxNameLength,
-                isError = viewModel.isLastNameValid,
-                error = stringResource(R.string.last_name_required),
-                keyboardType = KeyboardType.Text,
-                keyboardCapitalization = KeyboardCapitalization.Words
-            ) {
-                if (it.matches(nameRegex) || it.isEmpty()) viewModel.lastName = it
-                viewModel.isLastNameValid = viewModel.lastName.isBlank()
-            }
-            CustomTextFieldWithLength(
-                value = viewModel.firstName,
-                label = stringResource(id = R.string.first_name_mandatory),
-                placeholder = null,
-                weight = 1f,
-                maxLength = viewModel.maxNameLength,
-                isError = viewModel.isFirstNameValid,
-                error = stringResource(id = R.string.first_name_required),
-                keyboardType = KeyboardType.Text,
-                keyboardCapitalization = KeyboardCapitalization.Words
-            ) {
-                if (it.matches(nameRegex) || it.isEmpty()) viewModel.firstName = it
-                viewModel.isFirstNameValid = viewModel.firstName.isBlank()
-            }
-            Column(
-                verticalArrangement = Arrangement.spacedBy(6.dp)
-            ) {
-                Row(modifier = Modifier.fillMaxWidth()) {
-                    CustomFilterChip(viewModel.dobAgeSelector, "dob", "Date of Birth") {
-                        viewModel.dobAgeSelector = it
-                        viewModel.days = ""
-                        viewModel.months = ""
-                        viewModel.years = ""
-                    }
-                    Spacer(modifier = Modifier.width(10.dp))
-                    CustomFilterChip(viewModel.dobAgeSelector, "age", "Age") {
-                        viewModel.dobAgeSelector = it
-                        viewModel.dobDay = ""
-                        viewModel.dobMonth = ""
-                        viewModel.dobYear = ""
-                    }
-                }
-                if (viewModel.dobAgeSelector == "dob") {
-                    DobTextField(viewModel)
-                } else
-                    AgeTextField(viewModel)
-
-                if (viewModel.isDOBAgeBlank) {
-                    Text(
-                        text = stringResource(id = R.string.dob_age_required),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.error,
-                        modifier = Modifier.padding(start = 8.dp)
-                    )
-                }
-            }
-            CustomTextFieldWithLength(
-                value = viewModel.phoneNumber,
-                label = stringResource(id = R.string.mobile),
-                placeholder = null,
-                weight = 1f,
-                maxLength = viewModel.maxPhoneNumberLength,
-                isError = viewModel.isPhoneValid,
-                error = stringResource(id = R.string.phone_number_error_msg),
-                keyboardType = KeyboardType.Number,
-                keyboardCapitalization = KeyboardCapitalization.Words
-            ) {
-                if (it.length <= viewModel.maxPhoneNumberLength && (it.matches(viewModel.onlyNumbers) || it.isEmpty()))
-                    viewModel.phoneNumber = it
-                viewModel.isPhoneValid =
-                    viewModel.phoneNumber.isNotBlank() && !viewModel.phoneNumber.matches(
-                        phoneNumberRegex
-                    )
-            }
-
-            CustomTextField(
-                value = viewModel.email,
-                label = stringResource(id = R.string.email),
-                weight = 1f,
-                maxLength = viewModel.maxNameLength,
-                isError = viewModel.emailError,
-                error = stringResource(id = R.string.enter_valid_email),
-                keyboardType = KeyboardType.Text,
-                keyboardCapitalization = KeyboardCapitalization.None
-            ) {
-                viewModel.email = it
-                viewModel.emailError = viewModel.email.isNotBlank() && !viewModel.email.matches(emailPattern)
-            }
-
+            LastNameField(viewModel)
+            FirstNameField(viewModel)
+            DOBAndAgeFields(viewModel)
+            PhoneNumberField(viewModel)
+            EmailField(viewModel)
             GenderComposable(viewModel)
             PatientDeceasedComposable(viewModel)
-            CustomTextFieldWithLength(
-                value = viewModel.motherName,
-                label = stringResource(id = R.string.mother_name_mandatory),
-                placeholder = null,
-                weight = 1f,
-                maxLength = viewModel.maxNameLength,
-                isError = viewModel.isMotherNameValid,
-                error = stringResource(id = R.string.mother_name_required),
-                keyboardType = KeyboardType.Text,
-                keyboardCapitalization = KeyboardCapitalization.Words
-            ) {
-                if (it.matches(nameRegex) || it.isEmpty()) viewModel.motherName = it
-                viewModel.isMotherNameValid = viewModel.motherName.isBlank()
-            }
-
-            CustomTextFieldWithLength(
-                value = viewModel.fatherName,
-                label = stringResource(id = R.string.father_name),
-                placeholder = null,
-                weight = 1f,
-                maxLength = viewModel.maxNameLength,
-                isError = false,
-                error = "",
-                keyboardType = KeyboardType.Text,
-                keyboardCapitalization = KeyboardCapitalization.Words
-            ) {
-                if (it.matches(nameRegex) || it.isEmpty()) viewModel.fatherName = it
-            }
-
-            CustomTextFieldWithLength(
-                value = viewModel.spouseName,
-                label = stringResource(id = R.string.spouse_name),
-                placeholder = null,
-                weight = 1f,
-                maxLength = viewModel.maxNameLength,
-                isError = false,
-                error = "",
-                keyboardType = KeyboardType.Text,
-                keyboardCapitalization = KeyboardCapitalization.Words
-            ) {
-                if (it.matches(nameRegex) || it.isEmpty()) viewModel.spouseName = it
-            }
-
+            MotherNameField(viewModel)
+            FatherNameField(viewModel)
+            SpouseNameField(viewModel)
             HospitalIdComposable(viewModel)
         }
-        Button(
-            onClick = {
-                if (viewModel.basicInfoValidation()) {
-                    patientRegister.run {
-                        firstName = viewModel.firstName.capitalizeFirst().trim()
-                        lastName = viewModel.lastName.capitalizeFirst().trim()
-                        dobAgeSelector = viewModel.dobAgeSelector
-                        dobDay = viewModel.dobDay
-                        dobMonth = viewModel.dobMonth
-                        dobYear = viewModel.dobYear
-                        years = viewModel.years
-                        months = viewModel.months
-                        days = viewModel.days
-                        phoneNumber = viewModel.phoneNumber
-                        email = viewModel.email
-                        gender = viewModel.gender
-                        isPersonDeceased = viewModel.isPersonDeceased
-                        personDeceasedReason = viewModel.selectedDeceasedReason
-                        motherName = viewModel.motherName.capitalizeFirst().trim()
-                        fatherName = viewModel.fatherName.capitalizeFirst().trim()
-                        spouseName = viewModel.spouseName.capitalizeFirst().trim()
-                    }
-                    patientRegistrationViewModel.currentStep = 2
-                }
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 10.dp)
-                .testTag("step2")
-        ) {
-            Text(text = stringResource(id = R.string.next))
-        }
+        NextButton(patientRegister, viewModel, patientRegistrationViewModel)
     }
     if (viewModel.showDeceasedReasonSheet) {
         DeceasedReasonComposable(
@@ -321,7 +137,202 @@ fun PatientRegistrationStepOne(
 }
 
 @Composable
-fun DobTextField(viewModel: PatientRegistrationStepOneViewModel) {
+private fun HeaderRow(patientRegistrationViewModel: PatientRegistrationViewModel) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(
+            text = stringResource(id = R.string.basic_information),
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        Text(
+            text = "Page 1/${patientRegistrationViewModel.totalSteps}",
+            style = MaterialTheme.typography.bodySmall,
+            color = Neutral40
+        )
+    }
+}
+
+@Composable
+private fun NationalIdComposable(
+    viewModel: PatientRegistrationStepOneViewModel
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        OutlinedTextField(
+            value = viewModel.nationalId,
+            onValueChange = {
+                if (it.length <= viewModel.maxNationalIdLength && (it.matches(onlyNumbers) || it.isEmpty())) {
+                    viewModel.nationalId = it
+                    viewModel.isVerifyClicked = false
+                    viewModel.isNationalIdVerified = false
+                }
+            },
+            label = {
+                Text(stringResource(R.string.national_id))
+            },
+            modifier = Modifier.weight(2.5f),
+            supportingText = {
+                NationalIdSupportingText(viewModel)
+            },
+            trailingIcon = {
+                if (viewModel.nationalId.isNotBlank())
+                    IconButton(
+                        onClick = {
+                            viewModel.nationalId = ""
+                            viewModel.isVerifyClicked = false
+                            viewModel.isNationalIdVerified = false
+                        }
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.cancel),
+                            contentDescription = null
+                        )
+                    }
+            },
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Number
+            )
+        )
+        FilledTonalButton(
+            onClick = {
+                viewModel.isVerifyClicked = true
+                viewModel.verifyNationalId()
+            },
+            modifier = Modifier.weight(1f),
+            enabled = viewModel.nationalId.isNotBlank() && !viewModel.isNationalIdVerified
+        ) {
+            Text(stringResource(R.string.verify))
+        }
+    }
+}
+
+@Composable
+private fun NationalIdSupportingText(
+    viewModel: PatientRegistrationStepOneViewModel
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        if (viewModel.isVerifyClicked) {
+            val text: String
+            val icon: Int
+            val color: Color
+            if (viewModel.isNationalIdVerified) {
+                text = stringResource(R.string.verified)
+                icon = R.drawable.sync_completed_icon
+                color = MaterialTheme.colorScheme.primary
+            } else {
+                text = stringResource(R.string.unverified)
+                icon = R.drawable.info
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            }
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Icon(
+                    painter = painterResource(icon),
+                    contentDescription = null,
+                    tint = color,
+                    modifier = Modifier.size(16.dp)
+                )
+                Text(
+                    text = text,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = color
+                )
+            }
+        }
+        Spacer(modifier = Modifier.weight(1f))
+        Text(
+            text = "${viewModel.nationalId.length}/${viewModel.maxNationalIdLength}",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+}
+
+@Composable
+private fun LastNameField(viewModel: PatientRegistrationStepOneViewModel) {
+    CustomTextFieldWithLength(
+        value = viewModel.lastName,
+        label = stringResource(id = R.string.last_name_mandatory),
+        placeholder = null,
+        weight = 1f,
+        maxLength = viewModel.maxNameLength,
+        isError = viewModel.isLastNameValid,
+        error = stringResource(R.string.last_name_required),
+        keyboardType = KeyboardType.Text,
+        keyboardCapitalization = KeyboardCapitalization.Words
+    ) {
+        if (it.matches(nameRegex) || it.isEmpty()) viewModel.lastName = it
+        viewModel.isLastNameValid = viewModel.lastName.isBlank()
+    }
+}
+
+@Composable
+private fun FirstNameField(viewModel: PatientRegistrationStepOneViewModel) {
+    CustomTextFieldWithLength(
+        value = viewModel.firstName,
+        label = stringResource(id = R.string.first_name_mandatory),
+        placeholder = null,
+        weight = 1f,
+        maxLength = viewModel.maxNameLength,
+        isError = viewModel.isFirstNameValid,
+        error = stringResource(id = R.string.first_name_required),
+        keyboardType = KeyboardType.Text,
+        keyboardCapitalization = KeyboardCapitalization.Words
+    ) {
+        if (it.matches(nameRegex) || it.isEmpty()) viewModel.firstName = it
+        viewModel.isFirstNameValid = viewModel.firstName.isBlank()
+    }
+}
+
+@Composable
+private fun DOBAndAgeFields(viewModel: PatientRegistrationStepOneViewModel) {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(6.dp)
+    ) {
+        Row(modifier = Modifier.fillMaxWidth()) {
+            CustomFilterChip(viewModel.dobAgeSelector, "dob", "Date of Birth") {
+                viewModel.dobAgeSelector = it
+                viewModel.days = ""
+                viewModel.months = ""
+                viewModel.years = ""
+            }
+            Spacer(modifier = Modifier.width(10.dp))
+            CustomFilterChip(viewModel.dobAgeSelector, "age", "Age") {
+                viewModel.dobAgeSelector = it
+                viewModel.dobDay = ""
+                viewModel.dobMonth = ""
+                viewModel.dobYear = ""
+            }
+        }
+        if (viewModel.dobAgeSelector == "dob") {
+            DobTextField(viewModel)
+        } else
+            AgeTextField(viewModel)
+
+        if (viewModel.isDOBAgeBlank) {
+            Text(
+                text = stringResource(id = R.string.dob_age_required),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.error,
+                modifier = Modifier.padding(start = 8.dp)
+            )
+        }
+    }
+}
+
+@Composable
+private fun DobTextField(viewModel: PatientRegistrationStepOneViewModel) {
     Column {
         Row(
             modifier = Modifier
@@ -448,7 +459,7 @@ private fun MonthDropDown(viewModel: PatientRegistrationStepOneViewModel) {
 }
 
 @Composable
-fun AgeTextField(viewModel: PatientRegistrationStepOneViewModel) {
+private fun AgeTextField(viewModel: PatientRegistrationStepOneViewModel) {
     Row(
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -527,7 +538,46 @@ private fun AgeYearsComposable(viewModel: PatientRegistrationStepOneViewModel) {
 }
 
 @Composable
-fun GenderComposable(viewModel: PatientRegistrationStepOneViewModel) {
+private fun PhoneNumberField(viewModel: PatientRegistrationStepOneViewModel) {
+    CustomTextFieldWithLength(
+        value = viewModel.phoneNumber,
+        label = stringResource(id = R.string.mobile),
+        placeholder = null,
+        weight = 1f,
+        maxLength = viewModel.maxPhoneNumberLength,
+        isError = viewModel.isPhoneValid,
+        error = stringResource(id = R.string.phone_number_error_msg),
+        keyboardType = KeyboardType.Number,
+        keyboardCapitalization = KeyboardCapitalization.Words
+    ) {
+        if (it.length <= viewModel.maxPhoneNumberLength && (it.matches(viewModel.onlyNumbers) || it.isEmpty()))
+            viewModel.phoneNumber = it
+        viewModel.isPhoneValid =
+            viewModel.phoneNumber.isNotBlank() && !viewModel.phoneNumber.matches(
+                phoneNumberRegex
+            )
+    }
+}
+
+@Composable
+private fun EmailField(viewModel: PatientRegistrationStepOneViewModel) {
+    CustomTextField(
+        value = viewModel.email,
+        label = stringResource(id = R.string.email),
+        weight = 1f,
+        maxLength = viewModel.maxNameLength,
+        isError = viewModel.emailError,
+        error = stringResource(id = R.string.enter_valid_email),
+        keyboardType = KeyboardType.Text,
+        keyboardCapitalization = KeyboardCapitalization.None
+    ) {
+        viewModel.email = it
+        viewModel.emailError = viewModel.email.isNotBlank() && !viewModel.email.matches(emailPattern)
+    }
+}
+
+@Composable
+private fun GenderComposable(viewModel: PatientRegistrationStepOneViewModel) {
     Column {
         Row(
             modifier = Modifier
@@ -569,7 +619,7 @@ fun GenderComposable(viewModel: PatientRegistrationStepOneViewModel) {
 }
 
 @Composable
-fun PatientDeceasedComposable(viewModel: PatientRegistrationStepOneViewModel) {
+private fun PatientDeceasedComposable(viewModel: PatientRegistrationStepOneViewModel) {
     Row(
         modifier = Modifier
             .fillMaxWidth(),
@@ -599,241 +649,60 @@ fun PatientDeceasedComposable(viewModel: PatientRegistrationStepOneViewModel) {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DeceasedReasonComposable(
-    selectedReason: String,
-    dismiss: () -> Unit,
-    updatedReasons: (String) -> Unit
-) {
-    val selectedDeceasedReason = remember { mutableStateListOf<String>() }
-
-    var otherReason by remember { mutableStateOf("") }
-    var isOtherError by remember { mutableStateOf(false) }
-    var isLaunched by remember { mutableStateOf(false) }
-
-    LaunchedEffect(isLaunched) {
-        if (!isLaunched) {
-            selectedReason.split(",").forEach { reason ->
-                if (getDeceasedReasonList().contains(reason)) selectedDeceasedReason.add(reason)
-                else if (reason.isNotBlank()) {
-                    if (otherReason.isBlank()) {
-                        selectedDeceasedReason.add(DeceasedReason.OTHERS.reason)
-                        otherReason = reason
-                    } else {
-                        otherReason += ",$reason"
-                    }
-                }
-            }
-            isLaunched = true
-        }
-    }
-    ModalBottomSheet(
-        onDismissRequest = {
-            dismiss()
-        },
-        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-        modifier = Modifier
-            .statusBarsPadding(),
-        dragHandle = null
+private fun MotherNameField(viewModel: PatientRegistrationStepOneViewModel) {
+    CustomTextFieldWithLength(
+        value = viewModel.motherName,
+        label = stringResource(id = R.string.mother_name_mandatory),
+        placeholder = null,
+        weight = 1f,
+        maxLength = viewModel.maxNameLength,
+        isError = viewModel.isMotherNameValid,
+        error = stringResource(id = R.string.mother_name_required),
+        keyboardType = KeyboardType.Text,
+        keyboardCapitalization = KeyboardCapitalization.Words
     ) {
-        Column(
-            modifier = Modifier
-                .navigationBarsPadding()
-                .padding(24.dp)
-                .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(4.dp)
-        ) {
-            Text(
-                text = stringResource(R.string.person_deceased_note),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Spacer(Modifier.height(16.dp))
-            Text(
-                text = stringResource(R.string.select_decease_reason),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            getDeceasedReasonList().forEach { reason ->
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Checkbox(
-                        checked = selectedDeceasedReason.contains(reason),
-                        onCheckedChange = { checked ->
-                            if (checked) selectedDeceasedReason.add(reason)
-                            else {
-                                selectedDeceasedReason.remove(reason)
-                                if (reason == DeceasedReason.OTHERS.reason) {
-                                    otherReason = ""
-                                    isOtherError = false
-                                }
-                            }
-                        }
-                    )
-                    Text(
-                        text = reason
-                    )
-                }
-            }
-            AnimatedVisibility(
-                visible = selectedDeceasedReason.contains(DeceasedReason.OTHERS.reason)
-            ) {
-                CustomTextFieldWithLength(
-                    value = otherReason,
-                    label = null,
-                    placeholder = stringResource(R.string.please_specify),
-                    weight = 1f,
-                    maxLength = 50,
-                    isError = isOtherError,
-                    error = stringResource(R.string.specify_reason),
-                    keyboardType = KeyboardType.Text,
-                    keyboardCapitalization = KeyboardCapitalization.Sentences
-                ) {
-                    otherReason = it
-                    isOtherError = selectedDeceasedReason.contains(DeceasedReason.OTHERS.reason)
-                            && otherReason.isBlank()
-                }
-            }
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End
-            ) {
-                TextButton(
-                    onClick = dismiss
-                ) {
-                    Text(stringResource(R.string.cancel))
-                }
-                Spacer(Modifier.width(16.dp))
-                TextButton(
-                    onClick = {
-                        if (selectedDeceasedReason.contains(DeceasedReason.OTHERS.reason)) {
-                            selectedDeceasedReason.remove(DeceasedReason.OTHERS.reason)
-                            selectedDeceasedReason.add(otherReason.trim())
-                        }
-                        updatedReasons(selectedDeceasedReason.joinToString(","))
-                    },
-                    enabled = selectedDeceasedReason.isNotEmpty() && !(selectedDeceasedReason.contains(
-                        DeceasedReason.OTHERS.reason
-                    )
-                            && otherReason.isBlank())
-                ) {
-                    Text(stringResource(R.string.save))
-                }
-            }
-        }
+        if (it.matches(nameRegex) || it.isEmpty()) viewModel.motherName = it
+        viewModel.isMotherNameValid = viewModel.motherName.isBlank()
     }
 }
 
 @Composable
-private fun NationalIdComposable(
-    viewModel: PatientRegistrationStepOneViewModel
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
-        verticalAlignment = Alignment.CenterVertically
+private fun FatherNameField(viewModel: PatientRegistrationStepOneViewModel) {
+    CustomTextFieldWithLength(
+        value = viewModel.fatherName,
+        label = stringResource(id = R.string.father_name),
+        placeholder = null,
+        weight = 1f,
+        maxLength = viewModel.maxNameLength,
+        isError = false,
+        error = "",
+        keyboardType = KeyboardType.Text,
+        keyboardCapitalization = KeyboardCapitalization.Words
     ) {
-        OutlinedTextField(
-            value = viewModel.nationalId,
-            onValueChange = {
-                if (it.length <= viewModel.maxNationalIdLength && (it.matches(onlyNumbers) || it.isEmpty())) {
-                    viewModel.nationalId = it
-                    viewModel.isVerifyClicked = false
-                    viewModel.isNationalIdVerified = false
-                }
-            },
-            label = {
-                Text(stringResource(R.string.national_id))
-            },
-            modifier = Modifier.weight(2.5f),
-            supportingText = {
-                NationalIdSupportingText(viewModel)
-            },
-            trailingIcon = {
-                if (viewModel.nationalId.isNotBlank())
-                    IconButton(
-                        onClick = {
-                            viewModel.nationalId = ""
-                            viewModel.isVerifyClicked = false
-                            viewModel.isNationalIdVerified = false
-                        }
-                    ) {
-                        Icon(
-                            painter = painterResource(R.drawable.cancel),
-                            contentDescription = null
-                        )
-                    }
-            },
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Number
-            )
-        )
-        FilledTonalButton(
-            onClick = {
-                viewModel.isVerifyClicked = true
-                viewModel.verifyNationalId()
-            },
-            modifier = Modifier.weight(1f),
-            enabled = viewModel.nationalId.isNotBlank() && !viewModel.isNationalIdVerified
-        ) {
-            Text(stringResource(R.string.verify))
-        }
+        if (it.matches(nameRegex) || it.isEmpty()) viewModel.fatherName = it
     }
 }
 
 @Composable
-private fun NationalIdSupportingText(
-    viewModel: PatientRegistrationStepOneViewModel
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically
+private fun SpouseNameField(viewModel: PatientRegistrationStepOneViewModel) {
+    CustomTextFieldWithLength(
+        value = viewModel.spouseName,
+        label = stringResource(id = R.string.spouse_name),
+        placeholder = null,
+        weight = 1f,
+        maxLength = viewModel.maxNameLength,
+        isError = false,
+        error = "",
+        keyboardType = KeyboardType.Text,
+        keyboardCapitalization = KeyboardCapitalization.Words
     ) {
-        if (viewModel.isVerifyClicked) {
-            val text: String
-            val icon: Int
-            val color: Color
-            if (viewModel.isNationalIdVerified) {
-                text = stringResource(R.string.verified)
-                icon = R.drawable.sync_completed_icon
-                color = MaterialTheme.colorScheme.primary
-            } else {
-                text = stringResource(R.string.unverified)
-                icon = R.drawable.info
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            }
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                Icon(
-                    painter = painterResource(icon),
-                    contentDescription = null,
-                    tint = color,
-                    modifier = Modifier.size(16.dp)
-                )
-                Text(
-                    text = text,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = color
-                )
-            }
-        }
-        Spacer(modifier = Modifier.weight(1f))
-        Text(
-            text = "${viewModel.nationalId.length}/${viewModel.maxNationalIdLength}",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
+        if (it.matches(nameRegex) || it.isEmpty()) viewModel.spouseName = it
     }
 }
 
 @Composable
-private fun HospitalIdComposable(
-    viewModel: PatientRegistrationStepOneViewModel
-) {
+private fun HospitalIdComposable(viewModel: PatientRegistrationStepOneViewModel) {
     CustomTextFieldWithLength(
         value = viewModel.hospitalId,
         label = stringResource(id = R.string.hospital_id),
@@ -850,5 +719,45 @@ private fun HospitalIdComposable(
             viewModel.hospitalId = value
         viewModel.isHospitalIdValid = viewModel.hospitalId.isNotBlank() &&
                 !atLeastOneAlphaAndNumber.matches(viewModel.hospitalId)
+    }
+}
+
+@Composable
+private fun NextButton(
+    patientRegister: PatientRegister,
+    viewModel: PatientRegistrationStepOneViewModel,
+    patientRegistrationViewModel: PatientRegistrationViewModel
+) {
+    Button(
+        onClick = {
+            if (viewModel.basicInfoValidation()) {
+                patientRegister.run {
+                    firstName = viewModel.firstName.capitalizeFirst().trim()
+                    lastName = viewModel.lastName.capitalizeFirst().trim()
+                    dobAgeSelector = viewModel.dobAgeSelector
+                    dobDay = viewModel.dobDay
+                    dobMonth = viewModel.dobMonth
+                    dobYear = viewModel.dobYear
+                    years = viewModel.years
+                    months = viewModel.months
+                    days = viewModel.days
+                    phoneNumber = viewModel.phoneNumber
+                    email = viewModel.email
+                    gender = viewModel.gender
+                    isPersonDeceased = viewModel.isPersonDeceased
+                    personDeceasedReason = viewModel.selectedDeceasedReason
+                    motherName = viewModel.motherName.capitalizeFirst().trim()
+                    fatherName = viewModel.fatherName.capitalizeFirst().trim()
+                    spouseName = viewModel.spouseName.capitalizeFirst().trim()
+                }
+                patientRegistrationViewModel.currentStep = 2
+            }
+        },
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 10.dp)
+            .testTag("step2")
+    ) {
+        Text(text = stringResource(id = R.string.next))
     }
 }

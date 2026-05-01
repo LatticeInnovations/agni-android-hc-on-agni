@@ -60,7 +60,7 @@ import com.heartcare.agni.data.server.model.patient.PatientResponse
 import com.heartcare.agni.ui.common.CustomFilterChip
 import com.heartcare.agni.ui.common.CustomTextField
 import com.heartcare.agni.ui.common.CustomTextFieldWithLength
-import com.heartcare.agni.ui.patientregistration.step1.DeceasedReasonComposable
+import com.heartcare.agni.ui.common.DeceasedReasonComposable
 import com.heartcare.agni.utils.converters.responseconverter.MonthsList.getMonthsList
 import com.heartcare.agni.utils.converters.responseconverter.StringUtils.capitalizeFirst
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.ageToPatientDate
