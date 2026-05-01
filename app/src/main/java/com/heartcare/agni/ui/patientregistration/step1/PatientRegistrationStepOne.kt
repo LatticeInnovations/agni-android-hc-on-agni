@@ -12,9 +12,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
@@ -23,7 +25,9 @@ import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
@@ -39,11 +43,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.heartcare.agni.R
 import com.heartcare.agni.data.local.enums.DeceasedReason
@@ -62,12 +69,14 @@ import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.isDOB
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toMonthInteger
 import com.heartcare.agni.utils.regex.EmailRegex.emailPattern
 import com.heartcare.agni.utils.regex.NameRegex.nameRegex
+import com.heartcare.agni.utils.regex.OnlyNumberRegex.onlyNumbers
 import com.heartcare.agni.utils.regex.PhoneNumberRegex.phoneNumberRegex
+import com.heartcare.agni.utils.regex.RegexPatterns.atLeastOneAlphaAndNumber
 
 @Composable
 fun PatientRegistrationStepOne(
     patientRegister: PatientRegister,
-    viewModel: PatientRegistrationStepOneViewModel = viewModel()
+    viewModel: PatientRegistrationStepOneViewModel = hiltViewModel()
 ) {
     val patientRegistrationViewModel: PatientRegistrationViewModel = viewModel()
     LaunchedEffect(viewModel.isLaunched) {
@@ -121,6 +130,8 @@ fun PatientRegistrationStepOne(
                 .weight(1f),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
+
+            NationalIdComposable(viewModel)
             CustomTextFieldWithLength(
                 value = viewModel.lastName,
                 label = stringResource(id = R.string.last_name_mandatory),
@@ -258,6 +269,8 @@ fun PatientRegistrationStepOne(
             ) {
                 if (it.matches(nameRegex) || it.isEmpty()) viewModel.spouseName = it
             }
+
+            HospitalIdComposable(viewModel)
         }
         Button(
             onClick = {
@@ -710,5 +723,132 @@ fun DeceasedReasonComposable(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun NationalIdComposable(
+    viewModel: PatientRegistrationStepOneViewModel
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        OutlinedTextField(
+            value = viewModel.nationalId,
+            onValueChange = {
+                if (it.length <= viewModel.maxNationalIdLength && (it.matches(onlyNumbers) || it.isEmpty())) {
+                    viewModel.nationalId = it
+                    viewModel.isVerifyClicked = false
+                    viewModel.isNationalIdVerified = false
+                }
+            },
+            label = {
+                Text(stringResource(R.string.national_id))
+            },
+            modifier = Modifier.weight(2.5f),
+            supportingText = {
+                NationalIdSupportingText(viewModel)
+            },
+            trailingIcon = {
+                if (viewModel.nationalId.isNotBlank())
+                    IconButton(
+                        onClick = {
+                            viewModel.nationalId = ""
+                            viewModel.isVerifyClicked = false
+                            viewModel.isNationalIdVerified = false
+                        }
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.cancel),
+                            contentDescription = null
+                        )
+                    }
+            },
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Number
+            )
+        )
+        FilledTonalButton(
+            onClick = {
+                viewModel.isVerifyClicked = true
+                viewModel.verifyNationalId()
+            },
+            modifier = Modifier.weight(1f),
+            enabled = viewModel.nationalId.isNotBlank() && !viewModel.isNationalIdVerified
+        ) {
+            Text(stringResource(R.string.verify))
+        }
+    }
+}
+
+@Composable
+private fun NationalIdSupportingText(
+    viewModel: PatientRegistrationStepOneViewModel
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        if (viewModel.isVerifyClicked) {
+            val text: String
+            val icon: Int
+            val color: Color
+            if (viewModel.isNationalIdVerified) {
+                text = stringResource(R.string.verified)
+                icon = R.drawable.sync_completed_icon
+                color = MaterialTheme.colorScheme.primary
+            } else {
+                text = stringResource(R.string.unverified)
+                icon = R.drawable.info
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            }
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Icon(
+                    painter = painterResource(icon),
+                    contentDescription = null,
+                    tint = color,
+                    modifier = Modifier.size(16.dp)
+                )
+                Text(
+                    text = text,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = color
+                )
+            }
+        }
+        Spacer(modifier = Modifier.weight(1f))
+        Text(
+            text = "${viewModel.nationalId.length}/${viewModel.maxNationalIdLength}",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+}
+
+@Composable
+private fun HospitalIdComposable(
+    viewModel: PatientRegistrationStepOneViewModel
+) {
+    CustomTextFieldWithLength(
+        value = viewModel.hospitalId,
+        label = stringResource(id = R.string.hospital_id),
+        placeholder = null,
+        weight = 1f,
+        maxLength = viewModel.maxHospitalIdLength,
+        isError = viewModel.isHospitalIdValid,
+        error = stringResource(id = R.string.hospital_id_error_msg),
+        keyboardType = KeyboardType.Text,
+        keyboardCapitalization = KeyboardCapitalization.Characters
+    ) { value ->
+        val filtered = value.filter { it.isLetterOrDigit() }
+        if (value.length <= viewModel.maxHospitalIdLength && (value == filtered || value.isEmpty()))
+            viewModel.hospitalId = value
+        viewModel.isHospitalIdValid = viewModel.hospitalId.isNotBlank() &&
+                !atLeastOneAlphaAndNumber.matches(viewModel.hospitalId)
     }
 }

@@ -28,4 +28,9 @@ class NationalIdRepositoryImpl @Inject constructor(
             tempFile.renameTo(file)
         }
     }
+
+    override suspend fun getNationalIdData(): String? {
+        val file = getFile()
+        return if (file.exists()) file.readText() else null
+    }
 }
