@@ -70,7 +70,8 @@ open class GenericRepositoryDatabaseTransactions(
     protected suspend fun insertPrescriptionGenericEntity(
         prescriptionResponse: PrescriptionResponse,
         prescriptionGenericEntity: GenericEntity?,
-        uuid: String
+        uuid: String,
+        type: GenericTypeEnum
     ): Long {
         return if (prescriptionGenericEntity != null) {
             genericDao.insertGenericEntity(
@@ -82,7 +83,7 @@ open class GenericRepositoryDatabaseTransactions(
                     id = uuid,
                     patientId = prescriptionResponse.prescriptionId!!,
                     payload = prescriptionResponse.copy(appUpdatedOn = Date()).toJson(),
-                    type = GenericTypeEnum.PRESCRIPTION,
+                    type = type,
                     syncType = SyncType.POST
                 )
             )[0]
@@ -93,7 +94,8 @@ open class GenericRepositoryDatabaseTransactions(
         prescriptionFhirId: String,
         prescriptionResponse: PrescriptionResponse,
         prescriptionGenericEntity: GenericEntity?,
-        uuid: String
+        uuid: String,
+        type: GenericTypeEnum
     ): Long {
         return if (prescriptionGenericEntity != null) {
             genericDao.insertGenericEntity(
@@ -106,7 +108,7 @@ open class GenericRepositoryDatabaseTransactions(
                     id = uuid,
                     patientId = prescriptionFhirId,
                     payload = prescriptionResponse.copy(appUpdatedOn = Date()).toJson(),
-                    type = GenericTypeEnum.PRESCRIPTION,
+                    type = type,
                     syncType = SyncType.PUT
                 )
             )[0]
@@ -141,7 +143,8 @@ open class GenericRepositoryDatabaseTransactions(
         examinationFhirId: String,
         examinationResponse: ExaminationResponse,
         examinationGenericEntity: GenericEntity?,
-        uuid: String
+        uuid: String,
+        type: GenericTypeEnum
     ): Long {
         return if (examinationGenericEntity != null) {
             genericDao.insertGenericEntity(
@@ -154,7 +157,7 @@ open class GenericRepositoryDatabaseTransactions(
                     id = uuid,
                     patientId = examinationFhirId,
                     payload = examinationResponse.toJson(),
-                    type = GenericTypeEnum.EXAMINATION,
+                    type = type,
                     syncType = SyncType.PUT
                 )
             )[0]
@@ -275,7 +278,8 @@ open class GenericRepositoryDatabaseTransactions(
     protected suspend fun insertSymDiagGenericEntity(
         local: DiagnosisData,
         genericEntity: GenericEntity?,
-        uuid: String
+        uuid: String,
+        type: GenericTypeEnum
     ): Long {
         return if (genericEntity != null) {
             genericDao.insertGenericEntity(
@@ -286,7 +290,7 @@ open class GenericRepositoryDatabaseTransactions(
                 GenericEntity(
                     id = uuid, patientId = local.diagnosisUuid,
                     payload = local.toJson(),
-                    type = GenericTypeEnum.DIAGNOSIS,
+                    type = type,
                     syncType = SyncType.POST
                 )
             )[0]
@@ -457,7 +461,8 @@ open class GenericRepositoryDatabaseTransactions(
     protected suspend fun insertExaminationGenericEntity(
         examinationGenericEntity: GenericEntity?,
         examinationResponse: ExaminationResponse,
-        uuid: String
+        uuid: String,
+        type: GenericTypeEnum
     ): Long {
         return if (examinationGenericEntity != null) {
             genericDao.insertGenericEntity(
@@ -469,7 +474,7 @@ open class GenericRepositoryDatabaseTransactions(
                     id = uuid,
                     patientId = examinationResponse.uuid!!,
                     payload = examinationResponse.toJson(),
-                    type = GenericTypeEnum.EXAMINATION,
+                    type = type,
                     syncType = SyncType.POST
                 )
             )[0]

@@ -71,7 +71,6 @@ fun PreviewScreen(
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         BasicInformationCard(patientResponse, navigate)
-        IdentificationCard(patientResponse, navigate)
         AddressCard(viewModel, patientResponse, navigate)
         Spacer(modifier = Modifier.height(60.dp))
     }
@@ -94,6 +93,8 @@ private fun BasicInformationCard(
             Heading(stringResource(R.string.basic_information), 1) { step ->
                 navigate(step)
             }
+            Spacer(modifier = Modifier.height(10.dp))
+            NationalIDComposable(patientResponse)
             Spacer(modifier = Modifier.height(10.dp))
             Text(
                 text = "${
@@ -136,84 +137,75 @@ private fun BasicInformationCard(
                 Label(stringResource(R.string.spouse_name))
                 Detail(patientResponse.spouseName)
             }
+            HospitalIDComposable(patientResponse)
         }
     }
 }
 
 @Composable
-private fun IdentificationCard(
-    patientResponse: PatientResponse,
-    navigate: (Int) -> Unit
+private fun NationalIDComposable(
+    patientResponse: PatientResponse
 ) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
-    ) {
-        Column(
-            modifier = Modifier
-                .padding(20.dp)
-                .fillMaxWidth()
-        ) {
-
-            Heading(stringResource(R.string.identification), 2) { step ->
-                navigate(step)
-            }
-            patientResponse.identifier.forEach { identifier ->
-                if (identifier.identifierType == IdentificationConstants.HOSPITAL_ID) {
-                    Spacer(modifier = Modifier.height(10.dp))
-                    Label(stringResource(R.string.hospital_id))
-                    Detail(identifier.identifierNumber)
+    patientResponse.identifier.forEach { identifier ->
+        if (identifier.identifierType == IdentificationConstants.NATIONAL_ID) {
+            Spacer(modifier = Modifier.height(10.dp))
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Column {
+                    Label(stringResource(R.string.national_id))
+                    Detail(identifier.identifierNumber.map { "X" }.joinToString(""))
                 }
-            }
-            patientResponse.identifier.forEach { identifier ->
-                if (identifier.identifierType == IdentificationConstants.NATIONAL_ID) {
-                    Spacer(modifier = Modifier.height(10.dp))
+                val text: String
+                val icon: Painter
+                if (identifier.use == NationalIdUse.OFFICIAL.use) {
+                    text = stringResource(R.string.verified)
+                    icon = painterResource(R.drawable.sync_completed_icon)
+                } else {
+                    text = stringResource(R.string.unverified)
+                    icon = painterResource(R.drawable.info)
+                }
+                Surface(
+                    shape = RoundedCornerShape(8.dp),
+                    border = BorderStroke(
+                        width = 1.dp,
+                        color = MaterialTheme.colorScheme.outlineVariant
+                    ),
+                    color = Color.Transparent
+                ) {
                     Row(
+                        modifier = Modifier.padding(8.dp),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Column {
-                            Label(stringResource(R.string.national_id))
-                            Detail(identifier.identifierNumber.map { "X" }.joinToString(""))
-                        }
-                        val text: String
-                        val icon: Painter
-                        if (identifier.use == NationalIdUse.OFFICIAL.use) {
-                            text = stringResource(R.string.verified)
-                            icon = painterResource(R.drawable.sync_completed_icon)
-                        } else {
-                            text = stringResource(R.string.unverified)
-                            icon = painterResource(R.drawable.info)
-                        }
-                        Surface(
-                            shape = RoundedCornerShape(8.dp),
-                            border = BorderStroke(
-                                width = 1.dp,
-                                color = MaterialTheme.colorScheme.outlineVariant
-                            ),
-                            color = Color.Transparent
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(8.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                Icon(
-                                    painter = icon,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.size(18.dp)
-                                )
-                                Text(
-                                    text = text,
-                                    style = MaterialTheme.typography.labelLarge,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                        }
+                        Icon(
+                            painter = icon,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Text(
+                            text = text,
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun HospitalIDComposable(
+    patientResponse: PatientResponse
+) {
+    patientResponse.identifier.forEach { identifier ->
+        if (identifier.identifierType == IdentificationConstants.HOSPITAL_ID) {
+            Spacer(modifier = Modifier.height(10.dp))
+            Label(stringResource(R.string.hospital_id))
+            Detail(identifier.identifierNumber)
         }
     }
 }
@@ -238,7 +230,7 @@ private fun AddressCard(
                 .padding(20.dp)
                 .fillMaxWidth()
         ) {
-            Heading(stringResource(R.string.addresses), 3) { step ->
+            Heading(stringResource(R.string.addresses), 2) { step ->
                 navigate(step)
             }
             Spacer(modifier = Modifier.height(10.dp))

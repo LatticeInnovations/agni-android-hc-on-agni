@@ -6,6 +6,7 @@ import com.heartcare.agni.data.local.enums.RecordType
 import com.heartcare.agni.data.local.enums.SyncType
 import com.heartcare.agni.data.local.model.diagnosis.DiagnosisData
 import com.heartcare.agni.data.local.repository.crashlytics.CrashlyticsLogger
+import com.heartcare.agni.data.local.repository.nationalId.NationalIdRepository
 import com.heartcare.agni.data.local.repository.preference.PreferenceRepository
 import com.heartcare.agni.data.local.roomdb.dao.AllergyDao
 import com.heartcare.agni.data.local.roomdb.dao.AppointmentDao
@@ -120,6 +121,7 @@ class SyncRepositoryImpl @Inject constructor(
     patientDao: PatientDao,
     private val genericDao: GenericDao,
     private val preferenceRepository: PreferenceRepository,
+    private val nationalIdRepository: NationalIdRepository,
     medicationDao: MedicationDao,
     prescriptionDao: PrescriptionDao,
     scheduleDao: ScheduleDao,
@@ -277,7 +279,7 @@ class SyncRepositoryImpl @Inject constructor(
                         map[PATIENT_ID] =
                             listOfGenericEntity.map { it.payload }.toNoBracketAndNoSpaceString()
                         map[COUNT] = DEFAULT_MAX_COUNT_VALUE.toString()
-                        ApiResponseConverter.convert(prescriptionApiService.getPastPrescription(map))
+                        ApiResponseConverter.convert(prescriptionApiService.getPastPrescription(MEDICATION_REQUEST,map))
                             .run {
                                 when (this) {
                                     is ApiEndResponse -> {
@@ -297,6 +299,7 @@ class SyncRepositoryImpl @Inject constructor(
             } else {
                 ApiResponseConverter.convert(
                     prescriptionApiService.getPastPrescription(
+                        MEDICATION_REQUEST,
                         mapOf(
                             Pair(PATIENT_ID, patientId)
                         )
@@ -317,6 +320,75 @@ class SyncRepositoryImpl @Inject constructor(
             crashlyticsLogger.logException(
                 e,
                 "getAndInsertFormPrescription function failed.",
+                mapOf(
+                    Pair(
+                        USER_ID,
+                        preferenceRepository.getUserDetails()?.userId ?: ERROR_FETCHING_USER_DETAILS
+                    )
+                )
+            )
+            ApiErrorResponse(
+                statusCode = 0,
+                errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
+            )
+        }
+    }
+
+    override suspend fun getAndInsertCampaignPrescription(patientId: String?): ResponseMapper<List<PrescriptionResponse>> {
+        return try {
+            if (patientId == null) {
+                genericDao.getSameTypeGenericEntityPayload(
+                    GenericTypeEnum.FHIR_IDS_PRESCRIPTION, SyncType.POST, COUNT_VALUE
+                ).let { listOfGenericEntity ->
+                    if (listOfGenericEntity.isEmpty()) ApiEmptyResponse()
+                    else {
+                        val map = mutableMapOf<String, String>()
+                        map[PATIENT_ID] =
+                            listOfGenericEntity.map { it.payload }.toNoBracketAndNoSpaceString()
+                        map[COUNT] = DEFAULT_MAX_COUNT_VALUE.toString()
+                        ApiResponseConverter.convert(prescriptionApiService.getPastPrescription(
+                            EndPoints.CAMPAIGN_PRESCRIPTION,
+                            map))
+                            .run {
+                                when (this) {
+                                    is ApiEndResponse -> {
+                                        insertFormPrescriptions(body)
+                                        genericDao.deleteSyncPayload(listOfGenericEntity.toListOfId())
+                                        getAndInsertFormPrescription(null)
+                                    }
+
+                                    else -> {
+                                        this
+                                    }
+                                }
+
+                            }
+                    }
+                }
+            } else {
+                ApiResponseConverter.convert(
+                    prescriptionApiService.getPastPrescription(
+                        EndPoints.CAMPAIGN_PRESCRIPTION,
+                        mapOf(
+                            Pair(PATIENT_ID, patientId)
+                        )
+                    )
+                ).run {
+                    when (this) {
+                        is ApiEndResponse -> {
+                            insertFormPrescriptions(body)
+                            this
+                        }
+
+                        else -> this
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            Timber.e(e, e.localizedMessage)
+            crashlyticsLogger.logException(
+                e,
+                "getAndInsertCampaignFormPrescription function failed.",
                 mapOf(
                     Pair(
                         USER_ID,
@@ -807,42 +879,6 @@ class SyncRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun getAndInsertCampaignCVD(offset: Int): ResponseMapper<List<CVDResponse>> {
-        val map = mutableMapOf<String, String>()
-        map[COUNT] = COUNT_VALUE.toString()
-        map[OFFSET] = offset.toString()
-        map[SORT] = "-$ID"
-        if (preferenceRepository.getLastSyncCampaignCVD() != 0L) map[LAST_UPDATED] = String.format(
-            GREATER_THAN_BUILDER, preferenceRepository.getLastSyncCampaignCVD().toTimeStampDate()
-        )
-
-        return try {
-            ApiResponseConverter.convert(
-                cvdApiService.getCVD(EndPoints.CAMPAIGN_CVD, map), true
-            ).run {
-                when (this) {
-                    is ApiContinueResponse -> {
-                        insertCVD(body)
-                        getAndInsertCampaignCVD(offset + COUNT_VALUE)
-                    }
-
-                    is ApiEndResponse -> {
-                        insertCVD(body)
-                        preferenceRepository.setLastSyncCampaignCVD(Date().time)
-                        this
-                    }
-
-                    else -> this
-                }
-            }
-        } catch (e: Exception) {
-            Timber.e(e, e.localizedMessage)
-            ApiErrorResponse(
-                statusCode = 0,
-                errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
-            )
-        }
-    }
 
     override suspend fun getAndInsertPatientLastUpdatedData(): ResponseMapper<List<PatientLastUpdatedResponse>> {
         return try {
@@ -928,7 +964,42 @@ class SyncRepositoryImpl @Inject constructor(
             )
         }
     }
+    override suspend fun getAndInsertCampaignCVD(offset: Int): ResponseMapper<List<CVDResponse>> {
+        val map = mutableMapOf<String, String>()
+        map[COUNT] = COUNT_VALUE.toString()
+        map[OFFSET] = offset.toString()
+        map[SORT] = "-$ID"
+        if (preferenceRepository.getLastSyncCampaignCVD() != 0L) map[LAST_UPDATED] = String.format(
+            GREATER_THAN_BUILDER, preferenceRepository.getLastSyncCampaignCVD().toTimeStampDate()
+        )
 
+        return try {
+            ApiResponseConverter.convert(
+                cvdApiService.getCVD(EndPoints.CAMPAIGN_CVD, map), true
+            ).run {
+                when (this) {
+                    is ApiContinueResponse -> {
+                        insertCVD(body)
+                        getAndInsertCampaignCVD(offset + COUNT_VALUE)
+                    }
+
+                    is ApiEndResponse -> {
+                        insertCVD(body)
+                        preferenceRepository.setLastSyncCampaignCVD(Date().time)
+                        this
+                    }
+
+                    else -> this
+                }
+            }
+        } catch (e: Exception) {
+            Timber.e(e, e.localizedMessage)
+            ApiErrorResponse(
+                statusCode = 0,
+                errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
+            )
+        }
+    }
     override suspend fun getAndInsertListVitalData(offset: Int): ResponseMapper<List<VitalResponse>> {
         val map = mutableMapOf<String, String>()
         map[COUNT] = COUNT_VALUE.toString()
@@ -980,7 +1051,6 @@ class SyncRepositoryImpl @Inject constructor(
             )
         }
     }
-
     override suspend fun getAndInsertCampaignVitalData(offset: Int): ResponseMapper<List<VitalResponse>> {
         val map = mutableMapOf<String, String>()
         map[COUNT] = COUNT_VALUE.toString()
@@ -1034,7 +1104,6 @@ class SyncRepositoryImpl @Inject constructor(
             )
         }
     }
-
     override suspend fun getAndInsertListDiagnosisData(offset: Int): ResponseMapper<List<DiagnosisResponse>> {
         val map = mutableMapOf<String, String>()
         map[COUNT] = COUNT_VALUE.toString()
@@ -1086,7 +1155,57 @@ class SyncRepositoryImpl @Inject constructor(
             )
         }
     }
+    override suspend fun getAndInsertCampaignDiagnosisData(offset: Int): ResponseMapper<List<DiagnosisResponse>> {
+        val map = mutableMapOf<String, String>()
+        map[COUNT] = COUNT_VALUE.toString()
+        map[OFFSET] = offset.toString()
+        map[SORT] = "-$ID"
+        if (preferenceRepository.getLastSyncCampaignDiagnosis() != 0L) map[LAST_UPDATED] =
+            String.format(
+                GREATER_THAN_BUILDER,
+                preferenceRepository.getLastSyncCampaignDiagnosis().toTimeStampDate()
+            )
 
+        return try {
+            ApiResponseConverter.convert(
+                diagnosisApiService.getListData(
+                    EndPoints.CAMPAIGN_DIAGNOSIS, map
+                ), true
+            ).run {
+                when (this) {
+                    is ApiContinueResponse -> {
+                        insertSymDiag(body)
+                        //Call for next batch data
+                        getAndInsertCampaignDiagnosisData(offset + COUNT_VALUE)
+                    }
+
+                    is ApiEndResponse -> {
+                        preferenceRepository.setLastSyncCampaignDiagnosis(Date().time)
+                        insertSymDiag(body)
+                        this
+                    }
+
+                    else -> this
+                }
+            }
+        } catch (e: Exception) {
+            Timber.e(e, e.localizedMessage)
+            crashlyticsLogger.logException(
+                e,
+                "getAndInsertCampaignDiagnosisData function failed.",
+                mapOf(
+                    Pair(
+                        USER_ID,
+                        preferenceRepository.getUserDetails()?.userId ?: ERROR_FETCHING_USER_DETAILS
+                    )
+                )
+            )
+            ApiErrorResponse(
+                statusCode = 0,
+                errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
+            )
+        }
+    }
     override suspend fun sendPersonPostData(): ResponseMapper<List<CreateResponse>> {
         return try {
             genericDao.getSameTypeGenericEntityPayload(
@@ -1133,20 +1252,20 @@ class SyncRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun sendFormPrescriptionPostData(): ResponseMapper<List<CreateResponse>> {
+    override suspend fun sendFormPrescriptionPostData(genericTypeEnum: GenericTypeEnum, endPoint: String): ResponseMapper<List<CreateResponse>> {
         return try {
             genericDao.getSameTypeGenericEntityPayload(
-                genericTypeEnum = GenericTypeEnum.PRESCRIPTION,
+                genericTypeEnum = genericTypeEnum,
                 syncType = SyncType.POST
             ).let { listOfGenericEntity ->
                 if (listOfGenericEntity.isEmpty()) ApiEmptyResponse()
                 else {
                     ApiResponseConverter.convert(
                         prescriptionApiService.postPrescriptionRelatedData(
-                            MEDICATION_REQUEST,
+                            endPoint,
                             listOfGenericEntity.map { prescriptionGenericEntity ->
                                 prescriptionGenericEntity.payload.fromJson<LinkedTreeMap<*, *>>()
-                                    .mapToObject(PrescriptionResponse::class.java)!!
+                                    .mapToObject(PrescriptionResponse::class.java)!!.copy(campaignId = null)
                             }
                         )
                     ).run {
@@ -1156,7 +1275,7 @@ class SyncRepositoryImpl @Inject constructor(
                                     listOfGenericEntity,
                                     body
                                 ).let { deletedRows ->
-                                    if (deletedRows > 0) sendFormPrescriptionPostData() else this
+                                    if (deletedRows > 0) sendFormPrescriptionPostData(genericTypeEnum, endPoint) else this
                                 }
                             }
 
@@ -1280,15 +1399,15 @@ class SyncRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun sendAppointmentPostData(): ResponseMapper<List<CreateResponse>> {
+    override suspend fun sendAppointmentPostData(genericTypeEnum: GenericTypeEnum, endPoint: String): ResponseMapper<List<CreateResponse>> {
         return try {
             genericDao.getSameTypeGenericEntityPayload(
-                genericTypeEnum = GenericTypeEnum.APPOINTMENT, syncType = SyncType.POST
+                genericTypeEnum =genericTypeEnum, syncType = SyncType.POST
             ).let { listOfGenericEntity ->
                 if (listOfGenericEntity.isEmpty()) ApiEmptyResponse()
                 else ApiResponseConverter.convert(
                     scheduleAndAppointmentApiService.createAppointment(
-                        EndPoints.APPOINTMENT,
+                        endPoint,
                         listOfGenericEntity.map {
                             it.payload.fromJson<LinkedTreeMap<*, *>>()
                                 .mapToObject(AppointmentResponse::class.java)!!
@@ -1299,9 +1418,9 @@ class SyncRepositoryImpl @Inject constructor(
                         is ApiEndResponse -> {
                             insertAppointmentFhirId(
                                 listOfGenericEntity, body,
-                                GenericTypeEnum.APPOINTMENT
+                                genericTypeEnum
                             ).let { deletedRows ->
-                                if (deletedRows > 0) sendAppointmentPostData() else this
+                                if (deletedRows > 0) sendAppointmentPostData(genericTypeEnum, endPoint) else this
                             }
                         }
 
@@ -1314,55 +1433,6 @@ class SyncRepositoryImpl @Inject constructor(
             crashlyticsLogger.logException(
                 e,
                 "sendAppointmentPostData function failed.",
-                mapOf(
-                    Pair(
-                        USER_ID,
-                        preferenceRepository.getUserDetails()?.userId ?: ERROR_FETCHING_USER_DETAILS
-                    )
-                )
-            )
-            ApiErrorResponse(
-                statusCode = 0,
-                errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
-            )
-        }
-    }
-
-
-    override suspend fun sendCampaignAppointmentPostData(): ResponseMapper<List<CreateResponse>> {
-        return try {
-            genericDao.getSameTypeGenericEntityPayload(
-                genericTypeEnum = GenericTypeEnum.CAMPAIGN_APPOINTMENT, syncType = SyncType.POST
-            ).let { listOfGenericEntity ->
-                if (listOfGenericEntity.isEmpty()) ApiEmptyResponse()
-                else ApiResponseConverter.convert(
-                    scheduleAndAppointmentApiService.createAppointment(
-                        EndPoints.CAMPAIGN_APPOINTMENT,
-                        listOfGenericEntity.map {
-                            it.payload.fromJson<LinkedTreeMap<*, *>>()
-                                .mapToObject(AppointmentResponse::class.java)!!
-                        }
-                    )
-                ).run {
-                    when (this) {
-                        is ApiEndResponse -> {
-                            insertAppointmentFhirId(
-                                listOfGenericEntity, body,
-                                GenericTypeEnum.CAMPAIGN_APPOINTMENT
-                            ).let { deletedRows ->
-                                if (deletedRows > 0) sendCampaignAppointmentPostData() else this
-                            }
-                        }
-
-                        else -> this
-                    }
-                }
-            }
-        } catch (e: Exception) {
-            Timber.e(e, e.localizedMessage)
-            crashlyticsLogger.logException(
-                e,
-                "sendCampaignAppointmentPostData function failed.",
                 mapOf(
                     Pair(
                         USER_ID,
@@ -1420,22 +1490,22 @@ class SyncRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun sendCVDPostData(): ResponseMapper<List<CreateResponse>> {
+    override suspend fun sendCVDPostData(genericTypeEnum: GenericTypeEnum, endPoint: String): ResponseMapper<List<CreateResponse>> {
         return try {
             genericDao.getSameTypeGenericEntityPayload(
-                genericTypeEnum = GenericTypeEnum.CVD, syncType = SyncType.POST
+                genericTypeEnum = genericTypeEnum, syncType = SyncType.POST
             ).let { listOfGenericEntity ->
                 if (listOfGenericEntity.isEmpty()) ApiEmptyResponse()
                 else ApiResponseConverter.convert(
-                    cvdApiService.createCVD(EndPoints.CVD, listOfGenericEntity.map {
+                    cvdApiService.createCVD(endPoint, listOfGenericEntity.map {
                         it.payload.fromJson<LinkedTreeMap<*, *>>()
-                            .mapToObject(CVDResponse::class.java)!!
+                            .mapToObject(CVDResponse::class.java)!!.copy(campaignId = null)
                     })
                 ).run {
                     when (this) {
                         is ApiEndResponse -> {
                             insertCVDFhirId(listOfGenericEntity, body).let { deletedRows ->
-                                if (deletedRows > 0) sendCVDPostData() else this
+                                if (deletedRows > 0) sendCVDPostData(genericTypeEnum,endPoint) else this
                             }
                         }
 
@@ -1462,65 +1532,23 @@ class SyncRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun sendCampaignCVDPostData(): ResponseMapper<List<CreateResponse>> {
+    override suspend fun sendVitalPostData(genericTypeEnum: GenericTypeEnum, endPoint: String): ResponseMapper<List<CreateResponse>> {
         return try {
             genericDao.getSameTypeGenericEntityPayload(
-                genericTypeEnum = GenericTypeEnum.CAMPAIGN_CVD, syncType = SyncType.POST
+                genericTypeEnum = genericTypeEnum, syncType = SyncType.POST
             ).let { listOfGenericEntity ->
                 if (listOfGenericEntity.isEmpty()) ApiEmptyResponse()
                 else ApiResponseConverter.convert(
-                    cvdApiService.createCVD(EndPoints.CAMPAIGN_CVD, listOfGenericEntity.map {
+                    vitalApiService.createData(endPoint, listOfGenericEntity.map {
                         it.payload.fromJson<LinkedTreeMap<*, *>>()
-                            .mapToObject(CVDResponse::class.java)!!.copy(campaignId = null)
-                    })
-                ).run {
-                    when (this) {
-                        is ApiEndResponse -> {
-                            insertCVDFhirId(listOfGenericEntity, body).let { deletedRows ->
-                                if (deletedRows > 0) sendCampaignCVDPostData() else this
-                            }
-                        }
-
-                        else -> this
-                    }
-                }
-            }
-        } catch (e: Exception) {
-            Timber.e(e, e.localizedMessage)
-            crashlyticsLogger.logException(
-                e,
-                "sendCampaignCVDPostData function failed.",
-                mapOf(
-                    Pair(
-                        USER_ID,
-                        preferenceRepository.getUserDetails()?.userId ?: ERROR_FETCHING_USER_DETAILS
-                    )
-                )
-            )
-            ApiErrorResponse(
-                statusCode = 0,
-                errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
-            )
-        }
-    }
-
-    override suspend fun sendVitalPostData(): ResponseMapper<List<CreateResponse>> {
-        return try {
-            genericDao.getSameTypeGenericEntityPayload(
-                genericTypeEnum = GenericTypeEnum.VITAL, syncType = SyncType.POST
-            ).let { listOfGenericEntity ->
-                if (listOfGenericEntity.isEmpty()) ApiEmptyResponse()
-                else ApiResponseConverter.convert(
-                    vitalApiService.createData(VITAL, listOfGenericEntity.map {
-                        it.payload.fromJson<LinkedTreeMap<*, *>>()
-                            .mapToObject(VitalResponse::class.java)!!
+                            .mapToObject(VitalResponse::class.java)!!.copy(campaignId = null)
                     })
                 ).run {
                     when (this) {
                         is ApiEndResponse -> {
                             insertVitalFhirId(
                                 listOfGenericEntity, body
-                            ).let { deletedRows -> if (deletedRows > 0) sendVitalPostData() else this }
+                            ).let { deletedRows -> if (deletedRows > 0) sendVitalPostData(genericTypeEnum,endPoint) else this }
                         }
 
                         else -> this
@@ -1546,66 +1574,25 @@ class SyncRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun sendCampaignVitalPostData(): ResponseMapper<List<CreateResponse>> {
+    override suspend fun sendDiagnosisPostData(genericTypeEnum: GenericTypeEnum, endPoint: String): ResponseMapper<List<CreateResponse>> {
         return try {
             genericDao.getSameTypeGenericEntityPayload(
-                genericTypeEnum = GenericTypeEnum.CAMPAIGN_VITAL, syncType = SyncType.POST
-            ).let { listOfGenericEntity ->
-                if (listOfGenericEntity.isEmpty()) ApiEmptyResponse()
-                else ApiResponseConverter.convert(
-                    vitalApiService.createData(CAMPAIGN_VITAL, listOfGenericEntity.map {
-                        it.payload.fromJson<LinkedTreeMap<*, *>>()
-                            .mapToObject(VitalResponse::class.java)!!.copy(campaignId = null)
-                    })
-                ).run {
-                    when (this) {
-                        is ApiEndResponse -> {
-                            insertVitalFhirId(
-                                listOfGenericEntity, body
-                            ).let { deletedRows -> if (deletedRows > 0) sendCampaignVitalPostData() else this }
-                        }
-
-                        else -> this
-                    }
-                }
-            }
-        } catch (e: Exception) {
-            crashlyticsLogger.logException(
-                e,
-                "sendCampaignVitalPostData function failed.",
-                mapOf(
-                    Pair(
-                        USER_ID,
-                        preferenceRepository.getUserDetails()?.userId ?: ERROR_FETCHING_USER_DETAILS
-                    )
-                )
-            )
-            ApiErrorResponse(
-                statusCode = 0,
-                errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
-            )
-        }
-    }
-
-    override suspend fun sendDiagnosisPostData(): ResponseMapper<List<CreateResponse>> {
-        return try {
-            genericDao.getSameTypeGenericEntityPayload(
-                genericTypeEnum = GenericTypeEnum.DIAGNOSIS, syncType = SyncType.POST
+                genericTypeEnum = genericTypeEnum, syncType = SyncType.POST
             ).let { listOfGenericEntity ->
                 if (listOfGenericEntity.isEmpty()) ApiEmptyResponse()
                 else ApiResponseConverter.convert(
                     diagnosisApiService.createData(
-                        EndPoints.DIAGNOSIS,
+                        endPoint,
                         listOfGenericEntity.map {
                             it.payload.fromJson<LinkedTreeMap<*, *>>()
-                                .mapToObject(DiagnosisData::class.java)!!
+                                .mapToObject(DiagnosisData::class.java)!!.copy(campaignId = null)
                         })
                 ).run {
                     when (this) {
                         is ApiEndResponse -> {
                             insertSymDiagFhirId(
                                 listOfGenericEntity, body
-                            ).let { deletedRows -> if (deletedRows > 0) sendDiagnosisPostData() else this }
+                            ).let { deletedRows -> if (deletedRows > 0) sendDiagnosisPostData(genericTypeEnum,endPoint) else this }
                         }
 
                         else -> this
@@ -1631,19 +1618,20 @@ class SyncRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun sendPriorDxPostData(): ResponseMapper<List<CreateResponse>> {
+    override suspend fun sendPriorDxPostData(genericTypeEnum: GenericTypeEnum, endPoint: String): ResponseMapper<List<CreateResponse>> {
         return try {
             genericDao.getSameTypeGenericEntityPayload(
-                genericTypeEnum = GenericTypeEnum.PRIOR_DX,
+                genericTypeEnum = genericTypeEnum,
                 syncType = SyncType.POST
             ).let { listOfGenericEntity ->
                 if (listOfGenericEntity.isEmpty()) ApiEmptyResponse()
                 else {
                     ApiResponseConverter.convert(
                         historyAndTestsApiService.postPriorDx(
+                             endPoint,
                             listOfGenericEntity.map {
                                 it.payload.fromJson<LinkedTreeMap<*, *>>()
-                                    .mapToObject(PriorDxResponse::class.java)!!
+                                    .mapToObject(PriorDxResponse::class.java)!!.copy(campaignId = null)
                                     .copy(campaignId = null)
                             }
                         )
@@ -1651,7 +1639,7 @@ class SyncRepositoryImpl @Inject constructor(
                         if (this is ApiEndResponse) {
                             insertPriorDxFhirIds(body, listOfGenericEntity)
                                 .apply {
-                                    if (this > 0) sendPriorDxPostData()
+                                    if (this > 0) sendPriorDxPostData(genericTypeEnum,endPoint)
                                 }
                         }
                     }
@@ -1676,71 +1664,27 @@ class SyncRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun sendCampaignPriorDxPostData(): ResponseMapper<List<CreateResponse>> {
+    override suspend fun sendHistoryMedicationPostData(genericTypeEnum: GenericTypeEnum, endPoint: String): ResponseMapper<List<CreateResponse>> {
         return try {
             genericDao.getSameTypeGenericEntityPayload(
-                genericTypeEnum = GenericTypeEnum.CAMPAIGN_PRIOR_DX,
-                syncType = SyncType.POST
-            ).let { listOfGenericEntity ->
-                if (listOfGenericEntity.isEmpty()) ApiEmptyResponse()
-                else {
-                    ApiResponseConverter.convert(
-                        historyAndTestsApiService.postCampaignPriorDx(
-                            listOfGenericEntity.map {
-                                it.payload.fromJson<LinkedTreeMap<*, *>>()
-                                    .mapToObject(PriorDxResponse::class.java)!!
-                                    .copy(campaignId = null)
-                            }
-                        )
-                    ).apply {
-                        if (this is ApiEndResponse) {
-                            insertPriorDxFhirIds(body, listOfGenericEntity)
-                                .apply {
-                                    if (this > 0) sendPriorDxPostData()
-                                }
-                        }
-                    }
-                }
-            }
-        } catch (e: Exception) {
-            Timber.e(e, e.localizedMessage)
-            crashlyticsLogger.logException(
-                e,
-                "sendPriorDxPostData function failed.",
-                mapOf(
-                    Pair(
-                        USER_ID,
-                        preferenceRepository.getUserDetails()?.userId ?: ERROR_FETCHING_USER_DETAILS
-                    )
-                )
-            )
-            ApiErrorResponse(
-                statusCode = 0,
-                errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
-            )
-        }
-    }
-
-    override suspend fun sendHistoryMedicationPostData(): ResponseMapper<List<CreateResponse>> {
-        return try {
-            genericDao.getSameTypeGenericEntityPayload(
-                genericTypeEnum = GenericTypeEnum.HISTORY_MEDICATION,
+                genericTypeEnum = genericTypeEnum,
                 syncType = SyncType.POST
             ).let { listOfGenericEntity ->
                 if (listOfGenericEntity.isEmpty()) ApiEmptyResponse()
                 else {
                     ApiResponseConverter.convert(
                         historyAndTestsApiService.postHistoryMedication(
+                            endPoint,
                             listOfGenericEntity.map {
                                 it.payload.fromJson<LinkedTreeMap<*, *>>()
-                                    .mapToObject(HistoryMedicationResponse::class.java)!!
+                                    .mapToObject(HistoryMedicationResponse::class.java)!!.copy(campaignId = null)
                             }
                         )
                     ).apply {
                         if (this is ApiEndResponse) {
                             insertHistoryMedicationFhirIds(body, listOfGenericEntity)
                                 .apply {
-                                    if (this > 0) sendHistoryMedicationPostData()
+                                    if (this > 0) sendHistoryMedicationPostData(genericTypeEnum, endPoint)
                                 }
                         }
                     }
@@ -1765,71 +1709,27 @@ class SyncRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun sendCampaignHistoryMedicationPostData(): ResponseMapper<List<CreateResponse>> {
+    override suspend fun sendFamilyHistoryPostData(genericTypeEnum: GenericTypeEnum, endPoint: String): ResponseMapper<List<CreateResponse>> {
         return try {
             genericDao.getSameTypeGenericEntityPayload(
-                genericTypeEnum = GenericTypeEnum.CAMPAIGN_HISTORY_MEDICATION,
-                syncType = SyncType.POST
-            ).let { listOfGenericEntity ->
-                if (listOfGenericEntity.isEmpty()) ApiEmptyResponse()
-                else {
-                    ApiResponseConverter.convert(
-                        historyAndTestsApiService.postCampaignHistoryMedication(
-                            listOfGenericEntity.map {
-                                it.payload.fromJson<LinkedTreeMap<*, *>>()
-                                    .mapToObject(HistoryMedicationResponse::class.java)!!
-                                    .copy(campaignId = null)
-                            }
-                        )
-                    ).apply {
-                        if (this is ApiEndResponse) {
-                            insertHistoryMedicationFhirIds(body, listOfGenericEntity)
-                                .apply {
-                                    if (this > 0) sendCampaignHistoryMedicationPostData()
-                                }
-                        }
-                    }
-                }
-            }
-        } catch (e: Exception) {
-            Timber.e(e, e.localizedMessage)
-            crashlyticsLogger.logException(
-                e,
-                "sendCampaignHistoryMedicationPostData function failed.",
-                mapOf(
-                    Pair(
-                        USER_ID,
-                        preferenceRepository.getUserDetails()?.userId ?: ERROR_FETCHING_USER_DETAILS
-                    )
-                )
-            )
-            ApiErrorResponse(
-                statusCode = 0,
-                errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
-            )
-        }
-    }
-
-    override suspend fun sendFamilyHistoryPostData(): ResponseMapper<List<CreateResponse>> {
-        return try {
-            genericDao.getSameTypeGenericEntityPayload(
-                genericTypeEnum = GenericTypeEnum.FAMILY_HISTORY,
+                genericTypeEnum = genericTypeEnum,
                 syncType = SyncType.POST
             ).let { listOfGenericEntity ->
                 if (listOfGenericEntity.isEmpty()) ApiEmptyResponse()
                 else {
                     ApiResponseConverter.convert(
                         historyAndTestsApiService.postFamilyHistory(
+                            endPoint,
                             listOfGenericEntity.map {
                                 it.payload.fromJson<LinkedTreeMap<*, *>>()
-                                    .mapToObject(FamilyHistoryResponse::class.java)!!
+                                    .mapToObject(FamilyHistoryResponse::class.java)!!.copy(campaignId = null)
                             }
                         )
                     ).apply {
                         if (this is ApiEndResponse) {
                             insertFamilyHistoryFhirIds(body, listOfGenericEntity)
                                 .apply {
-                                    if (this > 0) sendFamilyHistoryPostData()
+                                    if (this > 0) sendFamilyHistoryPostData(genericTypeEnum,endPoint)
                                 }
                         }
                     }
@@ -1854,71 +1754,27 @@ class SyncRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun sendCampaignFamilyHistoryPostData(): ResponseMapper<List<CreateResponse>> {
+    override suspend fun sendAllergyPostData(genericTypeEnum: GenericTypeEnum, endPoint: String): ResponseMapper<List<CreateResponse>> {
         return try {
             genericDao.getSameTypeGenericEntityPayload(
-                genericTypeEnum = GenericTypeEnum.CAMPAIGN_FAMILY_HISTORY,
-                syncType = SyncType.POST
-            ).let { listOfGenericEntity ->
-                if (listOfGenericEntity.isEmpty()) ApiEmptyResponse()
-                else {
-                    ApiResponseConverter.convert(
-                        historyAndTestsApiService.postCampaignFamilyHistory(
-                            listOfGenericEntity.map {
-                                it.payload.fromJson<LinkedTreeMap<*, *>>()
-                                    .mapToObject(FamilyHistoryResponse::class.java)!!
-                                    .copy(campaignId = null)
-                            }
-                        )
-                    ).apply {
-                        if (this is ApiEndResponse) {
-                            insertFamilyHistoryFhirIds(body, listOfGenericEntity)
-                                .apply {
-                                    if (this > 0) sendCampaignFamilyHistoryPostData()
-                                }
-                        }
-                    }
-                }
-            }
-        } catch (e: Exception) {
-            Timber.e(e, e.localizedMessage)
-            crashlyticsLogger.logException(
-                e,
-                "sendCampaignFamilyHistoryPostData function failed.",
-                mapOf(
-                    Pair(
-                        USER_ID,
-                        preferenceRepository.getUserDetails()?.userId ?: ERROR_FETCHING_USER_DETAILS
-                    )
-                )
-            )
-            ApiErrorResponse(
-                statusCode = 0,
-                errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
-            )
-        }
-    }
-
-    override suspend fun sendAllergyPostData(): ResponseMapper<List<CreateResponse>> {
-        return try {
-            genericDao.getSameTypeGenericEntityPayload(
-                genericTypeEnum = GenericTypeEnum.ALLERGY,
+                genericTypeEnum = genericTypeEnum,
                 syncType = SyncType.POST
             ).let { listOfGenericEntity ->
                 if (listOfGenericEntity.isEmpty()) ApiEmptyResponse()
                 else {
                     ApiResponseConverter.convert(
                         historyAndTestsApiService.postAllergy(
+                            endPoint,
                             listOfGenericEntity.map {
                                 it.payload.fromJson<LinkedTreeMap<*, *>>()
-                                    .mapToObject(AllergyResponse::class.java)!!
+                                    .mapToObject(AllergyResponse::class.java)!!.copy(campaignId = null)
                             }
                         )
                     ).apply {
                         if (this is ApiEndResponse) {
                             insertAllergyFhirIds(body, listOfGenericEntity)
                                 .apply {
-                                    if (this > 0) sendAllergyPostData()
+                                    if (this > 0) sendAllergyPostData(genericTypeEnum,endPoint)
                                 }
                         }
                     }
@@ -1943,71 +1799,28 @@ class SyncRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun sendCampaignAllergyPostData(): ResponseMapper<List<CreateResponse>> {
-        return try {
-            genericDao.getSameTypeGenericEntityPayload(
-                genericTypeEnum = GenericTypeEnum.CAMPAIGN_ALLERGY,
-                syncType = SyncType.POST
-            ).let { listOfGenericEntity ->
-                if (listOfGenericEntity.isEmpty()) ApiEmptyResponse()
-                else {
-                    ApiResponseConverter.convert(
-                        historyAndTestsApiService.postCampaignAllergy(
-                            listOfGenericEntity.map {
-                                it.payload.fromJson<LinkedTreeMap<*, *>>()
-                                    .mapToObject(AllergyResponse::class.java)!!
-                                    .copy(campaignId = null)
-                            }
-                        )
-                    ).apply {
-                        if (this is ApiEndResponse) {
-                            insertAllergyFhirIds(body, listOfGenericEntity)
-                                .apply {
-                                    if (this > 0) return sendCampaignAllergyPostData()
-                                }
-                        }
-                    }
-                }
-            }
-        } catch (e: Exception) {
-            Timber.e(e, e.localizedMessage)
-            crashlyticsLogger.logException(
-                e,
-                "sendCampaignAllergyPostData function failed.",
-                mapOf(
-                    Pair(
-                        USER_ID,
-                        preferenceRepository.getUserDetails()?.userId ?: ERROR_FETCHING_USER_DETAILS
-                    )
-                )
-            )
-            ApiErrorResponse(
-                statusCode = 0,
-                errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
-            )
-        }
-    }
 
-    override suspend fun sendRiskFactorPostData(): ResponseMapper<List<CreateResponse>> {
+    override suspend fun sendRiskFactorPostData(genericTypeEnum: GenericTypeEnum, endPoint: String): ResponseMapper<List<CreateResponse>> {
         return try {
             genericDao.getSameTypeGenericEntityPayload(
-                genericTypeEnum = GenericTypeEnum.RISK_FACTOR,
+                genericTypeEnum = genericTypeEnum,
                 syncType = SyncType.POST
             ).let { listOfGenericEntity ->
                 if (listOfGenericEntity.isEmpty()) ApiEmptyResponse()
                 else {
                     ApiResponseConverter.convert(
                         historyAndTestsApiService.postRiskFactor(
+                            endPoint,
                             listOfGenericEntity.map {
                                 it.payload.fromJson<LinkedTreeMap<*, *>>()
-                                    .mapToObject(RiskFactorResponse::class.java)!!
+                                    .mapToObject(RiskFactorResponse::class.java)!!.copy(campaignId = null)
                             }
                         )
                     ).apply {
                         if (this is ApiEndResponse) {
                             insertRiskFactorsFhirIds(body, listOfGenericEntity)
                                 .apply {
-                                    if (this > 0) sendRiskFactorPostData()
+                                    if (this > 0) sendRiskFactorPostData(genericTypeEnum,endPoint)
                                 }
                         }
                     }
@@ -2032,122 +1845,28 @@ class SyncRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun sendCampaignRiskFactorPostData(): ResponseMapper<List<CreateResponse>> {
+
+    override suspend fun sendTobaccoCessationPostData(genericTypeEnum: GenericTypeEnum, endPoint: String): ResponseMapper<List<CreateResponse>> {
         return try {
             genericDao.getSameTypeGenericEntityPayload(
-                GenericTypeEnum.CAMPAIGN_RISK_FACTORS,
-                syncType = SyncType.POST
-            ).let { listOfGenericEntity ->
-                if (listOfGenericEntity.isEmpty()) ApiEmptyResponse()
-                else {
-
-                    ApiResponseConverter.convert(
-                        historyAndTestsApiService.postCampaignRiskFactor(
-                            listOfGenericEntity.map {
-                                it.payload.fromJson<LinkedTreeMap<*, *>>()
-                                    .mapToObject(RiskFactorResponse::class.java)!!
-                                    .copy(campaignId = null)
-                            }
-                        )
-
-                    ).apply {
-                        if (this is ApiEndResponse) {
-                            insertRiskFactorsFhirIds(body, listOfGenericEntity)
-                                .apply {
-                                    if (this > 0) return sendCampaignRiskFactorPostData()
-                                }
-
-                        }
-                    }
-
-                }
-            }
-        } catch (e: Exception) {
-            Timber.e(e, e.localizedMessage)
-            crashlyticsLogger.logException(
-                e,
-                "sendCampaignRiskFactorPostData function failed.",
-                mapOf(
-                    Pair(
-                        USER_ID,
-                        preferenceRepository.getUserDetails()?.userId ?: ERROR_FETCHING_USER_DETAILS
-                    )
-                )
-            )
-            ApiErrorResponse(
-                statusCode = 0,
-                errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
-            )
-        }
-
-
-    }
-
-    override suspend fun sendCampaignTobaccoCessationPostData(): ResponseMapper<List<CreateResponse>> {
-        return try {
-            genericDao.getSameTypeGenericEntityPayload(
-                genericTypeEnum = GenericTypeEnum.CAMPAIGN_TOBACCO_CESSATION,
-                syncType = SyncType.POST
-            ).let { listOfGenericEntity ->
-                if (listOfGenericEntity.isEmpty()) ApiEmptyResponse()
-                else {
-                    ApiResponseConverter.convert(
-                        historyAndTestsApiService.postCampaignTobaccoCessation(
-                            listOfGenericEntity.map {
-                                it.payload.fromJson<LinkedTreeMap<*, *>>()
-                                    .mapToObject(TobaccoCessationResponse::class.java)!!
-                                    .copy(campaignId = null)
-                            }
-                        )
-                    ).apply {
-                        if (this is ApiEndResponse) {
-                            insertTobaccoCessationFhirIds(body, listOfGenericEntity)
-                                .apply {
-                                    if (this > 0) sendCampaignTobaccoCessationPostData()
-                                }
-                        }
-                    }
-                }
-            }
-        } catch (e: Exception) {
-            Timber.e(e, e.localizedMessage)
-            crashlyticsLogger.logException(
-                e,
-                "sendCampaignTobaccoCessationPostData function failed.",
-                mapOf(
-                    Pair(
-                        USER_ID,
-                        preferenceRepository.getUserDetails()?.userId ?: ERROR_FETCHING_USER_DETAILS
-                    )
-                )
-            )
-            ApiErrorResponse(
-                statusCode = 0,
-                errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
-            )
-        }
-    }
-
-    override suspend fun sendTobaccoCessationPostData(): ResponseMapper<List<CreateResponse>> {
-        return try {
-            genericDao.getSameTypeGenericEntityPayload(
-                genericTypeEnum = GenericTypeEnum.TOBACCO_CESSATION,
+                genericTypeEnum = genericTypeEnum,
                 syncType = SyncType.POST
             ).let { listOfGenericEntity ->
                 if (listOfGenericEntity.isEmpty()) ApiEmptyResponse()
                 else {
                     ApiResponseConverter.convert(
                         historyAndTestsApiService.postTobaccoCessation(
+                            endPoint,
                             listOfGenericEntity.map {
                                 it.payload.fromJson<LinkedTreeMap<*, *>>()
-                                    .mapToObject(TobaccoCessationResponse::class.java)!!
+                                    .mapToObject(TobaccoCessationResponse::class.java)!!.copy(campaignId = null)
                             }
                         )
                     ).apply {
                         if (this is ApiEndResponse) {
                             insertTobaccoCessationFhirIds(body, listOfGenericEntity)
                                 .apply {
-                                    if (this > 0) sendTobaccoCessationPostData()
+                                    if (this > 0) sendTobaccoCessationPostData(genericTypeEnum,endPoint)
                                 }
                         }
                     }
@@ -2171,6 +1890,7 @@ class SyncRepositoryImpl @Inject constructor(
             )
         }
     }
+
 
     override suspend fun sendInterventionPostData(): ResponseMapper<List<CreateResponse>> {
         return try {
@@ -2216,26 +1936,27 @@ class SyncRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun sendExaminationPostData(): ResponseMapper<List<CreateResponse>> {
+    override suspend fun sendExaminationPostData(genericTypeEnum: GenericTypeEnum, endPoint: String): ResponseMapper<List<CreateResponse>> {
         return try {
             genericDao.getSameTypeGenericEntityPayload(
-                genericTypeEnum = GenericTypeEnum.EXAMINATION,
+                genericTypeEnum = genericTypeEnum,
                 syncType = SyncType.POST
             ).let { listOfGenericEntity ->
                 if (listOfGenericEntity.isEmpty()) ApiEmptyResponse()
                 else {
                     ApiResponseConverter.convert(
                         examinationApiService.postExamination(
+                            endPoint,
                             listOfGenericEntity.map {
                                 it.payload.fromJson<LinkedTreeMap<*, *>>()
-                                    .mapToObject(ExaminationResponse::class.java)!!
+                                    .mapToObject(ExaminationResponse::class.java)!!.copy(campaignId = null)
                             }
                         )
                     ).apply {
                         if (this is ApiEndResponse) {
                             insertExaminationFhirIds(body, listOfGenericEntity)
                                 .apply {
-                                    if (this > 0) sendExaminationPostData()
+                                    if (this > 0) sendExaminationPostData(genericTypeEnum, endPoint)
                                 }
                         }
                     }
@@ -2391,18 +2112,21 @@ class SyncRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun sendPrescriptionPutData(): ResponseMapper<List<CreateResponse>> {
+    override suspend fun sendPrescriptionPutData(genericTypeEnum: GenericTypeEnum, endPoint: String): ResponseMapper<List<CreateResponse>> {
         return try {
             genericDao.getSameTypeGenericEntityPayload(
-                genericTypeEnum = GenericTypeEnum.PRESCRIPTION, syncType = SyncType.PUT
+                genericTypeEnum = genericTypeEnum, syncType = SyncType.PUT
             ).let { listOfGenericEntity ->
                 if (listOfGenericEntity.isEmpty()) ApiEmptyResponse()
                 else {
                     ApiResponseConverter.convert(
                         prescriptionApiService.sendPrescriptionPut(
+                            endPoint,
                             listOfGenericEntity.map { prescriptionGenericEntity ->
                                 prescriptionGenericEntity.payload.fromJson<LinkedTreeMap<*, *>>()
-                                    .mapToObject(PrescriptionResponse::class.java)!!
+                                    .mapToObject(PrescriptionResponse::class.java)!!.let {
+                                        if (genericTypeEnum == GenericTypeEnum.CAMPAIGN_PRESCRIPTION) it.copy(campaignId = null) else it
+                                    }
                             }
                         )
                     ).run {
@@ -2412,7 +2136,7 @@ class SyncRepositoryImpl @Inject constructor(
                                     listOfGenericEntity,
                                     body
                                 ).let {
-                                    if (it > 0) sendPrescriptionPutData() else this
+                                    if (it > 0) sendPrescriptionPutData(genericTypeEnum, endPoint) else this
                                 }
                             }
 
@@ -2486,25 +2210,26 @@ class SyncRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun sentExaminationPutData(): ResponseMapper<List<CreateResponse>> {
+    override suspend fun sentExaminationPutData(genericTypeEnum: GenericTypeEnum, endPoint: String): ResponseMapper<List<CreateResponse>> {
         return try {
             genericDao.getSameTypeGenericEntityPayload(
-                genericTypeEnum = GenericTypeEnum.EXAMINATION, syncType = SyncType.PUT
+                genericTypeEnum = genericTypeEnum, syncType = SyncType.PUT
             ).let { listOfGenericEntity ->
                 if (listOfGenericEntity.isEmpty()) ApiEmptyResponse()
                 else {
                     ApiResponseConverter.convert(
                         examinationApiService.putExamination(
+                            endPoint,
                             listOfGenericEntity.map { examinationGenericEntity ->
                                 examinationGenericEntity.payload.fromJson<LinkedTreeMap<*, *>>()
-                                    .mapToObject(ExaminationResponse::class.java)!!
+                                    .mapToObject(ExaminationResponse::class.java)!!.copy(campaignId = null)
                             }
                         )
                     ).run {
                         when (this) {
                             is ApiEndResponse -> {
                                 deleteGenericEntityData(listOfGenericEntity).let {
-                                    if (it > 0) sentExaminationPutData() else this
+                                    if (it > 0) sentExaminationPutData(genericTypeEnum, endPoint) else this
                                 }
                             }
 
@@ -2651,6 +2376,7 @@ class SyncRepositoryImpl @Inject constructor(
         return try {
             ApiResponseConverter.convert(
                 historyAndTestsApiService.getPriorDx(
+                    EndPoints.PRIOR_DX,
                     map
                 ), true
             ).run {
@@ -2703,7 +2429,7 @@ class SyncRepositoryImpl @Inject constructor(
 
         return try {
             ApiResponseConverter.convert(
-                historyAndTestsApiService.getCampaignPriorDx(map), true
+                historyAndTestsApiService.getPriorDx(EndPoints.CAMPAIGN_PRIOR_DX,map), true
             ).run {
                 when (this) {
                     is ApiContinueResponse -> {
@@ -2755,6 +2481,7 @@ class SyncRepositoryImpl @Inject constructor(
         return try {
             ApiResponseConverter.convert(
                 historyAndTestsApiService.getHistoryMedication(
+                    EndPoints.HISTORY_MEDICATION,
                     map
                 ), true
             ).run {
@@ -2809,7 +2536,8 @@ class SyncRepositoryImpl @Inject constructor(
 
         return try {
             ApiResponseConverter.convert(
-                historyAndTestsApiService.getCampaignHistoryMedication(
+                historyAndTestsApiService.getHistoryMedication(
+                    EndPoints.CAMPAIGN_HISTORY_MEDICATION,
                     map
                 ), true
             ).run {
@@ -2848,60 +2576,6 @@ class SyncRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun getAndInsertCampaignFamilyHistoryData(
-        offset: Int
-    ): ResponseMapper<List<FamilyHistoryResponse>> {
-        val map = mutableMapOf<String, String>()
-        map[COUNT] = COUNT_VALUE.toString()
-        map[OFFSET] = offset.toString()
-        map[SORT] = "-$ID"
-        if (preferenceRepository.getLastSyncCampaignFamilyHistory() != 0L) map[LAST_UPDATED] =
-            String.format(
-                GREATER_THAN_BUILDER,
-                preferenceRepository.getLastSyncCampaignFamilyHistory().toTimeStampDate()
-            )
-
-        return try {
-            ApiResponseConverter.convert(
-                historyAndTestsApiService.getCampaignFamilyHistory(
-                    map
-                ), true
-            ).run {
-                when (this) {
-                    is ApiContinueResponse -> {
-                        insertFamilyHistory(body)
-                        //Call for next batch data
-                        getAndInsertCampaignFamilyHistoryData(offset + COUNT_VALUE)
-                    }
-
-                    is ApiEndResponse -> {
-                        preferenceRepository.setLastSyncCampaignFamilyHistory(Date().time)
-                        insertFamilyHistory(body)
-                        this
-                    }
-
-                    else -> this
-                }
-            }
-        } catch (e: Exception) {
-            Timber.e(e, e.localizedMessage)
-            crashlyticsLogger.logException(
-                e,
-                "getAndInsertCampaignFamilyHistoryData function failed.",
-                mapOf(
-                    Pair(
-                        USER_ID,
-                        preferenceRepository.getUserDetails()?.userId ?: ERROR_FETCHING_USER_DETAILS
-                    )
-                )
-            )
-            ApiErrorResponse(
-                statusCode = 0,
-                errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
-            )
-        }
-    }
-
     override suspend fun getAndInsertFamilyHistoryData(offset: Int): ResponseMapper<List<FamilyHistoryResponse>> {
         val map = mutableMapOf<String, String>()
         map[COUNT] = COUNT_VALUE.toString()
@@ -2916,6 +2590,7 @@ class SyncRepositoryImpl @Inject constructor(
         return try {
             ApiResponseConverter.convert(
                 historyAndTestsApiService.getFamilyHistory(
+                    EndPoints.FAMILY_HISTORY,
                     map
                 ), true
             ).run {
@@ -2954,6 +2629,61 @@ class SyncRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun getAndInsertCampaignFamilyHistoryData(
+        offset: Int
+    ): ResponseMapper<List<FamilyHistoryResponse>> {
+        val map = mutableMapOf<String, String>()
+        map[COUNT] = COUNT_VALUE.toString()
+        map[OFFSET] = offset.toString()
+        map[SORT] = "-$ID"
+        if (preferenceRepository.getLastSyncCampaignFamilyHistory() != 0L) map[LAST_UPDATED] =
+            String.format(
+                GREATER_THAN_BUILDER,
+                preferenceRepository.getLastSyncCampaignFamilyHistory().toTimeStampDate()
+            )
+
+        return try {
+            ApiResponseConverter.convert(
+                historyAndTestsApiService.getFamilyHistory(
+                    EndPoints.CAMPAIGN_FAMILY_HISTORY,
+                    map
+                ), true
+            ).run {
+                when (this) {
+                    is ApiContinueResponse -> {
+                        insertFamilyHistory(body)
+                        //Call for next batch data
+                        getAndInsertCampaignFamilyHistoryData(offset + COUNT_VALUE)
+                    }
+
+                    is ApiEndResponse -> {
+                        preferenceRepository.setLastSyncCampaignFamilyHistory(Date().time)
+                        insertFamilyHistory(body)
+                        this
+                    }
+
+                    else -> this
+                }
+            }
+        } catch (e: Exception) {
+            Timber.e(e, e.localizedMessage)
+            crashlyticsLogger.logException(
+                e,
+                "getAndInsertCampaignFamilyHistoryData function failed.",
+                mapOf(
+                    Pair(
+                        USER_ID,
+                        preferenceRepository.getUserDetails()?.userId ?: ERROR_FETCHING_USER_DETAILS
+                    )
+                )
+            )
+            ApiErrorResponse(
+                statusCode = 0,
+                errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
+            )
+        }
+    }
+
     override suspend fun getAndInsertAllergyData(offset: Int): ResponseMapper<List<AllergyResponse>> {
         val map = mutableMapOf<String, String>()
         map[COUNT] = COUNT_VALUE.toString()
@@ -2966,6 +2696,7 @@ class SyncRepositoryImpl @Inject constructor(
         return try {
             ApiResponseConverter.convert(
                 historyAndTestsApiService.getAllergy(
+                    EndPoints.ALLERGY,
                     map
                 ), true
             ).run {
@@ -3004,7 +2735,6 @@ class SyncRepositoryImpl @Inject constructor(
         }
     }
 
-
     override suspend fun getAndInsertCampaignAllergyData(offset: Int): ResponseMapper<List<AllergyResponse>> {
         val map = mutableMapOf<String, String>()
         map[COUNT] = COUNT_VALUE.toString()
@@ -3018,7 +2748,8 @@ class SyncRepositoryImpl @Inject constructor(
 
         return try {
             ApiResponseConverter.convert(
-                historyAndTestsApiService.getCampaignAllergy(
+                historyAndTestsApiService.getAllergy(
+                    EndPoints.CAMPAIGN_ALLERGY,
                     map
                 ), true
             ).run {
@@ -3057,6 +2788,57 @@ class SyncRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun getAndInsertRiskFactorData(offset: Int): ResponseMapper<List<RiskFactorResponse>> {
+        val map = mutableMapOf<String, String>()
+        map[COUNT] = COUNT_VALUE.toString()
+        map[OFFSET] = offset.toString()
+        map[SORT] = "-$ID"
+        if (preferenceRepository.getLastSyncRiskFactors() != 0L) map[LAST_UPDATED] = String.format(
+            GREATER_THAN_BUILDER, preferenceRepository.getLastSyncRiskFactors().toTimeStampDate()
+        )
+
+        return try {
+            ApiResponseConverter.convert(
+                historyAndTestsApiService.getRiskFactors(
+                    EndPoints.RISK_FACTOR,
+                    map
+                ), true
+            ).run {
+                when (this) {
+                    is ApiContinueResponse -> {
+                        insertRiskFactors(body)
+                        //Call for next batch data
+                        getAndInsertRiskFactorData(offset + COUNT_VALUE)
+                    }
+
+                    is ApiEndResponse -> {
+                        preferenceRepository.setLastSyncRiskFactors(Date().time)
+                        insertRiskFactors(body)
+                        this
+                    }
+
+                    else -> this
+                }
+            }
+        } catch (e: Exception) {
+            Timber.e(e, e.localizedMessage)
+            crashlyticsLogger.logException(
+                e,
+                "getAndInsertRiskFactorData function failed.",
+                mapOf(
+                    Pair(
+                        USER_ID,
+                        preferenceRepository.getUserDetails()?.userId ?: ERROR_FETCHING_USER_DETAILS
+                    )
+                )
+            )
+            ApiErrorResponse(
+                statusCode = 0,
+                errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
+            )
+        }
+    }
+
     override suspend fun getAndInsertCampaignRiskFactorData(offset: Int): ResponseMapper<List<RiskFactorResponse>> {
         val map = mutableMapOf<String, String>()
         map[COUNT] = COUNT_VALUE.toString()
@@ -3070,7 +2852,8 @@ class SyncRepositoryImpl @Inject constructor(
 
         return try {
             ApiResponseConverter.convert(
-                historyAndTestsApiService.getCampaignRiskFactor(
+                historyAndTestsApiService.getRiskFactors(
+                    EndPoints.CAMPAIGN_RISK_FACTORS,
                     map
                 ), true
             ).run {
@@ -3109,6 +2892,58 @@ class SyncRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun getAndInsertTobaccoCessationData(offset: Int): ResponseMapper<List<TobaccoCessationResponse>> {
+        val map = mutableMapOf<String, String>()
+        map[COUNT] = COUNT_VALUE.toString()
+        map[OFFSET] = offset.toString()
+        map[SORT] = "-$ID"
+        if (preferenceRepository.getLastSyncTobaccoCessation() != 0L) map[LAST_UPDATED] =
+            String.format(
+                GREATER_THAN_BUILDER,
+                preferenceRepository.getLastSyncTobaccoCessation().toTimeStampDate()
+            )
+
+        return try {
+            ApiResponseConverter.convert(
+                historyAndTestsApiService.getTobaccoCessation(
+                    EndPoints.TOBACCO_CESSATION,
+                    map
+                ), true
+            ).run {
+                when (this) {
+                    is ApiContinueResponse -> {
+                        insertTobaccoCessation(body)
+                        //Call for next batch data
+                        getAndInsertTobaccoCessationData(offset + COUNT_VALUE)
+                    }
+
+                    is ApiEndResponse -> {
+                        preferenceRepository.setLastSyncTobaccoCessation(Date().time)
+                        insertTobaccoCessation(body)
+                        this
+                    }
+
+                    else -> this
+                }
+            }
+        } catch (e: Exception) {
+            Timber.e(e, e.localizedMessage)
+            crashlyticsLogger.logException(
+                e,
+                "getAndInsertTobaccoCessationData function failed.",
+                mapOf(
+                    Pair(
+                        USER_ID,
+                        preferenceRepository.getUserDetails()?.userId ?: ERROR_FETCHING_USER_DETAILS
+                    )
+                )
+            )
+            ApiErrorResponse(
+                statusCode = 0,
+                errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
+            )
+        }
+    }
     override suspend fun getAndInsertCampaignTobaccoCessationData(offset: Int): ResponseMapper<List<TobaccoCessationResponse>> {
         val map = mutableMapOf<String, String>()
         map[COUNT] = COUNT_VALUE.toString()
@@ -3122,7 +2957,8 @@ class SyncRepositoryImpl @Inject constructor(
 
         return try {
             ApiResponseConverter.convert(
-                historyAndTestsApiService.getCampaignTobaccoCessation(
+                historyAndTestsApiService.getTobaccoCessation(
+                    EndPoints.CAMPAIGN_TOBACCO_CESSATION,
                     map
                 ), true
             ).run {
@@ -3162,107 +2998,7 @@ class SyncRepositoryImpl @Inject constructor(
     }
 
 
-    override suspend fun getAndInsertRiskFactorData(offset: Int): ResponseMapper<List<RiskFactorResponse>> {
-        val map = mutableMapOf<String, String>()
-        map[COUNT] = COUNT_VALUE.toString()
-        map[OFFSET] = offset.toString()
-        map[SORT] = "-$ID"
-        if (preferenceRepository.getLastSyncRiskFactors() != 0L) map[LAST_UPDATED] = String.format(
-            GREATER_THAN_BUILDER, preferenceRepository.getLastSyncRiskFactors().toTimeStampDate()
-        )
 
-        return try {
-            ApiResponseConverter.convert(
-                historyAndTestsApiService.getRiskFactors(
-                    map
-                ), true
-            ).run {
-                when (this) {
-                    is ApiContinueResponse -> {
-                        insertRiskFactors(body)
-                        //Call for next batch data
-                        getAndInsertRiskFactorData(offset + COUNT_VALUE)
-                    }
-
-                    is ApiEndResponse -> {
-                        preferenceRepository.setLastSyncRiskFactors(Date().time)
-                        insertRiskFactors(body)
-                        this
-                    }
-
-                    else -> this
-                }
-            }
-        } catch (e: Exception) {
-            Timber.e(e, e.localizedMessage)
-            crashlyticsLogger.logException(
-                e,
-                "getAndInsertRiskFactorData function failed.",
-                mapOf(
-                    Pair(
-                        USER_ID,
-                        preferenceRepository.getUserDetails()?.userId ?: ERROR_FETCHING_USER_DETAILS
-                    )
-                )
-            )
-            ApiErrorResponse(
-                statusCode = 0,
-                errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
-            )
-        }
-    }
-
-    override suspend fun getAndInsertTobaccoCessationData(offset: Int): ResponseMapper<List<TobaccoCessationResponse>> {
-        val map = mutableMapOf<String, String>()
-        map[COUNT] = COUNT_VALUE.toString()
-        map[OFFSET] = offset.toString()
-        map[SORT] = "-$ID"
-        if (preferenceRepository.getLastSyncTobaccoCessation() != 0L) map[LAST_UPDATED] =
-            String.format(
-                GREATER_THAN_BUILDER,
-                preferenceRepository.getLastSyncTobaccoCessation().toTimeStampDate()
-            )
-
-        return try {
-            ApiResponseConverter.convert(
-                historyAndTestsApiService.getTobaccoCessation(
-                    map
-                ), true
-            ).run {
-                when (this) {
-                    is ApiContinueResponse -> {
-                        insertTobaccoCessation(body)
-                        //Call for next batch data
-                        getAndInsertTobaccoCessationData(offset + COUNT_VALUE)
-                    }
-
-                    is ApiEndResponse -> {
-                        preferenceRepository.setLastSyncTobaccoCessation(Date().time)
-                        insertTobaccoCessation(body)
-                        this
-                    }
-
-                    else -> this
-                }
-            }
-        } catch (e: Exception) {
-            Timber.e(e, e.localizedMessage)
-            crashlyticsLogger.logException(
-                e,
-                "getAndInsertTobaccoCessationData function failed.",
-                mapOf(
-                    Pair(
-                        USER_ID,
-                        preferenceRepository.getUserDetails()?.userId ?: ERROR_FETCHING_USER_DETAILS
-                    )
-                )
-            )
-            ApiErrorResponse(
-                statusCode = 0,
-                errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
-            )
-        }
-    }
 
     override suspend fun getAndInsertInterventionsData(
         offset: Int
@@ -3330,6 +3066,7 @@ class SyncRepositoryImpl @Inject constructor(
         return try {
             ApiResponseConverter.convert(
                 examinationApiService.getExaminations(
+                    EndPoints.EXAMINATION,
                     map
                 ), true
             ).run {
@@ -3354,6 +3091,59 @@ class SyncRepositoryImpl @Inject constructor(
             crashlyticsLogger.logException(
                 e,
                 "getAndInsertExaminationData function failed.",
+                mapOf(
+                    Pair(
+                        USER_ID,
+                        preferenceRepository.getUserDetails()?.userId ?: ERROR_FETCHING_USER_DETAILS
+                    )
+                )
+            )
+            ApiErrorResponse(
+                statusCode = 0,
+                errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
+            )
+        }
+    }
+
+    override suspend fun getAndInsertCampaignExaminationData(offset: Int): ResponseMapper<List<ExaminationResponse>> {
+        val map = mutableMapOf<String, String>()
+        map[COUNT] = COUNT_VALUE.toString()
+        map[OFFSET] = offset.toString()
+        map[SORT] = "-$ID"
+        if (preferenceRepository.getLastSyncCampaignExamination() != 0L) map[LAST_UPDATED] =
+            String.format(
+                GREATER_THAN_BUILDER,
+                preferenceRepository.getLastSyncCampaignExamination().toTimeStampDate()
+            )
+
+        return try {
+            ApiResponseConverter.convert(
+                examinationApiService.getExaminations(
+                    EndPoints.CAMPAIGN_EXAMINATION,
+                    map
+                ), true
+            ).run {
+                when (this) {
+                    is ApiContinueResponse -> {
+                        insertExamination(body)
+                        //Call for next batch data
+                        getAndInsertCampaignExaminationData(offset + COUNT_VALUE)
+                    }
+
+                    is ApiEndResponse -> {
+                        preferenceRepository.setLastSyncCampaignExamination(Date().time)
+                        insertExamination(body)
+                        this
+                    }
+
+                    else -> this
+                }
+            }
+        } catch (e: Exception) {
+            Timber.e(e, e.localizedMessage)
+            crashlyticsLogger.logException(
+                e,
+                "getAndInsertCampaignExaminationData function failed.",
                 mapOf(
                     Pair(
                         USER_ID,
@@ -3469,6 +3259,102 @@ class SyncRepositoryImpl @Inject constructor(
                 statusCode = 0,
                 errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
             )
+        }
+
+    override suspend fun getAndSaveNationalIdData(): ResponseMapper<Nothing> {
+        return try {
+            // Todo: Replace it after server binding
+            val dummyJson = """
+            [
+              {
+                "national_id": "1123665",
+                "last_name": "Rosko",
+                "middle_name": "Alison",
+                "first_name": "May",
+                "date_of_birth": "2023-05-15",
+                "gender": "Female"
+              },
+              {
+                "national_id": "1123638",
+                "last_name": "Taso",
+                "middle_name": "Emmy",
+                "first_name": "Raevely",
+                "date_of_birth": "2023-05-17",
+                "gender": "Female"
+              },
+              {
+                "national_id": "1123634",
+                "last_name": "Kuaramu",
+                "middle_name": "Luke",
+                "first_name": "Junior",
+                "date_of_birth": "2024-09-12",
+                "gender": "Male"
+              },
+              {
+                "national_id": "1123633",
+                "last_name": "Liu",
+                "middle_name": "",
+                "first_name": "Huajian",
+                "date_of_birth": "1996-06-17",
+                "gender": "Male"
+              },
+              {
+                "national_id": "1123628",
+                "last_name": "Lin",
+                "middle_name": "",
+                "first_name": "Qiaoli",
+                "date_of_birth": "1992-03-07",
+                "gender": "Male"
+              },
+              {
+                "national_id": "1123624",
+                "last_name": "Xu",
+                "middle_name": "",
+                "first_name": "Hongkun",
+                "date_of_birth": "2000-08-15",
+                "gender": "Male"
+              },
+              {
+                "national_id": "1123619",
+                "last_name": "Wu",
+                "middle_name": "",
+                "first_name": "Jincai",
+                "date_of_birth": "1988-04-20",
+                "gender": "Male"
+              },
+              {
+                "national_id": "1123617",
+                "last_name": "Namu",
+                "middle_name": "Sima",
+                "first_name": "Kauna",
+                "date_of_birth": "2025-06-25",
+                "gender": "Male"
+              },
+              {
+                "national_id": "1123615",
+                "last_name": "Namu",
+                "middle_name": "",
+                "first_name": "Rota",
+                "date_of_birth": "2023-10-17",
+                "gender": "Female"
+              },
+              {
+                "national_id": "1123611",
+                "last_name": "Muliaki",
+                "middle_name": "",
+                "first_name": "Anthony",
+                "date_of_birth": "2018-10-07",
+                "gender": "Male"
+              }
+            ]
+        """.trimIndent()
+
+            nationalIdRepository.saveNationalIdData(dummyJson)
+
+            ApiEmptyResponse()
+
+        } catch (e: Exception) {
+            ApiErrorResponse(statusCode = 0, errorMessage = e.localizedMessage ?: "Error in saving National Id Data")
         }
     }
 }

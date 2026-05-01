@@ -53,6 +53,8 @@ interface PreferenceStorage {
     var lastSyncExaminationMaster: Long
     var lastSyncExamination: Long
     var lastSyncDiagnosisMaster: Long
+    var lastSyncCampaignExamination: Long
+    var lastCampaignDiagnosisSyncTime: Long
     var lastSyncHealthFacility: Long
     var lastSyncReferral: Long
     var lastSyncScreeningSiteMaster: Long

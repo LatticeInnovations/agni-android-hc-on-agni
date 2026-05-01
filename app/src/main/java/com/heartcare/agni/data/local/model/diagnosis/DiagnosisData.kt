@@ -13,5 +13,6 @@ data class DiagnosisData(
     @SerializedName("appUpdatedDate")
     val createdOn: Date,
     val diagnosis: List<String>,
-    val symptoms: List<String>?
+    val symptoms: List<String>?,
+    val campaignId: String?
 )

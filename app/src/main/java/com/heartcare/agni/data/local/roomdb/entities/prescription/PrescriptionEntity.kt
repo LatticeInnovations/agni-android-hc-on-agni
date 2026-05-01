@@ -11,7 +11,7 @@ import java.util.Date
 
 @Keep
 @Entity(
-    indices = [Index("patientId"), Index("patientFhirId"), Index("appointmentId")],
+    indices = [Index("patientId"), Index("patientFhirId"), Index("appointmentId"), Index("campaignId"), Index("campaignAppointmentId")],
     foreignKeys = [
         ForeignKey(
             entity = PatientEntity::class,
@@ -24,10 +24,13 @@ data class PrescriptionEntity(
     @PrimaryKey val id: String,
     val prescriptionDate: Date,
     @ColumnInfo(defaultValue = "DEFAULT_APPOINTMENT_ID")
-    val appointmentId: String,
+    val appointmentId: String?,
+    val campaignAppointmentId: String?,
+    val campaignId: String?,
     val patientId: String,
     val patientFhirId: String?,
     val prescriptionFhirId: String?,
     @ColumnInfo(defaultValue = "DEFAULT_PRESCRIPTION_TYPE")
     val prescriptionType: String,
+    val screeningSiteName: String? = null
 )

@@ -248,10 +248,13 @@ internal suspend fun PrescriptionResponse.toPrescriptionEntity(
         id = prescriptionId!!,
         prescriptionDate = generatedOn,
         patientId = patientDao.getPatientIdByFhirId(patientFhirId)!!,
-        appointmentId = appointmentUuid!!,
+        appointmentId = if (campaignId==null)appointmentUuid!! else null,
+        campaignAppointmentId = if (campaignId!=null) appointmentUuid!! else null,
         patientFhirId = patientFhirId,
         prescriptionFhirId = prescriptionFhirId,
-        prescriptionType = PrescriptionType.FORM.type
+        prescriptionType = PrescriptionType.FORM.type,
+        campaignId = campaignId,
+        screeningSiteName = screeningSiteName
     )
 }
 
@@ -260,10 +263,13 @@ internal fun PrescriptionResponseLocal.toPrescriptionEntity(): PrescriptionEntit
         id = prescriptionId,
         prescriptionDate = generatedOn,
         patientId = patientId,
-        appointmentId = appointmentId,
+        appointmentId = if (campaignId.isNullOrEmpty()) appointmentId else null,
+        campaignAppointmentId = if (!campaignId.isNullOrEmpty()) appointmentId else null,
         patientFhirId = patientFhirId,
         prescriptionFhirId = prescriptionFhirId,
-        prescriptionType = PrescriptionType.FORM.type
+        prescriptionType = PrescriptionType.FORM.type,
+        campaignId = campaignId,
+        screeningSiteName = screeningSiteName
     )
 }
 
@@ -607,11 +613,13 @@ internal fun PrescriptionAndMedicineRelation.toPrescriptionResponseLocal(): Pres
     return PrescriptionResponseLocal(
         patientId = prescriptionEntity.patientId,
         patientFhirId = prescriptionEntity.patientFhirId,
-        appointmentId = prescriptionEntity.appointmentId,
+        appointmentId = if(prescriptionEntity.campaignId==null)prescriptionEntity.appointmentId!! else prescriptionEntity.campaignAppointmentId!!,
         generatedOn = prescriptionEntity.prescriptionDate,
         prescriptionId = prescriptionEntity.id,
         prescription = prescriptionDirectionAndMedicineView.map { prescriptionDirectionAndMedicineView -> prescriptionDirectionAndMedicineView.toMedicationLocal() },
-        prescriptionFhirId = prescriptionEntity.prescriptionFhirId
+        prescriptionFhirId = prescriptionEntity.prescriptionFhirId,
+        campaignId = prescriptionEntity.campaignId,
+        screeningSiteName = prescriptionEntity.screeningSiteName
     )
 }
 
@@ -884,43 +892,51 @@ internal fun DiagnosisMasterResponse.toDiagnosisMasterEntity(): DiagnosisMasterE
 internal fun DiagnosisLocal.toDiagnosisEntity(): DiagnosisEntity {
     return DiagnosisEntity(
         diagnosisUuid = diagnosisUuid,
-        appointmentId = appointmentId, fhirId = diagnosisFhirId,
+        appointmentId = if (campaignId == null) appointmentId else null,
+        campaignAppointmentId = if (campaignId != null) appointmentId else null,
+        fhirId = diagnosisFhirId,
         createdOn = createdOn,
         diagnosis = diagnosis,
         symptoms = symptoms,
         practitionerName = practitionerName,
         patientId = patientId,
-        progressNote = progressNote
+        progressNote = progressNote,
+        campaignId = campaignId
     )
 }
 
 internal fun DiagnosisEntity.toDiagnosisLocal(): DiagnosisLocal {
     return DiagnosisLocal(
         diagnosisUuid = diagnosisUuid,
-        appointmentId = appointmentId, diagnosisFhirId = fhirId,
+        appointmentId = (campaignAppointmentId ?: appointmentId)!!,
+        diagnosisFhirId = fhirId,
         createdOn = createdOn,
         diagnosis = diagnosis,
         symptoms = symptoms,
         practitionerName = practitionerName,
         patientId = patientId,
-        progressNote = progressNote
+        progressNote = progressNote,
+        campaignId = campaignId
     )
 }
 
 
 internal suspend fun DiagnosisResponse.toDiagnosisEntity(
-    studentDao: PatientDao,
-    appointmentDao: AppointmentDao
+    patientDao: PatientDao,
+    appointmentDao: AppointmentDao,
+    campaignAppointmentDao: CampaignAppointmentDao
 ): DiagnosisEntity {
     return DiagnosisEntity(
         diagnosisUuid = diagnosisUuid,
-        appointmentId = appointmentDao.getAppointmentIdByFhirId(appointmentId),
+        appointmentId = if (campaignId.isNullOrEmpty()) appointmentDao.getAppointmentIdByFhirId(appointmentId) else null,
+        campaignAppointmentId = if (!campaignId.isNullOrEmpty()) campaignAppointmentDao.getAppointmentIdByFhirId(appointmentId) else null,
+        campaignId = campaignId,
         fhirId = diagnosisFhirId,
         createdOn = createdOn,
         diagnosis = diagnosis,
         symptoms = symptoms,
         practitionerName = practitionerName,
-        patientId = studentDao.getPatientIdByFhirId(patientId)!!,
+        patientId = patientDao.getPatientIdByFhirId(patientId)!!,
         progressNote = progressNote
     )
 }
@@ -932,7 +948,8 @@ internal fun DiagnosisLocal.toDiagnosisData(): DiagnosisData {
         createdOn = createdOn,
         diagnosis = diagnosis.map { it.code },
         symptoms = symptoms.map { it.code }.ifEmpty { null },
-        patientId = patientId
+        patientId = patientId,
+        campaignId = campaignId
     )
 }
 
@@ -1647,7 +1664,9 @@ fun ExaminationResponse.toExaminationEntity(): ExaminationEntity{
         uuid = uuid!!,
         fhirId = fhirId,
         appUpdatedDate = appUpdatedDate,
-        appointmentId = appointmentId,
+        appointmentId = if (campaignId.isNullOrEmpty()) appointmentId else null,
+        campaignAppointmentId = if (!campaignId.isNullOrEmpty()) appointmentId else null,
+        campaignId = campaignId,
         patientId = patientId,
         practitionerId = practitionerId!!,
         practitionerName = practitionerName!!,
@@ -1657,10 +1676,12 @@ fun ExaminationResponse.toExaminationEntity(): ExaminationEntity{
 
 suspend fun ExaminationResponse.toExaminationEntity(
     patientDao: PatientDao,
-    appointmentDao: AppointmentDao
+    appointmentDao: AppointmentDao,
+    campaignAppointmentDao: CampaignAppointmentDao
 ): ExaminationEntity {
     return this.toExaminationEntity().copy(
-        appointmentId = appointmentDao.getAppointmentIdByFhirId(appointmentId),
+        appointmentId = if (campaignId.isNullOrEmpty()) appointmentDao.getAppointmentIdByFhirId(appointmentId) else null,
+        campaignAppointmentId = if (!campaignId.isNullOrEmpty()) campaignAppointmentDao.getAppointmentIdByFhirId(appointmentId) else null,
         patientId = patientDao.getPatientIdByFhirId(patientId)!!
     )
 }
@@ -1672,10 +1693,11 @@ suspend fun ExaminationEntity.toExaminationResponseLocal(
         uuid = uuid,
         fhirId = fhirId,
         appUpdatedDate = appUpdatedDate,
-        appointmentId = appointmentId,
+        appointmentId = (if (campaignId.isNullOrEmpty()) appointmentId else campaignAppointmentId) ?: "",
         patientId = patientId,
         practitionerId = practitionerId,
         practitionerName = practitionerName,
+        campaignId = campaignId,
         examinations = examinations.map { fhirId ->
             val examination = examinationDao.getExaminationByFhirId(fhirId)
             ExaminationItem(

@@ -78,6 +78,8 @@ interface PreferenceRepository {
     /** Last Sync Diagnosis */
     fun setLastSyncDiagnosis(long: Long)
     fun getLastSyncDiagnosis(): Long
+    fun setLastSyncCampaignDiagnosis(long: Long)
+    fun getLastSyncCampaignDiagnosis(): Long
 
     /** Last Level Data */
     fun setLastSyncLevelRecord(long: Long)
@@ -143,6 +145,8 @@ interface PreferenceRepository {
     /** Last Examination Sync Date */
     fun setLastSyncExamination(long: Long)
     fun getLastSyncExamination(): Long
+    fun setLastSyncCampaignExamination(long: Long)
+    fun getLastSyncCampaignExamination(): Long
 
     /** Last Diagnosis Master Sync Date */
     fun setLastDiagnosisMasterSyncDate(long: Long)

@@ -1,5 +1,6 @@
 package com.heartcare.agni.data.server.repository.sync
 
+import com.heartcare.agni.data.local.enums.GenericTypeEnum
 import com.heartcare.agni.data.server.model.allergy.AllergyResponse
 import com.heartcare.agni.data.server.model.create.CreateResponse
 import com.heartcare.agni.data.server.model.cvd.CVDResponse
@@ -64,44 +65,43 @@ interface SyncRepository {
     suspend fun getAndInsertCampaignRiskFactorData(offset: Int): ResponseMapper<List<RiskFactorResponse>>
     suspend fun getAndInsertTobaccoCessationData(offset: Int): ResponseMapper<List<TobaccoCessationResponse>>
     suspend fun getAndInsertCampaignTobaccoCessationData(offset: Int): ResponseMapper<Any>
+    suspend fun getAndInsertCampaignDiagnosisData(offset: Int): ResponseMapper<List<DiagnosisResponse>>
+    suspend fun getAndInsertCampaignPrescription(patientId: String?): ResponseMapper<List<PrescriptionResponse>>
     suspend fun getAndInsertInterventionsData(offset: Int): ResponseMapper<List<InterventionResponse>>
     suspend fun getAndInsertExaminationData(offset: Int): ResponseMapper<List<ExaminationResponse>>
+    suspend fun getAndInsertCampaignExaminationData(offset: Int): ResponseMapper<List<ExaminationResponse>>
     suspend fun getAndInsertReferralData(offset: Int): ResponseMapper<List<ReferralResponse>>
     suspend fun getAndInsertReportTokenData(offset: Int): ResponseMapper<List<ReportTokenResponse>>
+    suspend fun getAndSaveNationalIdData(): ResponseMapper<Nothing>
 
     //POST
     suspend fun sendPersonPostData(): ResponseMapper<List<CreateResponse>>
-    suspend fun sendFormPrescriptionPostData(): ResponseMapper<List<CreateResponse>>
+    suspend fun sendFormPrescriptionPostData(genericTypeEnum: GenericTypeEnum, endPoint: String): ResponseMapper<List<CreateResponse>>
     suspend fun sendSchedulePostData(): ResponseMapper<List<CreateResponse>>
-    suspend fun sendAppointmentPostData(): ResponseMapper<List<CreateResponse>>
+    suspend fun sendAppointmentPostData(genericTypeEnum: GenericTypeEnum, endPoint: String): ResponseMapper<List<CreateResponse>>
     suspend fun sendPatientLastUpdatePostData(): ResponseMapper<List<CreateResponse>>
-    suspend fun sendCVDPostData(): ResponseMapper<List<CreateResponse>>
+    suspend fun sendCVDPostData(genericTypeEnum: GenericTypeEnum, endPoint: String): ResponseMapper<List<CreateResponse>>
     suspend fun sendCampaignSchedulePostData(): ResponseMapper<List<CreateResponse>>
-    suspend fun sendCampaignAppointmentPostData(): ResponseMapper<List<CreateResponse>>
-    suspend fun sendCampaignCVDPostData(): ResponseMapper<List<CreateResponse>>
-    suspend fun sendCampaignVitalPostData(): ResponseMapper<List<CreateResponse>>
-    suspend fun sendVitalPostData(): ResponseMapper<List<CreateResponse>>
-    suspend fun sendDiagnosisPostData(): ResponseMapper<List<CreateResponse>>
-    suspend fun sendPriorDxPostData(): ResponseMapper<List<CreateResponse>>
-    suspend fun sendCampaignPriorDxPostData(): ResponseMapper<List<CreateResponse>>
-    suspend fun sendHistoryMedicationPostData(): ResponseMapper<List<CreateResponse>>
-    suspend fun sendCampaignHistoryMedicationPostData(): ResponseMapper<List<CreateResponse>>
-    suspend fun sendFamilyHistoryPostData(): ResponseMapper<List<CreateResponse>>
-    suspend fun sendCampaignFamilyHistoryPostData(): ResponseMapper<List<CreateResponse>>
-    suspend fun sendAllergyPostData(): ResponseMapper<List<CreateResponse>>
-    suspend fun sendCampaignAllergyPostData(): ResponseMapper<List<CreateResponse>>
-    suspend fun sendRiskFactorPostData(): ResponseMapper<List<CreateResponse>>
-    suspend fun sendCampaignRiskFactorPostData(): ResponseMapper<List<CreateResponse>>
-    suspend fun sendTobaccoCessationPostData(): ResponseMapper<List<CreateResponse>>
-    suspend fun sendCampaignTobaccoCessationPostData(): ResponseMapper<List<CreateResponse>>
+
+    suspend fun sendVitalPostData(genericTypeEnum: GenericTypeEnum, endPoint: String): ResponseMapper<List<CreateResponse>>
+    suspend fun sendDiagnosisPostData(genericTypeEnum: GenericTypeEnum, endPoint: String): ResponseMapper<List<CreateResponse>>
+
+    suspend fun sendPriorDxPostData(genericTypeEnum: GenericTypeEnum, endPoint: String): ResponseMapper<List<CreateResponse>>
+
+    suspend fun sendHistoryMedicationPostData(genericTypeEnum: GenericTypeEnum, endPoint: String): ResponseMapper<List<CreateResponse>>
+
+    suspend fun sendFamilyHistoryPostData(genericTypeEnum: GenericTypeEnum, endPoint: String): ResponseMapper<List<CreateResponse>>
+    suspend fun sendAllergyPostData(genericTypeEnum: GenericTypeEnum, endPoint: String): ResponseMapper<List<CreateResponse>>
+    suspend fun sendRiskFactorPostData(genericTypeEnum: GenericTypeEnum, endPoint: String): ResponseMapper<List<CreateResponse>>
+    suspend fun sendTobaccoCessationPostData(genericTypeEnum: GenericTypeEnum, endPoint: String): ResponseMapper<List<CreateResponse>>
     suspend fun sendInterventionPostData(): ResponseMapper<List<CreateResponse>>
-    suspend fun sendExaminationPostData(): ResponseMapper<List<CreateResponse>>
+    suspend fun sendExaminationPostData(genericTypeEnum: GenericTypeEnum, endPoint: String): ResponseMapper<List<CreateResponse>>
     suspend fun sendReferralPostData(): ResponseMapper<List<CreateResponse>>
 
     //PATCH
     suspend fun sendPersonPatchData(): ResponseMapper<List<CreateResponse>>
     suspend fun sendAppointmentPatchData(): ResponseMapper<List<CreateResponse>>
-    suspend fun sendPrescriptionPutData(): ResponseMapper<List<CreateResponse>>
+    suspend fun sendPrescriptionPutData(genericTypeEnum: GenericTypeEnum, endPoint: String): ResponseMapper<List<CreateResponse>>
     suspend fun sentInterventionPutData(): ResponseMapper<List<CreateResponse>>
-    suspend fun sentExaminationPutData(): ResponseMapper<List<CreateResponse>>
+    suspend fun sentExaminationPutData(genericTypeEnum: GenericTypeEnum, endPoint: String): ResponseMapper<List<CreateResponse>>
 }

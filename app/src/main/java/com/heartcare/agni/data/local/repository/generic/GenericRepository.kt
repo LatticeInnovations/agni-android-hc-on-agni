@@ -40,7 +40,7 @@ interface GenericRepository {
         uuid: String = UUIDBuilder.generateUUID()
     ): Long
 
-    suspend fun updatePrescriptionFhirId()
+    suspend fun updatePrescriptionFhirId(type: GenericTypeEnum)
 
     suspend fun insertSchedule(
         scheduleResponse: ScheduleResponse,
@@ -113,7 +113,7 @@ interface GenericRepository {
 
     suspend fun updateCVDFhirIds(genericTypeEnum: GenericTypeEnum)
     suspend fun updateVitalFhirId(genericTypeEnum: GenericTypeEnum)
-    suspend fun updateDiagnosisFhirId()
+    suspend fun updateDiagnosisFhirId(genericTypeEnum: GenericTypeEnum)
     suspend fun updatePriorDxFhirId(genericTypeEnum: GenericTypeEnum)
     suspend fun updateHistoryMedicationFhirId(genericTypeEnum: GenericTypeEnum)
     suspend fun updateFamilyHistoryFhirId(genericTypeEnum: GenericTypeEnum)
@@ -121,7 +121,7 @@ interface GenericRepository {
     suspend fun updateRiskFactorsFhirId(genericTypeEnum: GenericTypeEnum)
     suspend fun updateTobaccoCessationFhirId(genericTypeEnum: GenericTypeEnum)
     suspend fun updateInterventionFhirId()
-    suspend fun updateExaminationFhirId()
+    suspend fun updateExaminationFhirId(genericTypeEnum: GenericTypeEnum)
     suspend fun updateReferralFhirId()
 
     suspend fun insertOrUpdatePatientPatchEntity(

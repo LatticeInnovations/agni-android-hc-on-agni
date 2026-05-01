@@ -10,6 +10,7 @@ import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.PUT
+import retrofit2.http.Path
 import retrofit2.http.QueryMap
 
 @JvmSuppressWildcards
@@ -18,12 +19,18 @@ interface ExaminationApiService {
     @GET("$EXAMINATION/master")
     suspend fun getExaminationMasterList(@QueryMap(encoded = true) map: Map<String, String>?): Response<BaseResponse<List<ExaminationMasterResponse>>>
 
-    @GET(EXAMINATION)
-    suspend fun getExaminations(@QueryMap(encoded = true) map: Map<String, String>?): Response<BaseResponse<List<ExaminationResponse>>>
+    @GET("{endPoint}")
+    suspend fun getExaminations(
+        @Path("endPoint") endPoint: String,
+        @QueryMap(encoded = true) map: Map<String, String>?): Response<BaseResponse<List<ExaminationResponse>>>
 
-    @POST(EXAMINATION)
-    suspend fun postExamination(@Body examinationResponse: List<ExaminationResponse>): Response<BaseResponse<List<CreateResponse>>>
+    @POST("{endPoint}")
+    suspend fun postExamination(
+        @Path("endPoint") endPoint: String,
+        @Body examinationResponse: List<ExaminationResponse>): Response<BaseResponse<List<CreateResponse>>>
 
-    @PUT(EXAMINATION)
-    suspend fun putExamination(@Body examinationResponse: List<ExaminationResponse>): Response<BaseResponse<List<CreateResponse>>>
+    @PUT("{endPoint}")
+    suspend fun putExamination(
+        @Path("endPoint") endPoint: String,
+        @Body examinationResponse: List<ExaminationResponse>): Response<BaseResponse<List<CreateResponse>>>
 }

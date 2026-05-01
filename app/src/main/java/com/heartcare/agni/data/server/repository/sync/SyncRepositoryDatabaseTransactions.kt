@@ -255,7 +255,8 @@ open class SyncRepositoryDatabaseTransactions(
         diagnosisDao.insertDiagnosis(*body.map {
             it.toDiagnosisEntity(
                 patientDao,
-                appointmentDao
+                appointmentDao,
+                campaignAppointmentDao
             )
         }.toTypedArray())
     }
@@ -705,7 +706,7 @@ open class SyncRepositoryDatabaseTransactions(
 
     protected suspend fun insertExamination(body: List<ExaminationResponse>) {
         examinationDao.insertExamination(
-            *body.map { it.toExaminationEntity(patientDao, appointmentDao) }.toTypedArray()
+            *body.map { it.toExaminationEntity(patientDao, appointmentDao, campaignAppointmentDao) }.toTypedArray()
         )
     }
 

@@ -48,6 +48,7 @@ class AddDiagnosisViewModel @Inject constructor(
     var isLaunched by mutableStateOf(false)
     var patient by mutableStateOf<PatientResponse?>(null)
     var appointmentResponseLocal by mutableStateOf<AppointmentResponseLocal?>(null)
+    var selectedCampaignId by mutableStateOf<String?>(null)
 
     var searchQuery by mutableStateOf("")
     var frequentlyDiagnosedList by mutableStateOf(listOf<String>())
@@ -73,13 +74,20 @@ class AddDiagnosisViewModel @Inject constructor(
 
     fun getLastDiagnosis(patientId: String) {
         viewModelScope.launch(ioDispatcher) {
-            val appointmentIds =
-                getInProgressCompletedAppointmentIds(patientId, appointmentRepository)
-            lastDiagnosis = diagnosisRepository.getPastDiagnosisByAppointmentId(*appointmentIds.toTypedArray()).firstOrNull()
-            lastDiagnosis?.let { dx ->
-                if (isToday(dx.createdOn)) {
+            if (selectedCampaignId != null) {
+                lastDiagnosis = diagnosisRepository.getLatestDiagnosisForCampaign(patientId, selectedCampaignId!!)
+                lastDiagnosis?.let { dx ->
                     isTodayDiagnosis = true
                     selectedDiagnosis = dx.diagnosis.map { "${it.code}, ${it.display}" }
+                }
+            } else {
+                val appointmentIds = getInProgressCompletedAppointmentIds(patientId, appointmentRepository)
+                lastDiagnosis = diagnosisRepository.getPastDiagnosisByAppointmentId(*appointmentIds.toTypedArray()).firstOrNull()
+                lastDiagnosis?.let { dx ->
+                    if (isToday(dx.createdOn)) {
+                        isTodayDiagnosis = true
+                        selectedDiagnosis = dx.diagnosis.map { "${it.code}, ${it.display}" }
+                    }
                 }
             }
         }
@@ -118,7 +126,8 @@ class AddDiagnosisViewModel @Inject constructor(
                 user.lastName
             ),
             patientId = patient!!.id,
-            progressNote = null
+            progressNote = null,
+            campaignId = selectedCampaignId
         )
     }
 
@@ -129,12 +138,13 @@ class AddDiagnosisViewModel @Inject constructor(
             appointmentResponseLocal = getAppointment(
                 patientId = patient!!.id,
                 hospitalCode = user.hospitalCode,
+                campaignId = selectedCampaignId,
                 appointmentRepository = appointmentRepository
             )
             var uuid = UUIDBuilder.generateUUID()
             var fhirId: String? = null
             lastDiagnosis?.let {
-                if (isToday(it.createdOn)) {
+                if (isToday(it.createdOn) || selectedCampaignId != null) {
                     uuid = it.diagnosisUuid
                     fhirId = it.diagnosisFhirId
                 }
@@ -150,15 +160,17 @@ class AddDiagnosisViewModel @Inject constructor(
                     patientId = patient!!.fhirId ?: patient!!.id
                 ).toDiagnosisData()
             )
-            checkAndUpdateAppointmentStatusToInProgress(
-                inProgressTime = diagnosisResponseLocal.createdOn,
-                patient = patient!!,
-                appointmentResponseLocal = appointmentResponseLocal!!,
-                appointmentRepository = appointmentRepository,
-                scheduleRepository = scheduleRepository,
-                genericRepository = genericRepository,
-                preferenceRepository = preferenceRepository
-            )
+            if (selectedCampaignId == null) {
+                checkAndUpdateAppointmentStatusToInProgress(
+                    inProgressTime = diagnosisResponseLocal.createdOn,
+                    patient = patient!!,
+                    appointmentResponseLocal = appointmentResponseLocal!!,
+                    appointmentRepository = appointmentRepository,
+                    scheduleRepository = scheduleRepository,
+                    genericRepository = genericRepository,
+                    preferenceRepository = preferenceRepository
+                )
+            }
             updatePatientLastUpdated(
                 patient!!.id,
                 patientLastUpdatedRepository,

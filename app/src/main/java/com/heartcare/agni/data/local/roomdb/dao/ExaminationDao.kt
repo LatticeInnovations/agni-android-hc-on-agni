@@ -27,7 +27,7 @@ interface ExaminationDao {
     suspend fun insertExamination(vararg examinationEntity: ExaminationEntity): List<Long>
 
     @Transaction
-    @Query("SELECT * FROM ExaminationEntity WHERE appointmentId IN (:appointmentIds) ORDER BY appUpdatedDate DESC")
+    @Query("SELECT * FROM ExaminationEntity WHERE (appointmentId IN (:appointmentIds) OR campaignAppointmentId IN (:appointmentIds)) ORDER BY appUpdatedDate DESC")
     suspend fun getExaminationsByAppointmentId(vararg appointmentIds: String): List<ExaminationEntity>
 
     @Query("UPDATE ExaminationEntity SET fhirId = :fhirId WHERE uuid = :id")

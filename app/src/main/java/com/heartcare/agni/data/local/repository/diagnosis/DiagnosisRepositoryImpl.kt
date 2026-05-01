@@ -27,4 +27,8 @@ class DiagnosisRepositoryImpl @Inject constructor(private val dao: DiagnosisDao)
     override suspend fun updateDiagnosisData(diagnosisLocal: DiagnosisLocal): Int {
         return dao.updateDiagnosisData(diagnosisEntity = diagnosisLocal.toDiagnosisEntity())
     }
+
+    override suspend fun getLatestDiagnosisForCampaign(patientId: String, campaignId: String): DiagnosisLocal? {
+        return dao.getLatestDiagnosisForCampaign(patientId, campaignId)?.toDiagnosisLocal()
+    }
 }

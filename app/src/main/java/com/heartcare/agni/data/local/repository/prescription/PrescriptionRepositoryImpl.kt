@@ -33,6 +33,13 @@ class PrescriptionRepositoryImpl @Inject constructor(
             }
     }
 
+    override suspend fun getLatestPrescriptionForCampaign(
+        patientId: String,
+        campaignId: String
+    ): PrescriptionAndMedicineRelation? {
+        return prescriptionDao.getLatestPrescriptionForCampaign(patientId, campaignId)
+    }
+
     override suspend fun deletePrescriptionDirectionEntity(prescriptionDirectionsEntity: PrescriptionDirectionsEntity): Int {
         return prescriptionDao.deletePrescriptionDirectionEntity(prescriptionDirectionsEntity)
     }

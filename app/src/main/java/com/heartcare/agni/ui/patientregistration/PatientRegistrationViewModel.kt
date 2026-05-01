@@ -11,7 +11,7 @@ class PatientRegistrationViewModel : BaseViewModel(), DefaultLifecycleObserver {
     var isLaunched by mutableStateOf(false)
 
     var currentStep by mutableIntStateOf(1)
-    var totalSteps by mutableIntStateOf(3)
+    var totalSteps by mutableIntStateOf(2)
     var isEditing by mutableStateOf(false)
     var openDialog by mutableStateOf(false)
 }

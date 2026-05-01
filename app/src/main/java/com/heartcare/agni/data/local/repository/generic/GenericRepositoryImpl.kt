@@ -68,17 +68,18 @@ class GenericRepositoryImpl @Inject constructor(
         prescriptionResponse: PrescriptionResponse,
         uuid: String
     ): Long {
+        val type = if (prescriptionResponse.campaignId != null) GenericTypeEnum.CAMPAIGN_PRESCRIPTION else GenericTypeEnum.PRESCRIPTION
         return genericDao.getGenericEntityById(
             patientId = prescriptionResponse.prescriptionId!!,
-            genericTypeEnum = GenericTypeEnum.PRESCRIPTION,
+            genericTypeEnum = type,
             syncType = SyncType.POST
         ).let { prescriptionGenericEntity ->
-            insertPrescriptionGenericEntity(prescriptionResponse, prescriptionGenericEntity, uuid)
+            insertPrescriptionGenericEntity(prescriptionResponse, prescriptionGenericEntity, uuid, type)
         }
     }
 
-    override suspend fun updatePrescriptionFhirId() {
-        genericDao.getNotSyncedData(GenericTypeEnum.PRESCRIPTION)
+    override suspend fun updatePrescriptionFhirId(type: GenericTypeEnum) {
+        genericDao.getNotSyncedData(type)
             .forEach { prescriptionGenericEntity ->
                 updateFormPrescriptionFhirIdInGenericEntity(prescriptionGenericEntity)
             }
@@ -115,13 +116,13 @@ class GenericRepositoryImpl @Inject constructor(
             }
     }
     override suspend fun updateVitalFhirId(genericTypeEnum: GenericTypeEnum) {
-        genericDao.getNotSyncedData(GenericTypeEnum.VITAL)
+        genericDao.getNotSyncedData(genericTypeEnum)
             .forEach { vitalGenericEntity ->
                 updateVitalFhirIdInGenericEntity(vitalGenericEntity)
             }
     }
-    override suspend fun updateDiagnosisFhirId() {
-        genericDao.getNotSyncedData(GenericTypeEnum.DIAGNOSIS)
+    override suspend fun updateDiagnosisFhirId(genericTypeEnum: GenericTypeEnum) {
+        genericDao.getNotSyncedData(genericTypeEnum)
             .forEach { diagnosisGenericEntity ->
                 updateDiagnosisFhirIdInGenericEntity(diagnosisGenericEntity)
             }
@@ -176,8 +177,8 @@ class GenericRepositoryImpl @Inject constructor(
             }
     }
 
-    override suspend fun updateExaminationFhirId() {
-        genericDao.getNotSyncedData(GenericTypeEnum.EXAMINATION)
+    override suspend fun updateExaminationFhirId(genericTypeEnum: GenericTypeEnum) {
+        genericDao.getNotSyncedData(genericTypeEnum)
             .forEach { examinationGenericEntity ->
                 updateExaminationFhirIdInGenericEntity(examinationGenericEntity)
             }
@@ -219,12 +220,13 @@ class GenericRepositoryImpl @Inject constructor(
     }
 
     override suspend fun insertSymDiag(local: DiagnosisData, uuid: String): Long {
+        val type = if (local.campaignId != null) GenericTypeEnum.CAMPAIGN_DIAGNOSIS else GenericTypeEnum.DIAGNOSIS
         return genericDao.getGenericEntityById(
             patientId = local.diagnosisUuid,
-            genericTypeEnum = GenericTypeEnum.DIAGNOSIS,
+            genericTypeEnum =type,
             syncType = SyncType.POST
         ).let {
-            insertSymDiagGenericEntity(local, it, uuid)
+            insertSymDiagGenericEntity(local, it, uuid,type)
         }
     }
 
@@ -302,7 +304,7 @@ class GenericRepositoryImpl @Inject constructor(
         tobaccoCessationResponse: TobaccoCessationResponse,
         uuid: String
     ): Long {
-        val type = if (tobaccoCessationResponse.campaignId != null) GenericTypeEnum.CAMPAIGN_RISK_FACTORS else GenericTypeEnum.RISK_FACTOR
+        val type = if (tobaccoCessationResponse.campaignId != null) GenericTypeEnum.CAMPAIGN_TOBACCO_CESSATION else GenericTypeEnum.TOBACCO_CESSATION
 
 
         return genericDao.getGenericEntityById(
@@ -331,12 +333,13 @@ class GenericRepositoryImpl @Inject constructor(
         examinationResponse: ExaminationResponse,
         uuid: String
     ): Long {
+        val type = if (examinationResponse.campaignId != null) GenericTypeEnum.CAMPAIGN_EXAMINATION else GenericTypeEnum.EXAMINATION
         return genericDao.getGenericEntityById(
             patientId = examinationResponse.uuid!!,
-            genericTypeEnum = GenericTypeEnum.EXAMINATION,
+            genericTypeEnum = type,
             syncType = SyncType.POST
         ).let { examinationGenericEntity ->
-            insertExaminationGenericEntity(examinationGenericEntity, examinationResponse, uuid)
+            insertExaminationGenericEntity(examinationGenericEntity, examinationResponse, uuid, type)
         }
     }
 
@@ -445,12 +448,14 @@ class GenericRepositoryImpl @Inject constructor(
         prescriptionResponse: PrescriptionResponse,
         uuid: String
     ): Long {
+        val type = if (prescriptionResponse.campaignId != null) GenericTypeEnum.CAMPAIGN_PRESCRIPTION else GenericTypeEnum.PRESCRIPTION
+
         return genericDao.getGenericEntityById(
             patientId = prescriptionFhirId,
-            genericTypeEnum = GenericTypeEnum.PRESCRIPTION,
+            genericTypeEnum = type,
             syncType = SyncType.PUT
         ).let { prescriptionGenericEntity ->
-            insertPrescriptionPutGenericEntity(prescriptionFhirId, prescriptionResponse, prescriptionGenericEntity, uuid)
+            insertPrescriptionPutGenericEntity(prescriptionFhirId, prescriptionResponse, prescriptionGenericEntity, uuid,type)
         }
     }
 
@@ -473,12 +478,13 @@ class GenericRepositoryImpl @Inject constructor(
         examinationResponse: ExaminationResponse,
         uuid: String
     ): Long {
+        val type = if (examinationResponse.campaignId != null) GenericTypeEnum.CAMPAIGN_EXAMINATION else GenericTypeEnum.EXAMINATION
         return genericDao.getGenericEntityById(
             patientId = examinationFhirId,
-            genericTypeEnum = GenericTypeEnum.EXAMINATION,
+            genericTypeEnum = type,
             syncType = SyncType.PUT
         ).let { examinationGenericEntity ->
-            insertExaminationPutGenericEntity(examinationFhirId, examinationResponse, examinationGenericEntity, uuid)
+            insertExaminationPutGenericEntity(examinationFhirId, examinationResponse, examinationGenericEntity, uuid, type)
         }
     }
 }
