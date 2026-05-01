@@ -45,6 +45,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.heartcare.agni.R
 import com.heartcare.agni.data.local.enums.GenderEnum
+import com.heartcare.agni.data.local.enums.NationalIdUse
 import com.heartcare.agni.data.local.enums.YesNoEnum
 import com.heartcare.agni.ui.common.CustomFilterChip
 import com.heartcare.agni.ui.common.CustomTextField
@@ -88,6 +89,10 @@ fun PatientRegistrationStepOne(
                 viewModel.motherName = motherName.toString()
                 viewModel.fatherName = fatherName.toString()
                 viewModel.spouseName = spouseName.toString()
+                viewModel.hospitalId = hospitalId.toString()
+                viewModel.nationalId = nationalId.toString()
+                viewModel.isNationalIdVerified = nationalIdUse == NationalIdUse.OFFICIAL.use
+                viewModel.isVerifyClicked = !nationalIdUse.isNullOrBlank()
             }
             viewModel.isLaunched = true
         }
@@ -794,6 +799,12 @@ private fun NextButton(
                     motherName = viewModel.motherName.capitalizeFirst().trim()
                     fatherName = viewModel.fatherName.capitalizeFirst().trim()
                     spouseName = viewModel.spouseName.capitalizeFirst().trim()
+                    nationalId = viewModel.nationalId
+                    hospitalId = viewModel.hospitalId
+                    nationalIdUse = if (viewModel.nationalId.isNotBlank()) {
+                        if (viewModel.isNationalIdVerified) NationalIdUse.OFFICIAL.use
+                        else NationalIdUse.TEMP.use
+                    } else null
                 }
                 patientRegistrationViewModel.currentStep = 2
             }
