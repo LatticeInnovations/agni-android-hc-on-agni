@@ -9,8 +9,11 @@ import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.viewModelScope
 import com.heartcare.agni.base.viewmodel.BaseViewModel
 import com.heartcare.agni.data.local.repository.generic.GenericRepository
+import com.heartcare.agni.data.local.repository.identifier.IdentifierRepository
 import com.heartcare.agni.data.local.repository.patient.PatientRepository
+import com.heartcare.agni.data.server.model.patient.PatientIdentifier
 import com.heartcare.agni.data.server.model.patient.PatientResponse
+import com.heartcare.agni.utils.constants.IdentificationConstants
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toMonthInteger
 import com.heartcare.agni.utils.regex.AgeRegex
@@ -24,7 +27,8 @@ import javax.inject.Inject
 @HiltViewModel
 class EditBasicInformationViewModel @Inject constructor(
     val patientRepository: PatientRepository,
-    val genericRepository: GenericRepository
+    val genericRepository: GenericRepository,
+    val identifierRepository: IdentifierRepository
 ) : BaseViewModel(), DefaultLifecycleObserver {
     var isLaunched by mutableStateOf(false)
 
@@ -55,6 +59,18 @@ class EditBasicInformationViewModel @Inject constructor(
     internal var fatherName by mutableStateOf("")
     internal var spouseName by mutableStateOf("")
 
+    val identifierList = mutableListOf<PatientIdentifier>()
+
+    val maxHospitalIdLength = 6
+    val maxNationalIdLength = 7
+
+    var hospitalId by mutableStateOf("")
+    var nationalId by mutableStateOf("")
+    var nationalIdUse by mutableStateOf("")
+    var isVerifyClicked by mutableStateOf(false)
+    var isNationalIdVerified by mutableStateOf(false)
+    var isHospitalIdValid by mutableStateOf(false)
+
     //temp var
     var firstNameTemp by mutableStateOf("")
     var lastNameTemp by mutableStateOf("")
@@ -74,6 +90,12 @@ class EditBasicInformationViewModel @Inject constructor(
     var spouseNameTemp by mutableStateOf("")
     var isPersonDeceasedTemp by mutableIntStateOf(0)
     var selectedDeceasedReasonTemp by mutableStateOf("")
+
+    var hospitalIdTemp by mutableStateOf("")
+    var nationalIdTemp by mutableStateOf("")
+    var nationalIdUseTemp by mutableStateOf("")
+    var isNationalIdVerifiedTemp by mutableStateOf(false)
+    var isVerifyClickedTemp by mutableStateOf(false)
 
     var monthsList = mutableStateListOf(
         "January", "February", "March", "April", "May", "June",
@@ -97,7 +119,9 @@ class EditBasicInformationViewModel @Inject constructor(
                 !verifyAge() &&
                 !isPhoneValid &&
                 !emailError &&
-                gender.isNotBlank()
+                gender.isNotBlank() &&
+                !isHospitalIdValid &&
+                (isVerifyClicked || nationalId.isBlank())
     }
 
     private fun verifyDOB(): Boolean{
@@ -143,7 +167,12 @@ class EditBasicInformationViewModel @Inject constructor(
                 fatherName.trim() != fatherNameTemp ||
                 spouseName.trim() != spouseNameTemp ||
                 isPersonDeceased != isPersonDeceasedTemp ||
-                selectedDeceasedReason != selectedDeceasedReasonTemp
+                selectedDeceasedReason != selectedDeceasedReasonTemp ||
+                hospitalId != hospitalIdTemp ||
+                nationalId != nationalIdTemp ||
+                isNationalIdVerified != isNationalIdVerifiedTemp ||
+                nationalIdUse != nationalIdUseTemp ||
+                isVerifyClicked != isVerifyClickedTemp
     }
 
     fun revertChanges(): Boolean {
@@ -172,6 +201,13 @@ class EditBasicInformationViewModel @Inject constructor(
         isAgeMonthsValid = false
         isAgeYearsValid = false
         emailError = false
+
+        hospitalId = hospitalIdTemp
+        nationalId = nationalIdTemp
+        isHospitalIdValid = false
+        isNationalIdVerified = isNationalIdVerifiedTemp
+        nationalIdUse = nationalIdUseTemp
+        isVerifyClicked = isVerifyClickedTemp
         return true
     }
 
@@ -179,9 +215,37 @@ class EditBasicInformationViewModel @Inject constructor(
     fun updateBasicInfo(patientResponse: PatientResponse) {
 
         viewModelScope.launch(Dispatchers.IO) {
+            val toBeDeletedList = mutableListOf<PatientIdentifier>()
+            if (hospitalIdTemp != hospitalId) {
+                toBeDeletedList.add(
+                    PatientIdentifier(
+                        identifierType = IdentificationConstants.HOSPITAL_ID,
+                        identifierNumber = hospitalIdTemp,
+                        code = null,
+                        use = null
+                    )
+                )
+            }
+
+            if (nationalIdTemp != nationalId) {
+                toBeDeletedList.add(
+                    PatientIdentifier(
+                        identifierType = IdentificationConstants.NATIONAL_ID,
+                        identifierNumber = nationalIdTemp,
+                        code = null,
+                        use = nationalIdUseTemp
+                    )
+                )
+            }
+
+            identifierRepository.deleteIdentifier(
+                patientIdentifier = toBeDeletedList.toTypedArray(),
+                patientId = patientResponse.id
+            )
 
             val response = patientRepository.updatePatientData(patientResponse = patientResponse)
             if (response > 0) {
+                identifierRepository.insertIdentifierList(patientResponse = patientResponse)
                 if (patientResponse.fhirId != null) {
                     genericRepository.insertOrUpdatePatientPatchEntity(
                         patientFhirId = patientResponse.fhirId,

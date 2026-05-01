@@ -119,8 +119,7 @@ fun PatientProfileScreen(
             )
             when (step) {
                 1 -> navController.navigate(Screen.EditBasicInfo.route)
-                2 -> navController.navigate(Screen.EditIdentification.route)
-                3 -> navController.navigate(Screen.EditAddress.route)
+                2 -> navController.navigate(Screen.EditAddress.route)
             }
         }
     }
