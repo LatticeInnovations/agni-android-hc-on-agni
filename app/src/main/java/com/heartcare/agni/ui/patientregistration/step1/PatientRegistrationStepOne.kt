@@ -107,6 +107,7 @@ fun PatientRegistrationStepOne(
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             NationalIdComposable(viewModel)
+            Spacer(modifier = Modifier.height(1.dp))
             LastNameField(viewModel)
             FirstNameField(viewModel)
             DOBAndAgeFields(viewModel)
@@ -171,6 +172,7 @@ private fun NationalIdComposable(
                     viewModel.nationalId = it
                     viewModel.isVerifyClicked = false
                     viewModel.isNationalIdVerified = false
+                    viewModel.verifiedRecord = null
                 }
             },
             label = {
@@ -272,7 +274,12 @@ private fun LastNameField(viewModel: PatientRegistrationStepOneViewModel) {
         keyboardType = KeyboardType.Text,
         keyboardCapitalization = KeyboardCapitalization.Words
     ) {
-        if (it.matches(nameRegex) || it.isEmpty()) viewModel.lastName = it
+        if (it.matches(nameRegex) || it.isEmpty()) {
+            viewModel.lastName = it
+            if (viewModel.verifiedRecord != null) {
+                viewModel.isNationalIdVerified = viewModel.verifyLastName()
+            }
+        }
         viewModel.isLastNameValid = viewModel.lastName.isBlank()
     }
 }
@@ -290,7 +297,12 @@ private fun FirstNameField(viewModel: PatientRegistrationStepOneViewModel) {
         keyboardType = KeyboardType.Text,
         keyboardCapitalization = KeyboardCapitalization.Words
     ) {
-        if (it.matches(nameRegex) || it.isEmpty()) viewModel.firstName = it
+        if (it.matches(nameRegex) || it.isEmpty()) {
+            viewModel.firstName = it
+            if (viewModel.verifiedRecord != null) {
+                viewModel.isNationalIdVerified = viewModel.verifyFirstAndMiddleName()
+            }
+        }
         viewModel.isFirstNameValid = viewModel.firstName.isBlank()
     }
 }
@@ -313,6 +325,7 @@ private fun DOBAndAgeFields(viewModel: PatientRegistrationStepOneViewModel) {
                 viewModel.dobDay = ""
                 viewModel.dobMonth = ""
                 viewModel.dobYear = ""
+                viewModel.isNationalIdVerified = false
             }
         }
         if (viewModel.dobAgeSelector == "dob") {
@@ -336,67 +349,39 @@ private fun DobTextField(viewModel: PatientRegistrationStepOneViewModel) {
     Column {
         Row(
             modifier = Modifier
-                .fillMaxWidth()
+                .fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            CustomTextField(
-                value = viewModel.dobDay,
-                label = stringResource(id = R.string.day),
-                weight = 0.23f,
-                maxLength = 2,
-                isError = false,
-                error = "",
-                KeyboardType.Number,
-                KeyboardCapitalization.None
-            ) {
-                if (it.matches(viewModel.onlyNumbers) || it.isEmpty()) {
-                    viewModel.dobDay = it
-                    viewModel.isDOBAgeBlank = false
-                }
-                if (viewModel.dobDay.isNotEmpty()) {
-                    viewModel.monthsList = getMonthsList(viewModel.dobDay)
-                }
-            }
-            Spacer(modifier = Modifier.width(10.dp))
+            DOBDayField(viewModel)
             MonthDropDown(viewModel)
-            Spacer(modifier = Modifier.width(10.dp))
-            CustomTextField(
-                value = viewModel.dobYear,
-                label = stringResource(id = R.string.year),
-                weight = 1f,
-                maxLength = 4,
-                isError = false,
-                error = "",
-                KeyboardType.Number,
-                KeyboardCapitalization.None
-            ) {
-                if (it.matches(viewModel.onlyNumbers) || it.isEmpty()) {
-                    viewModel.dobYear = it
-                    viewModel.isDOBAgeBlank = false
-                }
-            }
+            DOBYearField(viewModel)
         }
         DateErrorText(viewModel)
     }
 }
 
 @Composable
-private fun DateErrorText(viewModel: PatientRegistrationStepOneViewModel) {
-    if (viewModel.dobDay.isNotEmpty() && viewModel.dobMonth.isNotEmpty() && viewModel.dobYear.isNotEmpty()
-        && !isDOBValid(
-            viewModel.dobDay.toInt(),
-            viewModel.dobMonth.toMonthInteger(),
-            viewModel.dobYear.toInt()
-        )
+private fun DOBDayField(viewModel: PatientRegistrationStepOneViewModel) {
+    CustomTextField(
+        value = viewModel.dobDay,
+        label = stringResource(id = R.string.day),
+        weight = 0.23f,
+        maxLength = 2,
+        isError = false,
+        error = "",
+        KeyboardType.Number,
+        KeyboardCapitalization.None
     ) {
-        Text(
-            text = stringResource(
-                id = R.string.invalid_date,
-                "${viewModel.dobDay}-${viewModel.dobMonth}-${viewModel.dobYear}"
-            ),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.error,
-            modifier = Modifier.padding(start = 8.dp, top = 4.dp)
-        )
+        if (it.matches(viewModel.onlyNumbers) || it.isEmpty()) {
+            viewModel.dobDay = it
+            viewModel.isDOBAgeBlank = false
+            if (viewModel.verifiedRecord != null) {
+                viewModel.isNationalIdVerified = viewModel.verifyDOBDay()
+            }
+        }
+        if (viewModel.dobDay.isNotEmpty()) {
+            viewModel.monthsList = getMonthsList(viewModel.dobDay)
+        }
     }
 }
 
@@ -444,6 +429,9 @@ private fun MonthDropDown(viewModel: PatientRegistrationStepOneViewModel) {
                         monthExpanded = false
                         viewModel.isDOBAgeBlank = false
                         viewModel.dobMonth = label
+                        if (viewModel.verifiedRecord != null) {
+                            viewModel.isNationalIdVerified = viewModel.verifyDOBMonth()
+                        }
                     },
                     text = {
                         Text(
@@ -455,6 +443,49 @@ private fun MonthDropDown(viewModel: PatientRegistrationStepOneViewModel) {
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun DOBYearField(viewModel: PatientRegistrationStepOneViewModel) {
+    CustomTextField(
+        value = viewModel.dobYear,
+        label = stringResource(id = R.string.year),
+        weight = 1f,
+        maxLength = 4,
+        isError = false,
+        error = "",
+        KeyboardType.Number,
+        KeyboardCapitalization.None
+    ) {
+        if (it.matches(viewModel.onlyNumbers) || it.isEmpty()) {
+            viewModel.dobYear = it
+            viewModel.isDOBAgeBlank = false
+            if (viewModel.verifiedRecord != null) {
+                viewModel.isNationalIdVerified = viewModel.verifyDOBYear()
+            }
+        }
+    }
+}
+
+@Composable
+private fun DateErrorText(viewModel: PatientRegistrationStepOneViewModel) {
+    if (viewModel.dobDay.isNotEmpty() && viewModel.dobMonth.isNotEmpty() && viewModel.dobYear.isNotEmpty()
+        && !isDOBValid(
+            viewModel.dobDay.toInt(),
+            viewModel.dobMonth.toMonthInteger(),
+            viewModel.dobYear.toInt()
+        )
+    ) {
+        Text(
+            text = stringResource(
+                id = R.string.invalid_date,
+                "${viewModel.dobDay}-${viewModel.dobMonth}-${viewModel.dobYear}"
+            ),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.error,
+            modifier = Modifier.padding(start = 8.dp, top = 4.dp)
+        )
     }
 }
 
@@ -597,6 +628,9 @@ private fun GenderComposable(viewModel: PatientRegistrationStepOneViewModel) {
             ) {
                 viewModel.gender = it
                 viewModel.isGenderBlank = false
+                if (viewModel.verifiedRecord != null) {
+                    viewModel.isNationalIdVerified = viewModel.verifyGender()
+                }
             }
             Spacer(modifier = Modifier.width(15.dp))
             CustomFilterChip(
@@ -606,6 +640,9 @@ private fun GenderComposable(viewModel: PatientRegistrationStepOneViewModel) {
             ) {
                 viewModel.gender = it
                 viewModel.isGenderBlank = false
+                if (viewModel.verifiedRecord != null) {
+                    viewModel.isNationalIdVerified = viewModel.verifyGender()
+                }
             }
         }
         if (viewModel.isGenderBlank) {

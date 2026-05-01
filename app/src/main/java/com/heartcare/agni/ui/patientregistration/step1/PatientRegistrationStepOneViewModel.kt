@@ -85,7 +85,7 @@ class PatientRegistrationStepOneViewModel @Inject constructor(
     var isVerifyClicked by mutableStateOf(false)
     var isNationalIdVerified by mutableStateOf(false)
 
-    private var verifiedRecord: Map<String, Any?>? = null
+    var verifiedRecord: Map<String, Any?>? = null
 
     internal fun basicInfoValidation(): Boolean {
         isFirstNameValid = firstName.isBlank()
@@ -140,7 +140,10 @@ class PatientRegistrationStepOneViewModel @Inject constructor(
                 if (matched != null) {
                     verifiedRecord = matched
 
-                    firstName = matched["first_name"]?.toString().orEmpty()
+                    firstName = listOfNotNull(
+                        matched["first_name"]?.toString()?.takeIf { it.isNotBlank() },
+                        matched["middle_name"]?.toString()?.takeIf { it.isNotBlank() }
+                    ).joinToString(" ")
                     lastName = matched["last_name"]?.toString().orEmpty()
                     gender = matched["gender"]?.toString().orEmpty().toLowerCase(Locale.current)
 
@@ -151,6 +154,7 @@ class PatientRegistrationStepOneViewModel @Inject constructor(
                         dobYear = dobDate.toYear()
                         dobMonth = dobDate.toFullMonth()
                         dobDay = dobDate.toDay()
+                        dobAgeSelector = "dob"
                     }
 
                     isFirstNameValid = false
@@ -165,5 +169,68 @@ class PatientRegistrationStepOneViewModel @Inject constructor(
                 isNationalIdVerified = false
             }
         }
+    }
+
+    fun verifyLastName(): Boolean {
+        val record = verifiedRecord ?: return false
+        return lastName.trim().equals(
+            record["last_name"]?.toString().orEmpty(),
+            ignoreCase = true
+        )
+    }
+
+    fun verifyFirstAndMiddleName(): Boolean {
+        val record = verifiedRecord ?: return false
+        return firstName.trim().equals(
+            listOfNotNull(
+                record["first_name"]?.toString()?.takeIf { it.isNotBlank() },
+                record["middle_name"]?.toString()?.takeIf { it.isNotBlank() }
+            ).joinToString(" "),
+            ignoreCase = true
+        )
+    }
+
+    fun verifyDOBDay(): Boolean {
+        val record = verifiedRecord ?: return false
+        val dob = record["date_of_birth"]?.toString()
+        return dob?.let {
+            val dobDate = Date(it.toTimeInMilli())
+            dobDay.equals(
+                dobDate.toDay(),
+                ignoreCase = true
+            )
+        } == true
+    }
+
+    fun verifyDOBMonth(): Boolean {
+        val record = verifiedRecord ?: return false
+        val dob = record["date_of_birth"]?.toString()
+        return dob?.let {
+            val dobDate = Date(it.toTimeInMilli())
+            dobMonth.equals(
+                dobDate.toFullMonth(),
+                ignoreCase = true
+            )
+        } == true
+    }
+
+    fun verifyDOBYear(): Boolean {
+        val record = verifiedRecord ?: return false
+        val dob = record["date_of_birth"]?.toString()
+        return dob?.let {
+            val dobDate = Date(it.toTimeInMilli())
+            dobYear.equals(
+                dobDate.toYear(),
+                ignoreCase = true
+            )
+        } == true
+    }
+
+    fun verifyGender(): Boolean {
+        val record = verifiedRecord ?: return false
+        return gender.trim().equals(
+            record["gender"]?.toString().orEmpty(),
+            ignoreCase = true
+        )
     }
 }
