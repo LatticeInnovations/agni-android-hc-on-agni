@@ -3260,6 +3260,7 @@ class SyncRepositoryImpl @Inject constructor(
                 errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
             )
         }
+    }
 
     override suspend fun getAndSaveNationalIdData(): ResponseMapper<Nothing> {
         return try {
