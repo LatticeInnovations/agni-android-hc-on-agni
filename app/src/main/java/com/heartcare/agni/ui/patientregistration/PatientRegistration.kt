@@ -27,7 +27,6 @@ import com.heartcare.agni.R
 import com.heartcare.agni.ui.patientregistration.model.PatientRegister
 import com.heartcare.agni.ui.patientregistration.preview.DiscardDialog
 import com.heartcare.agni.ui.patientregistration.step1.PatientRegistrationStepOne
-import com.heartcare.agni.ui.patientregistration.step2.PatientRegistrationStepTwo
 import com.heartcare.agni.ui.patientregistration.step3.PatientRegistrationStepThree
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -100,8 +99,7 @@ fun PatientRegistration(
             ) {
                 when (viewModel.currentStep) {
                     1 -> PatientRegistrationStepOne(patientRegister)
-                    2 -> PatientRegistrationStepTwo(patientRegister)
-                    3 -> PatientRegistrationStepThree(navController, patientRegister)
+                    2 -> PatientRegistrationStepThree(navController, patientRegister)
                 }
                 if (viewModel.openDialog) {
                     DiscardDialog(

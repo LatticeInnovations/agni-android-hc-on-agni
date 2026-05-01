@@ -167,7 +167,7 @@ private fun HeaderSection(viewModel: PatientRegistrationViewModel) {
             color = MaterialTheme.colorScheme.onSurface
         )
         Text(
-            text = "Page 3/${viewModel.totalSteps}",
+            text = "Page 2/${viewModel.totalSteps}",
             style = MaterialTheme.typography.bodySmall,
             color = Neutral40
         )
