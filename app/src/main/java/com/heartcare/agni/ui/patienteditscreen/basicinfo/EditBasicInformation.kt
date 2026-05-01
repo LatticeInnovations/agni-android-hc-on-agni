@@ -177,8 +177,12 @@ fun EditBasicInformation(
                         keyboardType = KeyboardType.Text,
                         keyboardCapitalization = KeyboardCapitalization.Words
                     ) {
-                        if (it.matches(nameRegex) || it.isEmpty()) viewModel.lastName =
-                            it
+                        if (it.matches(nameRegex) || it.isEmpty()) {
+                            viewModel.lastName = it
+                            if (viewModel.verifiedRecord != null) {
+                                viewModel.isNationalIdVerified = viewModel.verifyLastName()
+                            }
+                        }
                         viewModel.isLastNameValid = viewModel.lastName.isBlank()
                     }
                     CustomTextFieldWithLength(
@@ -192,8 +196,12 @@ fun EditBasicInformation(
                         keyboardType = KeyboardType.Text,
                         keyboardCapitalization = KeyboardCapitalization.Words
                     ) {
-                        if (it.matches(nameRegex) || it.isEmpty()) viewModel.firstName =
-                            it
+                        if (it.matches(nameRegex) || it.isEmpty()) {
+                            viewModel.firstName = it
+                            if (viewModel.verifiedRecord != null) {
+                                viewModel.isNationalIdVerified = viewModel.verifyFirstAndMiddleName()
+                            }
+                        }
                         viewModel.isFirstNameValid = viewModel.firstName.isBlank()
                     }
                     Column(
@@ -212,6 +220,7 @@ fun EditBasicInformation(
                                 viewModel.dobDay = ""
                                 viewModel.dobMonth = ""
                                 viewModel.dobYear = ""
+                                viewModel.isNationalIdVerified = false
                             }
                         }
                         if (viewModel.dobAgeSelector == "dob") {
@@ -528,7 +537,12 @@ fun DobTextField(viewModel: EditBasicInformationViewModel) {
                 KeyboardType.Number,
                 KeyboardCapitalization.None
             ) {
-                if (it.matches(viewModel.onlyNumbers) || it.isEmpty()) viewModel.dobDay = it
+                if (it.matches(viewModel.onlyNumbers) || it.isEmpty()) {
+                    viewModel.dobDay = it
+                    if (viewModel.verifiedRecord != null) {
+                        viewModel.isNationalIdVerified = viewModel.verifyDOBDay()
+                    }
+                }
                 if (viewModel.dobDay.isNotEmpty()) {
                     viewModel.monthsList = getMonthsList(viewModel.dobDay)
                 }
@@ -546,7 +560,12 @@ fun DobTextField(viewModel: EditBasicInformationViewModel) {
                 KeyboardType.Number,
                 KeyboardCapitalization.None
             ) {
-                if (it.matches(viewModel.onlyNumbers) || it.isEmpty()) viewModel.dobYear = it
+                if (it.matches(viewModel.onlyNumbers) || it.isEmpty()) {
+                    viewModel.dobYear = it
+                    if (viewModel.verifiedRecord != null) {
+                        viewModel.isNationalIdVerified = viewModel.verifyDOBYear()
+                    }
+                }
             }
         }
         DateErrorText(viewModel)
@@ -617,6 +636,9 @@ private fun MonthDropDown(viewModel: EditBasicInformationViewModel) {
                     onClick = {
                         monthExpanded = false
                         viewModel.dobMonth = label
+                        if (viewModel.verifiedRecord != null) {
+                            viewModel.isNationalIdVerified = viewModel.verifyDOBMonth()
+                        }
                     },
                     text = {
                         Text(
@@ -723,6 +745,9 @@ fun GenderComposable(viewModel: EditBasicInformationViewModel) {
             stringResource(id = R.string.male)
         ) {
             viewModel.gender = it
+            if (viewModel.verifiedRecord != null) {
+                viewModel.isNationalIdVerified = viewModel.verifyGender()
+            }
         }
         Spacer(modifier = Modifier.width(15.dp))
         CustomFilterChip(
@@ -731,6 +756,9 @@ fun GenderComposable(viewModel: EditBasicInformationViewModel) {
             stringResource(id = R.string.female)
         ) {
             viewModel.gender = it
+            if (viewModel.verifiedRecord != null) {
+                viewModel.isNationalIdVerified = viewModel.verifyGender()
+            }
         }
     }
 }
@@ -774,6 +802,7 @@ private fun NationalIdComposable(
                     viewModel.nationalId = it
                     viewModel.isVerifyClicked = false
                     viewModel.isNationalIdVerified = false
+                    viewModel.verifiedRecord = null
                 }
             },
             label = {
@@ -805,8 +834,7 @@ private fun NationalIdComposable(
         FilledTonalButton (
             onClick = {
                 viewModel.isVerifyClicked = true
-                // TODO : add logic to verify national id
-                viewModel.isNationalIdVerified = false
+                viewModel.verifyNationalId()
             },
             modifier = Modifier.weight(1f),
             enabled = viewModel.nationalId.isNotBlank() && !viewModel.isNationalIdVerified
