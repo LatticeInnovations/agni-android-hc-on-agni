@@ -62,6 +62,7 @@ class AddInterventionViewModel @Inject constructor(
     var isSearchResult by mutableStateOf(false)
 
     var todayIntervention by mutableStateOf<InterventionResponseLocal?>(null)
+    var selectedCampaignId by mutableStateOf<String?>(null)
 
     init {
         viewModelScope.launch(ioDispatcher) {
@@ -71,11 +72,15 @@ class AddInterventionViewModel @Inject constructor(
 
     fun getTodayIntervention(patientId: String) {
         viewModelScope.launch(ioDispatcher) {
-            val appointmentIds =
-                getInProgressCompletedAppointmentIds(patientId, appointmentRepository)
+            val appointmentIds = getInProgressCompletedAppointmentIds(patientId, appointmentRepository)
             todayIntervention =
-                interventionRepository.getInterventionListByAppointmentId(*appointmentIds.toTypedArray()).firstOrNull {
-                    isToday(it.appUpdatedDate)
+                if (selectedCampaignId !=null){
+                    interventionRepository.getLatestInterventionForCampaign(patientId, selectedCampaignId!!)
+
+                }else {
+                    interventionRepository.getInterventionListByAppointmentId(*appointmentIds.toTypedArray()).firstOrNull {
+                        isToday(it.appUpdatedDate)
+                    }
                 }
             todayIntervention?.let {
                 selectedInterventionList = it.interventions.map { intervention ->
@@ -108,6 +113,7 @@ class AddInterventionViewModel @Inject constructor(
             appointmentResponseLocal = getAppointment(
                 patientId = patient!!.id,
                 hospitalCode = user.hospitalCode,
+                campaignId = selectedCampaignId,
                 appointmentRepository = appointmentRepository
             )
 
@@ -128,7 +134,8 @@ class AddInterventionViewModel @Inject constructor(
                 patientId = patient!!.fhirId ?: patient!!.id,
                 practitionerId = null,
                 practitionerName = null,
-                interventions = selectedInterventionList.map { it.fhirId }
+                interventions = selectedInterventionList.map { it.fhirId },
+                campaignId = selectedCampaignId
             )
 
             interventionRepository.insertIntervention(
@@ -154,15 +161,17 @@ class AddInterventionViewModel @Inject constructor(
                 )
             }
 
-            checkAndUpdateAppointmentStatusToInProgress(
-                inProgressTime = interventionResponse.appUpdatedDate,
-                patient = patient!!,
-                appointmentResponseLocal = appointmentResponseLocal!!,
-                appointmentRepository = appointmentRepository,
-                scheduleRepository = scheduleRepository,
-                genericRepository = genericRepository,
-                preferenceRepository = preferenceRepository
-            )
+            if (selectedCampaignId==null) {
+                checkAndUpdateAppointmentStatusToInProgress(
+                    inProgressTime = interventionResponse.appUpdatedDate,
+                    patient = patient!!,
+                    appointmentResponseLocal = appointmentResponseLocal!!,
+                    appointmentRepository = appointmentRepository,
+                    scheduleRepository = scheduleRepository,
+                    genericRepository = genericRepository,
+                    preferenceRepository = preferenceRepository
+                )
+            }
 
             updatePatientLastUpdated(
                 patient!!.id,

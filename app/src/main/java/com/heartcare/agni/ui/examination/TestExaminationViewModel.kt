@@ -169,12 +169,20 @@ class TestExaminationViewModel @Inject constructor(
             testExaminationLists = examinationRepository.getExaminationListByAppointmentId(*allCombinedIds).map { record ->
                 record.copy(screeningSiteName = record.campaignId?.let { siteMap[it]?.name })
             }.also {
-                todayTestExamination = if (selectedCampaignId == null) {
-                    it.firstOrNull { examination -> isToday(examination.appUpdatedDate) && examination.campaignId == null }
-                } else {
-                    it.firstOrNull { examination -> examination.campaignId == selectedCampaignId }
+                todayTestExamination = it.firstOrNull { examination -> isToday(examination.appUpdatedDate) }?:it.firstOrNull()?.campaignId?.let { campaignId ->
+                    if (isCampaignActive(campaignId)) {
+                        examinationRepository.getLatestExaminationForCampaign(
+                            patientId,
+                            campaignId
+                        )
+                    } else null
                 }
             }
+
+
         }
+    }
+    private suspend fun isCampaignActive(campaignId: String): Boolean {
+        return screeningSiteRepository.getScreeningSiteById(campaignId)?.status == "active"
     }
 }

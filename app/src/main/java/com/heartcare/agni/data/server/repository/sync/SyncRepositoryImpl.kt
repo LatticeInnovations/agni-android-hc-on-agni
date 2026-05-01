@@ -1889,26 +1889,27 @@ class SyncRepositoryImpl @Inject constructor(
     }
 
 
-    override suspend fun sendInterventionPostData(): ResponseMapper<List<CreateResponse>> {
+    override suspend fun sendInterventionPostData(genericTypeEnum: GenericTypeEnum, endPoint: String): ResponseMapper<List<CreateResponse>> {
         return try {
             genericDao.getSameTypeGenericEntityPayload(
-                genericTypeEnum = GenericTypeEnum.INTERVENTION,
+                genericTypeEnum = genericTypeEnum,
                 syncType = SyncType.POST
             ).let { listOfGenericEntity ->
                 if (listOfGenericEntity.isEmpty()) ApiEmptyResponse()
                 else {
                     ApiResponseConverter.convert(
                         interventionApiService.postIntervention(
+                            endPoint,
                             listOfGenericEntity.map {
                                 it.payload.fromJson<LinkedTreeMap<*, *>>()
-                                    .mapToObject(InterventionResponse::class.java)!!
+                                    .mapToObject(InterventionResponse::class.java)!!.copy(campaignId = null)
                             }
                         )
                     ).apply {
                         if (this is ApiEndResponse) {
                             insertInterventionFhirIds(body, listOfGenericEntity)
                                 .apply {
-                                    if (this > 0) sendInterventionPostData()
+                                    if (this > 0) sendInterventionPostData(genericTypeEnum, endPoint)
                                 }
                         }
                     }
@@ -2161,7 +2162,7 @@ class SyncRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun sentInterventionPutData(): ResponseMapper<List<CreateResponse>> {
+    override suspend fun sentInterventionPutData(genericTypeEnum: GenericTypeEnum, endPoint: String): ResponseMapper<List<CreateResponse>> {
         return try {
             genericDao.getSameTypeGenericEntityPayload(
                 genericTypeEnum = GenericTypeEnum.INTERVENTION, syncType = SyncType.PUT
@@ -2170,16 +2171,17 @@ class SyncRepositoryImpl @Inject constructor(
                 else {
                     ApiResponseConverter.convert(
                         interventionApiService.putIntervention(
+                            endPoint,
                             listOfGenericEntity.map { interventionGenericEntity ->
                                 interventionGenericEntity.payload.fromJson<LinkedTreeMap<*, *>>()
-                                    .mapToObject(InterventionResponse::class.java)!!
+                                    .mapToObject(InterventionResponse::class.java)!!.copy(campaignId = null)
                             }
                         )
                     ).run {
                         when (this) {
                             is ApiEndResponse -> {
                                 deleteGenericEntityData(listOfGenericEntity).let {
-                                    if (it > 0) sentInterventionPutData() else this
+                                    if (it > 0) sentInterventionPutData(genericTypeEnum,endPoint) else this
                                 }
                             }
 
@@ -3011,6 +3013,7 @@ class SyncRepositoryImpl @Inject constructor(
         return try {
             ApiResponseConverter.convert(
                 interventionApiService.getInterventions(
+                    EndPoints.INTERVENTION,
                     map
                 ), true
             ).run {
@@ -3042,7 +3045,61 @@ class SyncRepositoryImpl @Inject constructor(
                     )
                 )
             )
-            ApiErrorResponse(
+            return ApiErrorResponse(
+                statusCode = 0,
+                errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
+            )
+        }
+    }
+
+    override suspend fun getAndInsertCampaignInterventionsData(
+        offset: Int
+    ): ResponseMapper<List<InterventionResponse>> {
+        val map = mutableMapOf<String, String>()
+        map[COUNT] = COUNT_VALUE.toString()
+        map[OFFSET] = offset.toString()
+        map[SORT] = "-$ID"
+        if (preferenceRepository.getLastSyncCampaignIntervention() != 0L) map[LAST_UPDATED] =
+            String.format(
+                GREATER_THAN_BUILDER,
+                preferenceRepository.getLastSyncCampaignIntervention().toTimeStampDate()
+            )
+
+        return try {
+            ApiResponseConverter.convert(
+                interventionApiService.getInterventions(
+                    EndPoints.CAMPAIGN_INTERVENTION,
+                    map
+                ), true
+            ).run {
+                when (this) {
+                    is ApiContinueResponse -> {
+                        insertIntervention(body)
+                        getAndInsertCampaignInterventionsData(offset + COUNT_VALUE)
+                    }
+
+                    is ApiEndResponse -> {
+                        preferenceRepository.setLastSyncCampaignIntervention(Date().time)
+                        insertIntervention(body)
+                        this
+                    }
+
+                    else -> this
+                }
+            }
+        } catch (e: Exception) {
+            Timber.e(e, e.localizedMessage)
+            crashlyticsLogger.logException(
+                e,
+                "getAndInsertCampaignInterventionsData function failed.",
+                mapOf(
+                    Pair(
+                        USER_ID,
+                        preferenceRepository.getUserDetails()?.userId ?: ERROR_FETCHING_USER_DETAILS
+                    )
+                )
+            )
+            return ApiErrorResponse(
                 statusCode = 0,
                 errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
             )

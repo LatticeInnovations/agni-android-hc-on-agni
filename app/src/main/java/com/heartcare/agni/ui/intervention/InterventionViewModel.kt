@@ -1,6 +1,7 @@
 package com.heartcare.agni.ui.intervention
 
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewModelScope
@@ -14,6 +15,9 @@ import com.heartcare.agni.data.local.repository.patient.lastupdated.PatientLastU
 import com.heartcare.agni.data.local.repository.preference.PreferenceRepository
 import com.heartcare.agni.data.local.repository.schedule.ScheduleRepository
 import com.heartcare.agni.data.server.model.patient.PatientResponse
+import com.heartcare.agni.data.local.repository.screeningsite.ScreeningSiteRepository
+import com.heartcare.agni.data.server.model.campaign.ScreeningSiteMasterResponse
+import com.heartcare.agni.data.local.enums.RecordType
 import com.heartcare.agni.di.dispatcher.IoDispatcher
 import com.heartcare.agni.utils.common.Queries
 import com.heartcare.agni.utils.common.Queries.getInProgressCompletedAppointmentIds
@@ -32,6 +36,7 @@ class InterventionViewModel @Inject constructor(
     private val genericRepository: GenericRepository,
     private val scheduleRepository: ScheduleRepository,
     private val patientLastUpdatedRepository: PatientLastUpdatedRepository,
+    val screeningSiteRepository: ScreeningSiteRepository,
     @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) : BaseViewModel() {
     val user = preferenceRepository.getUserDetails()!!
@@ -50,17 +55,47 @@ class InterventionViewModel @Inject constructor(
     var showAppointmentCompletedDialog by mutableStateOf(false)
     var isAppointmentCompleted by mutableStateOf(false)
     var existsInOtherHospital by mutableStateOf(false)
+
+    var screeningSites by mutableStateOf(listOf<ScreeningSiteMasterResponse>())
+    var isScreeningSiteEnabled by mutableStateOf(false)
+    var selectedCampaignId by mutableStateOf<String?>(null)
+    var selectedType by mutableStateOf<RecordType?>(null)
+    var currentStep by mutableIntStateOf(0)
+
+    init {
+        loadActiveScreeningSites()
+    }
+
+    internal fun loadActiveScreeningSites() {
+        viewModelScope.launch(ioDispatcher) {
+            val allSites = screeningSiteRepository.getActiveScreeningSites()
+            val userFhirId = user.fhirId
+            screeningSites = allSites.filter { site ->
+                site.staff.any { it.id == userFhirId }
+            }
+            isScreeningSiteEnabled = screeningSites.isNotEmpty()
+        }
+    }
     
     fun getAppointmentInfo(
         callback: () -> Unit
     ) {
         viewModelScope.launch(ioDispatcher) {
-            val info = loadAppointmentInfo(
-                patientId = patient!!.id,
-                hospitalCode = user.hospitalCode,
-                maxNumberOfAppointmentsInADay = maxNumberOfAppointmentsInADay,
-                appointmentRepository = appointmentRepository
-            )
+            val campaignId = selectedCampaignId
+            val info = if (campaignId != null) {
+                Queries.getCampaignAppointmentInfo(
+                    patientId = patient!!.id,
+                    campaignId = campaignId,
+                    appointmentRepository = appointmentRepository
+                )
+            } else {
+                loadAppointmentInfo(
+                    patientId = patient!!.id,
+                    hospitalCode = user.hospitalCode,
+                    maxNumberOfAppointmentsInADay = maxNumberOfAppointmentsInADay,
+                    appointmentRepository = appointmentRepository
+                )
+            }
             appointment = info.appointment
             existsInOtherHospital = info.existsInOtherHospital
             canAddAssessment = info.canAddAssessment
@@ -87,6 +122,23 @@ class InterventionViewModel @Inject constructor(
         }
     }
 
+    fun addPatientToCampaignQueue(
+        patient: PatientResponse,
+        campaignId: String,
+        addedToQueue: (List<Long>) -> Unit
+    ) {
+        viewModelScope.launch(ioDispatcher) {
+            Queries.addPatientToCampaignQueue(
+                patient = patient,
+                campaignId = campaignId,
+                scheduleRepository = scheduleRepository,
+                genericRepository = genericRepository,
+                appointmentRepository = appointmentRepository,
+                addedToQueue = addedToQueue
+            )
+        }
+    }
+
     fun updateStatusToArrived(
         patient: PatientResponse,
         appointment: AppointmentResponseLocal,
@@ -108,11 +160,30 @@ class InterventionViewModel @Inject constructor(
 
     fun getInterventionRecords(patientId: String) {
         viewModelScope.launch(ioDispatcher) {
+            val allSites = screeningSiteRepository.getScreeningSites()
+            val siteMap = allSites.associateBy { it.id }
             val appointmentIds =
                 getInProgressCompletedAppointmentIds(patientId, appointmentRepository)
-            interventionLists = interventionRepository.getInterventionListByAppointmentId(*appointmentIds.toTypedArray()).also {
-                todayIntervention = it.firstOrNull { intervention -> isToday(intervention.appUpdatedDate) }
+            val screenSiteAppointmentIds = Queries.getScreenSiteAppointmentIds(patientId, appointmentRepository)
+            val allCombinedIds = (screenSiteAppointmentIds + appointmentIds).toTypedArray()
+
+            interventionLists = interventionRepository.getInterventionListByAppointmentId(*allCombinedIds).map {record->
+                record.copy(screeningSiteName = record.campaignId?.let { siteMap[it]?.name })
+
+            }.also {
+                todayIntervention = it.firstOrNull { intervention -> isToday(intervention.appUpdatedDate) && intervention.campaignId == null }?:it.firstOrNull()?.campaignId?.let { campaignId ->
+                    if (isCampaignActive(campaignId)) {
+                        interventionRepository.getLatestInterventionForCampaign(
+                            patientId,
+                            campaignId
+                        )
+                    } else null
+                }
             }
         }
     }
+    private suspend fun isCampaignActive(campaignId: String): Boolean {
+        return screeningSiteRepository.getScreeningSiteById(campaignId)?.status == "active"
+    }
+
 }

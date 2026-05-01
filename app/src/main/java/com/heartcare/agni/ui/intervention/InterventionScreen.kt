@@ -29,12 +29,8 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
@@ -53,9 +49,9 @@ import com.heartcare.agni.ui.common.ExpandableCard
 import com.heartcare.agni.ui.common.RecordTypeSelectionContent
 import com.heartcare.agni.ui.common.ScreeningSiteListContent
 import com.heartcare.agni.ui.patientlandingscreen.AllSlotsBookedDialog
+import com.heartcare.agni.utils.constants.NavControllerConstants.CAMPAIGN_ID
 import com.heartcare.agni.utils.constants.NavControllerConstants.INTERVENTIONS_SAVED
 import com.heartcare.agni.utils.constants.NavControllerConstants.PATIENT
-import com.heartcare.agni.utils.constants.ScreenSiteConstants.SITE_LIST
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -69,16 +65,16 @@ fun InterventionScreen(
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
 
-    var currentStep by remember { mutableIntStateOf(0) }
-    var selectedSite by remember { mutableStateOf<String?>(null) }
-    var selectedType by remember { mutableStateOf<RecordType?>(null) }
+
 
     BackHandler {
-        if (currentStep > 0) {
-            if (currentStep == 2) {
-                currentStep = 1
-            } else if (currentStep == 1) {
-                currentStep = 0
+        if (viewModel.currentStep > 0) {
+            if (viewModel.currentStep == 2) {
+                viewModel.selectedCampaignId = null
+                viewModel.currentStep = 1
+            } else if (viewModel.currentStep == 1) {
+                viewModel.selectedType = null
+                viewModel.currentStep = 0
             }
         } else {
             navController.navigateUp()
@@ -114,26 +110,32 @@ fun InterventionScreen(
                     .padding(paddingValues)
                     .fillMaxSize()
             ) {
-                when (currentStep) {
+                when (viewModel.currentStep) {
                     0 -> InterventionContent(viewModel)
                     1 -> RecordTypeSelectionContent(
                         modifier = Modifier.fillMaxSize(),
-                        selectedType = selectedType,
-                        onTypeSelected = { selectedType = it },
+                        selectedType = viewModel.selectedType,
+                        onTypeSelected = { viewModel.selectedType = it },
                         onContinueClick = {
-                            if (selectedType == RecordType.FACILITY) {
+                            if (viewModel.selectedType == RecordType.FACILITY) {
+                                viewModel.selectedCampaignId = null
                                 handleAddInterventionLogic(viewModel, navController, coroutineScope, snackBarHostState, context)
-                            } else if (selectedType == RecordType.SCREENING_SITE) {
-                                currentStep = 2
+                            } else if (viewModel.selectedType == RecordType.SCREENING_SITE) {
+                                viewModel.currentStep = 2
                             }
                         }
                     )
                     2 -> ScreeningSiteListContent(
                         modifier = Modifier.fillMaxSize(),
-                        sites = SITE_LIST,
-                        selectedSite = selectedSite,
-                        onSiteSelected = { selectedSite = it },
-                        onBackClick = { currentStep = 1 },
+                        sites = viewModel.screeningSites.map { it.name },
+                        selectedSite = viewModel.screeningSites.find { it.id == viewModel.selectedCampaignId }?.name,
+                        onSiteSelected = { siteName -> 
+                            viewModel.selectedCampaignId = viewModel.screeningSites.find { it.name == siteName }?.id
+                        },
+                        onBackClick = {
+                            viewModel.currentStep = 1
+                            viewModel.selectedCampaignId = null
+                        },
                         onContinueClick = {
                             handleAddInterventionLogic(viewModel, navController, coroutineScope, snackBarHostState, context)
                         }
@@ -142,15 +144,17 @@ fun InterventionScreen(
             }
         },
         bottomBar = {
-            if (currentStep == 0) {
+            if (viewModel.currentStep == 0) {
                 InterventionBottomBar(
                     viewModel = viewModel,
                     onClickAdd = {
                         if (viewModel.patient!!.patientDeceasedReason.isNullOrBlank()) {
-                            if (viewModel.todayIntervention != null && !viewModel.existsInOtherHospital) {
-                                handleAddInterventionLogic(viewModel, navController, coroutineScope, snackBarHostState, context)
+                            if (viewModel.isScreeningSiteEnabled) {
+                                viewModel.currentStep = 1
                             } else {
-                                currentStep = 1
+                                viewModel.selectedType = RecordType.FACILITY
+                                viewModel.selectedCampaignId = null
+                                handleAddInterventionLogic(viewModel, navController, coroutineScope, snackBarHostState, context)
                             }
                         } else {
                             coroutineScope.launch {
@@ -187,6 +191,7 @@ private fun HandleLaunchedEffect(
         viewModel.getInterventionRecords(viewModel.patient!!.id)
         navController.currentBackStackEntry?.savedStateHandle?.let { handle ->
             if (handle.remove<Boolean>(INTERVENTIONS_SAVED) == true) {
+                viewModel.currentStep=0
                 snackBarHostState.showSnackbar(
                     context.getString(
                         if (viewModel.todayIntervention == null) R.string.interventions_saved
@@ -229,6 +234,7 @@ private fun InterventionContent(
                     ExpandableCard(
                         createdOn = intervention.appUpdatedDate,
                         practitionerName = intervention.practitionerName,
+                        screenSiteName = intervention.screeningSiteName,
                         listOfItems = intervention.interventions.map { "${it.code} ${it.display}" },
                         isBulleted = true
                     )
@@ -262,6 +268,10 @@ private fun handleAddInterventionLogic(
                             PATIENT,
                             viewModel.patient
                         )
+                        navController.currentBackStackEntry?.savedStateHandle?.set(
+                            CAMPAIGN_ID,
+                            viewModel.selectedCampaignId
+                        )
                         navController.navigate(Screen.AddInterventionScreen.route)
                     }
                 }
@@ -271,7 +281,28 @@ private fun handleAddInterventionLogic(
                 }
 
                 else -> {
-                    viewModel.showAddToQueueDialog = true
+                    if (viewModel.selectedCampaignId != null) {
+                        viewModel.addPatientToCampaignQueue(
+                            viewModel.patient!!,
+                            viewModel.selectedCampaignId!!,
+                            addedToQueue = {
+                                viewModel.showAddToQueueDialog = false
+                                coroutineScope.launch {
+                                    navController.currentBackStackEntry?.savedStateHandle?.set(
+                                        PATIENT,
+                                        viewModel.patient
+                                    )
+                                    navController.currentBackStackEntry?.savedStateHandle?.set(
+                                        CAMPAIGN_ID,
+                                        viewModel.selectedCampaignId
+                                    )
+                                    navController.navigate(Screen.AddInterventionScreen.route)
+                                }
+                            }
+                        )
+                    } else {
+                        viewModel.showAddToQueueDialog = true
+                    }
                 }
             }
         }

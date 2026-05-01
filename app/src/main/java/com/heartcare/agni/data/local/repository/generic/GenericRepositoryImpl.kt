@@ -170,8 +170,8 @@ class GenericRepositoryImpl @Inject constructor(
             }
     }
 
-    override suspend fun updateInterventionFhirId() {
-        genericDao.getNotSyncedData(GenericTypeEnum.INTERVENTION)
+    override suspend fun updateInterventionFhirId(genericTypeEnum: GenericTypeEnum) {
+        genericDao.getNotSyncedData(genericTypeEnum)
             .forEach { interventionGenericEntity ->
                 updateInterventionFhirIdInGenericEntity(interventionGenericEntity)
             }
@@ -320,12 +320,13 @@ class GenericRepositoryImpl @Inject constructor(
         interventionResponse: InterventionResponse,
         uuid: String
     ): Long {
+        val type = if (interventionResponse.campaignId != null) GenericTypeEnum.CAMPAIGN_INTERVENTION else GenericTypeEnum.INTERVENTION
         return genericDao.getGenericEntityById(
             patientId = interventionResponse.uuid!!,
-            genericTypeEnum = GenericTypeEnum.INTERVENTION,
+            genericTypeEnum = type,
             syncType = SyncType.POST
         ).let { interventionGenericEntity ->
-            insertInterventionGenericEntity(interventionGenericEntity, interventionResponse, uuid)
+            insertInterventionGenericEntity(interventionGenericEntity, interventionResponse, uuid, type)
         }
     }
 
@@ -464,12 +465,13 @@ class GenericRepositoryImpl @Inject constructor(
         interventionResponse: InterventionResponse,
         uuid: String
     ): Long {
+        val type = if (interventionResponse.campaignId != null) GenericTypeEnum.CAMPAIGN_INTERVENTION else GenericTypeEnum.INTERVENTION
         return genericDao.getGenericEntityById(
             patientId = interventionFhirId,
-            genericTypeEnum = GenericTypeEnum.INTERVENTION,
+            genericTypeEnum = type,
             syncType = SyncType.PUT
         ).let { interventionGenericEntity ->
-            insertInterventionPutGenericEntity(interventionFhirId, interventionResponse, interventionGenericEntity, uuid)
+            insertInterventionPutGenericEntity(interventionFhirId, interventionResponse, interventionGenericEntity, uuid, type)
         }
     }
 

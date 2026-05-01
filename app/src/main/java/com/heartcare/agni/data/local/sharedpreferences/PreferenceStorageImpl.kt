@@ -179,6 +179,11 @@ class PreferenceStorageImpl(private val sharedPreferences: SharedPreferences) : 
         PREF_LAST_INTERVENTION_SYNC_TIME,
         0L
     )
+    override var lastSyncCampaignIntervention by LongPreference(
+        sharedPreferences,
+        PREF_LAST_CAMPAIGN_INTERVENTION_SYNC_TIME,
+        0L
+    )
 
     override var lastSyncExaminationMaster by LongPreference(
         sharedPreferences,
@@ -267,6 +272,7 @@ class PreferenceStorageImpl(private val sharedPreferences: SharedPreferences) : 
         const val PREF_LAST_CAMPAIGN_TOBACCO_CESSATION_SYNC_TIME = "pref_last_campaign_tobacco_cessation_sync_time"
         const val PREF_LAST_INTERVENTION_MASTER_SYNC_TIME = "pref_last_intervention_master_sync_time"
         const val PREF_LAST_INTERVENTION_SYNC_TIME = "pref_last_intervention_sync_time"
+        const val PREF_LAST_CAMPAIGN_INTERVENTION_SYNC_TIME = "pref_last_campaign_intervention_sync_time"
         const val PREF_LAST_EXAMINATION_MASTER_SYNC_TIME = "pref_last_examination_master_sync_time"
         const val PREF_LAST_EXAMINATION_SYNC_TIME = "pref_last_examination_sync_time"
         const val PREF_LAST_DIAGNOSIS_MASTER_SYNC_TIME = "pref_last_diagnosis_master_sync_time"

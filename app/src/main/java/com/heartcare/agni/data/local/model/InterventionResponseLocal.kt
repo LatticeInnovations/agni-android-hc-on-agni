@@ -12,7 +12,9 @@ data class InterventionResponseLocal(
     val patientId: String,
     val practitionerId: String,
     val practitionerName: String,
-    val interventions: List<InterventionItem>
+    val interventions: List<InterventionItem>,
+    val campaignId: String? = null,
+    val screeningSiteName: String? = null
 )
 
 @Keep

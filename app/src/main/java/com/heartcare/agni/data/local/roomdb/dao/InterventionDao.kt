@@ -27,7 +27,7 @@ interface InterventionDao {
     suspend fun insertIntervention(vararg interventionEntity: InterventionEntity): List<Long>
 
     @Transaction
-    @Query("SELECT * FROM InterventionEntity WHERE appointmentId IN (:appointmentIds) ORDER BY appUpdatedDate DESC")
+    @Query("SELECT * FROM InterventionEntity WHERE appointmentId IN (:appointmentIds) OR campaignAppointmentId IN (:appointmentIds) ORDER BY appUpdatedDate DESC")
     suspend fun getInterventionsByAppointmentId(vararg appointmentIds: String): List<InterventionEntity>
 
     @Query("UPDATE InterventionEntity SET fhirId = :fhirId WHERE uuid = :id")
@@ -35,4 +35,9 @@ interface InterventionDao {
 
     @Query("DELETE FROM InterventionEntity WHERE uuid=:id")
     suspend fun deleteIntervention(id: String): Int
+
+    @Transaction
+    @Query("SELECT * FROM InterventionEntity WHERE patientId = :patientId AND campaignId = :campaignId ORDER BY appUpdatedDate DESC LIMIT 1")
+    suspend fun getLatestInterventionForCampaign(patientId: String, campaignId: String): InterventionEntity?
+
 }

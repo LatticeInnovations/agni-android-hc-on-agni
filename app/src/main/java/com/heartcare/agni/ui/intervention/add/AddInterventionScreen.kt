@@ -41,6 +41,7 @@ import com.heartcare.agni.ui.common.ExpandableBottomNavLayout
 import com.heartcare.agni.ui.common.SearchLayout
 import com.heartcare.agni.ui.common.SearchResults
 import com.heartcare.agni.utils.constants.NavControllerConstants.INTERVENTIONS_SAVED
+import com.heartcare.agni.utils.constants.NavControllerConstants.CAMPAIGN_ID
 import com.heartcare.agni.utils.constants.NavControllerConstants.PATIENT
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -56,11 +57,15 @@ fun AddInterventionScreen(
 
     LaunchedEffect(viewModel.isLaunched) {
         if (!viewModel.isLaunched) {
-            navController.previousBackStackEntry?.savedStateHandle
-                ?.get<PatientResponse>(PATIENT)?.let {
+            navController.previousBackStackEntry?.savedStateHandle?.get<PatientResponse>(PATIENT)
+                ?.let {
                     viewModel.patient = it
-                    viewModel.getTodayIntervention(it.id)
                 }
+            navController.previousBackStackEntry?.savedStateHandle?.get<String>(CAMPAIGN_ID)
+                ?.let {
+                    viewModel.selectedCampaignId = it
+                }
+            viewModel.getTodayIntervention(viewModel.patient!!.id)
             viewModel.isLaunched = true
         }
     }

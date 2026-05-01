@@ -119,7 +119,8 @@ open class GenericRepositoryDatabaseTransactions(
         interventionFhirId: String,
         interventionResponse: InterventionResponse,
         interventionGenericEntity: GenericEntity?,
-        uuid: String
+        uuid: String,
+        type: GenericTypeEnum
     ): Long {
         return if (interventionGenericEntity != null) {
             genericDao.insertGenericEntity(
@@ -132,7 +133,7 @@ open class GenericRepositoryDatabaseTransactions(
                     id = uuid,
                     patientId = interventionFhirId,
                     payload = interventionResponse.toJson(),
-                    type = GenericTypeEnum.INTERVENTION,
+                    type = type,
                     syncType = SyncType.PUT
                 )
             )[0]
@@ -439,7 +440,8 @@ open class GenericRepositoryDatabaseTransactions(
     protected suspend fun insertInterventionGenericEntity(
         interventionGenericEntity: GenericEntity?,
         interventionResponse: InterventionResponse,
-        uuid: String
+        uuid: String,
+        type: GenericTypeEnum
     ): Long {
         return if (interventionGenericEntity != null) {
             genericDao.insertGenericEntity(
@@ -451,7 +453,7 @@ open class GenericRepositoryDatabaseTransactions(
                     id = uuid,
                     patientId = interventionResponse.uuid!!,
                     payload = interventionResponse.toJson(),
-                    type = GenericTypeEnum.INTERVENTION,
+                    type = type,
                     syncType = SyncType.POST
                 )
             )[0]

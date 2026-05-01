@@ -32,4 +32,11 @@ class ExaminationRepositoryImpl @Inject constructor(
     override suspend fun getExaminationListByAppointmentId(vararg appointmentIds: String): List<ExaminationResponseLocal> {
         return examinationDao.getExaminationsByAppointmentId(*appointmentIds).map { it.toExaminationResponseLocal(examinationDao) }
     }
+
+    override suspend fun getLatestExaminationForCampaign(
+        patientId: String,
+        campaignId: String
+    ): ExaminationResponseLocal? {
+        return examinationDao.getLatestExaminationForCampaign(patientId, campaignId)?.toExaminationResponseLocal(examinationDao)
+    }
 }
