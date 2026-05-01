@@ -58,7 +58,6 @@ import kotlinx.coroutines.launch
 fun PreviousPrescriptionsScreen(
     snackBarHostState: SnackbarHostState,
     coroutineScope: CoroutineScope,
-    pagerState: PagerState,
     viewModel: PrescriptionViewModel = hiltViewModel(),
     onRequireWizard: () -> Unit = {}
 ) {
@@ -89,7 +88,6 @@ fun PreviousPrescriptionsScreen(
                                 && viewModel.patient!!.patientDeceasedReason.isNullOrBlank(),
                         snackBarHostState,
                         coroutineScope,
-                        pagerState,
                         onRequireWizard
                     )
                 }
@@ -105,7 +103,6 @@ fun PrescriptionCard(
     showRePrescribeBtn: Boolean,
     snackBarHostState: SnackbarHostState,
     coroutineScope: CoroutineScope,
-    pagerState: PagerState,
     onRequireWizard: () -> Unit
 ) {
     val context = LocalContext.current
@@ -138,10 +135,19 @@ fun PrescriptionCard(
                     .testTag("PREVIOUS_PRESCRIPTION_TITLE_ROW"),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = prescription.prescriptionEntity.prescriptionDate.toPrescriptionDate(),
-                    style = MaterialTheme.typography.bodyLarge
-                )
+                Column {
+                    Text(
+                        text = prescription.prescriptionEntity.prescriptionDate.toPrescriptionDate(),
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                    prescription.prescriptionEntity.screeningSiteName?.let {
+                        Text(
+                            text = it,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
                 Spacer(modifier = Modifier.weight(1f))
                 Icon(
                     Icons.Default.KeyboardArrowDown,

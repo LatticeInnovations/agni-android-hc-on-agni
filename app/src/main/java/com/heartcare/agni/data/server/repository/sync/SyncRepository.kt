@@ -65,13 +65,14 @@ interface SyncRepository {
     suspend fun getAndInsertTobaccoCessationData(offset: Int): ResponseMapper<List<TobaccoCessationResponse>>
     suspend fun getAndInsertCampaignTobaccoCessationData(offset: Int): ResponseMapper<Any>
     suspend fun getAndInsertCampaignDiagnosisData(offset: Int): ResponseMapper<List<DiagnosisResponse>>
+    suspend fun getAndInsertCampaignPrescription(patientId: String?): ResponseMapper<List<PrescriptionResponse>>
     suspend fun getAndInsertInterventionsData(offset: Int): ResponseMapper<List<InterventionResponse>>
     suspend fun getAndInsertExaminationData(offset: Int): ResponseMapper<List<ExaminationResponse>>
     suspend fun getAndInsertReferralData(offset: Int): ResponseMapper<List<ReferralResponse>>
 
     //POST
     suspend fun sendPersonPostData(): ResponseMapper<List<CreateResponse>>
-    suspend fun sendFormPrescriptionPostData(): ResponseMapper<List<CreateResponse>>
+    suspend fun sendFormPrescriptionPostData(genericTypeEnum: GenericTypeEnum, endPoint: String): ResponseMapper<List<CreateResponse>>
     suspend fun sendSchedulePostData(): ResponseMapper<List<CreateResponse>>
     suspend fun sendAppointmentPostData(genericTypeEnum: GenericTypeEnum, endPoint: String): ResponseMapper<List<CreateResponse>>
     suspend fun sendPatientLastUpdatePostData(): ResponseMapper<List<CreateResponse>>
@@ -96,7 +97,7 @@ interface SyncRepository {
     //PATCH
     suspend fun sendPersonPatchData(): ResponseMapper<List<CreateResponse>>
     suspend fun sendAppointmentPatchData(): ResponseMapper<List<CreateResponse>>
-    suspend fun sendPrescriptionPutData(): ResponseMapper<List<CreateResponse>>
+    suspend fun sendPrescriptionPutData(genericTypeEnum: GenericTypeEnum, endPoint: String): ResponseMapper<List<CreateResponse>>
     suspend fun sentInterventionPutData(): ResponseMapper<List<CreateResponse>>
     suspend fun sentExaminationPutData(): ResponseMapper<List<CreateResponse>>
 }

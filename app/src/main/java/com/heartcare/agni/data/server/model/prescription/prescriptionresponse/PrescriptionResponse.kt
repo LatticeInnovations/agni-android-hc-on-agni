@@ -14,6 +14,8 @@ data class PrescriptionResponse(
     val prescriptionId: String?,
     val prescriptionFhirId: String?,
     val prescription: List<Medication>,
-    val appUpdatedOn: Date?
+    val appUpdatedOn: Date?,
+    val campaignId: String?,
+    val screeningSiteName: String?=null
 )
 
