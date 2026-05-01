@@ -14,8 +14,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
@@ -24,6 +26,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -46,7 +49,9 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
@@ -55,12 +60,15 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.heartcare.agni.R
 import com.heartcare.agni.data.local.enums.GenderEnum
+import com.heartcare.agni.data.local.enums.NationalIdUse
 import com.heartcare.agni.data.local.enums.YesNoEnum
+import com.heartcare.agni.data.server.model.patient.PatientIdentifier
 import com.heartcare.agni.data.server.model.patient.PatientResponse
 import com.heartcare.agni.ui.common.CustomFilterChip
 import com.heartcare.agni.ui.common.CustomTextField
 import com.heartcare.agni.ui.common.CustomTextFieldWithLength
-import com.heartcare.agni.ui.patientregistration.step1.DeceasedReasonComposable
+import com.heartcare.agni.ui.common.DeceasedReasonComposable
+import com.heartcare.agni.utils.constants.IdentificationConstants
 import com.heartcare.agni.utils.converters.responseconverter.MonthsList.getMonthsList
 import com.heartcare.agni.utils.converters.responseconverter.StringUtils.capitalizeFirst
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.ageToPatientDate
@@ -69,8 +77,11 @@ import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toMon
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toPatientDate
 import com.heartcare.agni.utils.regex.EmailRegex.emailPattern
 import com.heartcare.agni.utils.regex.NameRegex.nameRegex
+import com.heartcare.agni.utils.regex.OnlyNumberRegex.onlyNumbers
 import com.heartcare.agni.utils.regex.PhoneNumberRegex.phoneNumberRegex
+import com.heartcare.agni.utils.regex.RegexPatterns.atLeastOneAlphaAndNumber
 import kotlinx.coroutines.launch
+import timber.log.Timber
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -153,6 +164,8 @@ fun EditBasicInformation(
                         .weight(1f),
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
+                    NationalIdComposable(viewModel)
+                    Spacer(modifier = Modifier.padding(bottom = 1.dp))
                     CustomTextFieldWithLength(
                         value = viewModel.lastName,
                         label = stringResource(id = R.string.last_name_mandatory),
@@ -164,8 +177,12 @@ fun EditBasicInformation(
                         keyboardType = KeyboardType.Text,
                         keyboardCapitalization = KeyboardCapitalization.Words
                     ) {
-                        if (it.matches(nameRegex) || it.isEmpty()) viewModel.lastName =
-                            it
+                        if (it.matches(nameRegex) || it.isEmpty()) {
+                            viewModel.lastName = it
+                            if (viewModel.verifiedRecord != null) {
+                                viewModel.isNationalIdVerified = viewModel.verifyLastName()
+                            }
+                        }
                         viewModel.isLastNameValid = viewModel.lastName.isBlank()
                     }
                     CustomTextFieldWithLength(
@@ -179,8 +196,12 @@ fun EditBasicInformation(
                         keyboardType = KeyboardType.Text,
                         keyboardCapitalization = KeyboardCapitalization.Words
                     ) {
-                        if (it.matches(nameRegex) || it.isEmpty()) viewModel.firstName =
-                            it
+                        if (it.matches(nameRegex) || it.isEmpty()) {
+                            viewModel.firstName = it
+                            if (viewModel.verifiedRecord != null) {
+                                viewModel.isNationalIdVerified = viewModel.verifyFirstAndMiddleName()
+                            }
+                        }
                         viewModel.isFirstNameValid = viewModel.firstName.isBlank()
                     }
                     Column(
@@ -199,6 +220,7 @@ fun EditBasicInformation(
                                 viewModel.dobDay = ""
                                 viewModel.dobMonth = ""
                                 viewModel.dobYear = ""
+                                viewModel.isNationalIdVerified = false
                             }
                         }
                         if (viewModel.dobAgeSelector == "dob") {
@@ -286,6 +308,7 @@ fun EditBasicInformation(
                         if (it.matches(nameRegex) || it.isEmpty()) viewModel.spouseName =
                             it
                     }
+                    HospitalIdComposable(viewModel)
                     Spacer(Modifier.height(64.dp))
                 }
             }
@@ -361,6 +384,28 @@ private fun handleBasicInfoNavigation(
     navController: NavController,
     patientResponse: PatientResponse?
 ) {
+
+    if (viewModel.hospitalId.isNotEmpty()) {
+        viewModel.identifierList.add(
+            PatientIdentifier(
+                identifierType = IdentificationConstants.HOSPITAL_ID,
+                identifierNumber = viewModel.hospitalId,
+                code = null,
+                use = null
+            )
+        )
+    }
+    if (viewModel.nationalId.isNotEmpty()) {
+        viewModel.identifierList.add(
+            PatientIdentifier(
+                identifierType = IdentificationConstants.NATIONAL_ID,
+                identifierNumber = viewModel.nationalId,
+                use = if (viewModel.isNationalIdVerified) NationalIdUse.OFFICIAL.use
+                else NationalIdUse.TEMP.use,
+                code = null
+            )
+        )
+    }
     viewModel.updateBasicInfo(
         patientResponse!!.copy(
             firstName = viewModel.firstName.capitalizeFirst().trim(),
@@ -377,7 +422,8 @@ private fun handleBasicInfoNavigation(
             fathersName = viewModel.fatherName.ifBlank { null }?.capitalizeFirst()?.trim(),
             spouseName = viewModel.spouseName.ifBlank { null }?.capitalizeFirst()?.trim(),
             patientDeceasedReason = viewModel.selectedDeceasedReason.ifBlank { null },
-            email = viewModel.email.ifBlank { null }
+            email = viewModel.email.ifBlank { null },
+            identifier = viewModel.identifierList
         )
     )
     navController.previousBackStackEntry?.savedStateHandle?.set(
@@ -420,6 +466,27 @@ fun HandleLaunchedEffect(
                 viewModel.isPersonDeceased = if (patientDeceasedReason.isNullOrBlank()) 0 else 1
                 viewModel.selectedDeceasedReason = patientDeceasedReason ?: ""
                 viewModel.email = email ?: ""
+
+                identifier.forEach { identity ->
+
+                    when (identity.identifierType) {
+                        IdentificationConstants.HOSPITAL_ID -> {
+                            viewModel.hospitalId = identity.identifierNumber
+                        }
+
+                        IdentificationConstants.NATIONAL_ID -> {
+                            viewModel.nationalId = identity.identifierNumber
+                            viewModel.isNationalIdVerified =
+                                identity.use == NationalIdUse.OFFICIAL.use
+                            viewModel.nationalIdUse = identity.use!!
+                        }
+
+                        else -> {
+                            Timber.d("Something wrong")
+                        }
+                    }
+                }
+                viewModel.isVerifyClicked = viewModel.nationalIdUse.isNotBlank()
             }
             viewModel.isLaunched = true
 
@@ -442,6 +509,12 @@ fun HandleLaunchedEffect(
             viewModel.isPersonDeceasedTemp = viewModel.isPersonDeceased
             viewModel.selectedDeceasedReasonTemp = viewModel.selectedDeceasedReason
             viewModel.emailTemp = viewModel.email
+
+            viewModel.hospitalIdTemp = viewModel.hospitalId
+            viewModel.nationalIdTemp = viewModel.nationalId
+            viewModel.nationalIdUseTemp = viewModel.nationalIdUse
+            viewModel.isNationalIdVerifiedTemp = viewModel.isNationalIdVerified
+            viewModel.isVerifyClickedTemp = viewModel.isVerifyClicked
         }
     }
 
@@ -464,7 +537,12 @@ fun DobTextField(viewModel: EditBasicInformationViewModel) {
                 KeyboardType.Number,
                 KeyboardCapitalization.None
             ) {
-                if (it.matches(viewModel.onlyNumbers) || it.isEmpty()) viewModel.dobDay = it
+                if (it.matches(viewModel.onlyNumbers) || it.isEmpty()) {
+                    viewModel.dobDay = it
+                    if (viewModel.verifiedRecord != null) {
+                        viewModel.isNationalIdVerified = viewModel.verifyDOBDay()
+                    }
+                }
                 if (viewModel.dobDay.isNotEmpty()) {
                     viewModel.monthsList = getMonthsList(viewModel.dobDay)
                 }
@@ -482,7 +560,12 @@ fun DobTextField(viewModel: EditBasicInformationViewModel) {
                 KeyboardType.Number,
                 KeyboardCapitalization.None
             ) {
-                if (it.matches(viewModel.onlyNumbers) || it.isEmpty()) viewModel.dobYear = it
+                if (it.matches(viewModel.onlyNumbers) || it.isEmpty()) {
+                    viewModel.dobYear = it
+                    if (viewModel.verifiedRecord != null) {
+                        viewModel.isNationalIdVerified = viewModel.verifyDOBYear()
+                    }
+                }
             }
         }
         DateErrorText(viewModel)
@@ -553,6 +636,9 @@ private fun MonthDropDown(viewModel: EditBasicInformationViewModel) {
                     onClick = {
                         monthExpanded = false
                         viewModel.dobMonth = label
+                        if (viewModel.verifiedRecord != null) {
+                            viewModel.isNationalIdVerified = viewModel.verifyDOBMonth()
+                        }
                     },
                     text = {
                         Text(
@@ -659,6 +745,9 @@ fun GenderComposable(viewModel: EditBasicInformationViewModel) {
             stringResource(id = R.string.male)
         ) {
             viewModel.gender = it
+            if (viewModel.verifiedRecord != null) {
+                viewModel.isNationalIdVerified = viewModel.verifyGender()
+            }
         }
         Spacer(modifier = Modifier.width(15.dp))
         CustomFilterChip(
@@ -667,6 +756,137 @@ fun GenderComposable(viewModel: EditBasicInformationViewModel) {
             stringResource(id = R.string.female)
         ) {
             viewModel.gender = it
+            if (viewModel.verifiedRecord != null) {
+                viewModel.isNationalIdVerified = viewModel.verifyGender()
+            }
         }
+    }
+}
+
+@Composable
+private fun HospitalIdComposable(
+    viewModel: EditBasicInformationViewModel
+) {
+    CustomTextFieldWithLength(
+        value = viewModel.hospitalId,
+        label = stringResource(id = R.string.hospital_id),
+        placeholder = null,
+        weight = 1f,
+        maxLength = viewModel.maxHospitalIdLength,
+        isError = viewModel.isHospitalIdValid,
+        error = stringResource(id = R.string.hospital_id_error_msg),
+        keyboardType = KeyboardType.Text,
+        keyboardCapitalization = KeyboardCapitalization.Characters
+    ) { value ->
+        val filtered = value.filter { it.isLetterOrDigit() }
+        if (value.length <= viewModel.maxHospitalIdLength && (value == filtered || value.isEmpty()))
+            viewModel.hospitalId = value
+        viewModel.isHospitalIdValid = viewModel.hospitalId.isNotBlank() &&
+                !atLeastOneAlphaAndNumber.matches(viewModel.hospitalId)
+    }
+}
+
+@Composable
+private fun NationalIdComposable(
+    viewModel: EditBasicInformationViewModel
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        OutlinedTextField(
+            value = viewModel.nationalId,
+            onValueChange = {
+                if (it.length <= viewModel.maxNationalIdLength && (it.matches(onlyNumbers) || it.isEmpty())) {
+                    viewModel.nationalId = it
+                    viewModel.isVerifyClicked = false
+                    viewModel.isNationalIdVerified = false
+                    viewModel.verifiedRecord = null
+                }
+            },
+            label = {
+                Text(stringResource(R.string.national_id))
+            },
+            modifier = Modifier.weight(2.5f),
+            supportingText = {
+                NationalIdSupportingText(viewModel)
+            },
+            trailingIcon = {
+                if (viewModel.nationalId.isNotBlank())
+                    IconButton(
+                        onClick = {
+                            viewModel.nationalId = ""
+                            viewModel.isVerifyClicked = false
+                            viewModel.isNationalIdVerified = false
+                        }
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.cancel),
+                            contentDescription = null
+                        )
+                    }
+            },
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Number
+            )
+        )
+        FilledTonalButton (
+            onClick = {
+                viewModel.isVerifyClicked = true
+                viewModel.verifyNationalId()
+            },
+            modifier = Modifier.weight(1f),
+            enabled = viewModel.nationalId.isNotBlank() && !viewModel.isNationalIdVerified
+        ) {
+            Text(stringResource(R.string.verify))
+        }
+    }
+}
+
+@Composable
+private fun NationalIdSupportingText(
+    viewModel: EditBasicInformationViewModel
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        if (viewModel.isVerifyClicked) {
+            val text: String
+            val icon: Int
+            val color: Color
+            if (viewModel.isNationalIdVerified) {
+                text = stringResource(R.string.verified)
+                icon = R.drawable.sync_completed_icon
+                color = MaterialTheme.colorScheme.primary
+            } else {
+                text = stringResource(R.string.unverified)
+                icon = R.drawable.info
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            }
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Icon(
+                    painter = painterResource(icon),
+                    contentDescription = null,
+                    tint = color,
+                    modifier = Modifier.size(16.dp)
+                )
+                Text(
+                    text = text,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = color
+                )
+            }
+        }
+        Spacer(modifier = Modifier.weight(1f))
+        Text(
+            text = "${viewModel.nationalId.length}/${viewModel.maxNationalIdLength}",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
     }
 }
