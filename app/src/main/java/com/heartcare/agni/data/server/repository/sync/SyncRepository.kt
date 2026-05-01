@@ -68,6 +68,7 @@ interface SyncRepository {
     suspend fun getAndInsertCampaignPrescription(patientId: String?): ResponseMapper<List<PrescriptionResponse>>
     suspend fun getAndInsertInterventionsData(offset: Int): ResponseMapper<List<InterventionResponse>>
     suspend fun getAndInsertExaminationData(offset: Int): ResponseMapper<List<ExaminationResponse>>
+    suspend fun getAndInsertCampaignExaminationData(offset: Int): ResponseMapper<List<ExaminationResponse>>
     suspend fun getAndInsertReferralData(offset: Int): ResponseMapper<List<ReferralResponse>>
     suspend fun getAndSaveNationalIdData(): ResponseMapper<Nothing>
 
@@ -92,7 +93,7 @@ interface SyncRepository {
     suspend fun sendRiskFactorPostData(genericTypeEnum: GenericTypeEnum, endPoint: String): ResponseMapper<List<CreateResponse>>
     suspend fun sendTobaccoCessationPostData(genericTypeEnum: GenericTypeEnum, endPoint: String): ResponseMapper<List<CreateResponse>>
     suspend fun sendInterventionPostData(): ResponseMapper<List<CreateResponse>>
-    suspend fun sendExaminationPostData(): ResponseMapper<List<CreateResponse>>
+    suspend fun sendExaminationPostData(genericTypeEnum: GenericTypeEnum, endPoint: String): ResponseMapper<List<CreateResponse>>
     suspend fun sendReferralPostData(): ResponseMapper<List<CreateResponse>>
 
     //PATCH
@@ -100,5 +101,5 @@ interface SyncRepository {
     suspend fun sendAppointmentPatchData(): ResponseMapper<List<CreateResponse>>
     suspend fun sendPrescriptionPutData(genericTypeEnum: GenericTypeEnum, endPoint: String): ResponseMapper<List<CreateResponse>>
     suspend fun sentInterventionPutData(): ResponseMapper<List<CreateResponse>>
-    suspend fun sentExaminationPutData(): ResponseMapper<List<CreateResponse>>
+    suspend fun sentExaminationPutData(genericTypeEnum: GenericTypeEnum, endPoint: String): ResponseMapper<List<CreateResponse>>
 }

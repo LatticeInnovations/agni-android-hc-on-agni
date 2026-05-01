@@ -12,5 +12,6 @@ data class ExaminationResponse(
     val patientId: String,
     val practitionerId: String?,
     val practitionerName: String?,
-    val examinations: List<String>
+    val examinations: List<String>,
+    val campaignId: String? = null
 )

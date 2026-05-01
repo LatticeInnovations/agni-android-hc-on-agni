@@ -12,7 +12,9 @@ data class ExaminationResponseLocal (
     val patientId: String,
     val practitionerId: String,
     val practitionerName: String,
-    val examinations: List<ExaminationItem>
+    val examinations: List<ExaminationItem>,
+    val campaignId: String? = null,
+    val screeningSiteName: String? = null
 )
 
 @Keep
