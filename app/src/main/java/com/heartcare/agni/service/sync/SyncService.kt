@@ -515,7 +515,8 @@ class SyncService(
                         downloadExamination(logout)
                     },
                     async { downloadReferral(logout) },
-                    async { downloadReportToken(logout) }
+                    // TODO: uncomment after campaign binding
+                    //async { downloadReportToken(logout) }
                 )
                 jobs.awaitAll()
             }
