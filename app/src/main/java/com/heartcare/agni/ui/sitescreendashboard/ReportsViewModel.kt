@@ -198,7 +198,7 @@ class ReportsViewModel @Inject constructor(
             ).filter { appointmentResponseLocal ->
                 (appointmentResponseLocal.status == AppointmentStatusEnum.IN_PROGRESS.value ||
                         appointmentResponseLocal.status == AppointmentStatusEnum.COMPLETED.value)
-                        && appointmentResponseLocal.hospitalCode == selectedFacility!!.code
+                        && appointmentResponseLocal.hospitalCode == selectedFacility?.code
             }
 
             facilityState = getReportData(
