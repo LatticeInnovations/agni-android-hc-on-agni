@@ -210,15 +210,9 @@ class HistoryTakingAndTestsViewModel @Inject constructor(
                 .map { dxResponse ->
                     dxResponse.copy(screeningSiteName = dxResponse.campaignId?.let { siteMap[it]?.name })
                 }.also {
-                    todayPriorDx = it.firstOrNull { priorDx -> isToday(priorDx.createdOn!!) }
-                        ?: it.firstOrNull()?.campaignId?.let { campaignId ->
-                            if (isCampaignActive(campaignId)) {
-                                priorDxRepository.getLatestPriorDxForCampaign(
-                                    patientId,
-                                    campaignId
-                                )
-                            } else null
-                        }
+                    todayPriorDx = it.firstOrNull { priorDx -> isToday(priorDx.createdOn!!) }?:
+                    it.firstOrNull { record -> record.campaignId != null && isCampaignActive(record.campaignId) }
+
 
 
                 }
@@ -229,15 +223,9 @@ class HistoryTakingAndTestsViewModel @Inject constructor(
                     }
                     .also {
                         todayHistoryMedication =
-                            it.firstOrNull { historyMedication -> isToday(historyMedication.appUpdatedDate) }
-                                ?: it.firstOrNull()?.campaignId?.let { campaignId ->
-                                    if (isCampaignActive(campaignId)) {
-                                        historyMedicationRepository.getLatestMedicationForCampaign(
-                                            patientId,
-                                            campaignId
-                                        )
-                                    } else null
-                                }
+                            it.firstOrNull { historyMedication -> isToday(historyMedication.appUpdatedDate) } ?:
+                                    it.firstOrNull { record -> record.campaignId != null && isCampaignActive(record.campaignId) }
+
 
                     }
             familyHistoryList =
@@ -249,14 +237,8 @@ class HistoryTakingAndTestsViewModel @Inject constructor(
 
                         todayFamilyHistory =
                             it.firstOrNull { familyHistory -> isToday(familyHistory.appUpdatedDate) }
-                                ?: it.firstOrNull()?.campaignId?.let { campaignId ->
-                                    if (isCampaignActive(campaignId)) {
-                                        familyHistoryRepository.getLatestFamilyHistoryForCampaign(
-                                            patientId,
-                                            campaignId
-                                        )
-                                    } else null
-                                }
+                                ?: it.firstOrNull { record -> record.campaignId != null && isCampaignActive(record.campaignId) }
+
                     }
             allergyList =
                 allergyRepository.getAllergyRecordsByAppointmentIds(*allCombinedIds)
@@ -265,14 +247,8 @@ class HistoryTakingAndTestsViewModel @Inject constructor(
                     }
                     .also {
                         todayAllergy = it.firstOrNull { allergy -> isToday(allergy.appUpdatedDate) }
-                            ?: it.firstOrNull()?.campaignId?.let { campaignId ->
-                                if (isCampaignActive(campaignId)) {
-                                    allergyRepository.getLatestAllergyForCampaign(
-                                        patientId,
-                                        campaignId
-                                    )
-                                } else null
-                            }
+                            ?:it.firstOrNull { record -> record.campaignId != null && isCampaignActive(record.campaignId) }
+
                     }
             riskFactorsList =
                 riskFactorRepository.getRiskFactorRecordsByAppointmentIds(*allCombinedIds)
@@ -283,25 +259,16 @@ class HistoryTakingAndTestsViewModel @Inject constructor(
 
                         todayRiskFactor =
                             it.firstOrNull { riskFactor -> isToday(riskFactor.appUpdatedDate) }
-                                ?: it.firstOrNull()?.campaignId?.let { campaignId ->
-                                    if (isCampaignActive(campaignId)) {
-                                        riskFactorRepository.getLatestRiskFactorForCampaign(
-                                            patientId,
-                                            campaignId
-                                        )
-                                    } else null
-                                }
+                                ?: it.firstOrNull { record -> record.campaignId != null && isCampaignActive(record.campaignId) }
+
                     }
             tobaccoCessationList =
                 tobaccoCessationRepository.getTobaccoCessationRecordsByAppointmentIds(*allCombinedIds)
                     .map { tobaccoCessation -> tobaccoCessation.copy(screeningSiteName = tobaccoCessation.campaignId?.let { siteMap[it]?.name }) }
                     .also {
                             todayTobaccoCessation =
-                                it.firstOrNull { tobaccoCessation -> isToday(tobaccoCessation.appUpdatedDate) }?:it.firstOrNull()?.campaignId?.let {campaignId->
-                                    if (isCampaignActive(campaignId =campaignId )){
-                                        tobaccoCessationRepository.getLatestTobaccoCessationForCampaign(patientId,campaignId)
-                                    }else null
-                                }
+                                it.firstOrNull { tobaccoCessation -> isToday(tobaccoCessation.appUpdatedDate) }?:
+                                        it.firstOrNull { record -> record.campaignId != null && isCampaignActive(record.campaignId) }
                     }
             isLoading = false
         }

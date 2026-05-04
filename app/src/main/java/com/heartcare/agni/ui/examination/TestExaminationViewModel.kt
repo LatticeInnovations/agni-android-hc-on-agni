@@ -169,14 +169,9 @@ class TestExaminationViewModel @Inject constructor(
             testExaminationLists = examinationRepository.getExaminationListByAppointmentId(*allCombinedIds).map { record ->
                 record.copy(screeningSiteName = record.campaignId?.let { siteMap[it]?.name })
             }.also {
-                todayTestExamination = it.firstOrNull { examination -> isToday(examination.appUpdatedDate) }?:it.firstOrNull()?.campaignId?.let { campaignId ->
-                    if (isCampaignActive(campaignId)) {
-                        examinationRepository.getLatestExaminationForCampaign(
-                            patientId,
-                            campaignId
-                        )
-                    } else null
-                }
+                todayTestExamination = it.firstOrNull { examination -> isToday(examination.appUpdatedDate) }?:
+                        it.firstOrNull { record -> record.campaignId != null && isCampaignActive(record.campaignId) }
+
             }
 
 

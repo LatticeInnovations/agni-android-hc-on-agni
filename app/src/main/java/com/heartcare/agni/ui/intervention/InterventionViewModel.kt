@@ -171,14 +171,12 @@ class InterventionViewModel @Inject constructor(
                 record.copy(screeningSiteName = record.campaignId?.let { siteMap[it]?.name })
 
             }.also {
-                todayIntervention = it.firstOrNull { intervention -> isToday(intervention.appUpdatedDate) && intervention.campaignId == null }?:it.firstOrNull()?.campaignId?.let { campaignId ->
-                    if (isCampaignActive(campaignId)) {
-                        interventionRepository.getLatestInterventionForCampaign(
-                            patientId,
-                            campaignId
-                        )
-                    } else null
-                }
+                todayIntervention = it.firstOrNull { intervention -> isToday(intervention.appUpdatedDate) }?:
+                        it.firstOrNull { record -> record.campaignId != null && isCampaignActive(record.campaignId) }
+
+
+
+
             }
         }
     }

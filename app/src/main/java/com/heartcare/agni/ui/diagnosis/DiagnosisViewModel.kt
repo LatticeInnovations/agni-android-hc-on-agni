@@ -87,15 +87,9 @@ class DiagnosisViewModel @Inject constructor(
             diagnosisList = diagnosisRepository.getPastDiagnosisByAppointmentId(*allCombinedIds).map { dx ->
                 dx.copy(screeningSiteName = dx.campaignId?.let { siteMap[it]?.name })
             }.also {
-                todayDiagnosis = it.firstOrNull { dx -> isToday(dx.createdOn) }
-                    ?: it.firstOrNull()?.campaignId?.let { campaignId ->
-                        if (isCampaignActive(campaignId)) {
-                            diagnosisRepository.getLatestDiagnosisForCampaign(
-                                patientId,
-                                campaignId
-                            )
-                        } else null
-                    }
+                todayDiagnosis = it.firstOrNull { dx -> isToday(dx.createdOn) }?:
+                it.firstOrNull { record -> record.campaignId != null && isCampaignActive(record.campaignId) }
+
             }
         }
     }

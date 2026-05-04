@@ -132,7 +132,7 @@ class PrescriptionViewModel @Inject constructor(
             val appointmentIds = getInProgressCompletedAppointmentIds(patientId, appointmentRepository)
             val screenSiteAppointmentIds = Queries.getScreenSiteAppointmentIds(patientId, appointmentRepository)
             val allCombinedIds = (screenSiteAppointmentIds + appointmentIds).toTypedArray()
-            
+
             previousPrescriptionList = prescriptionRepository.getLastPrescriptionAndMedicineByAppointmentId(*allCombinedIds).map { relation ->
                 relation.copy(
                     prescriptionEntity = relation.prescriptionEntity.copy(
@@ -146,14 +146,8 @@ class PrescriptionViewModel @Inject constructor(
                 todayPrescription =null
                 selectedMedicationsList = emptyList()
                 medicationsResponseWithMedicationList = emptyList()
-                previousPrescriptionList.firstOrNull()?.prescriptionEntity?.campaignId?.let { campaignId ->
-                    if (isCampaignActive(campaignId)) {
-                        prescriptionRepository.getLatestPrescriptionForCampaign(
-                            patientId,
-                            campaignId
-                        )
-                    } else null
-                }
+                previousPrescriptionList.firstOrNull { record -> record.prescriptionEntity.campaignId != null && isCampaignActive(record.prescriptionEntity.campaignId) }
+
             }
             setTodayData()
         }
