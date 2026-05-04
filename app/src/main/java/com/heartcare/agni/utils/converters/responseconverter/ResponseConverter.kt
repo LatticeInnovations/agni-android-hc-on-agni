@@ -22,6 +22,7 @@ import com.heartcare.agni.data.local.roomdb.dao.RiskPredictionDao
 import com.heartcare.agni.data.local.roomdb.dao.ScheduleDao
 import com.heartcare.agni.data.local.roomdb.entities.allergy.AllergyEntity
 import com.heartcare.agni.data.local.roomdb.entities.appointment.AppointmentEntity
+import com.heartcare.agni.data.local.roomdb.entities.appointment.AppointmentEntityWithToken
 import com.heartcare.agni.data.local.roomdb.entities.campaign.CampaignAppointmentEntity
 import com.heartcare.agni.data.local.roomdb.entities.campaign.CampaignScheduleEntity
 import com.heartcare.agni.data.local.roomdb.entities.campaign.ScreeningSiteMasterEntity
@@ -53,6 +54,7 @@ import com.heartcare.agni.data.local.roomdb.entities.prescription.PrescriptionDi
 import com.heartcare.agni.data.local.roomdb.entities.prescription.PrescriptionEntity
 import com.heartcare.agni.data.local.roomdb.entities.priordx.PriorDxEntity
 import com.heartcare.agni.data.local.roomdb.entities.referral.ReferralEntity
+import com.heartcare.agni.data.local.roomdb.entities.report.ReportTokenEntity
 import com.heartcare.agni.data.local.roomdb.entities.risk.AlcoholEntity
 import com.heartcare.agni.data.local.roomdb.entities.risk.FatAndOilEntity
 import com.heartcare.agni.data.local.roomdb.entities.risk.FruitsVegetablesEntity
@@ -92,6 +94,7 @@ import com.heartcare.agni.data.server.model.prescription.medication.MedicineTime
 import com.heartcare.agni.data.server.model.prescription.prescriptionresponse.PrescriptionResponse
 import com.heartcare.agni.data.server.model.priordx.PriorDxResponse
 import com.heartcare.agni.data.server.model.referral.ReferralResponse
+import com.heartcare.agni.data.server.model.report.ReportTokenResponse
 import com.heartcare.agni.data.server.model.risk.AlcoholResponse
 import com.heartcare.agni.data.server.model.risk.FatAndOilResponse
 import com.heartcare.agni.data.server.model.risk.FruitsVegetablesResponse
@@ -503,6 +506,35 @@ internal fun AppointmentEntity.toAppointmentResponseLocal(): AppointmentResponse
         campaignId = null,
         recordType = RecordType.FACILITY
     )
+}
+
+internal fun AppointmentEntityWithToken.toAppointmentResponseLocal(): AppointmentResponseLocal {
+    return appointmentEntity.run {
+        AppointmentResponseLocal(
+            uuid = id,
+            createdOn = createdOn,
+            appointmentId = appointmentFhirId,
+            patientId = patientId,
+            scheduleId = scheduleId,
+            slot = Slot(
+                start = startTime,
+                end = endTime
+            ),
+            status = status,
+            appointmentType = appointmentType,
+            inProgressTime = inProgressTime,
+            roleId = roleId,
+            slotId = slotId,
+            practitionerId = practitionerId,
+            hospitalFhirId = hospitalFhirId,
+            hospitalId = hospitalId,
+            hospitalName = hospitalName,
+            hospitalCode = hospitalCode,
+            campaignId = null,
+            recordType = RecordType.FACILITY,
+            reportToken = reportTokenEntity?.token
+        )
+    }
 }
 
 internal fun CampaignAppointmentEntity.toAppointmentResponseLocal(): AppointmentResponseLocal {
@@ -1754,5 +1786,14 @@ fun HealthFacilityEntity.toLevelResponse(): LevelResponse {
         precedingLevelId = islandId,
         secondaryName = null,
         status = "active"
+    )
+}
+
+suspend fun ReportTokenResponse.toReportTokenEntity(
+    appointmentDao: AppointmentDao
+): ReportTokenEntity {
+    return ReportTokenEntity(
+        appointmentId = appointmentDao.getAppointmentIdByFhirId(appointmentId),
+        token = token
     )
 }

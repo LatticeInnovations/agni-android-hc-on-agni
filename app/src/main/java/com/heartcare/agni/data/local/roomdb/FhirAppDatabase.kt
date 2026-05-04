@@ -67,6 +67,7 @@ import com.heartcare.agni.data.local.roomdb.entities.vitals.VitalEntity
 import com.heartcare.agni.data.local.roomdb.entities.campaign.CampaignAppointmentEntity
 import com.heartcare.agni.data.local.roomdb.entities.campaign.CampaignScheduleEntity
 import com.heartcare.agni.data.local.roomdb.entities.campaign.ScreeningSiteMasterEntity
+import com.heartcare.agni.data.local.roomdb.entities.report.ReportTokenEntity
 import com.heartcare.agni.data.local.roomdb.typeconverters.DiagnosisTypeConverter
 import com.heartcare.agni.data.local.roomdb.typeconverters.TypeConverter
 import com.heartcare.agni.data.local.roomdb.views.PrescriptionDirectionAndMedicineView
@@ -109,7 +110,8 @@ import java.util.UUID
         HealthFacilityEntity::class,
         ScreeningSiteMasterEntity::class,
         CampaignScheduleEntity::class,
-        CampaignAppointmentEntity::class
+        CampaignAppointmentEntity::class,
+        ReportTokenEntity::class
     ],
     views = [PrescriptionDirectionAndMedicineView::class],
     version = 3,

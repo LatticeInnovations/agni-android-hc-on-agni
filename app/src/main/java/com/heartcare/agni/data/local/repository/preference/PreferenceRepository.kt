@@ -170,6 +170,10 @@ interface PreferenceRepository {
     fun setScreeningSiteSeeded(isSeeded: Boolean)
     fun isScreeningSiteSeeded(): Boolean
 
+    /** Last ReportToken Sync Date */
+    fun setLastSyncReportToken(long: Long)
+    fun getLastSyncReportToken(): Long
+
     /** RoomDB EncryptionKey */
     fun setRoomDBEncryptionKey(encryptionKey: String)
     fun getRoomDBEncryptionKey(): String

@@ -7,6 +7,8 @@ import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Update
 import com.heartcare.agni.data.local.roomdb.entities.appointment.AppointmentEntity
+import com.heartcare.agni.data.local.roomdb.entities.appointment.AppointmentEntityWithToken
+import com.heartcare.agni.data.local.roomdb.entities.report.ReportTokenEntity
 
 @Dao
 interface AppointmentDao {
@@ -48,7 +50,7 @@ interface AppointmentDao {
     @Query("SELECT * FROM AppointmentEntity WHERE patientId=:patientId AND status<>\"cancelled\" ORDER BY startTime DESC")
     suspend fun getAppointmentsOfPatient(
         patientId: String
-    ): List<AppointmentEntity>
+    ): List<AppointmentEntityWithToken>
 
     @Transaction
     @Update(onConflict = OnConflictStrategy.REPLACE)
@@ -70,4 +72,8 @@ interface AppointmentDao {
     suspend fun getLastCompletedAppointment(
         patientId: String
     ): AppointmentEntity?
+
+    // appointment report token
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    fun insertReportToken(vararg reportTokenEntity: ReportTokenEntity): List<Long>
 }

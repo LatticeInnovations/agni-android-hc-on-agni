@@ -27,5 +27,6 @@ data class AppointmentResponseLocal(
     val hospitalName: String?,
     val hospitalCode: String?,
     val campaignId: String? = null,
-    val recordType: RecordType? = RecordType.FACILITY
+    val recordType: RecordType? = RecordType.FACILITY,
+    val reportToken: String? = null
 ) : Parcelable

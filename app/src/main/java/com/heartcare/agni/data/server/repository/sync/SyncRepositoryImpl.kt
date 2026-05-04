@@ -86,6 +86,7 @@ import com.heartcare.agni.data.server.model.scheduleandappointment.schedule.Sche
 import com.heartcare.agni.data.server.model.tobacco.TobaccoCessationResponse
 import com.heartcare.agni.data.server.model.vitals.VitalResponse
 import com.heartcare.agni.data.server.model.campaign.ScreeningSiteMasterResponse
+import com.heartcare.agni.data.server.model.report.ReportTokenResponse
 import com.heartcare.agni.utils.constants.ErrorConstants.ERROR_FETCHING_USER_DETAILS
 import com.heartcare.agni.utils.constants.ErrorConstants.SOMETHING_WENT_WRONG
 import com.heartcare.agni.utils.constants.FirebaseKeyConstants.USER_ID
@@ -3252,6 +3253,58 @@ class SyncRepositoryImpl @Inject constructor(
             crashlyticsLogger.logException(
                 e,
                 "getAndInsertReferralData function failed.",
+                mapOf(
+                    Pair(
+                        USER_ID,
+                        preferenceRepository.getUserDetails()?.userId ?: ERROR_FETCHING_USER_DETAILS
+                    )
+                )
+            )
+            ApiErrorResponse(
+                statusCode = 0,
+                errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
+            )
+        }
+    }
+
+    override suspend fun getAndInsertReportTokenData(
+        offset: Int
+    ): ResponseMapper<List<ReportTokenResponse>> {
+        val map = mutableMapOf<String, String>()
+        map[COUNT] = COUNT_VALUE.toString()
+        map[OFFSET] = offset.toString()
+        map[SORT] = "-$ID"
+        if (preferenceRepository.getLastSyncReportToken() != 0L) map[LAST_UPDATED] = String.format(
+            GREATER_THAN_BUILDER, preferenceRepository.getLastSyncReportToken().toTimeStampDate()
+        )
+
+        return try {
+            ApiResponseConverter.convert(
+                scheduleAndAppointmentApiService.getAppointmentReportToken(
+                    map
+                ), true
+            ).run {
+                when (this) {
+                    is ApiContinueResponse -> {
+                        insertReportToken(body)
+                        //Call for next batch data
+                        getAndInsertReportTokenData(offset + COUNT_VALUE)
+                    }
+
+                    is ApiEndResponse -> {
+                        insertReportToken(body)
+                        preferenceRepository.setLastSyncReportToken(Date().time)
+                        this
+                    }
+
+                    else -> this
+                }
+            }
+        } catch (e: Exception) {
+            Timber.e(e, e.localizedMessage)
+            crashlyticsLogger.logException(
+                e,
+                "getAndInsertReportTokenData function failed.",
                 mapOf(
                     Pair(
                         USER_ID,

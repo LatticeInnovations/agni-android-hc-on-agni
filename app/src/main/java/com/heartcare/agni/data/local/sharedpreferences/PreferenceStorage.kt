@@ -60,6 +60,7 @@ interface PreferenceStorage {
     var lastSyncReferral: Long
     var lastSyncScreeningSiteMaster: Long
     var isScreeningSiteSeeded: Boolean
+    var lastSyncReportToken: Long
 
     fun clear()
 }

@@ -229,6 +229,11 @@ class PreferenceStorageImpl(private val sharedPreferences: SharedPreferences) : 
         PREF_IS_SCREENING_SITE_SEEDED,
         false
     )
+    override var lastSyncReportToken by LongPreference(
+        sharedPreferences,
+        PREF_LAST_REPORT_TOKEN_SYNC_TIME,
+        0L
+    )
 
     override fun clear() {
         sharedPreferences.edit {
@@ -288,5 +293,6 @@ class PreferenceStorageImpl(private val sharedPreferences: SharedPreferences) : 
         const val PREF_LAST_CAMPAIGN_FAMILY_HISTORY_SYNC_TIME = "pref_last_campaign_family_history_sync_time"
         const val PREF_LAST_CAMPAIGN_EXAMINATION_SYNC_TIME = "pref_last_campaign_examination_sync_time"
         const val PREF_IS_SCREENING_SITE_SEEDED = "pref_is_screening_site_seeded"
+        const val PREF_LAST_REPORT_TOKEN_SYNC_TIME = "pref_last_report_token_sync_time"
     }
 }

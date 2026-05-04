@@ -530,7 +530,9 @@ class SyncService(
                         examinationPatchJob.await()
                         downloadExamination(logout)
                     },
-                    async { downloadReferral(logout) }
+                    async { downloadReferral(logout) },
+                    // TODO: uncomment after campaign binding
+                    //async { downloadReportToken(logout) }
                 )
                 jobs.awaitAll()
             }
@@ -809,14 +811,18 @@ class SyncService(
 
     /** Download Referral Data */
     private suspend fun downloadReferral(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
-        val response = healthFacilityDownloadJob.await()
-        return when (response) {
+        return when (val response = healthFacilityDownloadJob.await()) {
             is ApiEndResponse, is ApiEmptyResponse -> {
                 checkAuthenticationStatus(syncRepository.getAndInsertReferralData(0), logout)
             }
 
             else -> response
         }
+    }
+
+    /** Download Report Token */
+    private suspend fun downloadReportToken(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
+        return checkAuthenticationStatus(syncRepository.getAndInsertReportTokenData(0), logout)
     }
 
     /**

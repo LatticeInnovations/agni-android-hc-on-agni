@@ -8,7 +8,6 @@ import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toddM
 import com.heartcare.agni.utils.converters.responseconverter.toAppointmentEntity
 import com.heartcare.agni.utils.converters.responseconverter.toAppointmentResponseLocal
 import javax.inject.Inject
-
 import com.heartcare.agni.data.local.roomdb.dao.CampaignAppointmentDao
 import com.heartcare.agni.utils.converters.responseconverter.*
 
