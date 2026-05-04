@@ -89,7 +89,7 @@ fun PatientRegistrationPreview(
                         )
                         navController.previousBackStackEntry?.savedStateHandle?.set(
                             "currentStep",
-                            3
+                            2
                         )
                         navController.previousBackStackEntry?.savedStateHandle?.set(
                             "patient_register_details",

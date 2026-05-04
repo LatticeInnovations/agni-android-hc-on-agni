@@ -34,7 +34,6 @@ import com.heartcare.agni.ui.login.pin.PinScreen
 import com.heartcare.agni.ui.login.userpassword.UserPasswordScreen
 import com.heartcare.agni.ui.patienteditscreen.address.EditPatientAddress
 import com.heartcare.agni.ui.patienteditscreen.basicinfo.EditBasicInformation
-import com.heartcare.agni.ui.patienteditscreen.identification.EditIdentification
 import com.heartcare.agni.ui.patientlandingscreen.PatientLandingScreen
 import com.heartcare.agni.ui.patientprofile.PatientProfile
 import com.heartcare.agni.ui.patientregistration.PatientRegistration
@@ -68,7 +67,6 @@ fun NavigationAppHost(navController: NavController, startDest: String) {
         composable(Screen.Prescription.route) { PrescriptionScreen(navController = navController) }
         composable(Screen.PatientProfile.route) { PatientProfile(navController = navController) }
         composable(Screen.EditBasicInfo.route) { EditBasicInformation(navController = navController) }
-        composable(Screen.EditIdentification.route) { EditIdentification(navController = navController) }
         composable(Screen.EditAddress.route) { EditPatientAddress(navController = navController) }
         composable(Screen.Appointments.route) { AppointmentsScreen(navController = navController) }
         composable(Screen.ScheduleAppointments.route) { ScheduleAppointments(navController = navController) }

@@ -71,6 +71,7 @@ interface SyncRepository {
     suspend fun getAndInsertExaminationData(offset: Int): ResponseMapper<List<ExaminationResponse>>
     suspend fun getAndInsertCampaignExaminationData(offset: Int): ResponseMapper<List<ExaminationResponse>>
     suspend fun getAndInsertReferralData(offset: Int): ResponseMapper<List<ReferralResponse>>
+    suspend fun getAndSaveNationalIdData(): ResponseMapper<Nothing>
 
     //POST
     suspend fun sendPersonPostData(): ResponseMapper<List<CreateResponse>>

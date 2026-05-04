@@ -67,7 +67,8 @@ class SyncService(
                     async { downloadMedication(logout) },
                     async { downloadInterventionMasterList(logout) },
                     async { downloadExaminationMasterList(logout) },
-                    async { downloadScreeningSiteMasterList(logout) }
+                    async { downloadScreeningSiteMasterList(logout) },
+                    async { downloadNationalIdData(logout) }
                 )
             }
         }
@@ -628,6 +629,11 @@ class SyncService(
     /** Download Screening Site Master */
     internal suspend fun downloadScreeningSiteMasterList(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
         return checkAuthenticationStatus(syncRepository.getAndInsertScreeningSiteMaster(), logout)
+    }
+
+    /** Download National Id Data */
+    internal suspend fun downloadNationalIdData(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
+        return checkAuthenticationStatus(syncRepository.getAndSaveNationalIdData(), logout)
     }
 
     /** Download Medication Timing */

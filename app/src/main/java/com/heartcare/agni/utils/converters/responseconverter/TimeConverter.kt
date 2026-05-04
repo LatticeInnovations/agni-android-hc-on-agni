@@ -155,6 +155,16 @@ object TimeConverter {
         return formatter.format(this)
     }
 
+    fun Date.toFullMonth(): String {
+        val formatter = SimpleDateFormat("MMMM", Locale.getDefault())
+        return formatter.format(this)
+    }
+
+    fun Date.toDay(): String {
+        val formatter = SimpleDateFormat("dd", Locale.getDefault())
+        return formatter.format(this)
+    }
+
     internal fun String.toMonthInteger(): Int {
         val inputFormatter = SimpleDateFormat("MMM", Locale.getDefault())
         val currentMonth = inputFormatter.parse(this)
