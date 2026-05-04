@@ -698,7 +698,7 @@ open class SyncRepositoryDatabaseTransactions(
 
     protected suspend fun insertIntervention(body: List<InterventionResponse>) {
         interventionDao.insertIntervention(
-            *body.map { it.toInterventionEntity(patientDao, appointmentDao) }.toTypedArray()
+            *body.map { it.toInterventionEntity(patientDao, appointmentDao, campaignAppointmentDao) }.toTypedArray()
         )
     }
 

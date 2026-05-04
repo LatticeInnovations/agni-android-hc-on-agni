@@ -12,5 +12,7 @@ data class InterventionResponse(
     val patientId: String,
     val practitionerId: String?,
     val practitionerName: String?,
-    val interventions: List<String>
+    val interventions: List<String>,
+    val campaignId: String? = null,
+    val screeningSiteName: String? = null
 )

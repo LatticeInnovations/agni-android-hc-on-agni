@@ -10,4 +10,7 @@ interface InterventionRepository {
     suspend fun getInterventionMasterByFhirId(fhirId: String): InterventionMasterResponse
     suspend fun insertIntervention(vararg interventionResponse: InterventionResponse): List<Long>
     suspend fun getInterventionListByAppointmentId(vararg appointmentIds: String): List<InterventionResponseLocal>
+
+    suspend fun getLatestInterventionForCampaign(patientId: String, campaignId: String): InterventionResponseLocal?
+
 }

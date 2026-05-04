@@ -30,6 +30,10 @@ interface ExaminationDao {
     @Query("SELECT * FROM ExaminationEntity WHERE (appointmentId IN (:appointmentIds) OR campaignAppointmentId IN (:appointmentIds)) ORDER BY appUpdatedDate DESC")
     suspend fun getExaminationsByAppointmentId(vararg appointmentIds: String): List<ExaminationEntity>
 
+    @Transaction
+    @Query("SELECT * FROM ExaminationEntity WHERE patientId = :patientId AND campaignId = :campaignId ORDER BY appUpdatedDate DESC LIMIT 1")
+    suspend fun getLatestExaminationForCampaign(patientId: String, campaignId: String): ExaminationEntity?
+
     @Query("UPDATE ExaminationEntity SET fhirId = :fhirId WHERE uuid = :id")
     suspend fun updateFhirId(id: String, fhirId: String): Int
 

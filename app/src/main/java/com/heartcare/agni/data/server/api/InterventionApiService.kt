@@ -10,6 +10,7 @@ import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.PUT
+import retrofit2.http.Path
 import retrofit2.http.QueryMap
 
 @JvmSuppressWildcards
@@ -18,12 +19,21 @@ interface InterventionApiService {
     @GET("$INTERVENTION/master")
     suspend fun getInterventionMasterList(@QueryMap(encoded = true) map: Map<String, String>?): Response<BaseResponse<List<InterventionMasterResponse>>>
 
-    @GET(INTERVENTION)
-    suspend fun getInterventions(@QueryMap(encoded = true) map: Map<String, String>?): Response<BaseResponse<List<InterventionResponse>>>
+    @GET("{endPoint}")
+    suspend fun getInterventions(
+        @Path("endPoint") endPoint: String,
+        @QueryMap(encoded = true) map: Map<String, String>?
+    ): Response<BaseResponse<List<InterventionResponse>>>
 
-    @POST(INTERVENTION)
-    suspend fun postIntervention(@Body interventionResponse: List<InterventionResponse>): Response<BaseResponse<List<CreateResponse>>>
+    @POST("{endPoint}")
+    suspend fun postIntervention(
+        @Path("endPoint") endPoint: String,
+        @Body interventionResponse: List<InterventionResponse>
+    ): Response<BaseResponse<List<CreateResponse>>>
 
-    @PUT(INTERVENTION)
-    suspend fun putIntervention(@Body interventionResponse: List<InterventionResponse>): Response<BaseResponse<List<CreateResponse>>>
+    @PUT("{endPoint}")
+    suspend fun putIntervention(
+        @Path("endPoint") endPoint: String,
+        @Body interventionResponse: List<InterventionResponse>
+    ): Response<BaseResponse<List<CreateResponse>>>
 }

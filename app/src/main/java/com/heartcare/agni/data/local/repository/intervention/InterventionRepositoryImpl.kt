@@ -34,4 +34,11 @@ class InterventionRepositoryImpl @Inject constructor(
     override suspend fun getInterventionListByAppointmentId(vararg appointmentIds: String): List<InterventionResponseLocal> {
         return interventionDao.getInterventionsByAppointmentId(*appointmentIds).map { it.toInterventionResponseLocal(interventionDao) }
     }
+
+    override suspend fun getLatestInterventionForCampaign(
+        patientId: String,
+        campaignId: String
+    ): InterventionResponseLocal? {
+        return interventionDao.getLatestInterventionForCampaign(patientId, campaignId)?.toInterventionResponseLocal(interventionDao)
+    }
 }

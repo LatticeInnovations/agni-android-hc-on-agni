@@ -1567,7 +1567,9 @@ fun InterventionResponse.toInterventionEntity(): InterventionEntity {
         uuid = uuid!!,
         fhirId = fhirId,
         appUpdatedDate = appUpdatedDate,
-        appointmentId = appointmentId,
+        appointmentId = if (campaignId == null) appointmentId else null,
+        campaignAppointmentId = if (campaignId != null) appointmentId else null,
+        campaignId = campaignId,
         patientId = patientId,
         practitionerId = practitionerId!!,
         practitionerName = practitionerName!!,
@@ -1577,10 +1579,12 @@ fun InterventionResponse.toInterventionEntity(): InterventionEntity {
 
 suspend fun InterventionResponse.toInterventionEntity(
     patientDao: PatientDao,
-    appointmentDao: AppointmentDao
+    appointmentDao: AppointmentDao,
+    campaignAppointmentDao: CampaignAppointmentDao
 ): InterventionEntity {
     return this.toInterventionEntity().copy(
-        appointmentId = appointmentDao.getAppointmentIdByFhirId(appointmentId),
+        appointmentId = if (campaignId == null) appointmentDao.getAppointmentIdByFhirId(appointmentId) else null,
+        campaignAppointmentId = if (campaignId != null) campaignAppointmentDao.getAppointmentIdByFhirId(appointmentId) else null,
         patientId = patientDao.getPatientIdByFhirId(patientId)!!,
     )
 }
@@ -1592,7 +1596,7 @@ suspend fun InterventionEntity.toInterventionResponseLocal(
         uuid = uuid,
         fhirId = fhirId,
         appUpdatedDate = appUpdatedDate,
-        appointmentId = appointmentId,
+        appointmentId = (appointmentId ?: campaignAppointmentId)!!,
         patientId = patientId,
         practitionerId = practitionerId,
         practitionerName = practitionerName,
@@ -1603,7 +1607,8 @@ suspend fun InterventionEntity.toInterventionResponseLocal(
                 code = intervention.code,
                 display = intervention.name
             )
-        }
+        },
+        campaignId = campaignId,
     )
 }
 
@@ -1661,11 +1666,10 @@ suspend fun ExaminationEntity.toExaminationResponseLocal(
         uuid = uuid,
         fhirId = fhirId,
         appUpdatedDate = appUpdatedDate,
-        appointmentId = (if (campaignId.isNullOrEmpty()) appointmentId else campaignAppointmentId) ?: "",
+        appointmentId = (appointmentId ?: campaignAppointmentId)!!,
         patientId = patientId,
         practitionerId = practitionerId,
         practitionerName = practitionerName,
-        campaignId = campaignId,
         examinations = examinations.map { fhirId ->
             val examination = examinationDao.getExaminationByFhirId(fhirId)
             ExaminationItem(
@@ -1673,7 +1677,8 @@ suspend fun ExaminationEntity.toExaminationResponseLocal(
                 code = examination.code,
                 display = examination.name
             )
-        }
+        },
+        campaignId = campaignId
     )
 }
 
