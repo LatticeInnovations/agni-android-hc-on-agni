@@ -270,7 +270,7 @@ private fun TabDropDownComposable(viewModel: ReportsViewModel) {
                 label = "",
                 dropdownList = viewModel.campaignOptions,
                 itemToString = { it.name},
-                errorText = stringResource(R.string.required),
+                errorText = stringResource(R.string.select_entity_to_view_data, "a screening site"),
                 isMandatory = true,
                 dropdownWeight = .92f
             )
@@ -351,7 +351,7 @@ private fun TabDropDownComposable(viewModel: ReportsViewModel) {
                 },
                 label = "",
                 dropdownList = viewModel.facilityOptions,
-                errorText = stringResource(R.string.health_facility_required),
+                errorText = stringResource(R.string.select_entity_to_view_data, "a facility"),
                 isMandatory = true,
                 isEnabled = true
             )
@@ -386,7 +386,7 @@ private fun TabDropDownComposable(viewModel: ReportsViewModel) {
                     },
                     label = "",
                     dropdownList = viewModel.divisionOptions,
-                    errorText = stringResource(R.string.required),
+                    errorText = stringResource(R.string.select_entity_to_view_data, "a division"),
                     isMandatory = true,
                     isEnabled = true
                 )

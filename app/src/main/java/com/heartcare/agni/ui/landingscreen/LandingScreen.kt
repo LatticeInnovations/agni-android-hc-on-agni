@@ -240,13 +240,14 @@ fun LandingScreen(
                         title = { Text("Reports", style = MaterialTheme.typography.titleLarge, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth()) },
 
                         actions = {
-                            if (reportsViewModel.showSummary()) {
-                                IconButton(onClick = { viewModel.showDownloadSheet = true }) {
-                                    Icon(
-                                        painter = painterResource(id = R.drawable.file_download),
-                                        contentDescription = "Download"
-                                    )
-                                }
+                            IconButton(
+                                onClick = { viewModel.showDownloadSheet = true },
+                                enabled = reportsViewModel.showSummary()
+                            ) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.file_download),
+                                    contentDescription = "Download"
+                                )
                             }
                         },
                         colors = TopAppBarDefaults.topAppBarColors(

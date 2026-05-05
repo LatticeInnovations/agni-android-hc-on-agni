@@ -530,5 +530,5 @@
 
     <string name="duplicate_campaign_record_error">Record already exists for the campaign</string>
     <string name="qr_not_generated_yet">QR is not generated yet.</string>
-    <string name="required">Required</string>
+    <string name="select_entity_to_view_data">Please select %s to view data</string>
 </resources>

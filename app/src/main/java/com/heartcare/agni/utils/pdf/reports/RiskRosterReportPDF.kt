@@ -12,8 +12,8 @@ import com.heartcare.agni.utils.pdf.reports.CommonPDFComponents.reportFooterSect
 import com.heartcare.agni.utils.pdf.reports.CommonPDFComponents.reportHeaderSection
 import com.heartcare.agni.utils.pdf.reports.CommonPDFComponents.reportPdfCss
 
-object RiskRoasterReportPDF {
-    fun getRiskRoasterReportHTML(
+object RiskRosterReportPDF {
+    fun getRiskRosterReportHTML(
         metaData: String,
         currentState: ReportUiState,
         footerData: String
@@ -23,12 +23,12 @@ object RiskRoasterReportPDF {
             <html lang="en">
             <head>
               <meta charset="UTF-8">
-              <title>Risk Roaster Report</title>
+              <title>Risk Roster Report</title>
               <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
               ${reportPdfCss()}
             </head>
             <body>
-                ${reportHeaderSection(title = "Risk Roaster Report", metaData, currentState)}
+                ${reportHeaderSection(title = "Risk Roster Report", metaData, currentState)}
                 ${getHighRiskPatientsSection(
                     stats = currentState.patientAndCVD
                         .filter { it.second.risk >= 20 }
@@ -39,7 +39,7 @@ object RiskRoasterReportPDF {
                         .filter { it.second.risk in 10..19 }
                         .toRiskRoasterRows()
                 )}
-                ${reportFooterSection(title = "Risk Roaster Report - $footerData")}
+                ${reportFooterSection(title = "Risk Roster Report - $footerData")}
             </body>
             </html>
         """.trimIndent()
