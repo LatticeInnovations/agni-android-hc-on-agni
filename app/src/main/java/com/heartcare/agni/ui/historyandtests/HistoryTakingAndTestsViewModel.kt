@@ -136,7 +136,7 @@ class HistoryTakingAndTestsViewModel @Inject constructor(
             existsInOtherHospital = info.existsInOtherHospital
             canAddAssessment = info.canAddAssessment
             isAppointmentCompleted = info.isAppointmentCompleted
-            ifAllSlotsBooked = info.isAppointmentCompleted
+            ifAllSlotsBooked = info.ifAllSlotsBooked
             callback()
         }
     }
