@@ -143,13 +143,14 @@ class PrescriptionViewModel @Inject constructor(
             }
             todayPrescription = if (selectedCampaignId ==null) {
                 previousPrescriptionList.firstOrNull { isToday(it.prescriptionEntity.prescriptionDate) && it.prescriptionEntity.campaignId==null }
-            }else {
+            }else if ( selectedCampaignId!=null) {
                 todayPrescription =null
                 selectedMedicationsList = emptyList()
                 medicationsResponseWithMedicationList = emptyList()
-                previousPrescriptionList.firstOrNull { record -> record.prescriptionEntity.campaignId != null && isCampaignActive(screeningSiteRepository,record.prescriptionEntity.campaignId) }
+                previousPrescriptionList.firstOrNull { record -> record.prescriptionEntity.campaignId == selectedCampaignId && isCampaignActive(screeningSiteRepository, selectedCampaignId!!
+                ) }
 
-            }
+            } else null
             setTodayData()
         }
     }
