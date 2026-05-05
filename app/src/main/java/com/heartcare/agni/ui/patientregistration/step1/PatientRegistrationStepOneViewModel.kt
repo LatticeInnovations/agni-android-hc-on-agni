@@ -14,14 +14,18 @@ import com.heartcare.agni.data.local.repository.nationalId.NationalIdRepository
 import com.heartcare.agni.data.server.model.nationalId.NationalIdResponse
 import com.heartcare.agni.di.dispatcher.IoDispatcher
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter
+import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.ageToPatientDate
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toDay
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toFullMonth
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toMonthInteger
+import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toPatientDate
+import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toTimeInMilli
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toYear
 import com.heartcare.agni.utils.regex.PhoneNumberRegex.phoneNumberRegex
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.launch
+import java.util.Date
 import javax.inject.Inject
 
 @HiltViewModel
@@ -206,5 +210,17 @@ class PatientRegistrationStepOneViewModel @Inject constructor(
             record.gender,
             ignoreCase = true
         )
+    }
+
+    fun verifyAgeWithNationalID(): Boolean {
+        val record = verifiedRecord ?: return false
+        val dob = Date(
+            ageToPatientDate(
+                years.toIntOrNull() ?: 0,
+                months.toIntOrNull() ?: 0,
+                days.toIntOrNull() ?: 0
+            ).toPatientDate().toTimeInMilli()
+        )
+        return dob == record.dob
     }
 }

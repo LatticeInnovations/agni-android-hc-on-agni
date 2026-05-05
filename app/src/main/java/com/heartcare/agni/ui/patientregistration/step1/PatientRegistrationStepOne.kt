@@ -331,6 +331,7 @@ private fun DOBAndAgeFields(viewModel: PatientRegistrationStepOneViewModel) {
                 viewModel.days = ""
                 viewModel.months = ""
                 viewModel.years = ""
+                viewModel.isNationalIdVerified = false
             }
             Spacer(modifier = Modifier.width(10.dp))
             CustomFilterChip(viewModel.dobAgeSelector, "age", "Age") {
@@ -532,6 +533,9 @@ private fun AgeDaysComposable(viewModel: PatientRegistrationStepOneViewModel) {
         if (it.matches(viewModel.onlyNumbers) || it.isEmpty()) {
             viewModel.days = it
             viewModel.isDOBAgeBlank = false
+            if (viewModel.verifiedRecord != null) {
+                viewModel.isNationalIdVerified = viewModel.verifyAgeWithNationalID()
+            }
         }
         if (viewModel.days.isNotEmpty()) viewModel.isAgeDaysValid = viewModel.days.toInt() !in 1..30
     }
@@ -554,6 +558,9 @@ private fun AgeMonthsComposable(viewModel: PatientRegistrationStepOneViewModel) 
         if (it.matches(viewModel.onlyNumbers) || it.isEmpty()) {
             viewModel.months = it
             viewModel.isDOBAgeBlank = false
+            if (viewModel.verifiedRecord != null) {
+                viewModel.isNationalIdVerified = viewModel.verifyAgeWithNationalID()
+            }
         }
         if (viewModel.months.isNotEmpty()) viewModel.isAgeMonthsValid =  viewModel.months.toInt() !in 1..11
     }
@@ -576,6 +583,9 @@ private fun AgeYearsComposable(viewModel: PatientRegistrationStepOneViewModel) {
         if (it.matches(viewModel.onlyNumbers) || it.isEmpty()) {
             viewModel.years = it
             viewModel.isDOBAgeBlank = false
+            if (viewModel.verifiedRecord != null) {
+                viewModel.isNationalIdVerified = viewModel.verifyAgeWithNationalID()
+            }
         }
         if (viewModel.years.isNotEmpty()) viewModel.isAgeYearsValid = viewModel.years.toInt() !in 0..150
     }

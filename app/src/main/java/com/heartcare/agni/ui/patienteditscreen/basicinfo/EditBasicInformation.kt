@@ -213,6 +213,7 @@ fun EditBasicInformation(
                                 viewModel.days = ""
                                 viewModel.months = ""
                                 viewModel.years = ""
+                                viewModel.isNationalIdVerified = false
                             }
                             Spacer(modifier = Modifier.width(10.dp))
                             CustomFilterChip(viewModel.dobAgeSelector, "age", "Age") {
@@ -680,7 +681,12 @@ private fun AgeDaysComposable(viewModel: EditBasicInformationViewModel) {
         KeyboardType.Number,
         KeyboardCapitalization.None
     ) {
-        if (it.matches(viewModel.onlyNumbers) || it.isEmpty()) viewModel.days = it
+        if (it.matches(viewModel.onlyNumbers) || it.isEmpty()) {
+            viewModel.days = it
+            if (viewModel.verifiedRecord != null) {
+                viewModel.isNationalIdVerified = viewModel.verifyAgeWithNationalID()
+            }
+        }
         if (viewModel.days.isNotEmpty()) viewModel.isAgeDaysValid =
             viewModel.days.toInt() < 1 || viewModel.days.toInt() > 30
     }
@@ -700,7 +706,12 @@ private fun AgeMonthsComposable(viewModel: EditBasicInformationViewModel) {
         KeyboardType.Number,
         KeyboardCapitalization.None
     ) {
-        if (it.matches(viewModel.onlyNumbers) || it.isEmpty()) viewModel.months = it
+        if (it.matches(viewModel.onlyNumbers) || it.isEmpty()) {
+            viewModel.months = it
+            if (viewModel.verifiedRecord != null) {
+                viewModel.isNationalIdVerified = viewModel.verifyAgeWithNationalID()
+            }
+        }
         if (viewModel.months.isNotEmpty()) viewModel.isAgeMonthsValid =
             viewModel.months.toInt() < 1 || viewModel.months.toInt() > 11
     }
@@ -720,7 +731,12 @@ private fun AgeYearsComposable(viewModel: EditBasicInformationViewModel) {
         KeyboardType.Number,
         KeyboardCapitalization.None
     ) {
-        if (it.matches(viewModel.onlyNumbers) || it.isEmpty()) viewModel.years = it
+        if (it.matches(viewModel.onlyNumbers) || it.isEmpty()) {
+            viewModel.years = it
+            if (viewModel.verifiedRecord != null) {
+                viewModel.isNationalIdVerified = viewModel.verifyAgeWithNationalID()
+            }
+        }
         if (viewModel.years.isNotEmpty()) viewModel.isAgeYearsValid =
             viewModel.years.toInt() < 0 || viewModel.years.toInt() > 150
     }
