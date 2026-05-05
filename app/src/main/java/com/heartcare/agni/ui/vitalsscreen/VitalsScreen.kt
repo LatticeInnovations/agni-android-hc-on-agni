@@ -149,7 +149,10 @@ fun VitalsScreen(navController: NavController, vitalsViewModel: VitalsViewModel 
             .fillMaxSize()
             .imePadding()
             .navigationBarsPadding(),
-        snackbarHost = { SnackbarHost(snackBarHostState) },
+        snackbarHost = { SnackbarHost(
+            snackBarHostState,
+            modifier = if (currentStep!=0) Modifier.padding(bottom = 50.dp) else Modifier
+        ) },
         topBar = {
             TopAppBar(
                 modifier = Modifier.fillMaxWidth(),
@@ -293,10 +296,7 @@ fun VitalsScreen(navController: NavController, vitalsViewModel: VitalsViewModel 
                                 modifier = Modifier.size(ButtonDefaults.IconSize)
                             )
                             Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-                            Text(
-                                if (vitalsViewModel.todayVital == null || vitalsViewModel.existsInOtherHospital)
-                                    stringResource(id = R.string.add_vitals)
-                                else stringResource(id = R.string.update_vitals)
+                            Text(text = getBtnText(vitalsViewModel)
                             )
                         }
                     }
@@ -305,6 +305,18 @@ fun VitalsScreen(navController: NavController, vitalsViewModel: VitalsViewModel 
         }
     )
     ShowDialogs(vitalsViewModel, navController, scope)
+}
+
+@Composable
+private fun getBtnText(viewModel: VitalsViewModel): String {
+    return if (viewModel.todayVital != null && viewModel.todayVital!!.campaignId != null) {
+        stringResource(id = R.string.update_vitals)
+    } else {
+        stringResource(
+            id = if (viewModel.todayVital == null || viewModel.existsInOtherHospital) R.string.add_vitals
+            else R.string.update_vitals
+        )
+    }
 }
 
 private fun handleAddVitalLogic(

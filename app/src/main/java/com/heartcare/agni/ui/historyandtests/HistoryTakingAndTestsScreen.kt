@@ -120,7 +120,12 @@ fun HistoryTakingAndTestsScreen(
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
-        snackbarHost = { SnackbarHost(snackBarHostState) },
+        snackbarHost = {
+            SnackbarHost(
+                snackBarHostState,
+                modifier = if (viewModel.currentStep != 0) Modifier.padding(bottom = 50.dp) else Modifier
+            )
+        },
         topBar = {
             TopAppBar(
                 title = {
@@ -196,8 +201,8 @@ fun HistoryTakingAndTestsScreen(
                     onTypeSelected = { viewModel.selectedType = it },
                     onContinueClick = {
                         if (viewModel.selectedType == RecordType.FACILITY) {
-                            viewModel.selectedCampaignId=null
-                            viewModel.getAppointmentInfo {  }
+                            viewModel.selectedCampaignId = null
+                            viewModel.getAppointmentInfo { }
                             handleAddButtonClick(
                                 viewModel = viewModel,
                                 pagerState = pagerState,
@@ -223,7 +228,9 @@ fun HistoryTakingAndTestsScreen(
                         viewModel.selectedCampaignId =
                             viewModel.screeningSites.find { it.name == siteName }?.id
                     },
-                    onBackClick = { viewModel.currentStep = 1 },
+                    onBackClick = {
+                        viewModel.currentStep = 1
+                    },
                     onContinueClick = {
                         viewModel.getAppointmentInfo { }
                         handleAddButtonClick(
@@ -261,7 +268,7 @@ private fun HandleLaunchedEffectsAndSnackBars(
         }
         viewModel.getPreviousRecords(viewModel.patient!!.id)
 
-        showSnackBars(navController, snackBarHostState, context,viewModel)
+        showSnackBars(navController, snackBarHostState, context, viewModel)
     }
 }
 
@@ -272,6 +279,9 @@ private suspend fun showSnackBars(
     viewModel: HistoryTakingAndTestsViewModel
 ) {
     navController.currentBackStackEntry?.savedStateHandle?.let { handle ->
+        viewModel.selectedType = null
+        viewModel.selectedCampaignId = null
+        viewModel.currentStep = 0
         if (handle.remove<Boolean>(PRIOR_DX_SAVED) == true) {
             viewModel.currentStep =0
             snackBarHostState.showSnackbar(context.getString(R.string.prior_dx_saved))
@@ -489,7 +499,6 @@ private fun handleAddButtonClick(
                         navController,
                         coroutineScope
                     )
-                    viewModel.currentStep = 0
 
                 }
 
@@ -596,8 +605,32 @@ private fun getBtnText(
         5 -> viewModel.todayTobaccoCessation != null
         else -> false
     }
+    return getBtnText(viewModel, hasData, context, updateRes, addRes, page)
+}
 
-    return if (hasData && !viewModel.existsInOtherHospital) {
+
+private fun getBtnText(
+    viewModel: HistoryTakingAndTestsViewModel,
+    hasData: Boolean,
+    context: Context,
+    updateRes: Int,
+    addRes: Int,
+    page: Int
+): String {
+
+    val hasScreenSiteData = when (page) {
+        0 -> viewModel.todayPriorDx != null && viewModel.todayPriorDx!!.campaignId != null
+        1 -> viewModel.todayHistoryMedication != null && viewModel.todayHistoryMedication!!.campaignId != null
+        2 -> viewModel.todayFamilyHistory != null && viewModel.todayFamilyHistory!!.campaignId != null
+        3 -> viewModel.todayAllergy != null && viewModel.todayAllergy!!.campaignId != null
+        4 -> viewModel.todayRiskFactor != null && viewModel.todayRiskFactor!!.campaignId != null
+        5 -> viewModel.todayTobaccoCessation != null && viewModel.todayTobaccoCessation!!.campaignId != null
+        else -> false
+    }
+
+    return if (hasScreenSiteData) {
+        context.getString(updateRes)
+    } else if (hasData && !viewModel.existsInOtherHospital) {
         context.getString(updateRes)
     } else {
         context.getString(addRes)

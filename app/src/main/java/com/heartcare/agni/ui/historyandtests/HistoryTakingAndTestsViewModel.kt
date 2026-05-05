@@ -213,9 +213,6 @@ class HistoryTakingAndTestsViewModel @Inject constructor(
                 }.also {
                     todayPriorDx = it.firstOrNull { priorDx -> isToday(priorDx.createdOn!!) }?:
                     it.firstOrNull { record -> record.campaignId != null && isCampaignActive(screeningSiteRepository,record.campaignId) }
-
-
-
                 }
             medicationList =
                 historyMedicationRepository.getHistoryMedicationRecordsByAppointmentIds(*allCombinedIds)
