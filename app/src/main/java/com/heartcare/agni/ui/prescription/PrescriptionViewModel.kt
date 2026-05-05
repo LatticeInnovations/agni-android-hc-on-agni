@@ -33,6 +33,7 @@ import com.heartcare.agni.utils.common.Queries
 import com.heartcare.agni.utils.common.Queries.checkAndUpdateAppointmentStatusToInProgress
 import com.heartcare.agni.utils.common.Queries.getAppointment
 import com.heartcare.agni.utils.common.Queries.getInProgressCompletedAppointmentIds
+import com.heartcare.agni.utils.common.Queries.isCampaignActive
 import com.heartcare.agni.utils.common.Queries.loadAppointmentInfo
 import com.heartcare.agni.utils.common.Queries.updatePatientLastUpdated
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.isToday
@@ -146,16 +147,14 @@ class PrescriptionViewModel @Inject constructor(
                 todayPrescription =null
                 selectedMedicationsList = emptyList()
                 medicationsResponseWithMedicationList = emptyList()
-                previousPrescriptionList.firstOrNull { record -> record.prescriptionEntity.campaignId != null && isCampaignActive(record.prescriptionEntity.campaignId) }
+                previousPrescriptionList.firstOrNull { record -> record.prescriptionEntity.campaignId != null && isCampaignActive(screeningSiteRepository,record.prescriptionEntity.campaignId) }
 
             }
             setTodayData()
         }
     }
 
-    private suspend fun isCampaignActive(campaignId: String): Boolean {
-        return screeningSiteRepository.getScreeningSiteById(campaignId)?.status == "active"
-    }
+
     fun setTodayData() {
         todayPrescription?.let { prescription ->
             selectedMedicationsList =

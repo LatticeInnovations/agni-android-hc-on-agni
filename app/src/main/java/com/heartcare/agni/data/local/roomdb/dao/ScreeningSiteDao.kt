@@ -21,7 +21,6 @@ interface ScreeningSiteDao {
     @Query("SELECT * FROM ScreeningSiteMasterEntity WHERE id = :id")
     suspend fun getScreeningSiteById(id: String): ScreeningSiteMasterEntity?
 
-    @Transaction
-    @Query("SELECT * FROM ScreeningSiteMasterEntity WHERE status = 'active'")
-    suspend fun getActiveScreeningSites(): List<ScreeningSiteMasterEntity>
+    @Query("SELECT * FROM ScreeningSiteMasterEntity WHERE status = 'active'AND fromDate <= :currentDate AND toDate >= :currentDate")
+    suspend fun getActiveScreeningSites(currentDate: String): List<ScreeningSiteMasterEntity>
 }

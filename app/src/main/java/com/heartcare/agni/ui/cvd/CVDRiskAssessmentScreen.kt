@@ -280,6 +280,7 @@ private fun HandleLaunchedEffect(
                 navController.previousBackStackEntry?.savedStateHandle?.get<PatientResponse>(
                     PATIENT
                 )
+            viewModel.getTodayCVDAssessment()
             viewModel.getAppointmentInfo(callback = {})
             viewModel.isLaunched = true
         }

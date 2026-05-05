@@ -494,4 +494,9 @@ object TimeConverter {
         val formatter = SimpleDateFormat("dd MMM, yyyy", Locale.getDefault())
         return formatter.format(this)
     }
+
+    fun Date.toIsoDate(): String {
+        val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.US)
+        return sdf.format(this)
+    }
 }

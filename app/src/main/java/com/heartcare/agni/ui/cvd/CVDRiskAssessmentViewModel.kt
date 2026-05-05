@@ -136,7 +136,7 @@ class CVDRiskAssessmentViewModel @Inject constructor(
     var selectedCampaignId by mutableStateOf<String?>(null)
 
     var isScreeningSiteEnabled by mutableStateOf(false)
-    var currentStep by  mutableIntStateOf(2)
+    var currentStep by mutableIntStateOf(2)
 
     var selectedType by mutableStateOf<RecordType?>(null)
 
@@ -157,14 +157,18 @@ class CVDRiskAssessmentViewModel @Inject constructor(
                 site.staff.any { it.id == userFhirId }
             }
             isScreeningSiteEnabled = screeningSites.isNotEmpty()
-            currentStep = if (isScreeningSiteEnabled){
+            currentStep = if (isScreeningSiteEnabled) {
                 0
-            }else{
+            } else {
+                selectedCampaignId = null
+                selectedType = RecordType.FACILITY
                 2
+
             }
 
         }
     }
+
     fun getAppointmentInfo(
         callback: () -> Unit
     ) {
@@ -177,9 +181,7 @@ class CVDRiskAssessmentViewModel @Inject constructor(
                 loadCampaignAppointmentInfo(
                     patientId = patientId,
                     campaignId = campaignId,
-                    appointmentRepository = appointmentRepository,
-                    cvdAssessmentRepository = cvdAssessmentRepository,
-                    screeningSiteRepository= screeningSiteRepository
+                    appointmentRepository = appointmentRepository
                 )
             } else {
                 // Facility path - load today's facility info
@@ -238,29 +240,23 @@ class CVDRiskAssessmentViewModel @Inject constructor(
     }
     fun getTodayCVDAssessment() {
         viewModelScope.launch(ioDispatcher) {
-
+                getRecords()
             val records = previousRecordsWithReferralStatus.map { it.first }
 
             val selectedRecord = when (selectedType) {
 
                 RecordType.FACILITY -> {
-                    records
-                        .filter {
-                            it.createdOn.time in Date().toTodayStartDate()..Date().toEndOfDay() && it.campaignId ==null
-                        }
-                        .minByOrNull { it.createdOn }
+                    records.filter { it.campaignId == null }
                 }
-
                 RecordType.SCREENING_SITE -> {
-                    records
-                        .filter { it.campaignId == selectedCampaignId }
-                        .minByOrNull { it.createdOn }
+
+                    records.filter { it.campaignId == selectedCampaignId }.ifEmpty { records.filter { it.campaignId!=null } }
                 }
 
                 else -> null
             }
 
-            selectedRecord?.let { record ->
+            selectedRecord?.firstOrNull()?.let { record ->
                 isDiabetic = YesNoEnum.displayFromCode(record.diabetic)
                 isSmoker = YesNoEnum.displayFromCode(record.smoker)
                 previousHeartAttack = YesNoEnum.displayFromCode(record.heartAttackHistory)
@@ -278,18 +274,26 @@ class CVDRiskAssessmentViewModel @Inject constructor(
                 }
 
                 getBmi()
-                todayCVD = record
-                screeningDate = record.screeningDate
-                chiefComplaint = record.chiefComplaint ?: ""
-                systolic = record.bpSystolic.toString()
-                diastolic = record.bpDiastolic.toString()
-                cholesterol = record.cholesterol?.toString() ?: ""
-
-                selectedCholesterolIndex =
-                    if (record.cholesterolUnit.isNullOrBlank()) 0
-                    else cholesterolUnits.indexOf(record.cholesterolUnit)
+                if (selectedType == RecordType.FACILITY && record.createdOn.time in Date().toTodayStartDate()..Date().toEndOfDay()) {
+                   loadCVDRecord(record)
+                }else if (selectedType== RecordType.SCREENING_SITE && selectedCampaignId == record.campaignId){
+                    loadCVDRecord(record)
+                }
             }
         }
+    }
+
+    private fun loadCVDRecord(record: CVDResponse) {
+        todayCVD = record
+        screeningDate = record.screeningDate
+        chiefComplaint = record.chiefComplaint ?: ""
+        systolic = record.bpSystolic.toString()
+        diastolic = record.bpDiastolic.toString()
+        cholesterol = record.cholesterol?.toString() ?: ""
+
+        selectedCholesterolIndex =
+            if (record.cholesterolUnit.isNullOrBlank()) 0
+            else cholesterolUnits.indexOf(record.cholesterolUnit)
     }
 
     fun getRisk(

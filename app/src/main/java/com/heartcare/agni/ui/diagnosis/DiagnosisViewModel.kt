@@ -14,14 +14,15 @@ import com.heartcare.agni.data.local.repository.patient.lastupdated.PatientLastU
 import com.heartcare.agni.data.local.repository.preference.PreferenceRepository
 import com.heartcare.agni.data.local.repository.schedule.ScheduleRepository
 import com.heartcare.agni.data.local.repository.screeningsite.ScreeningSiteRepository
-import com.heartcare.agni.data.server.model.campaign.ScreeningSiteMasterResponse
 import com.heartcare.agni.data.local.roomdb.entities.diagnosis.DiagnosisLocal
+import com.heartcare.agni.data.server.model.campaign.ScreeningSiteMasterResponse
 import com.heartcare.agni.data.server.model.patient.PatientResponse
 import com.heartcare.agni.di.dispatcher.IoDispatcher
 import com.heartcare.agni.utils.common.Queries
-import com.heartcare.agni.utils.common.Queries.getInProgressCompletedAppointmentIds
-import com.heartcare.agni.utils.common.Queries.loadAppointmentInfo
 import com.heartcare.agni.utils.common.Queries.getCampaignAppointmentInfo
+import com.heartcare.agni.utils.common.Queries.getInProgressCompletedAppointmentIds
+import com.heartcare.agni.utils.common.Queries.isCampaignActive
+import com.heartcare.agni.utils.common.Queries.loadAppointmentInfo
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.isToday
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
@@ -88,15 +89,12 @@ class DiagnosisViewModel @Inject constructor(
                 dx.copy(screeningSiteName = dx.campaignId?.let { siteMap[it]?.name })
             }.also {
                 todayDiagnosis = it.firstOrNull { dx -> isToday(dx.createdOn) }?:
-                it.firstOrNull { record -> record.campaignId != null && isCampaignActive(record.campaignId) }
+                it.firstOrNull { record -> record.campaignId != null && isCampaignActive(screeningSiteRepository,record.campaignId) }
 
             }
         }
     }
 
-    private suspend fun isCampaignActive(campaignId: String): Boolean {
-        return screeningSiteRepository.getScreeningSiteById(campaignId)?.status == "active"
-    }
 
     internal fun getAppointmentInfo(
         callback: () -> Unit
