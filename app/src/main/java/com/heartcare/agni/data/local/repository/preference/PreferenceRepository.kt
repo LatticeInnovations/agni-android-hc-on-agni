@@ -174,6 +174,10 @@ interface PreferenceRepository {
     fun setLastSyncReportToken(long: Long)
     fun getLastSyncReportToken(): Long
 
+    /** Last National Id Sync Date */
+    fun setLastSyncNationalId(long: Long)
+    fun getLastSyncNationalId(): Long
+
     /** RoomDB EncryptionKey */
     fun setRoomDBEncryptionKey(encryptionKey: String)
     fun getRoomDBEncryptionKey(): String

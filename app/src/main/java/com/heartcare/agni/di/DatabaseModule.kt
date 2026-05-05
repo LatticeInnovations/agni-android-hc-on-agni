@@ -29,6 +29,7 @@ import com.heartcare.agni.data.local.roomdb.dao.TobaccoCessationDao
 import com.heartcare.agni.data.local.roomdb.dao.VitalDao
 import com.heartcare.agni.data.local.roomdb.dao.CampaignScheduleDao
 import com.heartcare.agni.data.local.roomdb.dao.CampaignAppointmentDao
+import com.heartcare.agni.data.local.roomdb.dao.NationalIdDao
 import com.heartcare.agni.data.local.sharedpreferences.PreferenceStorage
 import dagger.Module
 import dagger.Provides
@@ -208,5 +209,11 @@ object DatabaseModule {
     @Provides
     fun provideCampaignAppointmentDao(fhirAppDatabase: FhirAppDatabase): CampaignAppointmentDao {
         return fhirAppDatabase.getCampaignAppointmentDao()
+    }
+
+    @Singleton
+    @Provides
+    fun provideNationalIdDao(fhirAppDatabase: FhirAppDatabase): NationalIdDao {
+        return fhirAppDatabase.getNationalIdDao()
     }
 }

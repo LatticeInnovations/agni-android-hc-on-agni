@@ -22,6 +22,7 @@ import com.heartcare.agni.data.local.roomdb.dao.IdentifierDao
 import com.heartcare.agni.data.local.roomdb.dao.InterventionDao
 import com.heartcare.agni.data.local.roomdb.dao.LevelsDao
 import com.heartcare.agni.data.local.roomdb.dao.MedicationDao
+import com.heartcare.agni.data.local.roomdb.dao.NationalIdDao
 import com.heartcare.agni.data.local.roomdb.dao.PatientDao
 import com.heartcare.agni.data.local.roomdb.dao.PatientLastUpdatedDao
 import com.heartcare.agni.data.local.roomdb.dao.PrescriptionDao
@@ -67,6 +68,7 @@ import com.heartcare.agni.data.local.roomdb.entities.vitals.VitalEntity
 import com.heartcare.agni.data.local.roomdb.entities.campaign.CampaignAppointmentEntity
 import com.heartcare.agni.data.local.roomdb.entities.campaign.CampaignScheduleEntity
 import com.heartcare.agni.data.local.roomdb.entities.campaign.ScreeningSiteMasterEntity
+import com.heartcare.agni.data.local.roomdb.entities.nationalId.NationalIdEntity
 import com.heartcare.agni.data.local.roomdb.entities.report.ReportTokenEntity
 import com.heartcare.agni.data.local.roomdb.typeconverters.DiagnosisTypeConverter
 import com.heartcare.agni.data.local.roomdb.typeconverters.TypeConverter
@@ -111,7 +113,8 @@ import java.util.UUID
         ScreeningSiteMasterEntity::class,
         CampaignScheduleEntity::class,
         CampaignAppointmentEntity::class,
-        ReportTokenEntity::class
+        ReportTokenEntity::class,
+        NationalIdEntity::class
     ],
     views = [PrescriptionDirectionAndMedicineView::class],
     version = 3,
@@ -151,6 +154,7 @@ abstract class FhirAppDatabase : RoomDatabase() {
     abstract fun getScreeningSiteMasterDao(): ScreeningSiteDao
     abstract fun getCampaignScheduleDao(): CampaignScheduleDao
     abstract fun getCampaignAppointmentDao(): CampaignAppointmentDao
+    abstract fun getNationalIdDao(): NationalIdDao
 
     companion object {
         @Volatile
