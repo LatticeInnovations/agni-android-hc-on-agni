@@ -1811,3 +1811,16 @@ fun NationalIdResponse.toNationalIdEntity(): NationalIdEntity {
         updatedAt = updatedAt
     )
 }
+
+fun NationalIdEntity.toNationalIdResponse(): NationalIdResponse {
+    return NationalIdResponse(
+        nationalId = nationalId,
+        firstName = firstName,
+        middleName = middleName,
+        lastName = lastName,
+        dob = dob,
+        gender = gender,
+        updatedAt = updatedAt,
+        lastSyncedAt = Date()
+    )
+}

@@ -9,22 +9,19 @@ import androidx.compose.ui.text.intl.Locale
 import androidx.compose.ui.text.toLowerCase
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.viewModelScope
-import com.google.common.reflect.TypeToken
-import com.google.gson.Gson
 import com.heartcare.agni.base.viewmodel.BaseViewModel
 import com.heartcare.agni.data.local.repository.nationalId.NationalIdRepository
+import com.heartcare.agni.data.server.model.nationalId.NationalIdResponse
 import com.heartcare.agni.di.dispatcher.IoDispatcher
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toDay
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toFullMonth
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toMonthInteger
-import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toTimeInMilli
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toYear
 import com.heartcare.agni.utils.regex.PhoneNumberRegex.phoneNumberRegex
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.launch
-import java.util.Date
 import javax.inject.Inject
 
 @HiltViewModel
@@ -86,7 +83,7 @@ class PatientRegistrationStepOneViewModel @Inject constructor(
     var isVerifyClicked by mutableStateOf(false)
     var isNationalIdVerified by mutableStateOf(false)
 
-    var verifiedRecord: Map<String, Any?>? = null
+    var verifiedRecord: NationalIdResponse? = null
 
     internal fun basicInfoValidation(): Boolean {
         isFirstNameValid = firstName.isBlank()
@@ -124,42 +121,24 @@ class PatientRegistrationStepOneViewModel @Inject constructor(
     fun verifyNationalId() {
         viewModelScope.launch(ioDispatcher) {
             try {
-                val json = nationalIdRepository.getNationalIdData()
+                val nationalIdRecord = nationalIdRepository.getNationalIdData(nationalId)
 
-                if (json.isNullOrBlank()) {
-                    isNationalIdVerified = false
-                    return@launch
-                }
-
-                val gson = Gson()
-
-                val listType = object : TypeToken<List<Map<String, Any?>>>() {}.type
-
-                val data: List<Map<String, Any?>> = gson.fromJson(json, listType)
-
-                val matched = data.firstOrNull {
-                    it["national_id"]?.toString() == nationalId
-                }
-
-                if (matched != null) {
-                    verifiedRecord = matched
+                if (nationalIdRecord != null) {
+                    verifiedRecord = nationalIdRecord
 
                     firstName = listOfNotNull(
-                        matched["first_name"]?.toString()?.takeIf { it.isNotBlank() },
-                        matched["middle_name"]?.toString()?.takeIf { it.isNotBlank() }
+                        nationalIdRecord.firstName.takeIf { it.isNotBlank() },
+                        nationalIdRecord.middleName.takeIf { it.isNotBlank() }
                     ).joinToString(" ")
-                    lastName = matched["last_name"]?.toString().orEmpty()
-                    gender = matched["gender"]?.toString().orEmpty().toLowerCase(Locale.current)
+                    lastName = nationalIdRecord.lastName
+                    gender = nationalIdRecord.gender.toLowerCase(Locale.current)
 
                     // DOB split (yyyy-MM-dd)
-                    val dob = matched["date_of_birth"]?.toString()
-                    dob?.let {
-                        val dobDate = Date(it.toTimeInMilli())
-                        dobYear = dobDate.toYear()
-                        dobMonth = dobDate.toFullMonth()
-                        dobDay = dobDate.toDay()
-                        dobAgeSelector = "dob"
-                    }
+                    val dob = nationalIdRecord.dob
+                    dobYear = dob.toYear()
+                    dobMonth = dob.toFullMonth()
+                    dobDay = dob.toDay()
+                    dobAgeSelector = "dob"
 
                     isFirstNameValid = false
                     isLastNameValid = false
@@ -178,7 +157,7 @@ class PatientRegistrationStepOneViewModel @Inject constructor(
     fun verifyLastName(): Boolean {
         val record = verifiedRecord ?: return false
         return lastName.trim().equals(
-            record["last_name"]?.toString().orEmpty(),
+            record.lastName,
             ignoreCase = true
         )
     }
@@ -187,8 +166,8 @@ class PatientRegistrationStepOneViewModel @Inject constructor(
         val record = verifiedRecord ?: return false
         return firstName.trim().equals(
             listOfNotNull(
-                record["first_name"]?.toString()?.takeIf { it.isNotBlank() },
-                record["middle_name"]?.toString()?.takeIf { it.isNotBlank() }
+                record.firstName.takeIf { it.isNotBlank() },
+                record.middleName.takeIf { it.isNotBlank() }
             ).joinToString(" "),
             ignoreCase = true
         )
@@ -196,44 +175,35 @@ class PatientRegistrationStepOneViewModel @Inject constructor(
 
     fun verifyDOBDay(): Boolean {
         val record = verifiedRecord ?: return false
-        val dob = record["date_of_birth"]?.toString()
-        return dob?.let {
-            val dobDate = Date(it.toTimeInMilli())
-            dobDay.equals(
-                dobDate.toDay(),
-                ignoreCase = true
-            )
-        } == true
+        val dob = record.dob
+        return dobDay.equals(
+            dob.toDay(),
+            ignoreCase = true
+        )
     }
 
     fun verifyDOBMonth(): Boolean {
         val record = verifiedRecord ?: return false
-        val dob = record["date_of_birth"]?.toString()
-        return dob?.let {
-            val dobDate = Date(it.toTimeInMilli())
-            dobMonth.equals(
-                dobDate.toFullMonth(),
-                ignoreCase = true
-            )
-        } == true
+        val dob = record.dob
+        return dobMonth.equals(
+            dob.toFullMonth(),
+            ignoreCase = true
+        )
     }
 
     fun verifyDOBYear(): Boolean {
         val record = verifiedRecord ?: return false
-        val dob = record["date_of_birth"]?.toString()
-        return dob?.let {
-            val dobDate = Date(it.toTimeInMilli())
-            dobYear.equals(
-                dobDate.toYear(),
-                ignoreCase = true
-            )
-        } == true
+        val dob = record.dob
+        return dobYear.equals(
+            dob.toYear(),
+            ignoreCase = true
+        )
     }
 
     fun verifyGender(): Boolean {
         val record = verifiedRecord ?: return false
         return gender.trim().equals(
-            record["gender"]?.toString().orEmpty(),
+            record.gender,
             ignoreCase = true
         )
     }
