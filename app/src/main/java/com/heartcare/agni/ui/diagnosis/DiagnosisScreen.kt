@@ -109,7 +109,17 @@ fun DiagnosisScreen(
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = { navController.navigateUp() }) {
+                    IconButton(onClick = {
+                        if (viewModel.currentStep > 0) {
+                            if (viewModel.currentStep == 2) {
+                                viewModel.currentStep = 1
+                            } else if (viewModel.currentStep == 1) {
+                                viewModel.currentStep = 0
+                            }
+                        } else {
+                            navController.navigateUp()
+                        }
+                    }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "BACK_ICON")
                     }
                 }

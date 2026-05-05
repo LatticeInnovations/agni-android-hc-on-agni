@@ -100,7 +100,19 @@ fun InterventionScreen(
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = { navController.navigateUp() }) {
+                    IconButton(onClick = {
+                        if (viewModel.currentStep > 0) {
+                            if (viewModel.currentStep == 2) {
+                                viewModel.selectedCampaignId = null
+                                viewModel.currentStep = 1
+                            } else if (viewModel.currentStep == 1) {
+                                viewModel.selectedType = null
+                                viewModel.currentStep = 0
+                            }
+                        } else {
+                            navController.navigateUp()
+                        }
+                    }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },

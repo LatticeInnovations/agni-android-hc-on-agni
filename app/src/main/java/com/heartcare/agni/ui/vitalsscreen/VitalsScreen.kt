@@ -161,7 +161,15 @@ fun VitalsScreen(navController: NavController, vitalsViewModel: VitalsViewModel 
                 ),
                 navigationIcon = {
                     IconButton(onClick = {
-                        navController.navigateUp()
+                        if (currentStep > 0) {
+                            if (currentStep == 2) {
+                                currentStep = 1
+                            } else if (currentStep == 1) {
+                                currentStep = 0
+                            }
+                        } else {
+                            navController.navigateUp()
+                        }
                     }) {
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "BACK_ICON"
