@@ -23,11 +23,11 @@ import com.heartcare.agni.utils.common.Queries
 import com.heartcare.agni.utils.common.Queries.getAppointment
 import com.heartcare.agni.utils.common.Queries.getInProgressCompletedAppointmentIds
 import com.heartcare.agni.utils.common.Queries.getScreenSiteAppointmentIds
+import com.heartcare.agni.utils.common.Queries.isCampaignActive
 import com.heartcare.agni.utils.common.Queries.loadAppointmentInfo
 import com.heartcare.agni.utils.common.Queries.loadCampaignVitalInfo
 import com.heartcare.agni.utils.constants.VitalConstants.ALL
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.isToday
-import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toddMMMyyyy
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -35,7 +35,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import java.util.Date
 import javax.inject.Inject
-import kotlin.let
 
 @HiltViewModel
 class VitalsViewModel @Inject constructor(
@@ -152,7 +151,7 @@ class VitalsViewModel @Inject constructor(
                 vital.copy(screeningSiteName = vital.campaignId?.let { siteMap[it]?.name })
             }.also {
                 todayVital = it.firstOrNull { vital -> isToday(vital.appUpdatedDate) }?:
-                        it.firstOrNull { record -> record.campaignId != null && isCampaignActive(record.campaignId) }
+                        it.firstOrNull { record -> record.campaignId != null && isCampaignActive(screeningSiteRepository,record.campaignId) }
 
             }
             
@@ -234,12 +233,6 @@ class VitalsViewModel @Inject constructor(
                 patientLastUpdatedRepository,
                 updated
             )
-        }
-    }
-
-    private suspend fun isCampaignActive(campaignId: String): Boolean {
-        return screeningSiteRepository.getScreeningSiteById(campaignId).let {
-            it != null && it.status == "active" && Date().toddMMMyyyy()  in it.fromDate..it.toDate
         }
     }
 }

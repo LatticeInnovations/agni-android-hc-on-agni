@@ -95,6 +95,7 @@ import com.heartcare.agni.ui.theme.VeryHighRiskDarkContainer
 import com.heartcare.agni.ui.theme.VeryHighRiskLightContainer
 import com.heartcare.agni.utils.constants.NavControllerConstants.PATIENT
 import com.heartcare.agni.utils.constants.NavControllerConstants.REFERRAL_FROM_CVD
+import com.heartcare.agni.utils.constants.NavControllerConstants.REFERRAL_SAVED
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toddMMMyyyy
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toddMMYYYYString
 import kotlinx.coroutines.CoroutineScope
@@ -280,6 +281,7 @@ private fun HandleLaunchedEffect(
                 navController.previousBackStackEntry?.savedStateHandle?.get<PatientResponse>(
                     PATIENT
                 )
+            viewModel.getTodayCVDAssessment()
             viewModel.getAppointmentInfo(callback = {})
             viewModel.isLaunched = true
         }
@@ -293,6 +295,9 @@ private fun HandleLaunchedEffect(
                     snackBarHostState = snackBarHostState,
                     context = context
                 )
+            }
+            if (handle.remove<Boolean>(REFERRAL_SAVED) == true) {
+                viewModel.getTodayCVDAssessment()
             }
         }
     }

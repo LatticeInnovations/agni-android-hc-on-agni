@@ -11,7 +11,6 @@ import com.heartcare.agni.data.local.model.appointment.AppointmentInfo
 import com.heartcare.agni.data.local.model.appointment.AppointmentResponseLocal
 import com.heartcare.agni.data.local.model.patch.ChangeRequest
 import com.heartcare.agni.data.local.repository.appointment.AppointmentRepository
-import com.heartcare.agni.data.local.repository.cvd.records.CVDAssessmentRepository
 import com.heartcare.agni.data.local.repository.generic.GenericRepository
 import com.heartcare.agni.data.local.repository.patient.lastupdated.PatientLastUpdatedRepository
 import com.heartcare.agni.data.local.repository.preference.PreferenceRepository
@@ -20,6 +19,7 @@ import com.heartcare.agni.data.local.repository.screeningsite.ScreeningSiteRepos
 import com.heartcare.agni.data.local.repository.vital.VitalRepository
 import com.heartcare.agni.data.local.roomdb.entities.patient.PatientAndIdentifierAndAppointmentEntity
 import com.heartcare.agni.data.local.roomdb.entities.patient.PatientAndIdentifierEntity
+import com.heartcare.agni.data.server.model.campaign.ScreeningSiteMasterResponse
 import com.heartcare.agni.data.server.model.patient.PatientLastUpdatedResponse
 import com.heartcare.agni.data.server.model.patient.PatientResponse
 import com.heartcare.agni.data.server.model.scheduleandappointment.Slot
@@ -36,8 +36,8 @@ import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.to5Mi
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toAppointmentTime
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toCurrentTimeInMillis
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toEndOfDay
+import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toIsoDate
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toSlotStartTime
-import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toTimeInMilli
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toTodayStartDate
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toddMMMyyyy
 import timber.log.Timber
@@ -633,28 +633,11 @@ object Queries {
     internal suspend fun loadCampaignAppointmentInfo(
         patientId: String,
         campaignId: String,
-        appointmentRepository: AppointmentRepository,
-        cvdAssessmentRepository: CVDAssessmentRepository,
-        screeningSiteRepository: ScreeningSiteRepository
+        appointmentRepository: AppointmentRepository
     ): AppointmentInfo {
         val appointmentResponse = appointmentRepository.loadAppointmentForCampaign(patientId, campaignId)
-        
-        val latestCvd = cvdAssessmentRepository.getLatestCVDForCampaign(patientId, campaignId)
-        val screeningSite = screeningSiteRepository.getScreeningSiteById(campaignId)
-        
-        var isDuplicateCVDForCampaign = false
-        if (latestCvd != null && screeningSite != null) {
-            val fromDateMilli = screeningSite.fromDate.toTimeInMilli()
-            val toDateMilli = screeningSite.toDate.toTimeInMilli()
-            val currentTime = Date().time
-            if (currentTime in fromDateMilli..toDateMilli) {
-                isDuplicateCVDForCampaign = true
-            }
-        }
-
         val canAddAssessment = appointmentResponse != null && 
-                               appointmentResponse.status == AppointmentStatusEnum.WALK_IN.value &&
-                               !isDuplicateCVDForCampaign
+                               appointmentResponse.status == AppointmentStatusEnum.WALK_IN.value
 
         val isAppointmentCompleted = appointmentResponse?.status == AppointmentStatusEnum.COMPLETED.value
 
@@ -664,7 +647,7 @@ object Queries {
             canAddAssessment = canAddAssessment,
             isAppointmentCompleted = isAppointmentCompleted,
             ifAllSlotsBooked = false, // Campaign logic typically bypasses strict slot limits
-            isDuplicateCVDForCampaign = isDuplicateCVDForCampaign
+            isDuplicateCVDForCampaign = false
         )
     }
 
@@ -697,10 +680,7 @@ object Queries {
         val existingVital = vitalRepository.getLatestVitalForCampaign(patientId, campaignId)
         val screeningSite = screeningSiteRepository.getScreeningSiteById(campaignId)
 
-        val isWithinCampaignWindow = if (screeningSite != null) {
-            val now = Date().time
-            now in screeningSite.fromDate.toTimeInMilli()..screeningSite.toDate.toTimeInMilli()
-        } else false
+        val isWithinCampaignWindow = screeningSite?.isActive() ?: false
 
         // hasExistingRecord = true means UPDATE mode (load existing vital into form)
         val hasExistingRecord = existingVital != null && isWithinCampaignWindow
@@ -711,6 +691,15 @@ object Queries {
             hasExistingRecord = hasExistingRecord
         )
     }
+
+    suspend fun isCampaignActive(screeningSiteRepository: ScreeningSiteRepository, campaignId: String): Boolean {
+        return screeningSiteRepository.getScreeningSiteById(campaignId)?.isActive() ?: false
+    }
+}
+fun ScreeningSiteMasterResponse.isActive(
+    today: String = Date().toIsoDate()
+): Boolean {
+    return status == "active" && today in fromDate..toDate
 }
 
 /** Holds campaign-specific vital state returned from loadCampaignVitalInfo */

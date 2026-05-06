@@ -21,6 +21,7 @@ import com.heartcare.agni.data.local.enums.RecordType
 import com.heartcare.agni.di.dispatcher.IoDispatcher
 import com.heartcare.agni.utils.common.Queries
 import com.heartcare.agni.utils.common.Queries.getInProgressCompletedAppointmentIds
+import com.heartcare.agni.utils.common.Queries.isCampaignActive
 import com.heartcare.agni.utils.common.Queries.loadAppointmentInfo
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.isToday
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -172,7 +173,7 @@ class InterventionViewModel @Inject constructor(
 
             }.also {
                 todayIntervention = it.firstOrNull { intervention -> isToday(intervention.appUpdatedDate) }?:
-                        it.firstOrNull { record -> record.campaignId != null && isCampaignActive(record.campaignId) }
+                        it.firstOrNull { record -> record.campaignId != null && isCampaignActive(screeningSiteRepository,record.campaignId) }
 
 
 
@@ -180,8 +181,6 @@ class InterventionViewModel @Inject constructor(
             }
         }
     }
-    private suspend fun isCampaignActive(campaignId: String): Boolean {
-        return screeningSiteRepository.getScreeningSiteById(campaignId)?.status == "active"
-    }
+
 
 }

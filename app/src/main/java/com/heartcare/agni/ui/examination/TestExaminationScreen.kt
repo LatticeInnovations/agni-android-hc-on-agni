@@ -81,7 +81,9 @@ fun TestExaminationScreen(
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
-        snackbarHost = { SnackbarHost(snackBarHostState) },
+        snackbarHost = { SnackbarHost(snackBarHostState,
+            modifier = if (viewModel.currentStep!=0) Modifier.padding(bottom = 80.dp) else Modifier
+            ) },
         topBar = {
             TopAppBar(
                 title = {
@@ -91,7 +93,17 @@ fun TestExaminationScreen(
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = { navController.navigateUp() }) {
+                    IconButton(onClick = {
+                        if (viewModel.currentStep > 0) {
+                            if (viewModel.currentStep == 2) {
+                                viewModel.currentStep = 1
+                            } else if (viewModel.currentStep == 1) {
+                                viewModel.currentStep = 0
+                            }
+                        } else {
+                            navController.navigateUp()
+                        }
+                    }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },
@@ -187,8 +199,10 @@ private fun HandleLaunchedEffect(
         }
         viewModel.getExaminationRecords(viewModel.patient!!.id)
         navController.currentBackStackEntry?.savedStateHandle?.let { handle ->
+            viewModel.currentStep=0
+            viewModel.selectedType=null
+            viewModel.selectedCampaignId=null
             if (handle.remove<Boolean>(TEST_EXAMINATION_SAVED) == true) {
-                viewModel.currentStep=0
                 snackBarHostState.showSnackbar(
                     context.getString(
                         if (viewModel.todayTestExamination == null) R.string.test_and_examinations_saved
@@ -331,15 +345,23 @@ private fun TestExaminationBottomBar(
             Icon(Icons.Filled.Add, Icons.Filled.Add.name)
             Spacer(Modifier.width(6.dp))
             Text(
-                stringResource(
-                    id = if (viewModel.todayTestExamination == null || viewModel.existsInOtherHospital) R.string.add_test_and_examinations
-                    else R.string.update_test_and_examinations
-                )
+                text = getBtnText(viewModel)
             )
         }
     }
 }
 
+@Composable
+private fun getBtnText(viewModel: TestExaminationViewModel): String {
+    return if (viewModel.todayTestExamination != null && viewModel.todayTestExamination!!.campaignId != null) {
+        stringResource(id =  R.string.update_interventions)
+    } else {
+        stringResource(
+            id = if (viewModel.todayTestExamination == null || viewModel.existsInOtherHospital) R.string.add_test_and_examinations
+            else R.string.update_test_and_examinations
+        )
+    }
+}
 @Composable
 private fun TestExaminationDialogs(
     navController: NavController,

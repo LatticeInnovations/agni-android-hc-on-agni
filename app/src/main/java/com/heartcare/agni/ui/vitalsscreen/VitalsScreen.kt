@@ -149,7 +149,10 @@ fun VitalsScreen(navController: NavController, vitalsViewModel: VitalsViewModel 
             .fillMaxSize()
             .imePadding()
             .navigationBarsPadding(),
-        snackbarHost = { SnackbarHost(snackBarHostState) },
+        snackbarHost = { SnackbarHost(
+            snackBarHostState,
+            modifier = if (currentStep!=0) Modifier.padding(bottom = 50.dp) else Modifier
+        ) },
         topBar = {
             TopAppBar(
                 modifier = Modifier.fillMaxWidth(),
@@ -158,7 +161,15 @@ fun VitalsScreen(navController: NavController, vitalsViewModel: VitalsViewModel 
                 ),
                 navigationIcon = {
                     IconButton(onClick = {
-                        navController.navigateUp()
+                        if (currentStep > 0) {
+                            if (currentStep == 2) {
+                                currentStep = 1
+                            } else if (currentStep == 1) {
+                                currentStep = 0
+                            }
+                        } else {
+                            navController.navigateUp()
+                        }
                     }) {
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "BACK_ICON"
@@ -293,10 +304,7 @@ fun VitalsScreen(navController: NavController, vitalsViewModel: VitalsViewModel 
                                 modifier = Modifier.size(ButtonDefaults.IconSize)
                             )
                             Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-                            Text(
-                                if (vitalsViewModel.todayVital == null || vitalsViewModel.existsInOtherHospital)
-                                    stringResource(id = R.string.add_vitals)
-                                else stringResource(id = R.string.update_vitals)
+                            Text(text = getBtnText(vitalsViewModel)
                             )
                         }
                     }
@@ -305,6 +313,18 @@ fun VitalsScreen(navController: NavController, vitalsViewModel: VitalsViewModel 
         }
     )
     ShowDialogs(vitalsViewModel, navController, scope)
+}
+
+@Composable
+private fun getBtnText(viewModel: VitalsViewModel): String {
+    return if (viewModel.todayVital != null && viewModel.todayVital!!.campaignId != null) {
+        stringResource(id = R.string.update_vitals)
+    } else {
+        stringResource(
+            id = if (viewModel.todayVital == null || viewModel.existsInOtherHospital) R.string.add_vitals
+            else R.string.update_vitals
+        )
+    }
 }
 
 private fun handleAddVitalLogic(
@@ -913,19 +933,19 @@ private fun VitalsCardLayout(
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onPrimaryContainer
             )
-            vital.screeningSiteName?.let {
-                Text(
-                    modifier = Modifier.padding(top = 4.dp),
-                    text = it,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.primary
-                )
-            }
             Text(
                 modifier = Modifier.padding(top = 4.dp),
                 text = vital.practitionerName ?: stringResource(id = R.string.dash),
                 style = MaterialTheme.typography.bodySmall
             )
+            vital.screeningSiteName?.let {
+                Text(
+                    modifier = Modifier.padding(top = 4.dp),
+                    text = it,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
             HorizontalDivider(
                 modifier = Modifier.padding(
                     vertical = 8.dp
@@ -1071,17 +1091,18 @@ private fun CVDRecordCardLayout(
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
-                    cvdResponse.screeningSiteName?.let {
-                        Text(
-                            text = it,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                    }
+
                     Text(
                         text = cvdResponse.practitionerName ?: stringResource(id = R.string.dash),
                         style = MaterialTheme.typography.bodySmall
                     )
+                    cvdResponse.screeningSiteName?.let {
+                        Text(
+                            text = it,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
 
                 }
                 Surface(

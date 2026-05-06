@@ -89,7 +89,12 @@ fun DiagnosisScreen(
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
-        snackbarHost = { SnackbarHost(snackBarHostState) },
+        snackbarHost = {
+            SnackbarHost(
+                snackBarHostState,
+                modifier = if (viewModel.currentStep != 0) Modifier.padding(bottom = 80.dp) else Modifier
+            )
+        },
         topBar = {
             TopAppBar(
                 modifier = Modifier.fillMaxWidth(),
@@ -104,7 +109,17 @@ fun DiagnosisScreen(
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = { navController.navigateUp() }) {
+                    IconButton(onClick = {
+                        if (viewModel.currentStep > 0) {
+                            if (viewModel.currentStep == 2) {
+                                viewModel.currentStep = 1
+                            } else if (viewModel.currentStep == 1) {
+                                viewModel.currentStep = 0
+                            }
+                        } else {
+                            navController.navigateUp()
+                        }
+                    }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "BACK_ICON")
                     }
                 }
@@ -358,12 +373,21 @@ private fun DiagnosisBottomBar(
             )
             Spacer(Modifier.width(8.dp))
             Text(
-                text = if (viewModel.todayDiagnosis == null || viewModel.existsInOtherHospital) stringResource(
-                    R.string.add_diagnosis
-                )
-                else stringResource(R.string.update_diagnosis)
+                text = getBtnText(viewModel)
             )
         }
+    }
+}
+
+@Composable
+private fun getBtnText(viewModel: DiagnosisViewModel): String {
+    return if (viewModel.todayDiagnosis != null && viewModel.todayDiagnosis!!.campaignId != null) {
+        stringResource(id = R.string.update_diagnosis)
+    } else {
+        stringResource(
+            id = if (viewModel.todayDiagnosis == null || viewModel.existsInOtherHospital) R.string.add_diagnosis
+            else R.string.update_diagnosis
+        )
     }
 }
 

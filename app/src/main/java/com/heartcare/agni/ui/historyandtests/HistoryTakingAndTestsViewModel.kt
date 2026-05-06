@@ -33,6 +33,7 @@ import com.heartcare.agni.utils.common.Queries
 import com.heartcare.agni.utils.common.Queries.getInProgressCompletedAppointmentIds
 import com.heartcare.agni.utils.common.Queries.loadAppointmentInfo
 import com.heartcare.agni.utils.common.Queries.getCampaignAppointmentInfo
+import com.heartcare.agni.utils.common.Queries.isCampaignActive
 import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.isToday
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
@@ -135,7 +136,7 @@ class HistoryTakingAndTestsViewModel @Inject constructor(
             existsInOtherHospital = info.existsInOtherHospital
             canAddAssessment = info.canAddAssessment
             isAppointmentCompleted = info.isAppointmentCompleted
-            ifAllSlotsBooked = info.isAppointmentCompleted
+            ifAllSlotsBooked = info.ifAllSlotsBooked
             callback()
         }
     }
@@ -211,10 +212,7 @@ class HistoryTakingAndTestsViewModel @Inject constructor(
                     dxResponse.copy(screeningSiteName = dxResponse.campaignId?.let { siteMap[it]?.name })
                 }.also {
                     todayPriorDx = it.firstOrNull { priorDx -> isToday(priorDx.createdOn!!) }?:
-                    it.firstOrNull { record -> record.campaignId != null && isCampaignActive(record.campaignId) }
-
-
-
+                    it.firstOrNull { record -> record.campaignId != null && isCampaignActive(screeningSiteRepository,record.campaignId) }
                 }
             medicationList =
                 historyMedicationRepository.getHistoryMedicationRecordsByAppointmentIds(*allCombinedIds)
@@ -224,7 +222,7 @@ class HistoryTakingAndTestsViewModel @Inject constructor(
                     .also {
                         todayHistoryMedication =
                             it.firstOrNull { historyMedication -> isToday(historyMedication.appUpdatedDate) } ?:
-                                    it.firstOrNull { record -> record.campaignId != null && isCampaignActive(record.campaignId) }
+                                    it.firstOrNull { record -> record.campaignId != null && isCampaignActive(screeningSiteRepository,record.campaignId) }
 
 
                     }
@@ -237,7 +235,7 @@ class HistoryTakingAndTestsViewModel @Inject constructor(
 
                         todayFamilyHistory =
                             it.firstOrNull { familyHistory -> isToday(familyHistory.appUpdatedDate) }
-                                ?: it.firstOrNull { record -> record.campaignId != null && isCampaignActive(record.campaignId) }
+                                ?: it.firstOrNull { record -> record.campaignId != null && isCampaignActive(screeningSiteRepository,record.campaignId) }
 
                     }
             allergyList =
@@ -247,7 +245,7 @@ class HistoryTakingAndTestsViewModel @Inject constructor(
                     }
                     .also {
                         todayAllergy = it.firstOrNull { allergy -> isToday(allergy.appUpdatedDate) }
-                            ?:it.firstOrNull { record -> record.campaignId != null && isCampaignActive(record.campaignId) }
+                            ?:it.firstOrNull { record -> record.campaignId != null && isCampaignActive(screeningSiteRepository,record.campaignId) }
 
                     }
             riskFactorsList =
@@ -259,7 +257,7 @@ class HistoryTakingAndTestsViewModel @Inject constructor(
 
                         todayRiskFactor =
                             it.firstOrNull { riskFactor -> isToday(riskFactor.appUpdatedDate) }
-                                ?: it.firstOrNull { record -> record.campaignId != null && isCampaignActive(record.campaignId) }
+                                ?: it.firstOrNull { record -> record.campaignId != null && isCampaignActive(screeningSiteRepository,record.campaignId) }
 
                     }
             tobaccoCessationList =
@@ -268,13 +266,11 @@ class HistoryTakingAndTestsViewModel @Inject constructor(
                     .also {
                             todayTobaccoCessation =
                                 it.firstOrNull { tobaccoCessation -> isToday(tobaccoCessation.appUpdatedDate) }?:
-                                        it.firstOrNull { record -> record.campaignId != null && isCampaignActive(record.campaignId) }
+                                        it.firstOrNull { record -> record.campaignId != null && isCampaignActive(screeningSiteRepository,record.campaignId) }
                     }
             isLoading = false
         }
     }
 
-    private suspend fun isCampaignActive(campaignId: String): Boolean {
-        return screeningSiteRepository.getScreeningSiteById(campaignId)?.status == "active"
-    }
+
 }

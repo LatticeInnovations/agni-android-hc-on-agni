@@ -2,9 +2,11 @@ package com.heartcare.agni.data.local.repository.screeningsite
 
 import com.heartcare.agni.data.local.roomdb.dao.ScreeningSiteDao
 import com.heartcare.agni.data.server.model.campaign.ScreeningSiteMasterResponse
+import com.heartcare.agni.utils.converters.responseconverter.TimeConverter.toIsoDate
 import com.heartcare.agni.utils.converters.responseconverter.toScreeningSiteMasterEntity
 import com.heartcare.agni.utils.converters.responseconverter.toScreeningSiteMasterResponse
 import jakarta.inject.Inject
+import java.util.Date
 
 class ScreeningSiteRepositoryImpl @Inject constructor(
     private val dao: ScreeningSiteDao
@@ -25,6 +27,8 @@ class ScreeningSiteRepositoryImpl @Inject constructor(
     }
 
     override suspend fun getActiveScreeningSites(): List<ScreeningSiteMasterResponse> {
-        return dao.getActiveScreeningSites().map { it.toScreeningSiteMasterResponse() }
+        val today = Date().toIsoDate()
+        return dao.getActiveScreeningSites(today)
+            .map { it.toScreeningSiteMasterResponse() }
     }
 }

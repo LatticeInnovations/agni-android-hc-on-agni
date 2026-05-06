@@ -108,7 +108,6 @@ fun PrescriptionScreen(
             callback = {
                 when {
                     viewModel.existsInOtherHospital -> {
-                        onWizardReset()
                         coroutineScope.launch {
                             snackBarHostState.showSnackbar(
                                 message = context.getString(R.string.appointment_exists_in_other_hospital)
@@ -119,17 +118,23 @@ fun PrescriptionScreen(
                     viewModel.canAddAssessment -> {
                         onWizardReset()
                         if (viewModel.isReprescribing) {
-                             saveRePrescription(context, viewModel, viewModel.represcribingPrescription!!, coroutineScope, snackBarHostState, pagerState)
+                            saveRePrescription(
+                                context,
+                                viewModel,
+                                viewModel.represcribingPrescription!!,
+                                coroutineScope,
+                                snackBarHostState,
+                                pagerState
+                            )
                         } else {
-                             viewModel.setTodayData()
-                             coroutineScope.launch {
-                                 pagerState.animateScrollToPage(1)
-                             }
+                            viewModel.setTodayData()
+                            coroutineScope.launch {
+                                pagerState.animateScrollToPage(1)
+                            }
                         }
                     }
 
                     viewModel.isAppointmentCompleted -> {
-                        onWizardReset()
                         viewModel.showAppointmentCompletedDialog = true
                     }
 
@@ -203,8 +208,13 @@ fun PrescriptionScreen(
                             snackBarHostState = snackBarHostState,
                             context = context,
                             onTabRequiresWizard = {
-                                viewModel.currentStep = 0
-                                coroutineScope.launch { pagerState.animateScrollToPage(index) }
+                                if (viewModel.isScreeningSiteEnabled) {
+                                    viewModel.currentStep = 0
+                                    coroutineScope.launch { pagerState.animateScrollToPage(index) }
+                                } else {
+                                    handleAddPrescriptionAction {}
+                                }
+
                             }
                         )
                     }
@@ -232,16 +242,24 @@ fun PrescriptionScreen(
                                         if (viewModel.isScreeningSiteEnabled) {
                                             viewModel.currentStep = 1
                                         } else {
-                                            viewModel.currentStep = 3
+                                            handleAddPrescriptionAction {
+                                                viewModel.currentStep = 3
+                                                coroutineScope.launch {
+                                                    pagerState.animateScrollToPage(
+                                                        index
+                                                    )
+                                                }
+
+                                            }
                                         }
                                     }
 
                                     1 -> RecordTypeSelectionContent(
                                         modifier = Modifier.fillMaxSize(),
                                         selectedType = viewModel.selectedType,
-                                        onTypeSelected = { type-> viewModel.selectedType = type },
+                                        onTypeSelected = { type -> viewModel.selectedType = type },
                                         onContinueClick = {
-                                            viewModel.patient?.let {patient->
+                                            viewModel.patient?.let { patient ->
                                                 viewModel.getPreviousPrescription(patient.id)
                                             }
                                             if (viewModel.selectedType == RecordType.FACILITY) {
@@ -257,11 +275,11 @@ fun PrescriptionScreen(
 
                                     2 -> ScreeningSiteListContent(
                                         modifier = Modifier.fillMaxSize(),
-                                        sites = viewModel.screeningSites.map {site-> site.name },
+                                        sites = viewModel.screeningSites.map { site -> site.name },
                                         selectedSite = viewModel.screeningSites.find { selectedSite -> selectedSite.id == viewModel.selectedCampaignId }?.name,
                                         onSiteSelected = { siteName ->
                                             viewModel.selectedCampaignId =
-                                                viewModel.screeningSites.find { site->site.name == siteName }?.id
+                                                viewModel.screeningSites.find { site -> site.name == siteName }?.id
                                         },
                                         onBackClick = {
                                             viewModel.currentStep = 1
@@ -269,7 +287,7 @@ fun PrescriptionScreen(
                                         },
                                         onContinueClick = {
                                             if (viewModel.selectedCampaignId != null) {
-                                                viewModel.patient?.let {patient->
+                                                viewModel.patient?.let { patient ->
                                                     viewModel.getPreviousPrescription(patient.id)
                                                 }
                                                 handleAddPrescriptionAction {
@@ -296,7 +314,7 @@ fun PrescriptionScreen(
         SnackbarHost(
             hostState = snackBarHostState,
             modifier = Modifier
-                .padding(bottom = if (viewModel.selectedMedicationsList.isNotEmpty() && pagerState.currentPage == 1) 70.dp else 6.dp)
+                .padding(bottom = if (viewModel.selectedMedicationsList.isNotEmpty() && pagerState.currentPage == 1) 70.dp else if (viewModel.currentStep != 0) 70.dp else 6.dp)
                 .navigationBarsPadding()
         )
     }
@@ -378,9 +396,9 @@ private fun handleTabNavigation(
 ) {
     if (index == 1) {
         if (viewModel.patient!!.patientDeceasedReason.isNullOrBlank()) {
-             viewModel.isReprescribing = false
-             viewModel.represcribingPrescription = null
-             onTabRequiresWizard()
+            viewModel.isReprescribing = false
+            viewModel.represcribingPrescription = null
+            onTabRequiresWizard()
         } else {
             coroutineScope.launch {
                 snackBarHostState.showSnackbar(
@@ -467,7 +485,7 @@ fun BottomNavLayout(
         contentAlignment = Alignment.BottomCenter
     ) {
         AnimatedVisibility(
-            visible = pagerState.currentPage == 1 && viewModel.currentStep ==3,
+            visible = pagerState.currentPage == 1 && viewModel.currentStep == 3,
             enter = expandVertically(),
             exit = shrinkVertically()
         ) {
@@ -781,6 +799,7 @@ private fun AddToQueueDialog(
             )
         } else {
             coroutineScope.launch {
+                viewModel.currentStep = 0
                 pagerState.animateScrollToPage(1)
             }
         }
