@@ -11,8 +11,6 @@ import com.heartcare.agni.data.local.repository.crashlytics.CrashlyticsLogger
 import com.heartcare.agni.data.local.repository.crashlytics.CrashlyticsLoggerImpl
 import com.heartcare.agni.data.local.repository.generic.GenericRepository
 import com.heartcare.agni.data.local.repository.generic.GenericRepositoryImpl
-import com.heartcare.agni.data.local.repository.nationalId.NationalIdRepository
-import com.heartcare.agni.data.local.repository.nationalId.NationalIdRepositoryImpl
 import com.heartcare.agni.data.local.repository.preference.PreferenceRepository
 import com.heartcare.agni.data.local.repository.preference.PreferenceRepositoryImpl
 import com.heartcare.agni.data.local.roomdb.FhirAppDatabase
@@ -37,7 +35,6 @@ import com.heartcare.agni.utils.converters.gson.DateDeserializer
 import com.heartcare.agni.utils.converters.gson.DateSerializer
 import com.heartcare.agni.utils.network.CheckNetwork
 import dagger.hilt.android.HiltAndroidApp
-import kotlinx.coroutines.Dispatchers
 import timber.log.Timber
 import timber.log.Timber.Forest.plant
 import java.util.Date
@@ -113,7 +110,6 @@ class FhirApp : Application() {
         }
 
         val preferenceRepository: PreferenceRepository = PreferenceRepositoryImpl(preferenceStorage)
-        val nationalIdRepository: NationalIdRepository = NationalIdRepositoryImpl(applicationContext, Dispatchers.IO)
 
         _crashlyticsLogger = CrashlyticsLoggerImpl(
             crashlytics
@@ -135,7 +131,6 @@ class FhirApp : Application() {
             fhirAppDatabase.getPatientDao(),
             fhirAppDatabase.getGenericDao(),
             preferenceRepository,
-            nationalIdRepository,
             fhirAppDatabase.getMedicationDao(),
             fhirAppDatabase.getPrescriptionDao(),
             fhirAppDatabase.getScheduleDao(),
@@ -159,6 +154,7 @@ class FhirApp : Application() {
             fhirAppDatabase.getScreeningSiteMasterDao(),
             fhirAppDatabase.getCampaignScheduleDao(),
             fhirAppDatabase.getCampaignAppointmentDao(),
+            fhirAppDatabase.getNationalIdDao(),
             crashlyticsLogger
         )
 

@@ -635,7 +635,7 @@ class SyncService(
 
     /** Download National Id Data */
     internal suspend fun downloadNationalIdData(logout: (Boolean, String) -> Unit): ResponseMapper<Any>? {
-        return checkAuthenticationStatus(syncRepository.getAndSaveNationalIdData(), logout)
+        return checkAuthenticationStatus(syncRepository.getAndSaveLatestNationalIdData(), logout)
     }
 
     /** Download Medication Timing */

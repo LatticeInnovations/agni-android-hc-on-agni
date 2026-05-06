@@ -26,6 +26,7 @@ import com.heartcare.agni.data.server.model.healthfacility.HealthFacilityRespons
 import com.heartcare.agni.data.server.model.referral.ReferralResponse
 import com.heartcare.agni.data.server.model.tobacco.TobaccoCessationResponse
 import com.heartcare.agni.data.server.model.campaign.ScreeningSiteMasterResponse
+import com.heartcare.agni.data.server.model.nationalId.NationalIdResponse
 import com.heartcare.agni.data.server.model.report.ReportTokenResponse
 import com.heartcare.agni.data.server.model.vitals.VitalResponse
 import com.heartcare.agni.utils.converters.server.responsemapper.ResponseMapper
@@ -73,7 +74,7 @@ interface SyncRepository {
     suspend fun getAndInsertCampaignExaminationData(offset: Int): ResponseMapper<List<ExaminationResponse>>
     suspend fun getAndInsertReferralData(offset: Int): ResponseMapper<List<ReferralResponse>>
     suspend fun getAndInsertReportTokenData(offset: Int): ResponseMapper<List<ReportTokenResponse>>
-    suspend fun getAndSaveNationalIdData(): ResponseMapper<Nothing>
+    suspend fun getAndSaveLatestNationalIdData(): ResponseMapper<List<NationalIdResponse>>
 
     //POST
     suspend fun sendPersonPostData(): ResponseMapper<List<CreateResponse>>

@@ -284,6 +284,12 @@ class PreferenceRepositoryImpl @Inject constructor(private val preferenceStorage
 
     override fun getLastSyncReportToken(): Long = preferenceStorage.lastSyncReportToken
 
+    override fun setLastSyncNationalId(long: Long) {
+        preferenceStorage.lastSyncNationalId = long
+    }
+
+    override fun getLastSyncNationalId(): Long = preferenceStorage.lastSyncNationalId
+
     override fun setRoomDBEncryptionKey(encryptionKey: String) {
         preferenceStorage.roomDBEncryptionKey = encryptionKey
     }

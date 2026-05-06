@@ -6,7 +6,6 @@ import com.heartcare.agni.data.local.enums.RecordType
 import com.heartcare.agni.data.local.enums.SyncType
 import com.heartcare.agni.data.local.model.diagnosis.DiagnosisData
 import com.heartcare.agni.data.local.repository.crashlytics.CrashlyticsLogger
-import com.heartcare.agni.data.local.repository.nationalId.NationalIdRepository
 import com.heartcare.agni.data.local.repository.preference.PreferenceRepository
 import com.heartcare.agni.data.local.roomdb.dao.AllergyDao
 import com.heartcare.agni.data.local.roomdb.dao.AppointmentDao
@@ -22,6 +21,7 @@ import com.heartcare.agni.data.local.roomdb.dao.HistoryMedicationDao
 import com.heartcare.agni.data.local.roomdb.dao.InterventionDao
 import com.heartcare.agni.data.local.roomdb.dao.LevelsDao
 import com.heartcare.agni.data.local.roomdb.dao.MedicationDao
+import com.heartcare.agni.data.local.roomdb.dao.NationalIdDao
 import com.heartcare.agni.data.local.roomdb.dao.PatientDao
 import com.heartcare.agni.data.local.roomdb.dao.PatientLastUpdatedDao
 import com.heartcare.agni.data.local.roomdb.dao.PrescriptionDao
@@ -33,8 +33,8 @@ import com.heartcare.agni.data.local.roomdb.dao.ScheduleDao
 import com.heartcare.agni.data.local.roomdb.dao.ScreeningSiteDao
 import com.heartcare.agni.data.local.roomdb.dao.TobaccoCessationDao
 import com.heartcare.agni.data.local.roomdb.dao.VitalDao
-import com.heartcare.agni.data.server.api.CampaignApiService
 import com.heartcare.agni.data.server.api.CVDApiService
+import com.heartcare.agni.data.server.api.CampaignApiService
 import com.heartcare.agni.data.server.api.DiagnosisApiService
 import com.heartcare.agni.data.server.api.ExaminationApiService
 import com.heartcare.agni.data.server.api.HistoryAndTestsApiService
@@ -47,6 +47,7 @@ import com.heartcare.agni.data.server.api.ScheduleAndAppointmentApiService
 import com.heartcare.agni.data.server.api.VitalApiService
 import com.heartcare.agni.data.server.constants.ConstantValues.COUNT_VALUE
 import com.heartcare.agni.data.server.constants.ConstantValues.DEFAULT_MAX_COUNT_VALUE
+import com.heartcare.agni.data.server.constants.ConstantValues.NATIONAL_ID_COUNT_VALUE
 import com.heartcare.agni.data.server.constants.EndPoints
 import com.heartcare.agni.data.server.constants.EndPoints.CAMPAIGN_VITAL
 import com.heartcare.agni.data.server.constants.EndPoints.MEDICATION_REQUEST
@@ -61,6 +62,7 @@ import com.heartcare.agni.data.server.constants.QueryParameters.PATIENT_ID
 import com.heartcare.agni.data.server.constants.QueryParameters.SORT
 import com.heartcare.agni.data.server.constants.QueryParameters.TYPE
 import com.heartcare.agni.data.server.model.allergy.AllergyResponse
+import com.heartcare.agni.data.server.model.campaign.ScreeningSiteMasterResponse
 import com.heartcare.agni.data.server.model.create.CreateResponse
 import com.heartcare.agni.data.server.model.cvd.CVDResponse
 import com.heartcare.agni.data.server.model.diagnosis.DiagnosisMasterResponse
@@ -73,6 +75,7 @@ import com.heartcare.agni.data.server.model.historymedication.HistoryMedicationR
 import com.heartcare.agni.data.server.model.intervention.InterventionMasterResponse
 import com.heartcare.agni.data.server.model.intervention.InterventionResponse
 import com.heartcare.agni.data.server.model.levels.LevelResponse
+import com.heartcare.agni.data.server.model.nationalId.NationalIdResponse
 import com.heartcare.agni.data.server.model.patient.PatientLastUpdatedResponse
 import com.heartcare.agni.data.server.model.patient.PatientResponse
 import com.heartcare.agni.data.server.model.prescription.medication.MedicationResponse
@@ -80,13 +83,12 @@ import com.heartcare.agni.data.server.model.prescription.medication.MedicineTime
 import com.heartcare.agni.data.server.model.prescription.prescriptionresponse.PrescriptionResponse
 import com.heartcare.agni.data.server.model.priordx.PriorDxResponse
 import com.heartcare.agni.data.server.model.referral.ReferralResponse
+import com.heartcare.agni.data.server.model.report.ReportTokenResponse
 import com.heartcare.agni.data.server.model.risk.RiskFactorResponse
 import com.heartcare.agni.data.server.model.scheduleandappointment.appointment.AppointmentResponse
 import com.heartcare.agni.data.server.model.scheduleandappointment.schedule.ScheduleResponse
 import com.heartcare.agni.data.server.model.tobacco.TobaccoCessationResponse
 import com.heartcare.agni.data.server.model.vitals.VitalResponse
-import com.heartcare.agni.data.server.model.campaign.ScreeningSiteMasterResponse
-import com.heartcare.agni.data.server.model.report.ReportTokenResponse
 import com.heartcare.agni.utils.constants.ErrorConstants.ERROR_FETCHING_USER_DETAILS
 import com.heartcare.agni.utils.constants.ErrorConstants.SOMETHING_WENT_WRONG
 import com.heartcare.agni.utils.constants.FirebaseKeyConstants.USER_ID
@@ -121,7 +123,6 @@ class SyncRepositoryImpl @Inject constructor(
     patientDao: PatientDao,
     private val genericDao: GenericDao,
     private val preferenceRepository: PreferenceRepository,
-    private val nationalIdRepository: NationalIdRepository,
     medicationDao: MedicationDao,
     prescriptionDao: PrescriptionDao,
     scheduleDao: ScheduleDao,
@@ -145,6 +146,7 @@ class SyncRepositoryImpl @Inject constructor(
     screeningSiteDao: ScreeningSiteDao,
     campaignScheduleDao: CampaignScheduleDao,
     campaignAppointmentDao: CampaignAppointmentDao,
+    nationalIdDao: NationalIdDao,
     private val crashlyticsLogger: CrashlyticsLogger
 ) : SyncRepository, SyncRepositoryDatabaseTransactions(
     patientDao,
@@ -171,7 +173,8 @@ class SyncRepositoryImpl @Inject constructor(
     referralDao,
     screeningSiteDao,
     campaignScheduleDao,
-    campaignAppointmentDao
+    campaignAppointmentDao,
+    nationalIdDao
 ) {
 
     override suspend fun getAndInsertListPatientData(
@@ -3319,100 +3322,103 @@ class SyncRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun getAndSaveNationalIdData(): ResponseMapper<Nothing> {
+    // Check if server has new national id data
+    override suspend fun getAndSaveLatestNationalIdData(): ResponseMapper<List<NationalIdResponse>> {
+        val map = mutableMapOf<String, String>()
+        map[COUNT] = 1.toString()
+        map[OFFSET] = 0.toString()
+
         return try {
-            // Todo: Replace it after server binding
-            val dummyJson = """
-            [
-              {
-                "national_id": "1123665",
-                "last_name": "Rosko",
-                "middle_name": "Alison",
-                "first_name": "May",
-                "date_of_birth": "2023-05-15",
-                "gender": "Female"
-              },
-              {
-                "national_id": "1123638",
-                "last_name": "Taso",
-                "middle_name": "Emmy",
-                "first_name": "Raevely",
-                "date_of_birth": "2023-05-17",
-                "gender": "Female"
-              },
-              {
-                "national_id": "1123634",
-                "last_name": "Kuaramu",
-                "middle_name": "Luke",
-                "first_name": "Junior",
-                "date_of_birth": "2024-09-12",
-                "gender": "Male"
-              },
-              {
-                "national_id": "1123633",
-                "last_name": "Liu",
-                "middle_name": "",
-                "first_name": "Huajian",
-                "date_of_birth": "1996-06-17",
-                "gender": "Male"
-              },
-              {
-                "national_id": "1123628",
-                "last_name": "Lin",
-                "middle_name": "",
-                "first_name": "Qiaoli",
-                "date_of_birth": "1992-03-07",
-                "gender": "Male"
-              },
-              {
-                "national_id": "1123624",
-                "last_name": "Xu",
-                "middle_name": "",
-                "first_name": "Hongkun",
-                "date_of_birth": "2000-08-15",
-                "gender": "Male"
-              },
-              {
-                "national_id": "1123619",
-                "last_name": "Wu",
-                "middle_name": "",
-                "first_name": "Jincai",
-                "date_of_birth": "1988-04-20",
-                "gender": "Male"
-              },
-              {
-                "national_id": "1123617",
-                "last_name": "Namu",
-                "middle_name": "Sima",
-                "first_name": "Kauna",
-                "date_of_birth": "2025-06-25",
-                "gender": "Male"
-              },
-              {
-                "national_id": "1123615",
-                "last_name": "Namu",
-                "middle_name": "",
-                "first_name": "Rota",
-                "date_of_birth": "2023-10-17",
-                "gender": "Female"
-              },
-              {
-                "national_id": "1123611",
-                "last_name": "Muliaki",
-                "middle_name": "",
-                "first_name": "Anthony",
-                "date_of_birth": "2018-10-07",
-                "gender": "Male"
-              }
-            ]
-        """.trimIndent()
+            ApiResponseConverter.convert(
+                patientApiService.getNationalIdData(
+                    map
+                ), true
+            ).run {
+                when (this) {
+                    is ApiContinueResponse -> {
+                        handleNationalIdResponse(body)
+                    }
 
-            nationalIdRepository.saveNationalIdData(dummyJson)
+                    is ApiEndResponse -> {
+                        handleNationalIdResponse(body)
+                    }
 
-            ApiEmptyResponse()
-
+                    else -> this
+                }
+            }
         } catch (e: Exception) {
-            ApiErrorResponse(statusCode = 0, errorMessage = e.localizedMessage ?: "Error in saving National Id Data")
+            Timber.e(e, e.localizedMessage)
+            crashlyticsLogger.logException(
+                e,
+                "getAndSaveLatestNationalIdData function failed.",
+                mapOf(
+                    Pair(
+                        USER_ID,
+                        preferenceRepository.getUserDetails()?.userId ?: ERROR_FETCHING_USER_DETAILS
+                    )
+                )
+            )
+            ApiErrorResponse(
+                statusCode = 0,
+                errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
+            )
+        }
+    }
+
+    private suspend fun handleNationalIdResponse(body: List<NationalIdResponse>): ResponseMapper<List<NationalIdResponse>> {
+        val serverTime = body.firstOrNull()?.lastSyncedAt?.time ?: return ApiEmptyResponse()
+        return if (serverTime > preferenceRepository.getLastSyncNationalId()) {
+            deleteAllNationalId()
+            getAndSaveNationalIdData(0)
+        } else ApiEmptyResponse()
+    }
+
+    private suspend fun getAndSaveNationalIdData(
+        offset: Int
+    ): ResponseMapper<List<NationalIdResponse>> {
+        val map = mutableMapOf<String, String>()
+        map[COUNT] = NATIONAL_ID_COUNT_VALUE.toString()
+        map[OFFSET] = offset.toString()
+
+        return try {
+            ApiResponseConverter.convert(
+                patientApiService.getNationalIdData(
+                    map
+                ), true
+            ).run {
+                when (this) {
+                    is ApiContinueResponse -> {
+                        insertNationalId(body)
+                        //Call for next batch data
+                        getAndSaveNationalIdData(offset + NATIONAL_ID_COUNT_VALUE)
+                    }
+
+                    is ApiEndResponse -> {
+                        insertNationalId(body)
+                        preferenceRepository.setLastSyncNationalId(Date().time)
+                        this
+                    }
+
+                    else -> this
+                }
+            }
+        } catch (e: Exception) {
+            Timber.e(e, e.localizedMessage)
+            crashlyticsLogger.logException(
+                e,
+                "getAndSaveNationalIdData function failed.",
+                mapOf(
+                    Pair(
+                        USER_ID,
+                        preferenceRepository.getUserDetails()?.userId
+                            ?: ERROR_FETCHING_USER_DETAILS
+                    )
+                )
+            )
+            ApiErrorResponse(
+                statusCode = 0,
+                errorMessage = e.localizedMessage ?: SOMETHING_WENT_WRONG
+            )
         }
     }
 }

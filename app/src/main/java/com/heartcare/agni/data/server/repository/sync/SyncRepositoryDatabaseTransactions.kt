@@ -28,6 +28,7 @@ import com.heartcare.agni.data.local.roomdb.dao.TobaccoCessationDao
 import com.heartcare.agni.data.local.roomdb.dao.VitalDao
 import com.heartcare.agni.data.local.roomdb.dao.CampaignScheduleDao
 import com.heartcare.agni.data.local.roomdb.dao.CampaignAppointmentDao
+import com.heartcare.agni.data.local.roomdb.dao.NationalIdDao
 import com.heartcare.agni.data.local.roomdb.entities.generic.GenericEntity
 import com.heartcare.agni.data.local.roomdb.entities.patient.IdentifierEntity
 import com.heartcare.agni.data.local.roomdb.entities.prescription.PrescriptionDirectionsEntity
@@ -57,6 +58,7 @@ import com.heartcare.agni.data.server.model.scheduleandappointment.schedule.Sche
 import com.heartcare.agni.data.server.model.tobacco.TobaccoCessationResponse
 import com.heartcare.agni.data.server.model.vitals.VitalResponse
 import com.heartcare.agni.data.server.model.campaign.ScreeningSiteMasterResponse
+import com.heartcare.agni.data.server.model.nationalId.NationalIdResponse
 import com.heartcare.agni.data.server.model.report.ReportTokenResponse
 import com.heartcare.agni.utils.constants.ErrorConstants
 import com.heartcare.agni.utils.constants.ErrorConstants.APPOINTMENT_ERROR
@@ -90,6 +92,7 @@ import com.heartcare.agni.utils.converters.responseconverter.toScheduleEntity
 import com.heartcare.agni.utils.converters.responseconverter.toTobaccoCessationEntity
 import com.heartcare.agni.utils.converters.responseconverter.toScreeningSiteMasterEntity
 import com.heartcare.agni.utils.converters.responseconverter.toCampaignAppointmentEntity
+import com.heartcare.agni.utils.converters.responseconverter.toNationalIdEntity
 import com.heartcare.agni.utils.converters.responseconverter.toReportTokenEntity
 import com.heartcare.agni.utils.converters.responseconverter.toVitalEntity
 import java.util.UUID
@@ -119,7 +122,8 @@ open class SyncRepositoryDatabaseTransactions(
     private val referralDao: ReferralDao,
     private val screeningSiteDao: ScreeningSiteDao,
     private val campaignScheduleDao: CampaignScheduleDao,
-    private val campaignAppointmentDao: CampaignAppointmentDao
+    private val campaignAppointmentDao: CampaignAppointmentDao,
+    private val nationalIdDao: NationalIdDao
 ) {
 
 
@@ -720,5 +724,15 @@ open class SyncRepositoryDatabaseTransactions(
         appointmentDao.insertReportToken(
             *body.map { it.toReportTokenEntity(appointmentDao) }.toTypedArray()
         )
+    }
+
+    protected fun insertNationalId(body: List<NationalIdResponse>) {
+        nationalIdDao.insertNationalIdRecord(
+            *body.map { it.toNationalIdEntity() }.toTypedArray()
+        )
+    }
+
+    protected fun deleteAllNationalId() {
+        nationalIdDao.deleteAllNationalIdRecord()
     }
 }

@@ -44,6 +44,7 @@ import com.heartcare.agni.data.local.roomdb.entities.intervention.InterventionMa
 import com.heartcare.agni.data.local.roomdb.entities.levels.LevelEntity
 import com.heartcare.agni.data.local.roomdb.entities.medication.MedicationEntity
 import com.heartcare.agni.data.local.roomdb.entities.medication.MedicineTimingEntity
+import com.heartcare.agni.data.local.roomdb.entities.nationalId.NationalIdEntity
 import com.heartcare.agni.data.local.roomdb.entities.patient.IdentifierEntity
 import com.heartcare.agni.data.local.roomdb.entities.patient.PatientAndIdentifierEntity
 import com.heartcare.agni.data.local.roomdb.entities.patient.PatientEntity
@@ -82,6 +83,7 @@ import com.heartcare.agni.data.server.model.historymedication.HistoryMedicationR
 import com.heartcare.agni.data.server.model.intervention.InterventionMasterResponse
 import com.heartcare.agni.data.server.model.intervention.InterventionResponse
 import com.heartcare.agni.data.server.model.levels.LevelResponse
+import com.heartcare.agni.data.server.model.nationalId.NationalIdResponse
 import com.heartcare.agni.data.server.model.patient.GPSCoordinates
 import com.heartcare.agni.data.server.model.patient.GeneralPractitioner
 import com.heartcare.agni.data.server.model.patient.ManagingOrganization
@@ -1795,5 +1797,30 @@ suspend fun ReportTokenResponse.toReportTokenEntity(
     return ReportTokenEntity(
         appointmentId = appointmentDao.getAppointmentIdByFhirId(appointmentId),
         token = token
+    )
+}
+
+fun NationalIdResponse.toNationalIdEntity(): NationalIdEntity {
+    return NationalIdEntity(
+        nationalId = nationalId,
+        firstName = firstName,
+        middleName = middleName,
+        lastName = lastName,
+        dob = dob,
+        gender = gender,
+        updatedAt = updatedAt
+    )
+}
+
+fun NationalIdEntity.toNationalIdResponse(): NationalIdResponse {
+    return NationalIdResponse(
+        nationalId = nationalId,
+        firstName = firstName,
+        middleName = middleName,
+        lastName = lastName,
+        dob = dob,
+        gender = gender,
+        updatedAt = updatedAt,
+        lastSyncedAt = Date()
     )
 }
