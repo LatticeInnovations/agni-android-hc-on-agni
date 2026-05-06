@@ -14,6 +14,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -38,6 +40,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -83,9 +86,10 @@ fun ReportsScreen(
                     text = {
                         Text(
                             text = title,
+                            textAlign = TextAlign.Center,
                             color = if (viewModel.selectedTabIndex == index) MaterialTheme.colorScheme.primary
                             else MaterialTheme.colorScheme.onSurfaceVariant,
-                            style = MaterialTheme.typography.titleSmall
+                            style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold)
                         )
                     }
                 )
@@ -149,11 +153,12 @@ fun ReportsScreen(
                                     modifier = Modifier.padding(bottom = 8.dp)
                                 )
 
-                                Row(
+                                LazyRow(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                                 ) {
-                                    viewModel.currentState.ageGroups.forEach { (range, count) ->
+
+                                    items(viewModel.currentState.ageGroups){ (range, count)->
                                         Column(
                                             modifier = Modifier
                                                 .background(
