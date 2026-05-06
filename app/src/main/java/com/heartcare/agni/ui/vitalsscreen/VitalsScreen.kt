@@ -933,19 +933,19 @@ private fun VitalsCardLayout(
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onPrimaryContainer
             )
-            vital.screeningSiteName?.let {
-                Text(
-                    modifier = Modifier.padding(top = 4.dp),
-                    text = it,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.primary
-                )
-            }
             Text(
                 modifier = Modifier.padding(top = 4.dp),
                 text = vital.practitionerName ?: stringResource(id = R.string.dash),
                 style = MaterialTheme.typography.bodySmall
             )
+            vital.screeningSiteName?.let {
+                Text(
+                    modifier = Modifier.padding(top = 4.dp),
+                    text = it,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
             HorizontalDivider(
                 modifier = Modifier.padding(
                     vertical = 8.dp
@@ -1091,17 +1091,18 @@ private fun CVDRecordCardLayout(
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
-                    cvdResponse.screeningSiteName?.let {
-                        Text(
-                            text = it,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                    }
+
                     Text(
                         text = cvdResponse.practitionerName ?: stringResource(id = R.string.dash),
                         style = MaterialTheme.typography.bodySmall
                     )
+                    cvdResponse.screeningSiteName?.let {
+                        Text(
+                            text = it,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
 
                 }
                 Surface(
