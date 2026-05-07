@@ -100,7 +100,7 @@ class ReportsViewModel @Inject constructor(
     private fun getCampaignList() {
         viewModelScope.launch {
             val campaigns = withContext(ioDispatcher) {
-                screeningSiteRepository.getActiveScreeningSites().filter { site ->
+                screeningSiteRepository.getScreeningSites().filter { site ->
                     site.staff.any { it.id == user.fhirId && it.isTeamLead }
                 }
             }
