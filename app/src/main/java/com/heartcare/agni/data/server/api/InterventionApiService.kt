@@ -21,19 +21,19 @@ interface InterventionApiService {
 
     @GET("{endPoint}")
     suspend fun getInterventions(
-        @Path("endPoint") endPoint: String,
+        @Path("endPoint", encoded = true) endPoint: String,
         @QueryMap(encoded = true) map: Map<String, String>?
     ): Response<BaseResponse<List<InterventionResponse>>>
 
     @POST("{endPoint}")
     suspend fun postIntervention(
-        @Path("endPoint") endPoint: String,
+        @Path("endPoint", encoded = true) endPoint: String,
         @Body interventionResponse: List<InterventionResponse>
     ): Response<BaseResponse<List<CreateResponse>>>
 
     @PUT("{endPoint}")
     suspend fun putIntervention(
-        @Path("endPoint") endPoint: String,
+        @Path("endPoint", encoded = true) endPoint: String,
         @Body interventionResponse: List<InterventionResponse>
     ): Response<BaseResponse<List<CreateResponse>>>
 }

@@ -21,16 +21,16 @@ interface ExaminationApiService {
 
     @GET("{endPoint}")
     suspend fun getExaminations(
-        @Path("endPoint") endPoint: String,
+        @Path("endPoint", encoded = true) endPoint: String,
         @QueryMap(encoded = true) map: Map<String, String>?): Response<BaseResponse<List<ExaminationResponse>>>
 
     @POST("{endPoint}")
     suspend fun postExamination(
-        @Path("endPoint") endPoint: String,
+        @Path("endPoint", encoded = true) endPoint: String,
         @Body examinationResponse: List<ExaminationResponse>): Response<BaseResponse<List<CreateResponse>>>
 
     @PUT("{endPoint}")
     suspend fun putExamination(
-        @Path("endPoint") endPoint: String,
+        @Path("endPoint", encoded = true) endPoint: String,
         @Body examinationResponse: List<ExaminationResponse>): Response<BaseResponse<List<CreateResponse>>>
 }

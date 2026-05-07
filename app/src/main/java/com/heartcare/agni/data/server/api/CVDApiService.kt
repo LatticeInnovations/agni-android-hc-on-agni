@@ -16,13 +16,13 @@ interface CVDApiService {
 
     @POST("{endPoint}")
     suspend fun createCVD(
-        @Path("endPoint") endPoint: String,
+        @Path("endPoint", encoded = true) endPoint: String,
         @Body cvdResponse: List<CVDResponse>
     ): Response<BaseResponse<List<CreateResponse>>>
 
     @GET("{endPoint}")
     suspend fun getCVD(
-        @Path("endPoint") endPoint: String,
+        @Path("endPoint", encoded = true) endPoint: String,
         @QueryMap(encoded = true) map: Map<String, String>?
     ): Response<BaseResponse<List<CVDResponse>>>
 

@@ -14,13 +14,13 @@ import retrofit2.http.QueryMap
 interface VitalApiService {
     @GET("{endPoint}")
     suspend fun getListData(
-        @Path("endPoint") endPoint: String,
+        @Path("endPoint", encoded = true) endPoint: String,
         @QueryMap(encoded = true) map: Map<String, String>?
     ): Response<BaseResponse<List<VitalResponse>>>
 
     @POST("{endPoint}")
     suspend fun createData(
-        @Path("endPoint") endPoint: String, @Body vitals: List<VitalResponse>
+        @Path("endPoint", encoded = true) endPoint: String, @Body vitals: List<VitalResponse>
     ): Response<BaseResponse<List<CreateResponse>>>
 
     @PATCH("{endPoint}")

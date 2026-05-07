@@ -19,13 +19,13 @@ interface DiagnosisApiService {
 
     @GET("{endPoint}")
     suspend fun getListData(
-        @Path("endPoint") endPoint: String,
+        @Path("endPoint", encoded = true) endPoint: String,
         @QueryMap(encoded = true) map: Map<String, String>?
     ): Response<BaseResponse<List<DiagnosisResponse>>>
 
     @POST("{endPoint}")
     suspend fun createData(
-        @Path("endPoint") endPoint: String,
+        @Path("endPoint", encoded = true) endPoint: String,
         @Body diag: List<DiagnosisData>
     ): Response<BaseResponse<List<CreateResponse>>>
 }
