@@ -7,6 +7,7 @@ import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Update
 import com.heartcare.agni.data.local.roomdb.entities.campaign.CampaignAppointmentEntity
+import com.heartcare.agni.data.local.roomdb.entities.campaign.CampaignAppointmentEntityWithToken
 
 @Dao
 interface CampaignAppointmentDao {
@@ -49,7 +50,7 @@ interface CampaignAppointmentDao {
     @Query("SELECT * FROM CampaignAppointmentEntity WHERE patientId=:patientId AND status<>\"cancelled\" ORDER BY startTime DESC")
     suspend fun getAppointmentsOfPatient(
         patientId: String
-    ): List<CampaignAppointmentEntity>
+    ): List<CampaignAppointmentEntityWithToken>
 
     @Transaction
     @Update(onConflict = OnConflictStrategy.REPLACE)

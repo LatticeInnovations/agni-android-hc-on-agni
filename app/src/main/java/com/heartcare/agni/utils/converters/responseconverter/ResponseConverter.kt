@@ -24,12 +24,11 @@ import com.heartcare.agni.data.local.roomdb.entities.allergy.AllergyEntity
 import com.heartcare.agni.data.local.roomdb.entities.appointment.AppointmentEntity
 import com.heartcare.agni.data.local.roomdb.entities.appointment.AppointmentEntityWithToken
 import com.heartcare.agni.data.local.roomdb.entities.campaign.CampaignAppointmentEntity
+import com.heartcare.agni.data.local.roomdb.entities.campaign.CampaignAppointmentEntityWithToken
 import com.heartcare.agni.data.local.roomdb.entities.campaign.CampaignScheduleEntity
 import com.heartcare.agni.data.local.roomdb.entities.campaign.ScreeningSiteMasterEntity
 import com.heartcare.agni.data.local.roomdb.entities.campaign.StaffEntity
 import com.heartcare.agni.data.local.roomdb.entities.cvd.CVDEntity
-import com.heartcare.agni.data.server.model.campaign.ScreeningSiteMasterResponse
-import com.heartcare.agni.data.server.model.campaign.StaffResponse
 import com.heartcare.agni.data.local.roomdb.entities.diagnosis.DiagnosisEntity
 import com.heartcare.agni.data.local.roomdb.entities.diagnosis.DiagnosisLocal
 import com.heartcare.agni.data.local.roomdb.entities.diagnosis.DiagnosisMasterEntity
@@ -72,6 +71,8 @@ import com.heartcare.agni.data.local.roomdb.entities.vitals.Measurement
 import com.heartcare.agni.data.local.roomdb.entities.vitals.VitalEntity
 import com.heartcare.agni.data.local.roomdb.views.PrescriptionDirectionAndMedicineView
 import com.heartcare.agni.data.server.model.allergy.AllergyResponse
+import com.heartcare.agni.data.server.model.campaign.ScreeningSiteMasterResponse
+import com.heartcare.agni.data.server.model.campaign.StaffResponse
 import com.heartcare.agni.data.server.model.cvd.CVDResponse
 import com.heartcare.agni.data.server.model.diagnosis.DiagnosisMasterResponse
 import com.heartcare.agni.data.server.model.diagnosis.DiagnosisResponse
@@ -1792,11 +1793,13 @@ fun HealthFacilityEntity.toLevelResponse(): LevelResponse {
 }
 
 suspend fun ReportTokenResponse.toReportTokenEntity(
-    appointmentDao: AppointmentDao
+    appointmentDao: AppointmentDao,
+    campaignAppointmentDao: CampaignAppointmentDao
 ): ReportTokenEntity {
     return ReportTokenEntity(
-        appointmentId = appointmentDao.getAppointmentIdByFhirId(appointmentId),
-        token = token
+        token = token,
+        appointmentId = if (reportType == "facility") appointmentDao.getAppointmentIdByFhirId(appointmentId) else null,
+        campaignAppointmentId = if (reportType == "screening-site") campaignAppointmentDao.getAppointmentIdByFhirId(appointmentId) else null
     )
 }
 
@@ -1823,4 +1826,33 @@ fun NationalIdEntity.toNationalIdResponse(): NationalIdResponse {
         updatedAt = updatedAt,
         lastSyncedAt = Date()
     )
+}
+
+fun CampaignAppointmentEntityWithToken.toAppointmentResponseLocal(): AppointmentResponseLocal {
+    return campaignAppointmentEntity.run {
+        AppointmentResponseLocal(
+            uuid = id,
+            createdOn = createdOn,
+            appointmentId = appointmentFhirId,
+            patientId = patientId,
+            scheduleId = scheduleId,
+            slot = Slot(
+                start = startTime,
+                end = endTime
+            ),
+            status = status,
+            appointmentType = appointmentType,
+            inProgressTime = inProgressTime,
+            roleId = roleId,
+            slotId = slotId,
+            practitionerId = practitionerId,
+            hospitalFhirId = hospitalFhirId,
+            hospitalId = hospitalId,
+            hospitalName = hospitalName,
+            hospitalCode = hospitalCode,
+            campaignId = campaignId,
+            recordType = RecordType.SCREENING_SITE,
+            reportToken = reportTokenEntity?.token
+        )
+    }
 }

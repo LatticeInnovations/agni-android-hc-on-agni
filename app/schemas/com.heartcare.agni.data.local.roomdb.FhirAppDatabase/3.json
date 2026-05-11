@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 3,
-    "identityHash": "2433ce5db909c7a432db4a744725386d",
+    "identityHash": "d856e15c7f75d21d00b332975efc24b6",
     "entities": [
       {
         "tableName": "PatientEntity",
@@ -3689,25 +3689,29 @@
       },
       {
         "tableName": "ReportTokenEntity",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`appointmentId` TEXT NOT NULL, `token` TEXT NOT NULL, PRIMARY KEY(`appointmentId`), FOREIGN KEY(`appointmentId`) REFERENCES `AppointmentEntity`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`token` TEXT NOT NULL, `appointmentId` TEXT, `campaignAppointmentId` TEXT, PRIMARY KEY(`token`), FOREIGN KEY(`appointmentId`) REFERENCES `AppointmentEntity`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION , FOREIGN KEY(`campaignAppointmentId`) REFERENCES `CampaignAppointmentEntity`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION )",
         "fields": [
-          {
-            "fieldPath": "appointmentId",
-            "columnName": "appointmentId",
-            "affinity": "TEXT",
-            "notNull": true
-          },
           {
             "fieldPath": "token",
             "columnName": "token",
             "affinity": "TEXT",
             "notNull": true
+          },
+          {
+            "fieldPath": "appointmentId",
+            "columnName": "appointmentId",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "campaignAppointmentId",
+            "columnName": "campaignAppointmentId",
+            "affinity": "TEXT"
           }
         ],
         "primaryKey": {
           "autoGenerate": false,
           "columnNames": [
-            "appointmentId"
+            "token"
           ]
         },
         "indices": [
@@ -3719,6 +3723,15 @@
             ],
             "orders": [],
             "createSql": "CREATE INDEX IF NOT EXISTS `index_ReportTokenEntity_appointmentId` ON `${TABLE_NAME}` (`appointmentId`)"
+          },
+          {
+            "name": "index_ReportTokenEntity_campaignAppointmentId",
+            "unique": false,
+            "columnNames": [
+              "campaignAppointmentId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_ReportTokenEntity_campaignAppointmentId` ON `${TABLE_NAME}` (`campaignAppointmentId`)"
           }
         ],
         "foreignKeys": [
@@ -3728,6 +3741,17 @@
             "onUpdate": "NO ACTION",
             "columns": [
               "appointmentId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          },
+          {
+            "table": "CampaignAppointmentEntity",
+            "onDelete": "NO ACTION",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "campaignAppointmentId"
             ],
             "referencedColumns": [
               "id"
@@ -3804,7 +3828,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '2433ce5db909c7a432db4a744725386d')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'd856e15c7f75d21d00b332975efc24b6')"
     ]
   }
 }

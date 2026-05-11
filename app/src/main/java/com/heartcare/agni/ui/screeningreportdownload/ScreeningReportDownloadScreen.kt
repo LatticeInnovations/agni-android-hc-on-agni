@@ -115,10 +115,20 @@ fun ScreeningReportDownloadScreen(
                                         .padding(16.dp),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Text(
-                                        text = appointment.slot.start.toAppointmentDate(),
-                                        style = MaterialTheme.typography.bodyLarge
-                                    )
+                                    Column {
+                                        Text(
+                                            text = appointment.slot.start.toAppointmentDate(),
+                                            style = MaterialTheme.typography.bodyLarge
+                                        )
+                                        appointment.campaignId?.let {
+                                            Text(
+                                                text = appointment.campaignId,
+                                                style = MaterialTheme.typography.bodyLarge,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                modifier = Modifier.padding(top = 4.dp)
+                                            )
+                                        }
+                                    }
                                     Spacer(modifier = Modifier.weight(1f))
                                     FilledTonalIconButton(
                                         onClick = {

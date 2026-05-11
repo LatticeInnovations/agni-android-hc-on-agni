@@ -150,8 +150,12 @@ class SyncService(
                 campaignScheduleDownloadJob
             ).all { responseMapper -> responseMapper is ApiEndResponse }.apply {
                 if (this) {
-                    downloadAppointment(logout)
-                    downloadCampaignAppointment(logout)
+                    awaitAll(
+                        async { downloadAppointment(logout) },
+                        async { downloadCampaignAppointment(logout) }
+                    )
+
+                    downloadReportToken(logout)
                 }
             }
         }
@@ -530,9 +534,7 @@ class SyncService(
                         examinationPatchJob.await()
                         downloadExamination(logout)
                     },
-                    async { downloadReferral(logout) },
-                    // TODO: uncomment after campaign binding
-                    //async { downloadReportToken(logout) }
+                    async { downloadReferral(logout) }
                 )
                 jobs.awaitAll()
             }
