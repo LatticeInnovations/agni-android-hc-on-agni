@@ -20,6 +20,7 @@ import com.heartcare.agni.data.local.repository.preference.PreferenceRepository
 import com.heartcare.agni.data.local.repository.prescription.PrescriptionRepository
 import com.heartcare.agni.data.local.repository.priordx.PriorDxRepository
 import com.heartcare.agni.data.local.repository.risk.RiskFactorRepository
+import com.heartcare.agni.data.local.repository.screeningsite.ScreeningSiteRepository
 import com.heartcare.agni.data.local.repository.tobacco.TobaccoCessationRepository
 import com.heartcare.agni.data.local.repository.vital.VitalRepository
 import com.heartcare.agni.data.server.model.patient.PatientResponse
@@ -61,6 +62,7 @@ class ScreeningReportDownloadViewModel @Inject constructor(
     private val prescriptionRepository: PrescriptionRepository,
     private val examinationRepository: ExaminationRepository,
     private val interventionRepository: InterventionRepository,
+    private val screeningSiteRepository: ScreeningSiteRepository,
     @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher,
     @param:MainDispatcher private val mainDispatcher: CoroutineDispatcher
 ) : BaseViewModel() {
@@ -72,15 +74,25 @@ class ScreeningReportDownloadViewModel @Inject constructor(
 
     fun getAppointmentsList(patientId: String) {
         viewModelScope.launch(ioDispatcher) {
-            appointmentList = appointmentRepository.getAppointmentsOfPatient(patientId)
+            val facilityAppointmentList = appointmentRepository.getAppointmentsOfPatient(patientId)
                 .filter { appointmentResponseLocal ->
-                    appointmentResponseLocal.hospitalCode == user.hospitalCode &&
-                            appointmentResponseLocal.slot.start.time < Date().toEndOfDay()
-                            && (
-                            appointmentResponseLocal.status == AppointmentStatusEnum.COMPLETED.value
-                                    || appointmentResponseLocal.status == AppointmentStatusEnum.IN_PROGRESS.value
-                            )
+                    appointmentResponseLocal.slot.start.time < Date().toEndOfDay()
+                    && (
+                    appointmentResponseLocal.status == AppointmentStatusEnum.COMPLETED.value
+                            || appointmentResponseLocal.status == AppointmentStatusEnum.IN_PROGRESS.value
+                    )
                 }
+
+            val campaignAppointmentList = appointmentRepository.getCampaignAppointmentsOfPatient(patientId)
+                .filter { appointment ->
+                    appointment.status == AppointmentStatusEnum.WALK_IN.value
+                }.map {
+                    it.copy(
+                        campaignId = screeningSiteRepository.getScreeningSiteById(it.campaignId!!)?.name
+                    )
+                }
+
+            appointmentList = (facilityAppointmentList + campaignAppointmentList).sortedByDescending { it.slot.start }
         }
     }
 

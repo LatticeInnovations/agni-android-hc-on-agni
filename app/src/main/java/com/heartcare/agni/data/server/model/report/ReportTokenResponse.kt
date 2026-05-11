@@ -8,5 +8,6 @@ import kotlinx.parcelize.Parcelize
 @Parcelize
 data class ReportTokenResponse(
     val appointmentId: String,
-    val token: String
+    val token: String,
+    val reportType: String
 ) : Parcelable

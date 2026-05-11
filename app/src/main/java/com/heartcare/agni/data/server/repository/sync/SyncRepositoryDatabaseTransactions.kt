@@ -722,7 +722,7 @@ open class SyncRepositoryDatabaseTransactions(
 
     protected suspend fun insertReportToken(body: List<ReportTokenResponse>) {
         appointmentDao.insertReportToken(
-            *body.map { it.toReportTokenEntity(appointmentDao) }.toTypedArray()
+            *body.map { it.toReportTokenEntity(appointmentDao, campaignAppointmentDao) }.toTypedArray()
         )
     }
 

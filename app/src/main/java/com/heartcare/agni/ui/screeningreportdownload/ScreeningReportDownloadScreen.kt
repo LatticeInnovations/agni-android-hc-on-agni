@@ -55,8 +55,6 @@ fun ScreeningReportDownloadScreen(
     navController: NavController,
     viewModel: ScreeningReportDownloadViewModel = hiltViewModel()
 ) {
-    val context = LocalContext.current
-
     LaunchedEffect(viewModel.isLaunched) {
         if (!viewModel.isLaunched) {
             viewModel.patient = navController.previousBackStackEntry?.savedStateHandle?.get<PatientResponse>(PATIENT)
@@ -103,79 +101,95 @@ fun ScreeningReportDownloadScreen(
                         )
                     }
                 } else {
-                    Column(
-                        modifier = Modifier.verticalScroll(rememberScrollState())
-                    ) {
-                        viewModel.appointmentList.forEach { appointment ->
-                            var isExpanded by rememberSaveable { mutableStateOf(false) }
-                            Column {
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(16.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Text(
-                                        text = appointment.slot.start.toAppointmentDate(),
-                                        style = MaterialTheme.typography.bodyLarge
-                                    )
-                                    Spacer(modifier = Modifier.weight(1f))
-                                    FilledTonalIconButton(
-                                        onClick = {
-                                            // download pdf
-                                            viewModel.getAssessmentsByAppointmentId(
-                                                appointment,
-                                                context
-                                            )
-                                        }
-                                    ) {
-                                        Icon(
-                                            painter = painterResource(R.drawable.file_download),
-                                            contentDescription = null
-                                        )
-                                    }
-                                    IconButton(
-                                        onClick = {
-                                            isExpanded = !isExpanded
-                                        }
-                                    ) {
-                                        Icon(
-                                            imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp
-                                            else Icons.Default.KeyboardArrowDown,
-                                            contentDescription = null
-                                        )
-                                    }
-                                }
-                                AnimatedVisibility(
-                                    visible = isExpanded
-                                ) {
-                                    Box(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(16.dp),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        if (appointment.reportToken == null) {
-                                            Text(
-                                                text = stringResource(R.string.qr_not_generated_yet),
-                                                style = MaterialTheme.typography.bodyLarge
-                                            )
-                                        } else {
-                                            val qr = generateQrCode("${BuildConfig.BASE_URL}access/${appointment.reportToken}")
-                                            Image(
-                                                bitmap = qr.asImageBitmap(),
-                                                contentDescription = "QR Code",
-                                                modifier = Modifier.fillMaxWidth(0.5f)
-                                            )
-                                        }
-                                    }
-                                }
-                                HorizontalDivider()
-                            }
-                        }
-                    }
+                    ScreeningReportsList(viewModel)
                 }
             }
         }
     )
+}
+
+@Composable
+private fun ScreeningReportsList(viewModel: ScreeningReportDownloadViewModel) {
+    val context = LocalContext.current
+    Column(
+        modifier = Modifier.verticalScroll(rememberScrollState())
+    ) {
+        viewModel.appointmentList.forEach { appointment ->
+            var isExpanded by rememberSaveable { mutableStateOf(false) }
+            Column {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column {
+                        Text(
+                            text = appointment.slot.start.toAppointmentDate(),
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                        appointment.campaignId?.let {
+                            Text(
+                                text = appointment.campaignId,
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(top = 4.dp)
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.weight(1f))
+                    FilledTonalIconButton(
+                        onClick = {
+                            // download pdf
+                            viewModel.getAssessmentsByAppointmentId(
+                                appointment,
+                                context
+                            )
+                        }
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.file_download),
+                            contentDescription = null
+                        )
+                    }
+                    IconButton(
+                        onClick = {
+                            isExpanded = !isExpanded
+                        }
+                    ) {
+                        Icon(
+                            imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp
+                            else Icons.Default.KeyboardArrowDown,
+                            contentDescription = null
+                        )
+                    }
+                }
+                AnimatedVisibility(
+                    visible = isExpanded
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (appointment.reportToken == null) {
+                            Text(
+                                text = stringResource(R.string.qr_not_generated_yet),
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                        } else {
+                            val qr = generateQrCode("${BuildConfig.BASE_URL}access/${appointment.reportToken}")
+                            Image(
+                                bitmap = qr.asImageBitmap(),
+                                contentDescription = "QR Code",
+                                modifier = Modifier.fillMaxWidth(0.5f)
+                            )
+                        }
+                    }
+                }
+                HorizontalDivider()
+            }
+        }
+    }
 }
