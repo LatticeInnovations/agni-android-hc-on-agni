@@ -35,7 +35,7 @@ interface VitalDao {
     suspend fun updateVitalFhirId(vitalUUid: String, fhirId: String)
 
     @Transaction
-    @Query("SELECT * FROM VitalEntity WHERE appointmentId = :appointmentId")
+    @Query("SELECT * FROM VitalEntity WHERE appointmentId = :appointmentId OR campaignAppointmentId = :appointmentId")
     suspend fun getVitalsByAppointmentId(appointmentId: String): List<VitalEntity>
 
     @Transaction
