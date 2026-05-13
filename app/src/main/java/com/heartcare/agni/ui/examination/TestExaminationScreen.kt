@@ -354,7 +354,7 @@ private fun TestExaminationBottomBar(
 @Composable
 private fun getBtnText(viewModel: TestExaminationViewModel): String {
     return if (viewModel.todayTestExamination != null && viewModel.todayTestExamination!!.campaignId != null) {
-        stringResource(id =  R.string.update_interventions)
+        stringResource(id =  R.string.update_test_and_examinations)
     } else {
         stringResource(
             id = if (viewModel.todayTestExamination == null || viewModel.existsInOtherHospital) R.string.add_test_and_examinations
