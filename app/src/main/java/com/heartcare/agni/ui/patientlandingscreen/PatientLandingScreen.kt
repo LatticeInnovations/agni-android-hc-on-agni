@@ -343,20 +343,20 @@ private fun CardComposableList(
                     navController.navigate(Screen.InterventionScreen.route)
                 }
             )
-            CardComposable(
-                viewModel,
-                stringResource(id = R.string.screening_report_download),
-                R.drawable.file_download,
-                null,
-                onClick = {
-                    navController.currentBackStackEntry?.savedStateHandle?.set(
-                        PATIENT,
-                        viewModel.patient
-                    )
-                    navController.navigate(Screen.ScreeningReportDownloadScreen.route)
-                }
-            )
         }
+        CardComposable(
+            viewModel,
+            stringResource(id = R.string.screening_report_download),
+            R.drawable.file_download,
+            null,
+            onClick = {
+                navController.currentBackStackEntry?.savedStateHandle?.set(
+                    PATIENT,
+                    viewModel.patient
+                )
+                navController.navigate(Screen.ScreeningReportDownloadScreen.route)
+            }
+        )
         Spacer(
             modifier = Modifier.height(76.dp)
         )

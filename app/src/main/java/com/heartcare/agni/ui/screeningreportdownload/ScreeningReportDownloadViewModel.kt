@@ -149,7 +149,7 @@ class ScreeningReportDownloadViewModel @Inject constructor(
         </body>
         </html>
     """.trimIndent()
-            val fileName = "${patient?.heartcareId}-${patient?.firstName} ${patient?.lastName}-${
+            val fileName = "${patient?.heartcareId ?: patient?.fhirId}-${patient?.firstName} ${patient?.lastName}-${
                 appointment.slot
                     .start.toddMMMyyyy()
             }"
