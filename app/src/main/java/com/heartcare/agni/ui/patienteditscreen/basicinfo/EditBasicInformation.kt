@@ -480,6 +480,7 @@ fun HandleLaunchedEffect(
                             viewModel.isNationalIdVerified =
                                 identity.use == NationalIdUse.OFFICIAL.use
                             viewModel.nationalIdUse = identity.use!!
+                            if (viewModel.isNationalIdVerified) viewModel.verifyNationalId()
                         }
 
                         else -> {
