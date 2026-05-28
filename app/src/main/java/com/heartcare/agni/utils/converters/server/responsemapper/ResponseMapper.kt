@@ -63,9 +63,9 @@ sealed class ResponseMapper<out T> {
                     ApiEmptyResponse()
                 } else {
                     when {
-                        paginated && response.body()?.status == 1 -> ApiContinueResponse(body = response.body()?.data!!)
-                        paginated && response.body()?.status == 2 -> ApiEndResponse(body = response.body()?.data!!)
-                        !paginated && response.body()?.status == 1 -> ApiEndResponse(body = response.body()?.data!!)
+                        paginated && response.body()?.status == 1 -> ApiContinueResponse(body = response.body()?.data!!, total = response.body()?.total ?: 0)
+                        paginated && response.body()?.status == 2 -> ApiEndResponse(body = response.body()?.data!!, total = response.body()?.total ?: 0)
+                        !paginated && response.body()?.status == 1 -> ApiEndResponse(body = response.body()?.data!!, total = response.body()?.total ?: 0)
                         else -> ApiErrorResponse(
                             response.body()?.status ?: 0,
                             response.body()?.message ?: SERVER_ERROR
@@ -86,7 +86,7 @@ sealed class ResponseMapper<out T> {
             return if (response.isSuccessful) {
                 val body = response.body()
                 if (body != null) {
-                    ApiEndResponse(body = body, headers = response.headers())
+                    ApiEndResponse(body = body, headers = response.headers(), total = 0)
                 } else {
                     ApiEmptyResponse()
                 }

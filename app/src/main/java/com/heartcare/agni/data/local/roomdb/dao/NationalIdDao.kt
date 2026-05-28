@@ -19,4 +19,7 @@ interface NationalIdDao {
 
     @Query("SELECT * FROM NationalIdEntity WHERE nationalId=:nationalId")
     fun getNationalIdData(nationalId: String): List<NationalIdEntity>
+
+    @Query("SELECT COUNT(*) FROM NationalIdEntity")
+    fun getNationalIdCount(): Int
 }

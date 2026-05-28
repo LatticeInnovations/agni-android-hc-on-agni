@@ -735,4 +735,8 @@ open class SyncRepositoryDatabaseTransactions(
     protected fun deleteAllNationalId() {
         nationalIdDao.deleteAllNationalIdRecord()
     }
+
+    protected fun getNationalIdCount(): Int {
+        return nationalIdDao.getNationalIdCount()
+    }
 }

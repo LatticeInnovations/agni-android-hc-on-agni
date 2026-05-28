@@ -239,6 +239,11 @@ class PreferenceStorageImpl(private val sharedPreferences: SharedPreferences) : 
         PREF_LAST_NATIONAL_ID_SYNC_TIME,
         0L
     )
+    override var serverSyncNationalId by LongPreference(
+        sharedPreferences,
+        PREF_SERVER_NATIONAL_ID_SYNC_TIME,
+        0L
+    )
 
     override fun clear() {
         sharedPreferences.edit {
@@ -300,5 +305,6 @@ class PreferenceStorageImpl(private val sharedPreferences: SharedPreferences) : 
         const val PREF_IS_SCREENING_SITE_SEEDED = "pref_is_screening_site_seeded"
         const val PREF_LAST_REPORT_TOKEN_SYNC_TIME = "pref_last_report_token_sync_time"
         const val PREF_LAST_NATIONAL_ID_SYNC_TIME = "pref_last_national_id_sync_time"
+        const val PREF_SERVER_NATIONAL_ID_SYNC_TIME = "pref_server_national_id_sync_time"
     }
 }

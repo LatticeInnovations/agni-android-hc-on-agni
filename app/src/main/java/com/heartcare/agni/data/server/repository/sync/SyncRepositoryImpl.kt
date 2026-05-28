@@ -3336,11 +3336,11 @@ class SyncRepositoryImpl @Inject constructor(
             ).run {
                 when (this) {
                     is ApiContinueResponse -> {
-                        handleNationalIdResponse(body)
+                        handleNationalIdResponse(body, total)
                     }
 
                     is ApiEndResponse -> {
-                        handleNationalIdResponse(body)
+                        handleNationalIdResponse(body, total)
                     }
 
                     else -> this
@@ -3365,16 +3365,23 @@ class SyncRepositoryImpl @Inject constructor(
         }
     }
 
-    private suspend fun handleNationalIdResponse(body: List<NationalIdResponse>): ResponseMapper<List<NationalIdResponse>> {
-        val serverTime = body.firstOrNull()?.lastSyncedAt?.time ?: return ApiEmptyResponse()
-        return if (serverTime > preferenceRepository.getLastSyncNationalId()) {
+    private suspend fun handleNationalIdResponse(body: List<NationalIdResponse>, total: Int): ResponseMapper<List<NationalIdResponse>> {
+        val serverTime = body.firstOrNull()?.lastSyncedAt?.time ?: return ApiErrorResponse(statusCode = 0, errorMessage = "National ID lastSyncedAt is null. body: $body")
+
+        return if (serverTime == preferenceRepository.getServerSyncNationalId()) {
+            val localRecordsCount = getNationalIdCount()
+            if (total > localRecordsCount) {
+                getAndSaveNationalIdData(localRecordsCount, serverTime)
+            } else ApiEmptyResponse()
+        } else if (serverTime > preferenceRepository.getLastSyncNationalId()) {
             deleteAllNationalId()
-            getAndSaveNationalIdData(0)
+            getAndSaveNationalIdData(0, serverTime)
         } else ApiEmptyResponse()
     }
 
     private suspend fun getAndSaveNationalIdData(
-        offset: Int
+        offset: Int,
+        serverTime: Long
     ): ResponseMapper<List<NationalIdResponse>> {
         val map = mutableMapOf<String, String>()
         map[COUNT] = NATIONAL_ID_COUNT_VALUE.toString()
@@ -3389,12 +3396,14 @@ class SyncRepositoryImpl @Inject constructor(
                 when (this) {
                     is ApiContinueResponse -> {
                         insertNationalId(body)
+                        preferenceRepository.setServerSyncNationalId(serverTime)
                         //Call for next batch data
-                        getAndSaveNationalIdData(offset + NATIONAL_ID_COUNT_VALUE)
+                        getAndSaveNationalIdData(offset + NATIONAL_ID_COUNT_VALUE, serverTime)
                     }
 
                     is ApiEndResponse -> {
                         insertNationalId(body)
+                        preferenceRepository.setServerSyncNationalId(serverTime)
                         preferenceRepository.setLastSyncNationalId(Date().time)
                         this
                     }
