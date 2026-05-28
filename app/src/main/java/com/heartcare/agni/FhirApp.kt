@@ -191,37 +191,41 @@ class FhirApp : Application() {
 
     fun launchSyncing() {
         applicationScope.launch {
-            if (isSyncing.compareAndSet(false, true)) {
-                try {
-                    if (CheckNetwork.isInternetAvailable(applicationContext)) {
-                        val listOfErrors = mutableListOf<String>()
-                        syncWorkerStatus.postValue(WorkerStatus.IN_PROGRESS)
-                        preferenceStorage.syncStatus =
-                            SyncStatusMessageEnum.SYNCING_IN_PROGRESS.display
-                        syncService.syncLauncher { _, errorMessage ->
-                            // as there will be multiple callbacks from different coroutines
-                            // list of errors is maintained.
-                            // if the list is empty, then all the api calls were successful.
-                            listOfErrors.add(errorMessage)
-                        }.also {
-                            preferenceStorage.lastSyncTime = Date().time
-                            if (listOfErrors.isEmpty()) {
-                                preferenceStorage.syncStatus =
-                                    SyncStatusMessageEnum.SYNCING_COMPLETED.display
-                                syncWorkerStatus.postValue(WorkerStatus.SUCCESS)
-                            } else {
-                                preferenceStorage.syncStatus =
-                                    SyncStatusMessageEnum.SYNCING_FAILED.display
-                                syncWorkerStatus.postValue(WorkerStatus.FAILED)
-                            }
+            launchSyncingInternal()
+        }
+    }
+
+    suspend fun launchSyncingInternal() {
+        if (isSyncing.compareAndSet(false, true)) {
+            try {
+                if (CheckNetwork.isInternetAvailable(applicationContext)) {
+                    val listOfErrors = mutableListOf<String>()
+                    syncWorkerStatus.postValue(WorkerStatus.IN_PROGRESS)
+                    preferenceStorage.syncStatus =
+                        SyncStatusMessageEnum.SYNCING_IN_PROGRESS.display
+                    syncService.syncLauncher { _, errorMessage ->
+                        // as there will be multiple callbacks from different coroutines
+                        // list of errors is maintained.
+                        // if the list is empty, then all the api calls were successful.
+                        listOfErrors.add(errorMessage)
+                    }.also {
+                        preferenceStorage.lastSyncTime = Date().time
+                        if (listOfErrors.isEmpty()) {
+                            preferenceStorage.syncStatus =
+                                SyncStatusMessageEnum.SYNCING_COMPLETED.display
+                            syncWorkerStatus.postValue(WorkerStatus.SUCCESS)
+                        } else {
+                            preferenceStorage.syncStatus =
+                                SyncStatusMessageEnum.SYNCING_FAILED.display
+                            syncWorkerStatus.postValue(WorkerStatus.FAILED)
                         }
                     }
-                } catch (e: Exception) {
-                    Timber.e(e, e.localizedMessage)
-                    crashlyticsLogger.logException(e)
-                } finally {
-                    isSyncing.set(false)
                 }
+            } catch (e: Exception) {
+                Timber.e(e, e.localizedMessage)
+                crashlyticsLogger.logException(e)
+            } finally {
+                isSyncing.set(false)
             }
         }
     }

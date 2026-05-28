@@ -8,7 +8,7 @@ import com.heartcare.agni.service.workmanager.workers.base.SyncWorker
 abstract class TriggerWorkerPeriodic(context: Context, workerParameters: WorkerParameters) :
     SyncWorker(context, workerParameters) {
     override suspend fun doWork(): Result {
-        (applicationContext as FhirApp).launchSyncing()
+        (applicationContext as FhirApp).launchSyncingInternal()
         return Result.success()
     }
 }
