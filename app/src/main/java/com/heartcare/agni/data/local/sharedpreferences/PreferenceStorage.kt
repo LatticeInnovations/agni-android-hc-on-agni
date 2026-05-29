@@ -62,6 +62,7 @@ interface PreferenceStorage {
     var isScreeningSiteSeeded: Boolean
     var lastSyncReportToken: Long
     var lastSyncNationalId: Long
+    var serverSyncNationalId: Long
 
     fun clear()
 }

@@ -35,6 +35,10 @@ import com.heartcare.agni.utils.converters.gson.DateDeserializer
 import com.heartcare.agni.utils.converters.gson.DateSerializer
 import com.heartcare.agni.utils.network.CheckNetwork
 import dagger.hilt.android.HiltAndroidApp
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import timber.log.Timber
 import timber.log.Timber.Forest.plant
 import java.util.Date
@@ -101,6 +105,8 @@ class FhirApp : Application() {
 
     internal var syncWorkerStatus = MutableLiveData<WorkerStatus>()
     private val isSyncing = AtomicBoolean(false)
+
+    private val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     override fun onCreate() {
         super.onCreate()
@@ -183,14 +189,20 @@ class FhirApp : Application() {
 
     }
 
-    internal suspend fun launchSyncing() {
+    fun launchSyncing() {
+        applicationScope.launch {
+            launchSyncingInternal()
+        }
+    }
 
+    suspend fun launchSyncingInternal() {
         if (isSyncing.compareAndSet(false, true)) {
             try {
                 if (CheckNetwork.isInternetAvailable(applicationContext)) {
                     val listOfErrors = mutableListOf<String>()
                     syncWorkerStatus.postValue(WorkerStatus.IN_PROGRESS)
-                    preferenceStorage.syncStatus = SyncStatusMessageEnum.SYNCING_IN_PROGRESS.display
+                    preferenceStorage.syncStatus =
+                        SyncStatusMessageEnum.SYNCING_IN_PROGRESS.display
                     syncService.syncLauncher { _, errorMessage ->
                         // as there will be multiple callbacks from different coroutines
                         // list of errors is maintained.
@@ -209,7 +221,7 @@ class FhirApp : Application() {
                         }
                     }
                 }
-            } catch (e: Exception){
+            } catch (e: Exception) {
                 Timber.e(e, e.localizedMessage)
                 crashlyticsLogger.logException(e)
             } finally {

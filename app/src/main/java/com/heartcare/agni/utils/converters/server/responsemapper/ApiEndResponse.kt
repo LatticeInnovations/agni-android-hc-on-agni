@@ -4,5 +4,6 @@ import okhttp3.Headers
 
 data class ApiEndResponse<T>(
     val body: T,
-    val headers: Headers? = null
+    val headers: Headers? = null,
+    val total: Int
 ) : ResponseMapper<T>()
