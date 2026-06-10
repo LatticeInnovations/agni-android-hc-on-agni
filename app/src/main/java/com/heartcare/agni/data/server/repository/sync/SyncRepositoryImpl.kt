@@ -1183,8 +1183,8 @@ class SyncRepositoryImpl @Inject constructor(
                     }
 
                     is ApiEndResponse -> {
-                        preferenceRepository.setLastSyncCampaignDiagnosis(Date().time)
                         insertSymDiag(body)
+                        preferenceRepository.setLastSyncCampaignDiagnosis(Date().time)
                         this
                     }
 
@@ -2289,8 +2289,8 @@ class SyncRepositoryImpl @Inject constructor(
                     }
 
                     is ApiEndResponse -> {
-                        preferenceRepository.setLastSyncLevelRecord(Date().time)
                         insertLevels(body)
+                        preferenceRepository.setLastSyncLevelRecord(Date().time)
                         this
                     }
 
@@ -2393,8 +2393,8 @@ class SyncRepositoryImpl @Inject constructor(
                     }
 
                     is ApiEndResponse -> {
-                        preferenceRepository.setLastSyncPriorDx(Date().time)
                         insertPriorDx(body)
+                        preferenceRepository.setLastSyncPriorDx(Date().time)
                         this
                     }
 
@@ -2443,8 +2443,8 @@ class SyncRepositoryImpl @Inject constructor(
                     }
 
                     is ApiEndResponse -> {
-                        preferenceRepository.setLastSyncCampaignPriorDx(Date().time)
                         insertPriorDx(body)
+                        preferenceRepository.setLastSyncCampaignPriorDx(Date().time)
                         this
                     }
 
@@ -2498,8 +2498,8 @@ class SyncRepositoryImpl @Inject constructor(
                     }
 
                     is ApiEndResponse -> {
-                        preferenceRepository.setLastSyncHistoryMedication(Date().time)
                         insertHistoryMedication(body)
+                        preferenceRepository.setLastSyncHistoryMedication(Date().time)
                         this
                     }
 
@@ -2554,8 +2554,8 @@ class SyncRepositoryImpl @Inject constructor(
                     }
 
                     is ApiEndResponse -> {
-                        preferenceRepository.setLastSyncCampaignHistoryMedication(Date().time)
                         insertHistoryMedication(body)
+                        preferenceRepository.setLastSyncCampaignHistoryMedication(Date().time)
                         this
                     }
 
@@ -2607,8 +2607,8 @@ class SyncRepositoryImpl @Inject constructor(
                     }
 
                     is ApiEndResponse -> {
-                        preferenceRepository.setLastSyncFamilyHistory(Date().time)
                         insertFamilyHistory(body)
+                        preferenceRepository.setLastSyncFamilyHistory(Date().time)
                         this
                     }
 
@@ -2662,8 +2662,8 @@ class SyncRepositoryImpl @Inject constructor(
                     }
 
                     is ApiEndResponse -> {
-                        preferenceRepository.setLastSyncCampaignFamilyHistory(Date().time)
                         insertFamilyHistory(body)
+                        preferenceRepository.setLastSyncCampaignFamilyHistory(Date().time)
                         this
                     }
 
@@ -2713,8 +2713,8 @@ class SyncRepositoryImpl @Inject constructor(
                     }
 
                     is ApiEndResponse -> {
-                        preferenceRepository.setLastSyncAllergy(Date().time)
                         insertAllergy(body)
+                        preferenceRepository.setLastSyncAllergy(Date().time)
                         this
                     }
 
@@ -2766,8 +2766,8 @@ class SyncRepositoryImpl @Inject constructor(
                     }
 
                     is ApiEndResponse -> {
-                        preferenceRepository.setLastSyncCampaignAllergy(Date().time)
                         insertAllergy(body)
+                        preferenceRepository.setLastSyncCampaignAllergy(Date().time)
                         this
                     }
 
@@ -2817,8 +2817,8 @@ class SyncRepositoryImpl @Inject constructor(
                     }
 
                     is ApiEndResponse -> {
-                        preferenceRepository.setLastSyncRiskFactors(Date().time)
                         insertRiskFactors(body)
+                        preferenceRepository.setLastSyncRiskFactors(Date().time)
                         this
                     }
 
@@ -2870,8 +2870,8 @@ class SyncRepositoryImpl @Inject constructor(
                     }
 
                     is ApiEndResponse -> {
-                        preferenceRepository.setLastSyncCampaignRiskFactors(Date().time)
                         insertRiskFactors(body)
+                        preferenceRepository.setLastSyncCampaignRiskFactors(Date().time)
                         this
                     }
 
@@ -2923,8 +2923,8 @@ class SyncRepositoryImpl @Inject constructor(
                     }
 
                     is ApiEndResponse -> {
-                        preferenceRepository.setLastSyncTobaccoCessation(Date().time)
                         insertTobaccoCessation(body)
+                        preferenceRepository.setLastSyncTobaccoCessation(Date().time)
                         this
                     }
 
@@ -2975,8 +2975,8 @@ class SyncRepositoryImpl @Inject constructor(
                     }
 
                     is ApiEndResponse -> {
-                        preferenceRepository.setLastSyncCampaignTobaccoCessation(Date().time)
                         insertTobaccoCessation(body)
+                        preferenceRepository.setLastSyncCampaignTobaccoCessation(Date().time)
                         this
                     }
 
@@ -3031,8 +3031,8 @@ class SyncRepositoryImpl @Inject constructor(
                     }
 
                     is ApiEndResponse -> {
-                        preferenceRepository.setLastSyncIntervention(Date().time)
                         insertIntervention(body)
+                        preferenceRepository.setLastSyncIntervention(Date().time)
                         this
                     }
 
@@ -3085,8 +3085,8 @@ class SyncRepositoryImpl @Inject constructor(
                     }
 
                     is ApiEndResponse -> {
-                        preferenceRepository.setLastSyncCampaignIntervention(Date().time)
                         insertIntervention(body)
+                        preferenceRepository.setLastSyncCampaignIntervention(Date().time)
                         this
                     }
 
@@ -3138,8 +3138,8 @@ class SyncRepositoryImpl @Inject constructor(
                     }
 
                     is ApiEndResponse -> {
-                        preferenceRepository.setLastSyncExamination(Date().time)
                         insertExamination(body)
+                        preferenceRepository.setLastSyncExamination(Date().time)
                         this
                     }
 
@@ -3191,8 +3191,8 @@ class SyncRepositoryImpl @Inject constructor(
                     }
 
                     is ApiEndResponse -> {
-                        preferenceRepository.setLastSyncCampaignExamination(Date().time)
                         insertExamination(body)
+                        preferenceRepository.setLastSyncCampaignExamination(Date().time)
                         this
                     }
 
