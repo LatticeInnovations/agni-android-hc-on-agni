@@ -1,6 +1,7 @@
 package com.heartcare.agni.data.local.enums
 
 enum class UserRoleEnum(val display: String, val code: Int) {
+    HEALTH_FACILITY_ADMIN("Health Facility Admin", 3),
     RECEPTIONIST("Receptionist", 4),
     PHYSICIAN("Physician", 5),
     PHARMACIST("Community staff", 6),
