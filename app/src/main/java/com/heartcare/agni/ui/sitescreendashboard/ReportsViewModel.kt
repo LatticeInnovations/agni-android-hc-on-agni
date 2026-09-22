@@ -17,6 +17,7 @@ import com.heartcare.agni.data.local.enums.CvdRiskCategory
 import com.heartcare.agni.data.local.enums.DateRangeEnum
 import com.heartcare.agni.data.local.enums.GenderEnum
 import com.heartcare.agni.data.local.enums.LevelsEnum
+import com.heartcare.agni.data.local.enums.UserRoleEnum
 import com.heartcare.agni.data.local.enums.YesNoEnum
 import com.heartcare.agni.data.local.model.appointment.AppointmentResponseLocal
 import com.heartcare.agni.data.local.model.report.StatRowData
@@ -101,7 +102,8 @@ class ReportsViewModel @Inject constructor(
         viewModelScope.launch {
             val campaigns = withContext(ioDispatcher) {
                 screeningSiteRepository.getScreeningSites().filter { site ->
-                    site.staff.any { it.id == user.fhirId && it.isTeamLead }
+                    user.userTypeId == UserRoleEnum.HEALTH_FACILITY_ADMIN.code ||
+                            site.staff.any { it.id == user.fhirId && it.isTeamLead }
                 }
             }
             campaignOptions = campaigns
